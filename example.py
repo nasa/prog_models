@@ -2,14 +2,16 @@ from prog_models import model, prognostics_model
 from prog_models.models import battery_circuit
 
 batt = battery_circuit.BatteryCircuit()
-x=batt.initialize([], [])
-print(x)
-print(batt.state(0, x, {'i': 0}, 0.1))
-print(batt.output(0, x))
-print(batt.event_state(0, x))
-print(batt.threshold_met(0, x))
 
+# simulate for 200 seconds
+result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+
+for i in range(len(result['t'])): # Print Results
+    print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(result['t'][i], result['u'][i], result['x'][i], result['z'][i], result['event_state'][i]))
+
+# Simulate to threshold
 def future_loading(t):
+    # Variable (piece-wise) future loading scheme 
     if (t < 600):
         i = 2
     elif (t < 900):
@@ -24,10 +26,6 @@ def future_loading(t):
 
 result = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183})
 
-for i in range(len(result['t'])):
+for i in range(len(result['t'])): # Print Results
     print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(result['t'][i], result['u'][i], result['x'][i], result['z'][i], result['event_state'][i]))
 
-result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-
-for i in range(len(result['t'])):
-    print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(result['t'][i], result['u'][i], result['x'][i], result['z'][i], result['event_state'][i]))

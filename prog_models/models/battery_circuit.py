@@ -4,6 +4,7 @@ import math
 
 class BatteryCircuit(prognostics_model.PrognosticsModel):
     """
+    Prognostics model for a battery, represented by an electric circuit
     """
     events = [
         'EOD' # End of Discharge
@@ -61,10 +62,10 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
+    # TODO(CT): Differential Model parent class 
+    #   Which then defines state = delta() + state
+
     def state(self, t, x, u, dt): 
-        """
-        """
-        # Constraints
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
         SOC = self.event_state(t, x)['EOD']
@@ -82,7 +83,6 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         ics = ib - Vcs/self.parameters['Rs']
         qcsdot = ics
 
-        # Return new state
         return {
             'tb':  x['tb'] + Tbdot*dt,
             'qb':  x['qb'] + qbdot*dt,
@@ -96,7 +96,6 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         }
 
     def output(self, t, x):
-        # Constraints
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
         SOC = self.event_state(t, x)['EOD']

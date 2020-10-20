@@ -1,6 +1,9 @@
 # Todo(CT): Should we name this SytemModel?
-class Model:
-        """A general time-variant state space model of system behavior.
+from abc import ABC, abstractmethod
+
+class Model(ABC):
+        """
+        A general time-variant state space model of system behavior.
 
         The Model class is a wrapper around a mathematical model of a system as
         represented by a state and output equation. Optionally, it may also
@@ -19,28 +22,118 @@ class Model:
         uncorrelated Gaussian noise as specified by these variances.
         """
 
-        name = 'myModel'
         parameters = {} # Configuration Parameters for model
-        inputs = []
-        states = []
-        outputs = []
+        inputs = []     # Identifiers for each input
+        states = []     # Identifiers for each state
+        outputs = []    # Identifiers for each output
 
-        def __init__(self):
+        # TODO(CT): Check if properties above are defined (in constructor?)
+
+        @abstractmethod
+        def initialize(self, u : dict, z : dict) -> dict:
+            """
+            Calculate initial state given inputs and outputs
+
+            Parameters
+            ----------
+            u : dict
+                Inputs, with keys defined by model.inputs.
+                e.g., u = {'i':3.2} given inputs = ['i']
+            z : dict
+                Outputs, with keys defined by model.outputs.
+                e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+
+            Returns
+            -------
+            x : dict
+                First state, with keys defined by model.states
+                e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+            """
+
             pass
 
-        def initialize(self, u, z):
+        @abstractmethod
+        def state(self, t, x : dict, u : dict, dt) -> dict: 
+            """
+            Calculate next state, forward one timestep
+
+            Parameters
+            ----------
+            t : double
+                Current timestamp in seconds (≥ 0.0)
+                e.g., t = 3.4
+            x : dict
+                state, with keys defined by model.states
+                e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+            u : dict
+                Inputs, with keys defined by model.inputs.
+                e.g., u = {'i':3.2} given inputs = ['i']
+            dt : double
+                Timestep size in seconds (≥ 0.0)
+                e.g., dt = 0.1
+            
+
+            Returns
+            -------
+            x : dict
+                Next state, with keys defined by model.states
+                e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+            """
+
             pass
 
-        def state(self, t, x, u, dt): 
+        @abstractmethod
+        def output(self, t, x : dict) -> dict:
+            """
+            Calculate next statem, forward one timestep
+
+            Parameters
+            ----------
+            t : double
+                Current timestamp in seconds (≥ 0.0)
+                e.g., t = 3.4
+            x : dict
+                state, with keys defined by model.states
+                e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+            
+            Returns
+            -------
+            z : dict
+                Outputs, with keys defined by model.outputs.
+                e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+            """
+            
             pass
 
-        def output(self, t, x):
-            pass
+        def simulate_to(self, time, future_loading_eqn, first_output : dict, options : dict = {}):
+            """
+            Simulate model for a given time interval
 
-        def event_state(self, t, x):
-            pass
-
-        def simulate_to(self, time, future_loading_eqn, first_output, options = {}):
+            Parameters
+            ----------
+            time : double
+                Time to which the model will be simulated in seconds (≥ 0.0)
+                e.g., time = 200
+            future_loading_eqn : function
+                Function of (t) -> z used to predict future loading (output) at a given time (t)
+            options: dict, optional:
+                Configuration options for the simulation
+                Note: configuration of the model is set through model.parameters
+            
+            Returns
+            -------
+            results : dict
+                Results recorded during simulation
+                e.g., results = [{
+                    't': 0,                             # Time (s)
+                    'u': {'i': 12},                     # Inputs
+                    'x': {'abc': 1233, 'def': 1933'},   # State
+                    'z': {'v': 3.3, 't': 22.54}         # Outputs
+                }, {
+                    't': 0.1, ...
+                }, ...]
+            """
+            
             config = { # Defaults
                 'step_size': 1,
                 'save_freq': 10
@@ -55,7 +148,6 @@ class Model:
             inputs = [u]
             states = [x]
             outputs = [first_output]
-            event_states = [self.event_state(t, x)]
             next_save = config['save_freq']
             while t < time:
                 t += config['step_size']
@@ -67,17 +159,14 @@ class Model:
                     inputs.append(u)
                     states.append(x)
                     outputs.append(self.output(t, x))
-                    event_states.append(self.event_state(t, x))
             if times[-1] != t:
                 times.append(t)
                 inputs.append(u)
                 states.append(x)
                 outputs.append(self.output(t, x))
-                event_states.append(self.event_state(t, x))
             return {
                 't': times,
                 'u': inputs,
                 'x': states,
                 'z': outputs, 
-                'event_state': event_states
             }
