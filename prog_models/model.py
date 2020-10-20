@@ -1,6 +1,6 @@
 # Todo(CT): Should we name this SytemModel?
 class Model:
-        """A general time-variant state space model of nominal system behavior.
+        """A general time-variant state space model of system behavior.
 
         The Model class is a wrapper around a mathematical model of a system as
         represented by a state and output equation. Optionally, it may also
@@ -21,12 +21,21 @@ class Model:
 
         name = 'myModel'
         parameters = {} # Configuration Parameters for model
+        inputs = []
+        states = []
+        outputs = []
 
         def __init__(self):
             pass
 
-        def state_eqn(self, t, x, u, v, dt): 
+        def initialize(self, u, z):
             pass
 
-        def output_eqn(self, t, x, n):
+        def state(self, t, x, u, dt): 
+            pass
+
+        def output(self, t, x):
+            pass
+
+        def event_state(self, t, x):
             pass

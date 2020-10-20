@@ -3,4 +3,7 @@ from . import model
 class PrognosticsModel(model.Model):
     """
     """
-    pass
+    events = []
+    
+    def threshold_met(t, x):
+        pass
