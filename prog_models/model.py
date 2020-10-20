@@ -39,3 +39,45 @@ class Model:
 
         def event_state(self, t, x):
             pass
+
+        def simulate_to(self, time, future_loading_eqn, first_output, options = {}):
+            config = { # Defaults
+                'step_size': 1,
+                'save_freq': 10
+            }
+            config.update(options)
+            # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
+
+            t = 0
+            u = future_loading_eqn(t)
+            x = self.initialize(u, first_output)
+            times = [t]
+            inputs = [u]
+            states = [x]
+            outputs = [first_output]
+            event_states = [self.event_state(t, x)]
+            next_save = config['save_freq']
+            while t < time:
+                t += config['step_size']
+                u = future_loading_eqn(t)
+                x = self.state(t, x, u, config['step_size'])
+                if (t >= next_save):
+                    next_save += config['save_freq']
+                    times.append(t)
+                    inputs.append(u)
+                    states.append(x)
+                    outputs.append(self.output(t, x))
+                    event_states.append(self.event_state(t, x))
+            if times[-1] != t:
+                times.append(t)
+                inputs.append(u)
+                states.append(x)
+                outputs.append(self.output(t, x))
+                event_states.append(self.event_state(t, x))
+            return {
+                't': times,
+                'u': inputs,
+                'x': states,
+                'z': outputs, 
+                'event_state': event_states
+            }
