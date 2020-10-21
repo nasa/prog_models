@@ -170,7 +170,10 @@ class PrognosticsModel(model.Model, ABC):
 
         t = 0
         u = future_loading_eqn(t)
-        x = self.initialize(u, first_output)
+        if 'x' in config:
+            x = config['x']
+        else:
+            x = self.initialize(u, first_output)
         times = [t]
         inputs = [u]
         states = [x]
