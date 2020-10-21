@@ -1,5 +1,5 @@
 from . import model 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 class PrognosticsModel(model.Model, ABC):
     """
@@ -57,7 +57,7 @@ class PrognosticsModel(model.Model, ABC):
             If each threshold has been met (bool), with deys defined by prognostics_model.events
             e.g., thresholds_met = {'EOL': False} given events = ['EOL']
         """
-        
+
         pass
 
     def simulate_to(self, time, future_loading_eqn, first_output : dict, options : dict = {}):
@@ -162,7 +162,8 @@ class PrognosticsModel(model.Model, ABC):
 
         config = { # Defaults
             'step_size': 1,
-            'save_freq': 10
+            'save_freq': 10,
+            'horizon': 1e100 # Default horizon (in s), essentially inf
         }
         config.update(options)
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
@@ -177,7 +178,7 @@ class PrognosticsModel(model.Model, ABC):
         event_states = [self.event_state(t, x)]
         next_save = config['save_freq']
         threshold_met = False
-        while not threshold_met:
+        while not threshold_met and t < config['horizon']:
             t += config['step_size']
             u = future_loading_eqn(t)
             x = self.state(t, x, u, config['step_size'])

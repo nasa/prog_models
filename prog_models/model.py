@@ -55,7 +55,7 @@ class Model(ABC):
         @abstractmethod
         def state(self, t, x : dict, u : dict, dt) -> dict: 
             """
-            Calculate next state, forward one timestep
+            State transition equation: Calculate next state
 
             Parameters
             ----------
@@ -102,7 +102,7 @@ class Model(ABC):
                 Outputs, with keys defined by model.outputs.
                 e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
             """
-            
+
             pass
 
         def simulate_to(self, time, future_loading_eqn, first_output : dict, options : dict = {}):
