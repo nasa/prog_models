@@ -161,7 +161,7 @@ class PrognosticsModel(model.Model, ABC):
             """
 
         config = { # Defaults
-            'step_size': 1,
+            'dt': 1.0,
             'save_freq': 10,
             'horizon': 1e100 # Default horizon (in s), essentially inf
         }
@@ -182,9 +182,9 @@ class PrognosticsModel(model.Model, ABC):
         next_save = config['save_freq']
         threshold_met = False
         while not threshold_met and t < config['horizon']:
-            t += config['step_size']
+            t += config['dt']
             u = future_loading_eqn(t)
-            x = self.state(t, x, u, config['step_size'])
+            x = self.state(t, x, u, config['dt'])
             thresholds_met = self.threshold_met(t, x)
             threshold_met = any(thresholds_met.values())
             if (t >= next_save):
