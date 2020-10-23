@@ -134,6 +134,7 @@ class Model(ABC):
             }, ...]
         """
         
+        # Configure
         config = { # Defaults
             'step_size': 1,
             'save_freq': 10
@@ -141,6 +142,7 @@ class Model(ABC):
         config.update(options)
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
 
+        # Setup
         t = 0
         u = future_loading_eqn(t)
         x = self.initialize(u, first_output)
@@ -149,6 +151,8 @@ class Model(ABC):
         states = [x]
         outputs = [first_output]
         next_save = config['save_freq']
+
+        # Simulate Forward
         while t < time:
             t += config['step_size']
             u = future_loading_eqn(t)
@@ -159,11 +163,15 @@ class Model(ABC):
                 inputs.append(u)
                 states.append(x)
                 outputs.append(self.output(t, x))
+        
+        # Record final state
         if times[-1] != t:
+            # This check prevents double recording when the last state was a savepoint 
             times.append(t)
             inputs.append(u)
             states.append(x)
             outputs.append(self.output(t, x))
+
         return {
             't': times,
             'u': inputs,

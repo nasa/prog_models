@@ -92,6 +92,7 @@ class PrognosticsModel(model.Model, ABC):
                 }, ...]
             """
 
+        # Configure 
         config = { # Defaults
             'step_size': 1,
             'save_freq': 10
@@ -99,6 +100,7 @@ class PrognosticsModel(model.Model, ABC):
         config.update(options)
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
 
+        # Setup
         t = 0
         u = future_loading_eqn(t)
         x = self.initialize(u, first_output)
@@ -108,6 +110,8 @@ class PrognosticsModel(model.Model, ABC):
         outputs = [first_output]
         event_states = [self.event_state(t, x)]
         next_save = config['save_freq']
+
+        # Simulate
         while t < time:
             t += config['step_size']
             u = future_loading_eqn(t)
@@ -119,12 +123,16 @@ class PrognosticsModel(model.Model, ABC):
                 states.append(x)
                 outputs.append(self.output(t, x))
                 event_states.append(self.event_state(t, x))
+
+        # Save final state
         if times[-1] != t:
+            # This check prevents double recording when the last state was a savepoint 
             times.append(t)
             inputs.append(u)
             states.append(x)
             outputs.append(self.output(t, x))
             event_states.append(self.event_state(t, x))
+        
         return {
             't': times,
             'u': inputs,
@@ -160,6 +168,7 @@ class PrognosticsModel(model.Model, ABC):
                 }, ...]
             """
 
+        # Configure
         config = { # Defaults
             'dt': 1.0,
             'save_freq': 10,
@@ -168,6 +177,7 @@ class PrognosticsModel(model.Model, ABC):
         config.update(options)
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
 
+        # Setup
         t = 0
         u = future_loading_eqn(t)
         if 'x' in config:
@@ -181,6 +191,8 @@ class PrognosticsModel(model.Model, ABC):
         event_states = [self.event_state(t, x)]
         next_save = config['save_freq']
         threshold_met = False
+
+        # Simulate
         while not threshold_met and t < config['horizon']:
             t += config['dt']
             u = future_loading_eqn(t)
@@ -194,12 +206,16 @@ class PrognosticsModel(model.Model, ABC):
                 states.append(x)
                 outputs.append(self.output(t, x))
                 event_states.append(self.event_state(t, x))
+
+        # Save final state
         if times[-1] != t:
+            # This check prevents double recording when the last state was a savepoint
             times.append(t)
             inputs.append(u)
             states.append(x)
             outputs.append(self.output(t, x))
             event_states.append(self.event_state(t, x))
+        
         return {
             't': times,
             'u': inputs,
