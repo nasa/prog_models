@@ -77,19 +77,22 @@ class PrognosticsModel(model.Model, ABC):
                 Configuration options for the simulation
                 Note: configuration of the model is set through model.parameters
             
-            Returns
+            Returns (tuple)
             -------
-            results : dict
-                Results recorded during simulation
-                e.g., results = [{
-                    't': 0,                             # Time (s)
-                    'u': {'i': 12},                     # Inputs
-                    'x': {'abc': 1233, 'def': 1933'},   # State
-                    'z': {'v': 3.3, 't': 22.54}         # Outputs
-                    'event_state': {'EOL': 0.23}        # Event States
-                }, {
-                    't': 0.1, ...
-                }, ...]
+            times: number
+                Times for each simulated point
+            inputs: [dict]
+                Future input (from future_loading_eqn) for each time in times
+            states: [dict]
+                Estimated states for each time in times
+            outputs: [dict]
+                Estimated outputs for each time in times
+            event_states: [dict]
+                Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
+            
+            Example
+            -------
+            (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
             """
 
         # Configure 
@@ -135,13 +138,7 @@ class PrognosticsModel(model.Model, ABC):
             outputs.append(self.output(t, x))
             event_states.append(self.event_state(t, x))
         
-        return {
-            't': times,
-            'u': inputs,
-            'x': states,
-            'z': outputs, 
-            'event_state': event_states
-        }
+        return (times, inputs, states, outputs, event_states)
  
     def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}):
         """
@@ -155,19 +152,22 @@ class PrognosticsModel(model.Model, ABC):
                 Configuration options for the simulation
                 Note: configuration of the model is set through model.parameters
             
-            Returns
+            Returns (tuple)
             -------
-            results : dict
-                Results recorded during simulation
-                e.g., results = [{
-                    't': 0,                             # Time (s)
-                    'u': {'i': 12},                     # Inputs
-                    'x': {'abc': 1233, 'def': 1933'},   # State
-                    'z': {'v': 3.3, 't': 22.54}         # Outputs
-                    'event_state': {'EOL': 0.23}        # Event States
-                }, {
-                    't': 0.1, ...
-                }, ...]
+            times: number
+                Times for each simulated point
+            inputs: [dict]
+                Future input (from future_loading_eqn) for each time in times
+            states: [dict]
+                Estimated states for each time in times
+            outputs: [dict]
+                Estimated outputs for each time in times
+            event_states: [dict]
+                Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
+            
+            Example
+            -------
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
             """
 
         # Configure
@@ -220,10 +220,4 @@ class PrognosticsModel(model.Model, ABC):
             outputs.append(self.output(t, x))
             event_states.append(self.event_state(t, x))
         
-        return {
-            't': times,
-            'u': inputs,
-            'x': states,
-            'z': outputs, 
-            'event_state': event_states
-        }
+        return (times, inputs, states, outputs, event_states)

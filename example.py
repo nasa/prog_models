@@ -18,14 +18,14 @@ def future_loading(t):
     return {'i': i}
 
 # simulate for 200 seconds
-result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+(times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
 
-for i in range(len(result['t'])): # Print Results
-    print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(result['t'][i], result['u'][i], result['x'][i], result['z'][i], result['event_state'][i]))
+for i in range(len(times)): # Print Results
+    print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
 
 # Simulate to threshold
-result = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183})
+(times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183})
 
-for i in range(len(result['t'])): # Print Results
-    print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(result['t'][i], result['u'][i], result['x'][i], result['z'][i], result['event_state'][i]))
+for i in range(len(times)): # Print Results
+    print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
 

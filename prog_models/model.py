@@ -120,18 +120,20 @@ class Model(ABC):
             Configuration options for the simulation
             Note: configuration of the model is set through model.parameters
         
-        Returns
+        Returns (tuple)
         -------
-        results : dict
-            Results recorded during simulation
-            e.g., results = [{
-                't': 0,                             # Time (s)
-                'u': {'i': 12},                     # Inputs
-                'x': {'abc': 1233, 'def': 1933'},   # State
-                'z': {'v': 3.3, 't': 22.54}         # Outputs
-            }, {
-                't': 0.1, ...
-            }, ...]
+        times: number
+            Times for each simulated point
+        inputs: [dict]
+            Future input (from future_loading_eqn) for each time in times
+        states: [dict]
+            Estimated states for each time in times
+        outputs: [dict]
+            Estimated outputs for each time in times
+        
+        Example
+        -------
+        (times, inputs, states, outputs) = m.simulate_to(200, future_load_eqn, first_output)
         """
         
         # Configure
@@ -174,9 +176,4 @@ class Model(ABC):
             states.append(x)
             outputs.append(self.output(t, x))
 
-        return {
-            't': times,
-            'u': inputs,
-            'x': states,
-            'z': outputs, 
-        }
+        return (times, inputs, states, outputs)
