@@ -30,7 +30,7 @@ class Model(ABC):
     # TODO(CT): Check if properties above are defined (in constructor?)
 
     @abstractmethod
-    def initialize(self, u : dict, z : dict) -> dict:
+    def initialize(self, u, z) -> dict:
         """
         Calculate initial state given inputs and outputs
 
@@ -53,14 +53,14 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def state(self, t, x : dict, u : dict, dt) -> dict: 
+    def state(self, t, x, u, dt) -> dict: 
         """
         State transition equation: Calculate next state
 
         Parameters
         ----------
-        t : double
-            Current timestamp in seconds (≥ 0.0)
+        t : number
+            Current timestamp in seconds (≥ 0)
             e.g., t = 3.4
         x : dict
             state, with keys defined by model.states
@@ -68,8 +68,8 @@ class Model(ABC):
         u : dict
             Inputs, with keys defined by model.inputs.
             e.g., u = {'i':3.2} given inputs = ['i']
-        dt : double
-            Timestep size in seconds (≥ 0.0)
+        dt : number
+            Timestep size in seconds (≥ 0)
             e.g., dt = 0.1
         
 
@@ -83,13 +83,13 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def output(self, t, x : dict) -> dict:
+    def output(self, t, x) -> dict:
         """
         Calculate next statem, forward one timestep
 
         Parameters
         ----------
-        t : double
+        t : number
             Current timestamp in seconds (≥ 0.0)
             e.g., t = 3.4
         x : dict
@@ -105,13 +105,13 @@ class Model(ABC):
 
         pass
 
-    def simulate_to(self, time, future_loading_eqn, first_output : dict, options : dict = {}):
+    def simulate_to(self, time, future_loading_eqn, first_output, options = {}):
         """
         Simulate model for a given time interval
 
         Parameters
         ----------
-        time : double
+        time : number
             Time to which the model will be simulated in seconds (≥ 0.0)
             e.g., time = 200
         future_loading_eqn : function
@@ -150,15 +150,17 @@ class Model(ABC):
         inputs = [u]
         states = [x]
         outputs = [first_output]
-        next_save = config['save_freq']
+        dt = config['dt'] # saving to optimize access in while loop
+        save_freq = config['save_freq']
+        next_save = save_freq
 
         # Simulate Forward
         while t < time:
-            t += config['dt']
+            t += dt
             u = future_loading_eqn(t)
-            x = self.state(t, x, u, config['dt'])
+            x = self.state(t, x, u, dt)
             if (t >= next_save):
-                next_save += config['save_freq']
+                next_save += save_freq
                 times.append(t)
                 inputs.append(u)
                 states.append(x)
