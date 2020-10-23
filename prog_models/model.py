@@ -136,7 +136,7 @@ class Model(ABC):
         
         # Configure
         config = { # Defaults
-            'step_size': 1,
+            'dt': 1,
             'save_freq': 10
         }
         config.update(options)
@@ -154,9 +154,9 @@ class Model(ABC):
 
         # Simulate Forward
         while t < time:
-            t += config['step_size']
+            t += config['dt']
             u = future_loading_eqn(t)
-            x = self.state(t, x, u, config['step_size'])
+            x = self.state(t, x, u, config['dt'])
             if (t >= next_save):
                 next_save += config['save_freq']
                 times.append(t)
