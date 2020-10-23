@@ -109,10 +109,10 @@ class PrognosticsModel(model.Model, ABC):
         config.update(options)
         
         # Configuration validation
-        if type(config['step_size']) is not int and type(config['step_size']) is not float:
-            raise Exception("'step_size' must be a number, was a {}".format(type(config['step_size'])))
-        if config['step_size'] <= 0:
-            raise Exception("'step_size' must be positive, was {}".format(config['step_size']))
+        if type(config['dt']) is not int and type(config['dt']) is not float:
+            raise Exception("'dt' must be a number, was a {}".format(type(config['dt'])))
+        if config['dt'] <= 0:
+            raise Exception("'dt' must be positive, was {}".format(config['dt']))
         if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
             raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
@@ -159,10 +159,10 @@ class PrognosticsModel(model.Model, ABC):
         config.update(options)
         
         # Configuration validation
-        if type(config['step_size']) is not int and type(config['step_size']) is not float:
-            raise Exception("'step_size' must be a number, was a {}".format(type(config['step_size'])))
-        if config['step_size'] <= 0:
-            raise Exception("'step_size' must be positive, was {}".format(config['step_size']))
+        if type(config['dt']) is not int and type(config['dt']) is not float:
+            raise Exception("'dt' must be a number, was a {}".format(type(config['dt'])))
+        if config['dt'] <= 0:
+            raise Exception("'dt' must be positive, was {}".format(config['dt']))
         if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
             raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
