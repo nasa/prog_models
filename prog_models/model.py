@@ -135,14 +135,26 @@ class Model(ABC):
         -------
         (times, inputs, states, outputs) = m.simulate_to(200, future_load_eqn, first_output)
         """
-        
+        # Input Validation
+        if time < 0:
+            raise Exception("'time' must be ≥ 0, was {}".format(time))
+
         # Configure
         config = { # Defaults
             'dt': 1,
             'save_freq': 10
         }
         config.update(options)
-        # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
+
+        # Configuration validation
+        if type(config['step_size']) is not int and type(config['step_size']) is not float:
+            raise Exception("'step_size' must be a number, was a {}".format(type(config['step_size'])))
+        if config['step_size'] <= 0:
+            raise Exception("'step_size' must be positive, was {}".format(config['step_size']))
+        if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
+            raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+        if config['save_freq'] <= 0:
+            raise Exception("'save_freq' must be positive, was {}".format(config['save_freq']))
 
         # Setup
         t = 0

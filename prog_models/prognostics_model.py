@@ -94,6 +94,10 @@ class PrognosticsModel(model.Model, ABC):
             -------
             (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
             """
+        
+        # Input Validation
+        if time < 0:
+            raise Exception("'time' must be ≥ 0, was {}".format(time))
 
         # Configure 
         config = { # Defaults
@@ -103,7 +107,16 @@ class PrognosticsModel(model.Model, ABC):
             'horizon': time
         }
         config.update(options)
-        # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
+        
+        # Configuration validation
+        if type(config['step_size']) is not int and type(config['step_size']) is not float:
+            raise Exception("'step_size' must be a number, was a {}".format(type(config['step_size'])))
+        if config['step_size'] <= 0:
+            raise Exception("'step_size' must be positive, was {}".format(config['step_size']))
+        if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
+            raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+        if config['save_freq'] <= 0:
+            raise Exception("'save_freq' must be positive, was {}".format(config['save_freq']))
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, config)
  
@@ -144,6 +157,17 @@ class PrognosticsModel(model.Model, ABC):
             'horizon': 1e100 # Default horizon (in s), essentially inf
         }
         config.update(options)
+        
+        # Configuration validation
+        if type(config['step_size']) is not int and type(config['step_size']) is not float:
+            raise Exception("'step_size' must be a number, was a {}".format(type(config['step_size'])))
+        if config['step_size'] <= 0:
+            raise Exception("'step_size' must be positive, was {}".format(config['step_size']))
+        if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
+            raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+        if config['save_freq'] <= 0:
+            raise Exception("'save_freq' must be positive, was {}".format(config['save_freq']))
+
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
         if 'threshold_eqn' in config:
             # Override threshold_met eqn
