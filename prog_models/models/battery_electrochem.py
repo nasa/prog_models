@@ -7,6 +7,9 @@ R = 8.3144621; # universal gas constant, J/K/mol
 F = 96487;     # Faraday's constant, C/mol
 
 class BatteryElectroChemParamDict(dict):
+    """
+    A custom dictionary class that updates derives parameters every time any other parameter is updated (and at creation)
+    """
     __setting = False
     def __update_derived_params(self):
         self['qMax'] = self['qMobile']/(self['xnMax']-self['xnMin']) # note qMax = qn+qp
@@ -38,18 +41,27 @@ class BatteryElectroChemParamDict(dict):
     def __init__(self, *args, **kwarg):
         super(BatteryElectroChemParamDict, self).__init__(*args, **kwarg)
         if not self.__setting:
-            self.__setting = True
-            self.__update_derived_params()
-            # Todo(CT): Handle Error
-            self.__setting = False
+            try:
+                self.__setting = True
+                self.__update_derived_params()
+                self.__setting = False
+            except Exception as ex:
+                self.__setting = False
+                raise ex
     
+    def __delitem__(self, item):
+        raise Exception('You cannot delete items from the electrochem battery parameters. Every item is important')
+
     def __setitem__(self, item, value):
         super(BatteryElectroChemParamDict, self).__setitem__(item, value)
         if not self.__setting:
-            self.__setting = True
-            self.__update_derived_params()
-            # Todo(CT): Handle Error
-            self.__setting = False
+            try:
+                self.__setting = True
+                self.__update_derived_params()
+                self.__setting = False
+            except Exception as ex:
+                self.__setting = False
+                raise ex
 
 class BatteryElectroChem(deriv_prog_model.DerivProgModel):
     """
