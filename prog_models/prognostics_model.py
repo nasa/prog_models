@@ -1,4 +1,4 @@
-from . import model 
+from . import model, ProgModelInputException
 from abc import ABC, abstractmethod
 
 class PrognosticsModel(model.Model, ABC):
@@ -97,7 +97,7 @@ class PrognosticsModel(model.Model, ABC):
         
         # Input Validation
         if time < 0:
-            raise Exception("'time' must be ≥ 0, was {}".format(time))
+            raise ProgModelInputException("'time' must be ≥ 0, was {}".format(time))
 
         # Configure 
         config = { # Defaults
@@ -110,13 +110,13 @@ class PrognosticsModel(model.Model, ABC):
         
         # Configuration validation
         if type(config['dt']) is not int and type(config['dt']) is not float:
-            raise Exception("'dt' must be a number, was a {}".format(type(config['dt'])))
+            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
         if config['dt'] <= 0:
-            raise Exception("'dt' must be positive, was {}".format(config['dt']))
+            raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
-            raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+            raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
-            raise Exception("'save_freq' must be positive, was {}".format(config['save_freq']))
+            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, config)
  
@@ -160,13 +160,13 @@ class PrognosticsModel(model.Model, ABC):
         
         # Configuration validation
         if type(config['dt']) is not int and type(config['dt']) is not float:
-            raise Exception("'dt' must be a number, was a {}".format(type(config['dt'])))
+            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
         if config['dt'] <= 0:
-            raise Exception("'dt' must be positive, was {}".format(config['dt']))
+            raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
-            raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+            raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
-            raise Exception("'save_freq' must be positive, was {}".format(config['save_freq']))
+            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
 
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
         if 'threshold_eqn' in config:

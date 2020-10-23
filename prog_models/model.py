@@ -1,5 +1,6 @@
 # Todo(CT): Should we name this SytemModel?
 from abc import ABC, abstractmethod
+from . import ProgModelInputException
 
 class Model(ABC):
     """
@@ -137,7 +138,7 @@ class Model(ABC):
         """
         # Input Validation
         if time < 0:
-            raise Exception("'time' must be ≥ 0, was {}".format(time))
+            raise ProgModelInputException("'time' must be ≥ 0, was {}".format(time))
 
         # Configure
         config = { # Defaults
@@ -148,13 +149,13 @@ class Model(ABC):
 
         # Configuration validation
         if type(config['dt']) is not int and type(config['dt']) is not float:
-            raise Exception("'dt' must be a number, was a {}".format(type(config['dt'])))
+            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
         if config['dt'] <= 0:
-            raise Exception("'dt' must be positive, was {}".format(config['dt']))
+            raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
-            raise Exception("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+            raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
-            raise Exception("'save_freq' must be positive, was {}".format(config['save_freq']))
+            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
 
         # Setup
         t = 0
