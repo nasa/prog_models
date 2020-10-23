@@ -1,7 +1,8 @@
 from prog_models import model, prognostics_model
-from prog_models.models import battery_circuit
+from prog_models.models import battery_circuit, battery_electrochem
 
 batt = battery_circuit.BatteryCircuit()
+batt = battery_electrochem.BatteryElectroChem()
 
 def future_loading(t):
     # Variable (piece-wise) future loading scheme 

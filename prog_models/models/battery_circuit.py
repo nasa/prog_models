@@ -22,7 +22,7 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
     ]
 
     outputs = [
-        't', # Battery temperature
+        't', # Battery temperature (°C)
         'v'  # Battery Voltage
     ]
 
