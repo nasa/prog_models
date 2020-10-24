@@ -98,47 +98,14 @@ class PrognosticsModel(model.Model, ABC):
         # Configure 
         config = { # Defaults
             'dt': 1,
-            'save_freq': 10
+            'save_freq': 10,
+            'threshold_eqn': (lambda t,x : {'a': False}), # Override threshold
+            'horizon': time
         }
         config.update(options)
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
 
-        # Setup
-        t = 0
-        u = future_loading_eqn(t)
-        x = self.initialize(u, first_output)
-        times = [t]
-        inputs = [u]
-        states = [x]
-        outputs = [first_output]
-        event_states = [self.event_state(t, x)]
-        dt = config['dt'] # saving to optimize access in while loop
-        save_freq = config['save_freq']
-        next_save = save_freq
-
-        # Simulate
-        while t < time:
-            t += dt
-            u = future_loading_eqn(t)
-            x = self.state(t, x, u, dt)
-            if (t >= next_save):
-                next_save += save_freq
-                times.append(t)
-                inputs.append(u)
-                states.append(x)
-                outputs.append(self.output(t, x))
-                event_states.append(self.event_state(t, x))
-
-        # Save final state
-        if times[-1] != t:
-            # This check prevents double recording when the last state was a savepoint 
-            times.append(t)
-            inputs.append(u)
-            states.append(x)
-            outputs.append(self.output(t, x))
-            event_states.append(self.event_state(t, x))
-        
-        return (times, inputs, states, outputs, event_states)
+        return self.simulate_to_threshold(future_loading_eqn, first_output, config)
  
     def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}):
         """
@@ -178,7 +145,12 @@ class PrognosticsModel(model.Model, ABC):
         }
         config.update(options)
         # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
-
+        if 'threshold_eqn' in config:
+            # Override threshold_met eqn
+            threshold_met_eqn = config['threshold_eqn']
+        else:
+            threshold_met_eqn = self.threshold_met
+        
         # Setup
         t = 0
         u = future_loading_eqn(t)
@@ -201,7 +173,7 @@ class PrognosticsModel(model.Model, ABC):
             t += dt
             u = future_loading_eqn(t)
             x = self.state(t, x, u, dt)
-            thresholds_met = self.threshold_met(t, x)
+            thresholds_met = threshold_met_eqn(t, x)
             threshold_met = any(thresholds_met.values())
             if (t >= next_save):
                 next_save += save_freq
