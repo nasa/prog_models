@@ -1,7 +1,7 @@
 from . import model, ProgModelInputException
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-class PrognosticsModel(model.Model, ABC):
+class PrognosticsModel(model.Model):
     """
     A general time-variant state space model of system degradation behavior.
 

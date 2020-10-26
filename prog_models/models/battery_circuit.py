@@ -1,8 +1,8 @@
-from .. import prognostics_model
+from .. import deriv_prog_model
 
 import math
 
-class BatteryCircuit(prognostics_model.PrognosticsModel):
+class BatteryCircuit(deriv_prog_model.DerivProgModel):
     """
     Prognostics model for a battery, represented by an electric circuit
     """
@@ -62,10 +62,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
-    # TODO(CT): Differential Model parent class 
-    #   Which then defines state = delta() + state
-
-    def next_state(self, t, x, u, dt): 
+    def dx(self, t, x, u): 
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
         SOC = self.event_state(t, x)['EOD']
@@ -84,10 +81,10 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         qcsdot = ics
 
         return {
-            'tb':  x['tb'] + Tbdot*dt,
-            'qb':  x['qb'] + qbdot*dt,
-            'qcp': x['qcp'] + qcpdot*dt,
-            'qcs': x['qcs'] + qcsdot*dt,
+            'tb':  Tbdot,
+            'qb':  qbdot,
+            'qcp': qcpdot,
+            'qcs': qcsdot,
         }
         
     def event_state(self, t, x):
