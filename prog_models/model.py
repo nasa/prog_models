@@ -53,7 +53,7 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def state(self, t, x, u, dt) -> dict: 
+    def next_state(self, t, x, u, dt) -> dict: 
         """
         State transition equation: Calculate next state
 
@@ -160,7 +160,7 @@ class Model(ABC):
         while t < time:
             t += dt
             u = future_loading_eqn(t)
-            x = self.state(t, x, u, dt)
+            x = self.next_state(t, x, u, dt)
             if (t >= next_save):
                 next_save += save_freq
                 times.append(t)

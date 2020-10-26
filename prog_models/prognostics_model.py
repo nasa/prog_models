@@ -172,7 +172,7 @@ class PrognosticsModel(model.Model, ABC):
         while not threshold_met and t < config['horizon']:
             t += dt
             u = future_loading_eqn(t)
-            x = self.state(t, x, u, dt)
+            x = self.next_state(t, x, u, dt)
             thresholds_met = threshold_met_eqn(t, x)
             threshold_met = any(thresholds_met.values())
             if (t >= next_save):

@@ -65,7 +65,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     # TODO(CT): Differential Model parent class 
     #   Which then defines state = delta() + state
 
-    def state(self, t, x, u, dt): 
+    def next_state(self, t, x, u, dt): 
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
         SOC = self.event_state(t, x)['EOD']
