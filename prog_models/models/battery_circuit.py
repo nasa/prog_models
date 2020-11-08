@@ -51,6 +51,7 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         'ha': 0.5,          # Heat transfer coefficient, ambient
         'hcp': 19,
         'hcs': 1,
+        'process_noise': 0.1, # Process noise
         'x0': {             # Default initial state
             'tb': 18.95,   
             'qb': 7856.3254,
@@ -58,6 +59,10 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
             'qcs': 0
         }
     }
+
+    def __init__(self, options = {}):
+        self.parameters.update(options)
+        super().__init__()
 
     def initialize(self, u, z):
         return self.parameters['x0']
@@ -80,12 +85,12 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         ics = ib - Vcs/self.parameters['Rs']
         qcsdot = ics
 
-        return {
+        return self.apply_process_noise({
             'tb':  Tbdot,
             'qb':  qbdot,
             'qcp': qcpdot,
             'qcs': qcsdot,
-        }
+        })
         
     def event_state(self, t, x):
         return {

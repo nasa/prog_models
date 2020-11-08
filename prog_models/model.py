@@ -1,6 +1,8 @@
 # Todo(CT): Should we name this SytemModel?
 from abc import ABC, abstractmethod
-from . import ProgModelInputException
+from . import ProgModelInputException, ProgModelException
+from numbers import Number
+import numpy as np
 
 class Model(ABC):
     """
@@ -30,6 +32,13 @@ class Model(ABC):
 
     # TODO(CT): Check if properties above are defined (in constructor?)
 
+    def __init__(self):
+        if 'process_noise' not in self.parameters:
+            raise ProgModelException('Missing `process_noise` parameter')
+
+        if isinstance(self.parameters['process_noise'], Number):
+            self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
+
     @abstractmethod
     def initialize(self, u, z) -> dict:
         """
@@ -50,8 +59,10 @@ class Model(ABC):
             First state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         """
-
         pass
+        
+    def apply_process_noise(self, x):
+        return {key: x[key] + np.random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
     @abstractmethod
     def next_state(self, t, x, u, dt) -> dict: 

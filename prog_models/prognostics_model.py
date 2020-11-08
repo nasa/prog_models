@@ -14,6 +14,9 @@ class PrognosticsModel(model.Model):
 
     events = []
 
+    def __init__(self):
+        super().__init__()
+
     @abstractmethod
     def event_state(self, t, x) -> dict:
         """

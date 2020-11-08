@@ -129,9 +129,15 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
             'tb': 292.1 # in K, about 18.95 C
         },
 
+        'process_noise': 1e-3,
+
         # End of discharge voltage threshold
         'VEOD': 3.0
     })
+
+    def __init__(self, options = {}):
+        self.parameters.update(options)
+        super().__init__()
 
     def initialize(self, u, z):
         return self.parameters['x0']
@@ -171,7 +177,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
         VoNominal = u['i']*self.parameters['Ro']
         Vodot = (VoNominal-x['Vo'])/self.parameters['to']
 
-        return {
+        return self.apply_process_noise({
             'tb': 0,
             'Vo': Vodot,
             'Vsn': Vsndot,
@@ -180,7 +186,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
             'qnS': qnSdot,
             'qpB': qpBdot,
             'qpS': qpSdot
-        }
+        })
         
     def event_state(self, t, x):
         return {

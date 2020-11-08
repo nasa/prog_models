@@ -12,6 +12,9 @@ class DerivProgModel(prognostics_model.PrognosticsModel):
     been reached.
     """
 
+    def __init__(self):
+        super().__init__()
+
     @abstractmethod
     def dx(self, t, x, u):
         """
