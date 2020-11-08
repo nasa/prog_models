@@ -14,6 +14,9 @@ Each model must be a class extending either `prog_models.model` (for nominal mod
  |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior <br>
 `example.py` - An example python script using prog_models <br>
 `README.md` - The readme (this file)
+`requirements.txt` - python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`
+`deriv_model_template.py` - Template for Derivative Model
+`prog_model_template.py` - Template for Prognsotics Model
 
 ## Citing this repository
 Use the following to cite this repository:
