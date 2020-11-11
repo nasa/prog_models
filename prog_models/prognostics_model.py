@@ -2,6 +2,7 @@
 
 from . import model, ProgModelInputException
 from abc import abstractmethod
+import numpy as np
 
 class PrognosticsModel(model.Model):
     """
@@ -187,11 +188,11 @@ class PrognosticsModel(model.Model):
             x = config['x']
         else:
             x = self.initialize(u, first_output)
-        times = [t]
-        inputs = [u]
-        states = [x]
-        outputs = [first_output]
-        event_states = [self.event_state(t, x)]
+        times = np.array([t])
+        inputs = np.array([u])
+        states = np.array([x])
+        outputs = np.array([first_output])
+        event_states = np.array([self.event_state(t, x)])
         dt = config['dt'] # saving to optimize access in while loop
         save_freq = config['save_freq']
         next_save = save_freq
@@ -206,19 +207,19 @@ class PrognosticsModel(model.Model):
             threshold_met = any(thresholds_met.values())
             if (t >= next_save):
                 next_save += save_freq
-                times.append(t)
-                inputs.append(u)
-                states.append(x)
-                outputs.append(self.output(t, x))
-                event_states.append(self.event_state(t, x))
+                times = np.append(times,t)
+                inputs = np.append(inputs,u)
+                states = np.append(states,x)
+                outputs = np.append(outputs,self.output(t, x))
+                event_states = np.append(event_states,self.event_state(t, x))
 
         # Save final state
         if times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
-            times.append(t)
-            inputs.append(u)
-            states.append(x)
-            outputs.append(self.output(t, x))
-            event_states.append(self.event_state(t, x))
+            times = np.append(times,t)
+            inputs = np.append(inputs,u)
+            states = np.append(states,x)
+            outputs = np.append(outputs,self.output(t, x))
+            event_states = np.append(event_states,self.event_state(t, x))
         
         return (times, inputs, states, outputs, event_states)
