@@ -1,6 +1,5 @@
 import unittest
 from prog_models import *
-import prog_models
 import copy
 
 class MockModel(model.Model):
@@ -123,37 +122,37 @@ class TestModels(unittest.TestCase):
         try: 
             m = missing_states()
             self.fail("Should not have worked, missing 'states'")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
 
         try: 
             m = empty_states()
             self.fail("Should not have worked, empty 'states'")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
 
         try: 
             m = missing_inputs()
             self.fail("Should not have worked, missing 'inputs'")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
 
         try: 
             m = empty_inputs()
             self.fail("Should not have worked, empty 'inputs'")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
 
         try: 
             m = missing_outputs()
             self.fail("Should not have worked, missing 'outputs'")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
 
         try: 
             m = empty_outputs()
             self.fail("Should not have worked, empty 'outputs'")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
 
         try: 
@@ -178,7 +177,7 @@ class TestModels(unittest.TestCase):
         try:
             m = MockModel()
             self.fail("Should not have worked, missing `process_noise`")
-        except prog_models.ProgModelTypeError:
+        except ProgModelTypeError:
             pass
         
         m = MockModel({'process_noise': 0.0})
@@ -200,31 +199,31 @@ class TestModels(unittest.TestCase):
         try:
             m.simulate_to(0, load, {'o1': 0.8})
             self.fail("Should have failed- time must be greater than 0")
-        except prog_models.ProgModelInputException:
+        except ProgModelInputException:
             pass
 
         try:
             m.simulate_to(-30, load, {'o1': 0.8})
             self.fail("Should have failed- time must be greater than 0")
-        except prog_models.ProgModelInputException:
+        except ProgModelInputException:
             pass
 
         try:
             m.simulate_to([12], load, {'o1': 0.8})
             self.fail("Should have failed- time must be a number")
-        except prog_models.ProgModelInputException:
+        except ProgModelInputException:
             pass
 
         try:
             m.simulate_to([12], load, {})
             self.fail("Should have failed- output must contain each field (e.g., o1)")
-        except prog_models.ProgModelInputException:
+        except ProgModelInputException:
             pass
 
         try:
             m.simulate_to([12], 132, {})
             self.fail("Should have failed- future_load should be callable")
-        except prog_models.ProgModelInputException:
+        except ProgModelInputException:
             pass
 
         ## Simulate
