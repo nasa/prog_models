@@ -195,7 +195,10 @@ class Model(ABC):
         # Setup
         t = 0
         u = future_loading_eqn(t)
-        x = self.initialize(u, first_output)
+        if 'x' in config:
+            x = config['x']
+        else:
+            x = self.initialize(u, first_output)
         times = np.array([t])
         inputs = np.array([u])
         states = np.array([copy.deepcopy(x)]) # Avoid optimization where x is not copied

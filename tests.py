@@ -26,6 +26,14 @@ class MockModel(model.Model):
     def output(self, t, x):
         return {'o1': x['a'] + sum(x['b']) + x['c']}
 
+class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
+    events = ['e1']
+    def event_state(self, t, x):
+        return {'e1': max(1-t/5.0,0)}
+
+    def threshold_met(self, t, x):
+        return {'e1': self.event_state(t, x)['e1'] < 1e-6}
+
 class TestModels(unittest.TestCase):
     def test_broken_models(self):
         class missing_states(model.Model):
@@ -172,7 +180,52 @@ class TestModels(unittest.TestCase):
             self.fail("Should not have worked, missing 'output' method")
         except TypeError:
             pass
-        
+    
+    def test_broken_prog_models(self):
+        class missing_events(MockModel, prognostics_model.PrognosticsModel):
+            def event_state(self, t, x):
+                pass
+            def threshold_met(self, t, x):
+                pass
+        class empty_events(MockModel, prognostics_model.PrognosticsModel):
+            events = []
+            def event_state(self, t, x):
+                pass
+            def threshold_met(self, t, x):
+                pass
+        class missing_event_state(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1']
+            def threshold_met(self, t, x):
+                pass
+        class missing_threshold_met(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1']
+            def event_state(self, t, x):
+                pass
+
+        try: 
+            m = missing_events()
+            self.fail("Should not have worked, missing 'events'")
+        except ProgModelTypeError:
+            pass
+
+        try: 
+            m = empty_events()
+            self.fail("Should not have worked, empty 'events'")
+        except ProgModelTypeError:
+            pass
+
+        try: 
+            m = missing_event_state()
+            self.fail("Should not have worked, missing 'event_state' method")
+        except TypeError:
+            pass
+
+        try: 
+            m = missing_threshold_met()
+            self.fail("Should not have worked, missing 'thresholds_met' method")
+        except TypeError:
+            pass
+
     def test_model(self):
         try:
             m = MockModel()
@@ -190,6 +243,113 @@ class TestModels(unittest.TestCase):
         z = m.output(0, x)
         self.assertAlmostEqual(z['o1'], 0.8, 5)
 
+    def test_prog_model(self):
+        m = MockProgModel({'process_noise': 0.0})
+        e = m.event_state(0, {})
+        t = m.threshold_met(0, {})
+        self.assertAlmostEqual(e['e1'], 1.0, 5)
+        self.assertFalse(t['e1'])
+        e = m.event_state(5, {})
+        self.assertAlmostEqual(e['e1'], 0.0, 5)
+        t = m.threshold_met(5, {})
+        self.assertTrue(t['e1'])
+        t = m.threshold_met(10, {})
+        self.assertTrue(t['e1'])
+
+    def test_sim_to_thresh(self):
+        m = MockProgModel({'process_noise': 0.0})
+        def load(t):
+            return {'i1': 1, 'i2': 2.1}
+
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+
+    def test_sim_past_thresh(self):
+        m = MockProgModel({'process_noise': 0.0})
+        def load(t):
+            return {'i1': 1, 'i2': 2.1}
+
+        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 6.0, 5)
+        
+    def test_sim_prog(self):
+        m = MockProgModel({'process_noise': 0.0})
+        def load(t):
+            return {'i1': 1, 'i2': 2.1}
+        
+        ## Check inputs
+        try:
+            m.simulate_to(0, load, {'o1': 0.8})
+            self.fail("Should have failed- time must be greater than 0")
+        except ProgModelInputException:
+            pass
+
+        try:
+            m.simulate_to(-30, load, {'o1': 0.8})
+            self.fail("Should have failed- time must be greater than 0")
+        except ProgModelInputException:
+            pass
+
+        try:
+            m.simulate_to([12], load, {'o1': 0.8})
+            self.fail("Should have failed- time must be a number")
+        except ProgModelInputException:
+            pass
+
+        try:
+            m.simulate_to([12], load, {})
+            self.fail("Should have failed- output must contain each field (e.g., o1)")
+        except ProgModelInputException:
+            pass
+
+        try:
+            m.simulate_to([12], 132, {})
+            self.fail("Should have failed- future_load should be callable")
+        except ProgModelInputException:
+            pass
+
+        ## Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+
+        # Check times
+        for t in range(0, 4):
+            self.assertAlmostEqual(times[t], t, 5)
+        self.assertEqual(len(times), 5)
+        self.assertAlmostEqual(times[-1], 3.5, 5) # Save last step (even though it's not on a savepoint)
+        
+        # Check inputs
+        self.assertEqual(len(inputs), 5)
+        for i in inputs:
+            self.assertDictEqual(i, {'i1': 1, 'i2': 2.1}, "Future loading error")
+
+        # Check states
+        self.assertEqual(len(states), 5)
+        a = [1, 2, 3, 4, 4.5]
+        c = [-3.2, -7.4, -11.6, -15.8, -17.9]
+        for (ai, ci, x) in zip(a, c, states):
+            self.assertAlmostEqual(x['a'], ai, 5)
+            self.assertEqual(x['b'], [3, 2])
+            self.assertAlmostEqual(x['c'], ci, 5)
+
+        # Check outputs
+        self.assertEqual(len(outputs), 5)
+        o = [2.8, -0.4, -3.6, -6.8, -8.4]
+        for (oi, z) in zip(o, outputs):
+            self.assertAlmostEqual(z['o1'], oi, 5)
+
+        # Check event_states
+        self.assertEqual(len(event_states), 5)
+        e = [1.0, 0.8, 0.6, 0.4, 0.3]
+        for (ei, es) in zip(e, event_states):
+            self.assertAlmostEqual(es['e1'], ei, 5)
+
+        ## Check last state saving
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        for t in range(0, 4):
+            self.assertAlmostEqual(times[t], t, 5)
+        self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
+
+        
     def test_sim(self):
         m = MockModel({'process_noise': 0.0})
         def load(t):
