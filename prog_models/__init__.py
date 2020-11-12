@@ -7,3 +7,6 @@ class ProgModelException(Exception):
 
 class ProgModelInputException(ProgModelException):
     pass
+
+class ProgModelTypeError(ProgModelException, TypeError):
+    pass

@@ -2,9 +2,10 @@
 
 # Todo(CT): Should we name this SytemModel?
 from abc import ABC, abstractmethod
-from . import ProgModelInputException, ProgModelException
+from . import ProgModelInputException, ProgModelException, ProgModelTypeError
 from numbers import Number
 import numpy as np
+import copy
 
 class Model(ABC):
     """
@@ -28,15 +29,30 @@ class Model(ABC):
     """
 
     parameters = {} # Configuration Parameters for model
-    inputs = []     # Identifiers for each input
-    states = []     # Identifiers for each state
-    outputs = []    # Identifiers for each output
+    # inputs = []     # Identifiers for each input
+    # states = []     # Identifiers for each state
+    # outputs = []    # Identifiers for each output
 
     # TODO(CT): Check if properties above are defined (in constructor?)
 
     def __init__(self):
         if 'process_noise' not in self.parameters:
-            raise ProgModelException('Missing `process_noise` parameter')
+            raise ProgModelTypeError('Missing `process_noise` parameter')
+
+        if not hasattr(self, 'inputs'):
+            raise ProgModelTypeError('Must have `inputs` attribute')
+        if len(self.inputs) <= 0:
+            raise ProgModelTypeError('`inputs` attribute must have at least one input key')
+
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
+
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        if len(self.outputs) <= 0:
+            raise ProgModelTypeError('`outputs` attribute must have at least one output key')
 
         if isinstance(self.parameters['process_noise'], Number):
             self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
@@ -150,8 +166,14 @@ class Model(ABC):
         (times, inputs, states, outputs) = m.simulate_to(200, future_load_eqn, first_output)
         """
         # Input Validation
-        if time < 0:
-            raise ProgModelInputException("'time' must be ≥ 0, was {}".format(time))
+        if not isinstance(time, Number) or time <= 0:
+            raise ProgModelInputException("'time' must be number greater than 0, was {} ({})".format(time, type(time)))
+
+        if not all(key in first_output for key in self.outputs):
+            raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
+
+        if not (callable(future_loading_eqn)):
+            raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
 
         # Configure
         config = { # Defaults
@@ -176,8 +198,8 @@ class Model(ABC):
         x = self.initialize(u, first_output)
         times = np.array([t])
         inputs = np.array([u])
-        states = np.array([x])
-        outputs = np.array([first_output])
+        states = np.array([copy.deepcopy(x)]) # Avoid optimization where x is not copied
+        outputs = np.array([self.output(t, x)])
         dt = config['dt'] # saving to optimize access in while loop
         save_freq = config['save_freq']
         next_save = save_freq
@@ -191,7 +213,7 @@ class Model(ABC):
                 next_save += save_freq
                 times = np.append(times,t)
                 inputs = np.append(inputs,u)
-                states = np.append(states,x)
+                states = np.append(states,copy.deepcopy(x))
                 outputs = np.append(outputs,self.output(t, x))
         
         # Record final state
