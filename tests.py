@@ -43,6 +43,14 @@ class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
             }
 
 class TestModels(unittest.TestCase):
+    def test_circuit(self):
+        batt = battery_circuit.BatteryCircuit()
+        # TODO(CT): More
+
+    def test_electrochem(self):
+        batt = battery_electrochem.BatteryElectroChem()
+        # TODO(CT): More
+
     def test_templates(self):
         import deriv_model_template
         m = deriv_model_template.DerivModelTemplate()
