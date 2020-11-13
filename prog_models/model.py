@@ -4,8 +4,8 @@
 from abc import ABC, abstractmethod
 from . import ProgModelInputException, ProgModelException, ProgModelTypeError
 from numbers import Number
-import numpy as np
-import copy
+from numpy import array, append, random
+from copy import deepcopy
 
 class Model(ABC):
     """
@@ -80,7 +80,7 @@ class Model(ABC):
         pass
         
     def apply_process_noise(self, x):
-        return {key: x[key] + np.random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
+        return {key: x[key] + random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
     @abstractmethod
     def next_state(self, t, x, u, dt) -> dict: 
@@ -199,10 +199,10 @@ class Model(ABC):
             x = config['x']
         else:
             x = self.initialize(u, first_output)
-        times = np.array([t])
-        inputs = np.array([u])
-        states = np.array([copy.deepcopy(x)]) # Avoid optimization where x is not copied
-        outputs = np.array([self.output(t, x)])
+        times = array([t])
+        inputs = array([u])
+        states = array([deepcopy(x)]) # Avoid optimization where x is not copied
+        outputs = array([self.output(t, x)])
         dt = config['dt'] # saving to optimize access in while loop
         save_freq = config['save_freq']
         next_save = save_freq
@@ -214,17 +214,17 @@ class Model(ABC):
             x = self.next_state(t, x, u, dt)
             if (t >= next_save):
                 next_save += save_freq
-                times = np.append(times,t)
-                inputs = np.append(inputs,u)
-                states = np.append(states,copy.deepcopy(x))
-                outputs = np.append(outputs,self.output(t, x))
+                times = append(times,t)
+                inputs = append(inputs,u)
+                states = append(states,deepcopy(x))
+                outputs = append(outputs,self.output(t, x))
         
         # Record final state
         if times[-1] != t:
             # This check prevents double recording when the last state was a savepoint 
-            times = np.append(times,t)
-            inputs = np.append(inputs,u)
-            states = np.append(states,x)
-            outputs = np.append(outputs,self.output(t, x))
+            times = append(times,t)
+            inputs = append(inputs,u)
+            states = append(states,x)
+            outputs = append(outputs,self.output(t, x))
 
         return (times, inputs, states, outputs)

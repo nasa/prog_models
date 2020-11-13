@@ -2,7 +2,7 @@
 
 from .. import deriv_prog_model
 
-import math
+from math import asinh, log
 
 # Constants of nature
 R = 8.3144621; # universal gas constant, J/K/mol
@@ -157,7 +157,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
         Jn = u['i']/self.parameters['Sn']
         Jn0 = self.parameters['kn']*((1-xnS)*xnS)**self.parameters['alpha']
 
-        VsnNominal = R*x['tb']/F/self.parameters['alpha']*math.asinh(Jn/(2*Jn0))
+        VsnNominal = R*x['tb']/F/self.parameters['alpha']*asinh(Jn/(2*Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/self.parameters['tsn']
 
         # Positive Surface
@@ -172,7 +172,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
         Jp = u['i']/self.parameters['Sp']
         Jp0 = self.parameters['kp']*((1-xpS)*xpS)**self.parameters['alpha']
 
-        VspNominal = R*x['tb']/F/self.parameters['alpha']*math.asinh(Jp/(2*Jp0))
+        VspNominal = R*x['tb']/F/self.parameters['alpha']*asinh(Jp/(2*Jp0))
         Vspdot = (VspNominal-x['Vsp'])/self.parameters['tsp']
 
         # Combined
@@ -213,7 +213,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
             self.parameters['An'][11]*((2*xnS-1)**12 - (22*xnS*(1-xnS))/(2*xnS-1)**(-10))/F, #Ven11
             self.parameters['An'][12]*((2*xnS-1)**13 - (24*xnS*(1-xnS))/(2*xnS-1)**(-11))/F  #Ven12
         ]
-        Ven = self.parameters['U0n'] + R*x['tb']/F*math.log((1-xnS)/xnS) + sum(VenParts)
+        Ven = self.parameters['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
 
         # Positive Surface
         xpS = x['qpS']/self.parameters['qSMax']
@@ -232,7 +232,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
             self.parameters['Ap'][11]*((2*xpS-1)**12 - (22*xpS*(1-xpS))/(2*xpS-1)**(-10))/F, #Vep11
             self.parameters['Ap'][12]*((2*xpS-1)**13 - (24*xpS*(1-xpS))/(2*xpS-1)**(-11))/F  #Vep12
         ]
-        Vep = self.parameters['U0p'] + R*x['tb']/F*math.log((1-xpS)/xpS) + sum(VepParts)
+        Vep = self.parameters['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
 
         return {
             't': x['tb'] - 273.15,

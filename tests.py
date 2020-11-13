@@ -1,6 +1,6 @@
 import unittest
 from prog_models import *
-import copy
+from copy import deepcopy
 
 class MockModel(model.Model):
     states = ['a', 'b', 'c']
@@ -16,7 +16,7 @@ class MockModel(model.Model):
         super().__init__()
 
     def initialize(self, u, z):
-        return copy.deepcopy(self.parameters['x0'])
+        return deepcopy(self.parameters['x0'])
 
     def next_state(self, t, x, u, dt):
         x['a']+= u['i1']*dt
