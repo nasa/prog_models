@@ -72,7 +72,7 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
     def dx(self, t, x, u): 
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
-        SOC = self.__soc(x['qb'])
+        SOC = (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
         Cb = self.parameters['Cbp0']*SOC**3 + self.parameters['Cbp1']*SOC**2 + self.parameters['Cbp2']*SOC + self.parameters['Cbp3']
         Rcp = self.parameters['Rcp0'] + self.parameters['Rcp1']*exp(self.parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
@@ -91,23 +91,15 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
             'qcs': ics,
         })
     
-    def __soc(self, qb):
-        """
-        Calculate SOC
-
-        Created to avoid constructing dict using event_state when not necessary
-        """
-        return (self.parameters['CMax'] - self.parameters['qMax'] + qb)/self.parameters['CMax']
-        
     def event_state(self, t, x):
         return {
-            'EOD': self.__soc(x['qb'])
+            'EOD': (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
         }
 
     def output(self, t, x):
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
-        SOC = self.__soc(x['qb'])
+        SOC = (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
         Cb = self.parameters['Cbp0']*SOC**3 + self.parameters['Cbp1']*SOC**2 + self.parameters['Cbp2']*SOC + self.parameters['Cbp3']
         Vb = x['qb']/Cb
 
@@ -119,7 +111,7 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
     def threshold_met(self, t, x):
         Vcs = x['qcs']/self.parameters['Cs']
         Vcp = x['qcp']/self.parameters['Ccp']
-        SOC = self.__soc(x['qb'])
+        SOC = (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
         Cb = self.parameters['Cbp0']*SOC**3 + self.parameters['Cbp1']*SOC**2 + self.parameters['Cbp2']*SOC + self.parameters['Cbp3']
         Vb = x['qb']/Cb
         V = Vb - Vcp - Vcs
