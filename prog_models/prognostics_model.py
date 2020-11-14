@@ -213,11 +213,16 @@ class PrognosticsModel(model.Model):
         next_save = save_freq
         threshold_met = False
 
+        # Optimization
+        next_state = self.next_state
+        output = self.output
+        event_state = self.event_state
+
         # Simulate
         while not threshold_met and t < horizon:
             t += dt
             u = future_loading_eqn(t)
-            x = self.next_state(t, x, u, dt)
+            x = next_state(t, x, u, dt)
             thresholds_met = threshold_met_eqn(t, x)
             threshold_met = any(thresholds_met.values())
             if (t >= next_save):
@@ -225,8 +230,8 @@ class PrognosticsModel(model.Model):
                 times = append(times,t)
                 inputs = append(inputs,u)
                 states = append(states,deepcopy(x))
-                outputs = append(outputs,self.output(t, x))
-                event_states = append(event_states,self.event_state(t, x))
+                outputs = append(outputs,output(t, x))
+                event_states = append(event_states,event_state(t, x))
 
         # Save final state
         if times[-1] != t:

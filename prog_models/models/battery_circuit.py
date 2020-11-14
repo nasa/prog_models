@@ -70,19 +70,20 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         return self.parameters['x0']
 
     def dx(self, t, x, u): 
-        Vcs = x['qcs']/self.parameters['Cs']
-        Vcp = x['qcp']/self.parameters['Ccp']
-        SOC = (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
-        Cb = self.parameters['Cbp0']*SOC**3 + self.parameters['Cbp1']*SOC**2 + self.parameters['Cbp2']*SOC + self.parameters['Cbp3']
-        Rcp = self.parameters['Rcp0'] + self.parameters['Rcp1']*exp(self.parameters['Rcp2']*(-SOC + 1))
+        parameters = self.parameters # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+        Vcs = x['qcs']/parameters['Cs']
+        Vcp = x['qcp']/parameters['Ccp']
+        SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
+        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
+        Rcp = parameters['Rcp0'] + parameters['Rcp1']*exp(parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
-        Tbdot = (Rcp*self.parameters['Rs']*self.parameters['ha']*(self.parameters['Ta'] - x['tb']) + Rcp*Vcs**2*self.parameters['hcs'] + self.parameters['Rs']*Vcp**2*self.parameters['hcp']) \
-                /(self.parameters['Jt']*Rcp*self.parameters['Rs'])
+        Tbdot = (Rcp*parameters['Rs']*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + parameters['Rs']*Vcp**2*parameters['hcp']) \
+                /(parameters['Jt']*Rcp*parameters['Rs'])
         Vp = Vb - Vcp - Vcs
-        ip = Vp/self.parameters['Rp']
+        ip = Vp/parameters['Rp']
         ib = u['i'] + ip
         icp = ib - Vcp/Rcp
-        ics = ib - Vcs/self.parameters['Rs']
+        ics = ib - Vcs/parameters['Rs']
 
         return self.apply_process_noise({
             'tb':  Tbdot,
@@ -92,15 +93,17 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         })
     
     def event_state(self, t, x):
+        parameters = self.parameters
         return {
-            'EOD': (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
+            'EOD': (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
         }
 
     def output(self, t, x):
-        Vcs = x['qcs']/self.parameters['Cs']
-        Vcp = x['qcp']/self.parameters['Ccp']
-        SOC = (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
-        Cb = self.parameters['Cbp0']*SOC**3 + self.parameters['Cbp1']*SOC**2 + self.parameters['Cbp2']*SOC + self.parameters['Cbp3']
+        parameters = self.parameters
+        Vcs = x['qcs']/parameters['Cs']
+        Vcp = x['qcp']/parameters['Ccp']
+        SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
+        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
         return {
@@ -109,14 +112,15 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         }
 
     def threshold_met(self, t, x):
-        Vcs = x['qcs']/self.parameters['Cs']
-        Vcp = x['qcp']/self.parameters['Ccp']
-        SOC = (self.parameters['CMax'] - self.parameters['qMax'] + x['qb'])/self.parameters['CMax']
-        Cb = self.parameters['Cbp0']*SOC**3 + self.parameters['Cbp1']*SOC**2 + self.parameters['Cbp2']*SOC + self.parameters['Cbp3']
+        parameters = self.parameters
+        Vcs = x['qcs']/parameters['Cs']
+        Vcp = x['qcp']/parameters['Ccp']
+        SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
+        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
         V = Vb - Vcp - Vcs
 
         # Return true if voltage is less than the voltage threshold
         return {
-             'EOD': V < self.parameters['VEOD']
+             'EOD': V < parameters['VEOD']
         }

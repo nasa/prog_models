@@ -207,17 +207,21 @@ class Model(ABC):
         save_freq = config['save_freq']
         next_save = save_freq
 
+        # Optimization
+        next_state = self.next_state
+        output = self.output
+
         # Simulate Forward
         while t < time:
             t += dt
             u = future_loading_eqn(t)
-            x = self.next_state(t, x, u, dt)
+            x = next_state(t, x, u, dt)
             if (t >= next_save):
                 next_save += save_freq
                 times = append(times,t)
                 inputs = append(inputs,u)
                 states = append(states,deepcopy(x))
-                outputs = append(outputs,self.output(t, x))
+                outputs = append(outputs,output(t, x))
         
         # Record final state
         if times[-1] != t:
