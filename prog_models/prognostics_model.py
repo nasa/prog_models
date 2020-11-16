@@ -232,7 +232,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, config)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}):
+    def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}, threshold_keys = None):
         """
             Simulate prognostics model until at least any threshold has been met
 
@@ -268,6 +268,9 @@ class PrognosticsModel(ABC):
         if not (callable(future_loading_eqn)):
             raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
 
+        if threshold_keys and not all([key in self.events for key in threshold_keys]):
+            raise ProgModelInputException("threshold_keys must be event names")
+
         # Configure
         config = { # Defaults
             'dt': 1.0,
@@ -292,7 +295,7 @@ class PrognosticsModel(ABC):
             threshold_met_eqn = config['threshold_eqn']
         else:
             threshold_met_eqn = self.threshold_met
-        
+
         # Setup
         t = 0
         u = future_loading_eqn(t)
@@ -315,14 +318,19 @@ class PrognosticsModel(ABC):
         next_state = self.next_state
         output = self.output
         event_state = self.event_state
+        if not threshold_keys:
+            def check_thresholds(thresholds_met):
+                return any(thresholds_met.values())
+        else:
+            def check_thresholds(thresholds_met):
+                return any([thresholds_met[key] for key in threshold_keys])
 
         # Simulate
         while not threshold_met and t < horizon:
             t += dt
             u = future_loading_eqn(t)
             x = next_state(t, x, u, dt)
-            thresholds_met = threshold_met_eqn(t, x)
-            threshold_met = any(thresholds_met.values())
+            threshold_met = check_thresholds(threshold_met_eqn(t, x))
             if (t >= next_save):
                 next_save += save_freq
                 times = append(times,t)

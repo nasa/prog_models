@@ -29,16 +29,22 @@ class MockModel():
         return {'o1': x['a'] + sum(x['b']) + x['c']}
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
-    events = ['e1']
+    events = ['e1', 'e2']
     def __init__(self, options = {}):
         self.parameters.update(options)
         super().__init__()
 
     def event_state(self, t, x):
-        return {'e1': max(1-t/5.0,0)}
+        return {
+            'e1': max(1-t/5.0,0),
+            'e2': max(1-t/15.0,0)
+            }
 
     def threshold_met(self, t, x):
-        return {'e1': self.event_state(t, x)['e1'] < 1e-6}
+        return {
+            'e1': self.event_state(t, x)['e1'] < 1e-6, 
+            'e2': self.event_state(t, x)['e2'] < 1e-6, 
+            }
 
 class TestModels(unittest.TestCase):
     def test_broken_models(self):
@@ -442,6 +448,18 @@ class TestModels(unittest.TestCase):
 
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
+
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e2'])
+        self.assertAlmostEqual(times[-1], 15.0, 5)
+
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2', 'e3'])
+            self.fail("Should fail- extra threshold key")
+        except ProgModelInputException:
+            pass
 
     def test_sim_past_thresh(self):
         m = MockProgModel({'process_noise': 0.0})
