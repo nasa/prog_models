@@ -599,6 +599,19 @@ class TestModels(unittest.TestCase):
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
+    
+    def test_example(self):
+        # set stdout (so it wont print)
+        from io import StringIO 
+        import sys
+        self._stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        import example 
+
+        # Reset stdout 
+        sys.stdout = self._stdout
 
 if __name__ == '__main__':
     unittest.main()
