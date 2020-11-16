@@ -3,6 +3,8 @@
 import unittest
 from prog_models import *
 from copy import deepcopy
+from io import StringIO 
+import sys
 
 class MockModel():
     states = ['a', 'b', 'c']
@@ -547,17 +549,21 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
     def test_example(self):
-        # set stdout (so it wont print)
-        from io import StringIO 
-        import sys
-        self._stdout = sys.stdout
-        sys.stdout = StringIO()
+        _test_ex()
+ 
+def _test_ex():
+    # set stdout (so it wont print)
+    _stdout = sys.stdout
+    sys.stdout = StringIO()
 
-        # Run example
-        import example 
+    # Run example
+    import example 
 
-        # Reset stdout 
-        sys.stdout = self._stdout
+    # Reset stdout 
+    sys.stdout = _stdout
 
 if __name__ == '__main__':
+    from timeit import timeit
+    print("\n\nExample Runtime: ", timeit(_test_ex))
     unittest.main()
+    
