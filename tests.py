@@ -258,6 +258,182 @@ class TestModels(unittest.TestCase):
         t = m.threshold_met(10, {})
         self.assertTrue(t['e1'])
 
+    def test_model_gen(self):
+        keys = {
+            'states': ['a', 'b', 'c'],
+            'inputs': ['i1', 'i2'],
+            'outputs': ['o1'],
+            'events': ['e1']
+        }
+
+        def initialize(u, z):
+            return {'a': 1, 'b': [3, 2], 'c': -3.2}
+
+        def next_state(t, x, u, dt):
+            x['a']+= u['i1']*dt
+            x['c']-= u['i2']
+            return x
+
+        def output(t, x):
+            return {'o1': x['a'] + sum(x['b']) + x['c']}
+
+        def event_state(t, x):
+            return {'e1': max(1-t/5.0,0)}
+
+        def threshold_met(t, x):
+            return {'e1': max(1-t/5.0,0) < 1e-6}
+
+        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, next_state, output, event_state_eqn = event_state, threshold_eqn = threshold_met)
+        x0 = m.initialize({}, {})
+        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        self.assertAlmostEqual(x['a'], 1.1, 6)
+        self.assertAlmostEqual(x['c'], -5.3, 6)
+        self.assertEqual(x['b'], [3, 2])
+        z = m.output(0, x)
+        self.assertAlmostEqual(z['o1'], 0.8, 5)
+        e = m.event_state(0, {})
+        t = m.threshold_met(0, {})
+        self.assertAlmostEqual(e['e1'], 1.0, 5)
+        self.assertFalse(t['e1'])
+        e = m.event_state(5, {})
+        self.assertAlmostEqual(e['e1'], 0.0, 5)
+        t = m.threshold_met(5.1, {})
+        self.assertTrue(t['e1'])
+        t = m.threshold_met(10, {})
+        self.assertTrue(t['e1'])
+
+        # Without event_state or threshold
+        keys = {
+            'states': ['a', 'b', 'c'],
+            'inputs': ['i1', 'i2'],
+            'outputs': ['o1']
+        }
+        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, next_state, output)
+        x0 = m.initialize({}, {})
+        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        self.assertAlmostEqual(x['a'], 1.1, 6)
+        self.assertAlmostEqual(x['c'], -5.3, 6)
+        self.assertEqual(x['b'], [3, 2])
+        z = m.output(0, x)
+        self.assertAlmostEqual(z['o1'], 0.8, 5)
+        e = m.event_state(5, {})
+        self.assertDictEqual(e, {})
+        t = m.threshold_met(5.1, {})
+        self.assertDictEqual(t, {})
+
+    def test_broken_model_gen(self):
+        keys = {
+            'states': ['a', 'b', 'c'],
+            'inputs': ['i1', 'i2'],
+            'outputs': ['o1'],
+            'events': ['e1']
+        }
+
+        def initialize(u, z):
+            return {'a': 1, 'b': [3, 2], 'c': -3.2}
+
+        def next_state(t, x, u, dt):
+            x['a']+= u['i1']*dt
+            x['c']-= u['i2']
+            return x
+
+        def output(t, x):
+            return {'o1': x['a'] + sum(x['b']) + x['c']}
+
+        def event_state(t, x):
+            return {'e1': max(1-t/5.0,0)}
+
+        def threshold_met(t, x):
+            print("Time: ", t)
+            return {'e1': max(1-t/5.0,0) < 1e-6}
+
+        try:
+            m = prognostics_model.PrognosticsModel.generate_model(keys, 7, next_state, output)
+            self.fail("Should have failed- non-callable initialize eqn")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, [], output)
+            self.fail("Should have failed- non-callable next_state eqn")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, next_state, {})
+            self.fail("Should have failed- non-callable output eqn")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            incomplete_keys = {
+                'states': ['a', 'b', 'c'],
+                'outputs': ['o1'],
+                'events': ['e1']
+            }
+            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, next_state, {})
+            self.fail("Should have failed- missing inputs keys")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            incomplete_keys = {
+                'inputs': ['a'],
+                'outputs': ['o1'],
+                'events': ['e1']
+            }
+            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, next_state, {})
+            self.fail("Should have failed- missing states keys")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            incomplete_keys = {
+                'inputs': ['a'],
+                'states': ['a', 'b', 'c'],
+                'events': ['e1']
+            }
+            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, next_state, {})
+            self.fail("Should have failed- missing outputs keys")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            extra_keys = {
+                'inputs': ['a'],
+                'states': ['a', 'b', 'c'],
+                'outputs': ['o1'],
+                'events': ['e1'],
+                'abc': 'def'
+            }
+            m = prognostics_model.PrognosticsModel.generate_model(extra_keys, initialize, next_state, output)
+        except ProgModelTypeError:
+            self.fail("Should not have failed- extra keys")
+
+        try:
+            incomplete_keys = {
+                'inputs': ['a'],
+                'states': ['a', 'b', 'c'],
+                'outputs': ['o1'],
+                'events': ['e1']
+            }
+            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, next_state, output, event_state_eqn=-3)
+            self.fail("Should have failed- not callable event_state eqn")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            incomplete_keys = {
+                'inputs': ['a'],
+                'states': ['a', 'b', 'c'],
+                'outputs': ['o1'],
+                'events': ['e1']
+            }
+            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, next_state, output, event_state_eqn=event_state, threshold_eqn=-3)
+            self.fail("Should have failed- not callable threshold eqn")
+        except ProgModelTypeError:
+            pass
+
     def test_sim_to_thresh(self):
         m = MockProgModel({'process_noise': 0.0})
         def load(t):

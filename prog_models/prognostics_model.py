@@ -17,18 +17,13 @@ class PrognosticsModel(model.Model):
     been reached.
     """
 
-    # events = [] # Identifiers for each event
+    events = [] # Identifiers for each event
 
-    def __init__(self):
-        # Input Validation
-        if not hasattr(self, 'events'):
-            raise ProgModelTypeError('Must have `events` attribute')
-        if len(self.events) <= 0:
-            raise ProgModelTypeError('`events` attribute must have at least one event key')
+    def __init__(self, options = {}):
+        self.parameters.update(options)
 
         super().__init__()
 
-    @abstractmethod
     def event_state(self, t, x) -> dict:
         """
         Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
@@ -49,9 +44,8 @@ class PrognosticsModel(model.Model):
             e.g., event_state = {'EOL':0.32} given events = ['EOL']
         """
 
-        pass
+        return {}
     
-    @abstractmethod
     def threshold_met(self, t, x) -> dict:
         """
         For each event threshold, calculate if it has been met
@@ -72,7 +66,7 @@ class PrognosticsModel(model.Model):
             e.g., thresholds_met = {'EOL': False} given events = ['EOL']
         """
 
-        pass
+        return {key: event_state < 0 for (key, event_state) in self.event_state(t, x).items()} 
 
     def simulate_to(self, time, future_loading_eqn, first_output, options = {}):
         """
@@ -243,3 +237,62 @@ class PrognosticsModel(model.Model):
             event_states = append(event_states,self.event_state(t, x))
         
         return (times, inputs, states, outputs, event_states)
+    
+    @staticmethod
+    def generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
+        """
+        Generate a new prognostics model from functions
+
+
+        """
+        # Input validation
+        if not callable(initialize_eqn):
+            raise ProgModelTypeError("Initialize Function must be callable")
+
+        if not callable(next_state_eqn):
+            raise ProgModelTypeError("Next_State Function must be callable")
+
+        if not callable(output_eqn):
+            raise ProgModelTypeError("Output Function must be callable")
+
+        if event_state_eqn and not callable(event_state_eqn):
+            raise ProgModelTypeError("Event State Function must be callable")
+
+        if threshold_eqn and not callable(threshold_eqn):
+            raise ProgModelTypeError("Threshold Function must be callable")
+
+        if 'inputs' not in keys:
+            raise ProgModelTypeError("Keys must include 'inputs'")
+        
+        if 'states' not in keys:
+            raise ProgModelTypeError("Keys must include 'states'")
+        
+        if 'outputs' not in keys:
+            raise ProgModelTypeError("Keys must include 'outputs'")
+
+        # Construct model
+        class NewProgModel(PrognosticsModel):
+            inputs = keys['inputs']
+            states = keys['states']
+            outputs = keys['outputs']
+            def initialize():
+                pass
+            def next_state():
+                pass
+            def output():
+                pass
+
+        m = NewProgModel(config)
+
+        m.initialize = initialize_eqn
+        m.next_state = next_state_eqn
+        m.output = output_eqn
+
+        if 'events' in keys:
+            m.events = keys['events']
+        if event_state_eqn:
+            m.event_state = event_state_eqn
+        if threshold_eqn:
+            m.threshold_met = threshold_eqn
+
+        return m

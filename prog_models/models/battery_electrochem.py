@@ -137,10 +137,6 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
         'VEOD': 3.0
     })
 
-    def __init__(self, options = {}):
-        self.parameters.update(options)
-        super().__init__()
-
     def initialize(self, u, z):
         return self.parameters['x0']
 
