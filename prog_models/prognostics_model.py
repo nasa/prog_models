@@ -1,12 +1,12 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from . import model, ProgModelInputException, ProgModelTypeError
-from abc import abstractmethod
+from . import ProgModelInputException, ProgModelTypeError
+from abc import abstractmethod, ABC
 from numbers import Number
-from numpy import array, append
+from numpy import array, append, random
 from copy import deepcopy
 
-class PrognosticsModel(model.Model):
+class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
 
@@ -15,14 +15,118 @@ class PrognosticsModel(model.Model):
     It is a subclass of the Model class, with the addition of a threshold
     equation, which defines when some condition, such as end-of-life, has
     been reached.
+
+    A Model also has a parameters structure, which contains fields for
+    various model parameters.
     """
 
+    parameters = {} # Configuration Parameters for model
+    # inputs = []     # Identifiers for each input
+    # states = []     # Identifiers for each state
+    # outputs = []    # Identifiers for each output
     events = [] # Identifiers for each event
 
     def __init__(self, options = {}):
         self.parameters.update(options)
 
-        super().__init__()
+        if 'process_noise' not in self.parameters:
+            raise ProgModelTypeError('Missing `process_noise` parameter')
+
+        if not hasattr(self, 'inputs'):
+            raise ProgModelTypeError('Must have `inputs` attribute')
+        if len(self.inputs) <= 0:
+            raise ProgModelTypeError('`inputs` attribute must have at least one input key')
+
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
+
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        if len(self.outputs) <= 0:
+            raise ProgModelTypeError('`outputs` attribute must have at least one output key')
+
+        if isinstance(self.parameters['process_noise'], Number):
+            self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
+
+    @abstractmethod
+    def initialize(self, u, z) -> dict:
+        """
+        Calculate initial state given inputs and outputs
+
+        Parameters
+        ----------
+        u : dict
+            Inputs, with keys defined by model.inputs.
+            e.g., u = {'i':3.2} given inputs = ['i']
+        z : dict
+            Outputs, with keys defined by model.outputs.
+            e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+
+        Returns
+        -------
+        x : dict
+            First state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        """
+        pass
+        
+    def apply_process_noise(self, x):
+        return {key: x[key] + random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
+
+    @abstractmethod
+    def next_state(self, t, x, u, dt) -> dict: 
+        """
+        State transition equation: Calculate next state
+
+        Parameters
+        ----------
+        t : number
+            Current timestamp in seconds (≥ 0)
+            e.g., t = 3.4
+        x : dict
+            state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs.
+            e.g., u = {'i':3.2} given inputs = ['i']
+        dt : number
+            Timestep size in seconds (≥ 0)
+            e.g., dt = 0.1
+        
+
+        Returns
+        -------
+        x : dict
+            Next state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        """
+
+        pass
+
+    @abstractmethod
+    def output(self, t, x) -> dict:
+        """
+        Calculate next statem, forward one timestep
+
+        Parameters
+        ----------
+        t : number
+            Current timestamp in seconds (≥ 0.0)
+            e.g., t = 3.4
+        x : dict
+            state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        z : dict
+            Outputs, with keys defined by model.outputs.
+            e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+        """
+
+        pass
 
     def event_state(self, t, x) -> dict:
         """

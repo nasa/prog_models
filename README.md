@@ -9,8 +9,7 @@ Each model must be a class extending either `prog_models.model` (for nominal mod
 ## Directory Structure 
 
 `prog_models/` - The prognostics model python package <br>
- |-`models/` - Example models <br>
- |-`model.py` - Physics-based model superclass of nominal system behavior <br>
+ |-`models/` - Example models <br> 
  |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior <br>
 `example.py` - An example python script using prog_models <br>
 `README.md` - The readme (this file)

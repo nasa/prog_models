@@ -1,6 +1,5 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from prog_models import model, prognostics_model
 from prog_models.models import battery_circuit, battery_electrochem
 
 batt = battery_circuit.BatteryCircuit()
@@ -31,4 +30,3 @@ for i in range(len(times)): # Print Results
 
 for i in range(len(times)): # Print Results
     print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
-

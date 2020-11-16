@@ -4,7 +4,7 @@ import unittest
 from prog_models import *
 from copy import deepcopy
 
-class MockModel(model.Model):
+class MockModel():
     states = ['a', 'b', 'c']
     inputs = ['i1', 'i2']
     outputs = ['o1']
@@ -30,6 +30,10 @@ class MockModel(model.Model):
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     events = ['e1']
+    def __init__(self, options = {}):
+        self.parameters.update(options)
+        super().__init__()
+
     def event_state(self, t, x):
         return {'e1': max(1-t/5.0,0)}
 
@@ -38,7 +42,7 @@ class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
 
 class TestModels(unittest.TestCase):
     def test_broken_models(self):
-        class missing_states(model.Model):
+        class missing_states(prognostics_model.PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
             parameters = {'process_noise':0.1}
@@ -48,7 +52,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class empty_states(model.Model):
+        class empty_states(prognostics_model.PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
             outputs = ['o1']
@@ -59,7 +63,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class missing_inputs(model.Model):
+        class missing_inputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
             parameters = {'process_noise':0.1}
@@ -69,7 +73,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class empty_inputs(model.Model):
+        class empty_inputs(prognostics_model.PrognosticsModel):
             inputs = []
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -80,7 +84,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class missing_outputs(model.Model):
+        class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
             parameters = {'process_noise':0.1}
@@ -90,7 +94,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class empty_outputs(model.Model):
+        class empty_outputs(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = []
@@ -101,7 +105,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class missing_initiialize(model.Model):
+        class missing_initiialize(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -110,7 +114,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class missing_next_state(model.Model):
+        class missing_next_state(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -119,7 +123,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class missing_output(model.Model):
+        class missing_output(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -228,14 +232,14 @@ class TestModels(unittest.TestCase):
         except TypeError:
             pass
 
-    def test_model(self):
+    def test_prog_model(self):
+
         try:
-            m = MockModel()
+            m = MockProgModel()
             self.fail("Should not have worked, missing `process_noise`")
         except ProgModelTypeError:
             pass
-        
-        m = MockModel({'process_noise': 0.0})
+        m = MockProgModel({'process_noise': 0.0})
         x0 = m.initialize({}, {})
         self.assertEqual(x0, m.parameters['x0'])
         x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
@@ -244,9 +248,6 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x['b'], [3, 2])
         z = m.output(0, x)
         self.assertAlmostEqual(z['o1'], 0.8, 5)
-
-    def test_prog_model(self):
-        m = MockProgModel({'process_noise': 0.0})
         e = m.event_state(0, {})
         t = m.threshold_met(0, {})
         self.assertAlmostEqual(e['e1'], 1.0, 5)
@@ -527,79 +528,6 @@ class TestModels(unittest.TestCase):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
-        
-    def test_sim(self):
-        m = MockModel({'process_noise': 0.0})
-        def load(t):
-            return {'i1': 1, 'i2': 2.1}
-        
-        ## Check inputs
-        try:
-            m.simulate_to(0, load, {'o1': 0.8})
-            self.fail("Should have failed- time must be greater than 0")
-        except ProgModelInputException:
-            pass
-
-        try:
-            m.simulate_to(-30, load, {'o1': 0.8})
-            self.fail("Should have failed- time must be greater than 0")
-        except ProgModelInputException:
-            pass
-
-        try:
-            m.simulate_to([12], load, {'o1': 0.8})
-            self.fail("Should have failed- time must be a number")
-        except ProgModelInputException:
-            pass
-
-        try:
-            m.simulate_to([12], load, {})
-            self.fail("Should have failed- output must contain each field (e.g., o1)")
-        except ProgModelInputException:
-            pass
-
-        try:
-            m.simulate_to([12], 132, {})
-            self.fail("Should have failed- future_load should be callable")
-        except ProgModelInputException:
-            pass
-
-        ## Simulate
-        (times, inputs, states, outputs) = m.simulate_to(3.5, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
-
-        # Check times
-        for t in range(0, 4):
-            self.assertAlmostEqual(times[t], t, 5)
-        self.assertEqual(len(times), 5)
-        self.assertAlmostEqual(times[-1], 3.5, 5) # Save last step (even though it's not on a savepoint)
-        
-        # Check inputs
-        self.assertEqual(len(inputs), 5)
-        for i in inputs:
-            self.assertDictEqual(i, {'i1': 1, 'i2': 2.1}, "Future loading error")
-
-        # Check states
-        self.assertEqual(len(states), 5)
-        a = [1, 2, 3, 4, 4.5]
-        c = [-3.2, -7.4, -11.6, -15.8, -17.9]
-        for (ai, ci, x) in zip(a, c, states):
-            self.assertAlmostEqual(x['a'], ai, 5)
-            self.assertEqual(x['b'], [3, 2])
-            self.assertAlmostEqual(x['c'], ci, 5)
-
-        # Check outputs
-        self.assertEqual(len(outputs), 5)
-        o = [2.8, -0.4, -3.6, -6.8, -8.4]
-
-        for (oi, z) in zip(o, outputs):
-            self.assertAlmostEqual(z['o1'], oi, 5)
-
-        ## Check last state saving
-        (times, inputs, states, outputs) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
-        for t in range(0, 4):
-            self.assertAlmostEqual(times[t], t, 5)
-        self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
-    
     def test_example(self):
         # set stdout (so it wont print)
         from io import StringIO 
