@@ -73,6 +73,19 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
     `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/`
 
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+
+    Events: (1)
+        EOD: End of Discharge
+
+    Inputs/Loading: (1)
+        i: Current draw on the battery
+
+    States: (8)
+        tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS
+
+    Outputs/Measurements: (2)
+        | t: Temperature of battery (°C) 
+        | v: Voltage supplied by battery`
     """
     events = [
         'EOD' # End of Discharge

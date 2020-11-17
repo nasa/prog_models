@@ -18,14 +18,11 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         i: Current draw on the battery
 
     States: (4)
-        tb:
-        qb:
-        qcp:
-        qcs:
+        tb, qb, qcp, qcs
 
     Outputs: (2)
-        t: Temperature of battery (°C)
-        v: Voltage supplied by battery
+        | t: Temperature of battery (°C)
+        | v: Voltage supplied by battery
     
     Note: This is much quicker but also less accurate as the electrochemistry model
     """

@@ -5,6 +5,32 @@ import math
 class CentrefugalPump(prognostics_model.PrognosticsModel):
     """
     Prognostics model for a centrefugal pump
+
+    This class implements an Centrefugal Pump model as described in the following paper:
+    `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
+
+    Events (4)
+        | ImpellerWearFailure: Failure of the impeller due to wear
+        | PumpOilOverheat: Overheat of the pump oil
+        | RadialBearingOverheat: Overheat of the radial bearing
+        | ThrustBearingOverheat: Overhead of the thrust bearing
+
+    Inputs/Loading: (5)
+        | Tamb: Ambient Temperature (K)
+        | V: Voltage
+        | pdisch: Discharge Pressure (Pa)
+        | psuc: Suction Pressure (Pa)
+        | wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)
+
+    States: (12)
+        A, Q, To, Tr, Tt, rRadial, rThrust, w, wA, wRadial, wThrust, QLeak
+
+    Outputs/Measurements: (5)
+        | Qout: Discharge Flow (m^3/s)
+        | To: Oil Temperature (K)
+        | Tr: Radial Bearing Temperature (K)
+        | Tt: Thrust Bearing Temperature (K)
+        | w: Mechanical Rotation (rad/sec)
     """
     events = [
         'ImpellerWearFailure',

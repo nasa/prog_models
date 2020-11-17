@@ -8,20 +8,32 @@ The Prognostics Model Package is distributed with a few pre-constructed models t
 Models Summary
 -------------------------------------------------------------
 
-+----------------------+----------------------------+-----------------------------------+
-|                      | Battery Model - Circuit    | Battery Model - Electro Chemistry |
-+======================+============================+===================================+
-| Description          | Battery equivilant circuit | Battery Electro Chemistry Model   |
-+----------------------+----------------------------+-----------------------------------+
-| Events               | End of Discharge (EOD)     | End of Discharge (EOD)            |
-+----------------------+----------------------------+-----------------------------------+
-| Inputs               | Current (i)                | Current (i)                       |
-+----------------------+----------------------------+-----------------------------------+
-|Outputs / Measurements| Voltage (v), Temp °C (t)   | Voltage (v), Temp °C (t)          |
-+----------------------+----------------------------+-----------------------------------+
-| Notes                | Faster and less accurate   | Slower and more accurate than     | 
-|                      | than Electro Chem Model    | Circuit model                     |
-+----------------------+----------------------------+-----------------------------------+
++----------------------+----------------------------+-----------------------------------+---------------------------------+
+|                      | Battery Model - Circuit    | Battery Model - Electro Chemistry | Centrefugal Pump                |
++======================+============================+===================================+=================================+
+| Description          | Battery equivilant circuit | Battery Electro Chemistry Model   |                                 |
++----------------------+----------------------------+-----------------------------------+---------------------------------+
+| Events               | End of Discharge (EOD)     | End of Discharge (EOD)            | * Impeller Wear Failure         |
+|                      |                            |                                   | * Pump Oil Overheating          |
+|                      |                            |                                   | * Radial Bering Overheat        |
+|                      |                            |                                   | * Thrust Beiring Overheat       |
++----------------------+----------------------------+-----------------------------------+---------------------------------+
+| Inputs               | Current (i)                | Current (i)                       | * Ambient Temperature-K (Tamb)  |
+|                      |                            |                                   | * Voltage (V)                   |
+|                      |                            |                                   | * Discharge Pressure-Pa (pdisch)|
+|                      |                            |                                   | * Suction Pressure-Pa (psuc)    |
+|                      |                            |                                   | * Sync Rotational Speed of      |
+|                      |                            |                                   | * supply voltage-rad/sec (wsync)|
++----------------------+----------------------------+-----------------------------------+---------------------------------+
+|Outputs / Measurements| Voltage (v), Temp °C (t)   | Voltage (v), Temp °C (t)          | * Discharge Flow- m^3/s (Qout)  |
+|                      |                            |                                   | * Oil Temp - K (To)             |
+|                      |                            |                                   | * Radial Bearing Temp - K (Tr)  |
+|                      |                            |                                   | * Thrust Bearing Temp - K (Tt)  |
+|                      |                            |                                   | * Mech rotation - rad/s (w)     |
++----------------------+----------------------------+-----------------------------------+---------------------------------+
+| Notes                | Faster and less accurate   | Slower and more accurate than     |                                 |
+|                      | than Electro Chem Model    | Circuit model                     |                                 |
++----------------------+----------------------------+-----------------------------------+---------------------------------+
 
 Battery Model - Circuit
 -------------------------------------------------------------
@@ -37,3 +49,9 @@ Battery Model - Electro Chemistry
    :members:
    :inherited-members:
 
+Centrefugal Pump Model
+-------------------------------------------------------------
+
+.. autoclass:: prog_models.models.centrefugal_pump.CentrefugalPump
+   :members:
+   :inherited-members:
