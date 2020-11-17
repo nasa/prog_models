@@ -1,0 +1,520 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Models &#8212; Prognostics Models Python Package 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Prognostics Model" href="prognostics_model.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="battery-model-circuit">
+<h2>Battery Model - Circuit<a class="headerlink" href="#battery-model-circuit" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit">
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.models.battery_circuit.</code><code class="sig-name descname">BatteryCircuit</code><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prognostics model for a battery, represented by an electric circuit</p>
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.dx">
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.dx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dx</strong> – First derivitive of state, with keys defined by model.states
+e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.event_state">
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.event_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.
+e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.generate_model">
+<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.generate_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new prognostics model from functions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate initial state given inputs and outputs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+<li><p><strong>z</strong> (<em>dict</em>) – Outputs, with keys defined by model.outputs.
+e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – First state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.next_state">
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>State transition equation: Calculate next state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+<li><p><strong>dt</strong> (<em>number</em>) – Timestep size in seconds (≥ 0)
+e.g., dt = 0.1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Next state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate next statem, forward one timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>z</strong> – Outputs, with keys defined by model.outputs.
+e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to">
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate prognostics model for a given time interval</p>
+<p>Similar to model.simulate_to, only includes event_state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>number</em>) – Time to which the model will be simulated in seconds (≥ 0.0)
+e.g., time = 200</p></li>
+<li><p><strong>future_loading_eqn</strong> (<em>function</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – Configuration options for the simulation
+Note: configuration of the model is set through model.parameters</p></li>
+<li><p><strong>(</strong><strong>tuple</strong><strong>)</strong> (<em>Returns</em>) – </p></li>
+<li><p><strong>-------</strong> – </p></li>
+<li><p><strong>times</strong> (<em>number</em>) – Times for each simulated point</p></li>
+<li><p><strong>inputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
+<li><p><strong>states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated states for each time in times</p></li>
+<li><p><strong>outputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated outputs for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>(times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold">
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate prognostics model until at least any threshold has been met</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>future_loading_eqn</strong> (<em>function</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – Configuration options for the simulation
+Note: configuration of the model is set through model.parameters</p></li>
+<li><p><strong>(</strong><strong>tuple</strong><strong>)</strong> (<em>Returns</em>) – </p></li>
+<li><p><strong>-------</strong> – </p></li>
+<li><p><strong>times</strong> (<em>number</em>) – Times for each simulated point</p></li>
+<li><p><strong>inputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
+<li><p><strong>states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated states for each time in times</p></li>
+<li><p><strong>outputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated outputs for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>(times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.threshold_met">
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.threshold_met" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each event threshold, calculate if it has been met</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events
+e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="battery-model-electro-chemistry">
+<h2>Battery Model - Electro Chemistry<a class="headerlink" href="#battery-model-electro-chemistry" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem">
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.models.battery_electrochem.</code><code class="sig-name descname">BatteryElectroChem</code><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prognostics model for a battery, represented by an electrochemical equations</p>
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.dx">
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.dx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dx</strong> – First derivitive of state, with keys defined by model.states
+e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.event_state">
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.event_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.
+e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.generate_model">
+<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.generate_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new prognostics model from functions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate initial state given inputs and outputs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+<li><p><strong>z</strong> (<em>dict</em>) – Outputs, with keys defined by model.outputs.
+e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – First state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.next_state">
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>State transition equation: Calculate next state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+<li><p><strong>dt</strong> (<em>number</em>) – Timestep size in seconds (≥ 0)
+e.g., dt = 0.1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Next state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate next statem, forward one timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>z</strong> – Outputs, with keys defined by model.outputs.
+e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to">
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate prognostics model for a given time interval</p>
+<p>Similar to model.simulate_to, only includes event_state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>number</em>) – Time to which the model will be simulated in seconds (≥ 0.0)
+e.g., time = 200</p></li>
+<li><p><strong>future_loading_eqn</strong> (<em>function</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – Configuration options for the simulation
+Note: configuration of the model is set through model.parameters</p></li>
+<li><p><strong>(</strong><strong>tuple</strong><strong>)</strong> (<em>Returns</em>) – </p></li>
+<li><p><strong>-------</strong> – </p></li>
+<li><p><strong>times</strong> (<em>number</em>) – Times for each simulated point</p></li>
+<li><p><strong>inputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
+<li><p><strong>states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated states for each time in times</p></li>
+<li><p><strong>outputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated outputs for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>(times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold">
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate prognostics model until at least any threshold has been met</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>future_loading_eqn</strong> (<em>function</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – Configuration options for the simulation
+Note: configuration of the model is set through model.parameters</p></li>
+<li><p><strong>(</strong><strong>tuple</strong><strong>)</strong> (<em>Returns</em>) – </p></li>
+<li><p><strong>-------</strong> – </p></li>
+<li><p><strong>times</strong> (<em>number</em>) – Times for each simulated point</p></li>
+<li><p><strong>inputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
+<li><p><strong>states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated states for each time in times</p></li>
+<li><p><strong>outputs</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated outputs for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>[</em><em>dict</em><em>]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>(times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met">
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each event threshold, calculate if it has been met</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events
+e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Prognostics Models Python Package</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="deriv_prog_model.html">Derivative Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="getting_started.html" title="previous chapter">Getting Started</a></li>
+      <li>Next: <a href="prognostics_model.html" title="next chapter">Prognostics Model</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+
+  </body>
+</html>
