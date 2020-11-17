@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Models" href="models.html" />
-    <link rel="prev" title="Derivative Prognostics Model" href="deriv_prog_model.html" />
+    <link rel="prev" title="Prognostics Models Python Package" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,13 +35,18 @@
             
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<p>The NASA Prognostics Models Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.</p>
+<p>The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
 <p>The foundation of this package is the class <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>)</p>
-<div class="section" id="installing">
-<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installing-dependencies">
+<h2>Installing Dependencies<a class="headerlink" href="#installing-dependencies" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>You can do this using the included <cite>requriements.txt</cite> file. Use the following command:</dt><dd><p><cite>pip install -r requirements.txt</cite></p>
+</dd>
+</dl>
 </div>
 <div class="section" id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
+<p>See <code class="xref py py-mod docutils literal notranslate"><span class="pre">example.py</span></code> for an example of use.</p>
 </div>
 <div class="section" id="extending">
 <h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
@@ -67,7 +72,7 @@ various model parameters.</p>
 </div>
 <dl class="py class">
 <dt id="prog_models.deriv_prog_model.DerivProgModel">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.deriv_prog_model.</code><code class="sig-name descname">DerivProgModel</code><a class="headerlink" href="#prog_models.deriv_prog_model.DerivProgModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.deriv_prog_model.</code><code class="sig-name descname">DerivProgModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.deriv_prog_model.DerivProgModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Prognostics Model where the first derivative of state can be defined for any time</p>
 <p>The DerivProgModel class is a wrapper around a mathematical model of a
 system as represented by a dx, output, input, and threshold equations.
@@ -104,10 +109,15 @@ been reached.</p>
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="deriv_prog_model.html">Derivative Prognostics Model</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installing-dependencies">Installing Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deriv_prog_model.html">Derivative Prognostics Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 </ul>
 
@@ -115,7 +125,7 @@ been reached.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="deriv_prog_model.html" title="previous chapter">Derivative Prognostics Model</a></li>
+      <li>Previous: <a href="index.html" title="previous chapter">Prognostics Models Python Package</a></li>
       <li>Next: <a href="models.html" title="next chapter">Models</a></li>
   </ul></li>
 </ul>

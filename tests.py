@@ -276,15 +276,18 @@ class TestModels(unittest.TestCase):
         }
 
         def initialize(u, z):
-            return {'a': 1, 'b': [3, 2], 'c': -3.2}
+            return {'a': 1, 'b': 3, 'c': -3.2}
 
         def next_state(t, x, u, dt):
             x['a']+= u['i1']*dt
             x['c']-= u['i2']
             return x
 
+        def dx(t, x, u):
+            return {'a': u['i1'], 'b': 0, 'c': u['i2']}
+
         def output(t, x):
-            return {'o1': x['a'] + sum(x['b']) + x['c']}
+            return {'o1': x['a'] + x['b'] + x['c']}
 
         def event_state(t, x):
             return {'e1': max(1-t/5.0,0)}
@@ -297,9 +300,9 @@ class TestModels(unittest.TestCase):
         x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], [3, 2])
+        self.assertEqual(x['b'], 3)
         z = m.output(0, x)
-        self.assertAlmostEqual(z['o1'], 0.8, 5)
+        self.assertAlmostEqual(z['o1'], -1.2, 5)
         e = m.event_state(0, {})
         t = m.threshold_met(0, {})
         self.assertAlmostEqual(e['e1'], 1.0, 5)
@@ -322,13 +325,25 @@ class TestModels(unittest.TestCase):
         x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], [3, 2])
+        self.assertEqual(x['b'], 3)
         z = m.output(0, x)
-        self.assertAlmostEqual(z['o1'], 0.8, 5)
+        self.assertAlmostEqual(z['o1'], -1.2, 5)
         e = m.event_state(5, {})
         self.assertDictEqual(e, {})
         t = m.threshold_met(5.1, {})
         self.assertDictEqual(t, {})
+
+        # Deriv Model
+        m = deriv_prog_model.DerivProgModel.generate_model(keys, initialize, dx, output)
+        x0 = m.initialize({}, {})
+        dx = m.dx(0, x0, {'i1': 1, 'i2': 2.1})
+        self.assertAlmostEqual(dx['a'], 1, 6)
+        self.assertAlmostEqual(dx['b'], 0, 6)
+        self.assertAlmostEqual(dx['c'], 2.1, 6)
+        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        self.assertAlmostEqual(x['a'], 1.1, 6)
+        self.assertAlmostEqual(x['c'], -2.99, 6)
+        self.assertEqual(x['b'], 3)
 
     def test_broken_model_gen(self):
         keys = {

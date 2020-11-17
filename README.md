@@ -8,10 +8,11 @@ Each model must be a class extending either `prog_models.model` (for nominal mod
 
 ## Directory Structure 
 
-`prog_models/` - The prognostics model python package <br>
- |-`models/` - Example models <br> 
- |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior <br>
-`example.py` - An example python script using prog_models <br>
+`prog_models/` - The prognostics model python package 
+ |-`models/` - Example models 
+ |-`deriv_prog_model.py` - Physics-based model superclass of degraded system behavior defined by the state derivative function
+ |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior 
+`example.py` - An example python script using prog_models 
 `README.md` - The readme (this file)
 `requirements.txt` - python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`
 `deriv_model_template.py` - Template for Derivative Model

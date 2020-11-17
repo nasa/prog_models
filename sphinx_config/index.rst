@@ -1,17 +1,17 @@
 Prognostics Models Python Package
 =============================================================
 
-The NASA Prognostics Models Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
+The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
 
 If you are new to this package, see `<getting_started.html>`__.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    
-   deriv_prog_model
    getting_started
    models
    prognostics_model
+   deriv_prog_model
    exceptions
 
 Citing this repository

@@ -7,6 +7,27 @@ from math import exp
 class BatteryCircuit(deriv_prog_model.DerivProgModel):
     """
     Prognostics model for a battery, represented by an electric circuit
+    
+    This class implements an equivilant circuit model as described in the following paper:
+    `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1055/`
+    
+    Events: (1)
+        EOD: End of Discharge
+    
+    Inputs/Loading: (1)
+        i: Current draw on the battery
+
+    States: (4)
+        tb:
+        qb:
+        qcp:
+        qcs:
+
+    Outputs: (2)
+        t: Temperature of battery (°C)
+        v: Voltage supplied by battery
+    
+    Note: This is much quicker but also less accurate as the electrochemistry model
     """
     events = [
         'EOD' # End of Discharge

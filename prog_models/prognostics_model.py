@@ -27,7 +27,31 @@ class PrognosticsModel(ABC):
     events = [] # Identifiers for each event
 
     def __init__(self, options = {}):
-        self.parameters.update(options)
+        """
+        Construct new PrognosticsModel
+
+        Parameters
+        ----------
+        options : dict, optional
+            Configuration parameters for model 
+        
+        Returns
+        -------
+        model : PrognosticsModel
+            Constructed Prognostics Model
+
+        Raises
+        ------
+        ProgModelTypeError
+
+        Example
+        -------
+        m = PrognosticsModel({'config 1': 3.2})
+        """
+        try:
+            self.parameters.update(options)
+        except TypeError:
+            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(options)))
 
         if 'process_noise' not in self.parameters:
             raise ProgModelTypeError('Missing `process_noise` parameter')
@@ -69,10 +93,40 @@ class PrognosticsModel(ABC):
         x : dict
             First state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
         """
         pass
         
-    def apply_process_noise(self, x):
+    def apply_process_noise(self, x) -> dict:
+        """
+        Apply process noise to the state
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Returns
+        -------
+        x : dict
+            state, with applied noise, with keys defined by model.states
+            e.g., x = {'abc': 332.2, 'def': 221.043} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.apply_process_noise(x) 
+        """
         return {key: x[key] + random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
     @abstractmethod
@@ -101,6 +155,14 @@ class PrognosticsModel(ABC):
         x : dict
             Next state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u
         """
 
         pass
@@ -108,7 +170,7 @@ class PrognosticsModel(ABC):
     @abstractmethod
     def output(self, t, x) -> dict:
         """
-        Calculate next statem, forward one timestep
+        Calculate next state, forward one timestep
 
         Parameters
         ----------
@@ -124,6 +186,14 @@ class PrognosticsModel(ABC):
         z : dict
             Outputs, with keys defined by model.outputs.
             e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | z = m.output(3.0, x) # Returns {'o1': 1.2}
         """
 
         pass
@@ -146,6 +216,18 @@ class PrognosticsModel(ABC):
         event_state : dict
             Event States, with keys defined by prognostics_model.events.
             e.g., event_state = {'EOL':0.32} given events = ['EOL']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | event_state = m.event_state(3.0, x) # Returns {'e1': 0.8, 'e2': 0.6}
+
+        Note
+        ----
+        Default is to return an empty array (for system models that do not include any events)
         """
 
         return {}
@@ -168,44 +250,69 @@ class PrognosticsModel(ABC):
         thresholds_met : dict
             If each threshold has been met (bool), with deys defined by prognostics_model.events
             e.g., thresholds_met = {'EOL': False} given events = ['EOL']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | threshold_met = m.threshold_met(t=3.2, x) # returns {'e1': False, 'e2': False}
+
+        Note
+        ----
+        If not overwritten, the default behavior is to say the threshold is met if the event state is <= 0
         """
 
-        return {key: event_state < 0 for (key, event_state) in self.event_state(t, x).items()} 
+        return {key: event_state <= 0 for (key, event_state) in self.event_state(t, x).items()} 
 
-    def simulate_to(self, time, future_loading_eqn, first_output, options = {}):
+    def simulate_to(self, time, future_loading_eqn, first_output, options = {}) -> tuple:
         """
-            Simulate prognostics model for a given time interval
+        Simulate prognostics model for a given number of seconds
 
-            Similar to model.simulate_to, only includes event_state
+        Parameters
+        ----------
+        time : number
+            Time to which the model will be simulated in seconds (≥ 0.0)
+            e.g., time = 200
+        future_loading_eqn : callable
+            Function of (t) -> z used to predict future loading (output) at a given time (t)
+        options: dict, optional:
+            Configuration options for the simulation
+            Note: configuration of the model is set through model.parameters
+        
+        Returns
+        -------
+        times: number
+            Times for each simulated point
+        inputs: [dict]
+            Future input (from future_loading_eqn) for each time in times
+        states: [dict]
+            Estimated states for each time in times
+        outputs: [dict]
+            Estimated outputs for each time in times
+        event_states: [dict]
+            Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
+        
+        Raises
+        ------
+        ProgModelInputException
 
-            Parameters
-            ----------
-            time : number
-                Time to which the model will be simulated in seconds (≥ 0.0)
-                e.g., time = 200
-            future_loading_eqn : function
-                Function of (t) -> z used to predict future loading (output) at a given time (t)
-            options: dict, optional:
-                Configuration options for the simulation
-                Note: configuration of the model is set through model.parameters
-            
-            Returns (tuple)
-            -------
-            times: number
-                Times for each simulated point
-            inputs: [dict]
-                Future input (from future_loading_eqn) for each time in times
-            states: [dict]
-                Estimated states for each time in times
-            outputs: [dict]
-                Estimated outputs for each time in times
-            event_states: [dict]
-                Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
-            
-            Example
-            -------
-            (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
-            """
+        See Also
+        --------
+        simulate_to_threshold
+
+        Example
+        -------
+        | def future_load_eqn(t):
+        |     if t< 5.0: # Load is 3.0 for first 5 seconds
+        |         return 3.0
+        |     else:
+        |         return 5.0
+        | first_output = {'o1': 3.2, 'o2': 1.2}
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
+        """
         
         # Input Validation
         if not isinstance(time, Number) or time <= 0:
@@ -232,35 +339,53 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, config)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}, threshold_keys = None):
+    def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}, threshold_keys = None) -> tuple:
         """
-            Simulate prognostics model until at least any threshold has been met
+        Simulate prognostics model until at least any or specified threshold(s) have been met
 
-            Parameters
-            ----------
-            future_loading_eqn : function
-                Function of (t) -> z used to predict future loading (output) at a given time (t)
-            options: dict, optional:
-                Configuration options for the simulation
-                Note: configuration of the model is set through model.parameters
-            
-            Returns (tuple)
-            -------
-            times: number
-                Times for each simulated point
-            inputs: [dict]
-                Future input (from future_loading_eqn) for each time in times
-            states: [dict]
-                Estimated states for each time in times
-            outputs: [dict]
-                Estimated outputs for each time in times
-            event_states: [dict]
-                Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
-            
-            Example
-            -------
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
-            """
+        Parameters
+        ----------
+        future_loading_eqn : callable
+            Function of (t) -> z used to predict future loading (output) at a given time (t)
+        options: dict, optional
+            Configuration options for the simulation
+            Note: configuration of the model is set through model.parameters
+        threshold_keys: [str], optional
+            Keys for events that will trigger the end of simulation. 
+            If blank, simulation will occur if any event will be met ()
+        
+        Returns
+        -------
+        times: [number]
+            Times for each simulated point
+        inputs: [dict]
+            Future input (from future_loading_eqn) for each time in times
+        states: [dict]
+            Estimated states for each time in times
+        outputs: [dict]
+            Estimated outputs for each time in times
+        event_states: [dict]
+            Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
+        
+        Raises
+        ------
+        ProgModelInputException
+
+        See Also
+        --------
+        simulate_to
+
+        Example
+        -------
+        | def future_load_eqn(t):
+        |     if t< 5.0: # Load is 3.0 for first 5 seconds
+        |         return 3.0
+        |     else:
+        |         return 5.0
+        | first_output = {'o1': 3.2, 'o2': 1.2}
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
+        """
         # Input Validation
         if not all(key in first_output for key in self.outputs):
             raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
@@ -355,7 +480,42 @@ class PrognosticsModel(ABC):
         """
         Generate a new prognostics model from functions
 
+        Parameters
+        ----------
+        keys : dict
+            Dictionary containing keys required by model. Must include `inputs`, `outputs`, and `states`. Can also include `events`
+        initialize_eqn : callable
+            Equation to initialize first state of the model. See `initialize`
+        next_state_eqn : callable
+            Equation to calculate next_state from current state. See `next_state`
+        output_eqn : callable
+            Equation to calculate the outputs (measurements) for the model. See `output`
+        event_state_eqn : callable, optional
+            Equation to calculate the state for each event of the model. See `event_state`
+        threshold_eqn : callable, optional
+            Equation to calculate if the threshold has been met for each event in model. See `threshold_met`
+        config : dict, optional
+            Any configuration parameters for the model
 
+        Returns
+        -------
+        model : PrognosticsModel
+            A callable PrognosticsModel
+
+        Raises
+        ------
+        ProgModelInputException
+
+        Example
+        -------
+        | keys = {
+        |     'inputs': ['u1', 'u2'],
+        |     'states': ['x1', 'x2', 'x3'],
+        |     'outputs': ['z1'],
+        |     'events': ['e1', 'e2']
+        | }
+        | 
+        | m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)
         """
         # Input validation
         if not callable(initialize_eqn):
