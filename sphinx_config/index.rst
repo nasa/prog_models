@@ -1,6 +1,10 @@
 Prognostics Models Python Package
 =============================================================
 
+The NASA Prognostics Models Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
+
+If you are new to this package, see `<getting_started.html>`__.
+
 .. toctree::
    :maxdepth: 1
    
@@ -10,6 +14,22 @@ Prognostics Models Python Package
    prognostics_model
    exceptions
 
+Citing this repository
+-----------------------
+Use the following to cite this repository:
+
+@misc{2020_nasa_prog_model,
+    author    = {Christopher Teubert and Chetan Kulkarni},
+    title     = {Prognostics Model Python Package},
+    month     = Oct,
+    year      = 2020,
+    version   = {0.0.1},
+    url       = {TBD}
+    }
+
+The corresponding reference should look like this:
+
+C. Teubert, and C. Kulkarni, Prognostics Model Python Package, v0.0.1, Oct. 2020. URL TBD.
 
 Indices and tables
 -----------------------

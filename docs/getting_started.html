@@ -35,6 +35,55 @@
             
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>The NASA Prognostics Models Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.</p>
+<p>The foundation of this package is the class <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>)</p>
+<div class="section" id="installing">
+<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="use">
+<h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="extending">
+<h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
+<p>There are two methods of creating new models: 1. Implementing a new subclass of one of the base model clases (<a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> or <a class="reference internal" href="#prog_models.deriv_prog_model.DerivProgModel" title="prog_models.deriv_prog_model.DerivProgModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.deriv_prog_model.DerivProgModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
+<div class="section" id="subclass-method">
+<h3>1. Subclass Method<a class="headerlink" href="#subclass-method" title="Permalink to this headline">¶</a></h3>
+<p>The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:</p>
+<dl class="py class">
+<dt id="prog_models.prognostics_model.PrognosticsModel">
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.prognostics_model.</code><code class="sig-name descname">PrognosticsModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general time-variant state space model of system degradation behavior.</p>
+<p>The PrognosticsModel class is a wrapper around a mathematical model of a
+system as represented by a state, output, input, and threshold equations.
+It is a subclass of the Model class, with the addition of a threshold
+equation, which defines when some condition, such as end-of-life, has
+been reached.</p>
+<p>A Model also has a parameters structure, which contains fields for
+various model parameters.</p>
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<dl class="py class">
+<dt id="prog_models.deriv_prog_model.DerivProgModel">
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.deriv_prog_model.</code><code class="sig-name descname">DerivProgModel</code><a class="headerlink" href="#prog_models.deriv_prog_model.DerivProgModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Prognostics Model where the first derivative of state can be defined for any time</p>
+<p>The DerivProgModel class is a wrapper around a mathematical model of a
+system as represented by a dx, output, input, and threshold equations.
+It is a subclass of the Model class, with the addition of a threshold
+equation, which defines when some condition, such as end-of-life, has
+been reached.</p>
+</dd></dl>
+
+<p>To generate a new model create a new class for your model that inherits from one of these two base classes, whichever is more appropriate for your application. Alternatively, you can copy one of the templates <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">deriv_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
+<p>The analysis and simulation tools defined in <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> will then work with your new model.</p>
+</div>
+<div class="section" id="model-generator-method">
+<h3>2. Model Generator Method<a class="headerlink" href="#model-generator-method" title="Permalink to this headline">¶</a></h3>
+<p>The second way to generate a new model is using the model generator method <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>. Pass a map of the keys for input, state, output, events (optional), and the required transition equations into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
+</div>
+</div>
 </div>
 
 
