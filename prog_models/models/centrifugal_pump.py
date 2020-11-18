@@ -2,11 +2,11 @@ from .. import prognostics_model
 
 import math
 
-class CentrefugalPump(prognostics_model.PrognosticsModel):
+class CentrifugalPump(prognostics_model.PrognosticsModel):
     """
-    Prognostics model for a centrefugal pump
+    Prognostics model for a centrifugal pump
 
-    This class implements an Centrefugal Pump model as described in the following paper:
+    This class implements an Centrifugal Pump model as described in the following paper:
     `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
 
     Events (4)
@@ -71,7 +71,7 @@ class CentrefugalPump(prognostics_model.PrognosticsModel):
     ]
 
     parameters = { # Set to defaults
-        'cycleTime': 3600,  # length of a pump usage cycle
+        'process_noise': 0.1,
 
         # Environmental parameters
         'pAtm': 101325,     # Atmospheric Pressure (Pa)
@@ -124,7 +124,7 @@ class CentrefugalPump(prognostics_model.PrognosticsModel):
 
         # Initial state
         'x0': {
-            'w': 376.9908, # 3600 rpm (rad/sec)
+            'w': 376.991118431, # 3600 rpm (rad/sec)
             'Q': 0,
             'Tt': 290,
             'Tr': 290,
@@ -132,13 +132,13 @@ class CentrefugalPump(prognostics_model.PrognosticsModel):
             'A': 12.7084,
             'rThrust': 1.4e-6,
             'rRadial': 1.8e-6,
-            'wA': 0,
+            'wA': 0.0,
             'wThrust': 0,
-            'wRadial': 0
+            'wRadial': 0,
         }
     }
 
-    def initialize(self, u, z):
+    def initialize(self, u, z = None):
         x0 = self.parameters['x0']
         x0['QLeak'] = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
         return x0
@@ -163,8 +163,6 @@ class CentrefugalPump(prognostics_model.PrognosticsModel):
         wdot = (Te-friction-backTorque)/self.parameters['I']
         Qdot = 1/self.parameters['FluidI']*(Qo-x['Q'])
         QLeak = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
-
-
         return {
             'A': x['A'] + Adot*dt,
             'Q': x['Q'] + Qdot*dt, 
@@ -201,8 +199,8 @@ class CentrefugalPump(prognostics_model.PrognosticsModel):
 
     def threshold_met(self, t, x):
         return {
-            'ImpellerWearFailure': x['A'] > self.parameters['lim']['A'],
-            'ThrustBearingOverheat': x['Tt'] < self.parameters['lim']['Tt'],
-            'RadialBearingOverheat': x['Tr'] < self.parameters['lim']['Tr'],
-            'PumpOilOverheat': x['To'] < self.parameters['lim']['To']
+            'ImpellerWearFailure': x['A'] <= self.parameters['lim']['A'],
+            'ThrustBearingOverheat': x['Tt'] >= self.parameters['lim']['Tt'],
+            'RadialBearingOverheat': x['Tr'] >= self.parameters['lim']['Tr'],
+            'PumpOilOverheat': x['To'] >= self.parameters['lim']['To']
         }

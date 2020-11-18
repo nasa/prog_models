@@ -9,7 +9,7 @@ Models Summary
 -------------------------------------------------------------
 
 +----------------------+----------------------------+-----------------------------------+---------------------------------+
-|                      | Battery Model - Circuit    | Battery Model - Electro Chemistry | Centrefugal Pump                |
+|                      | Battery Model - Circuit    | Battery Model - Electro Chemistry | Centrifugal Pump                |
 +======================+============================+===================================+=================================+
 | Description          | Battery equivilant circuit | Battery Electro Chemistry Model   |                                 |
 +----------------------+----------------------------+-----------------------------------+---------------------------------+
@@ -49,9 +49,9 @@ Battery Model - Electro Chemistry
    :members:
    :inherited-members:
 
-Centrefugal Pump Model
+ Pump Model
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.centrefugal_pump.CentrefugalPump
+.. autoclass:: prog_models.models.centrifugal_pump.CentrifugalPump
    :members:
    :inherited-members:
