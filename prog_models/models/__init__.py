@@ -1,1 +1,1 @@
-__all__ = ["battery_circuit", "battery_electrochem", "centrifugal_pump"]
+__all__ = ["battery_circuit", "battery_electrochem", "centrifugal_pump", "pneumatic_valve"]
