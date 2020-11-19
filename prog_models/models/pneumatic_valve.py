@@ -17,7 +17,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | Friction Failure: Failure due to increase in friction along the piston with wear
 
     Inputs/Loading:
-        | pL: Fluid pressure at the left side of the plug (Pa) TODO(CT): Confirm unit
+        | pL: Fluid pressure at the left side of the plug (Pa)
         | pR: Fluid pressure at the right side of the plug (Pa) 
         | uBot: input pressure at the bottom pneumatic port (Pa) 
         | uTop: input pressure at the botton pneumatic port (Pa) 
@@ -147,10 +147,6 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'wt': 0
         },
     }
-
-    def __init__(self, config={}):
-        self.parameters = deepcopy(PneumaticValve.default_parameters)
-        super().__init__(config)
 
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']

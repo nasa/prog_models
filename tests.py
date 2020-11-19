@@ -11,14 +11,10 @@ class MockModel():
     states = ['a', 'b', 'c']
     inputs = ['i1', 'i2']
     outputs = ['o1']
-    parameters = {
+    default_parameters = {
         'p1': 1.2,
         'x0': {'a': 1, 'b': [3, 2], 'c': -3.2}
     }
-
-    def __init__(self, options = {}):
-        self.parameters.update(options)
-        super().__init__()
 
     def initialize(self, u, z):
         return deepcopy(self.parameters['x0'])
@@ -33,9 +29,6 @@ class MockModel():
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     events = ['e1', 'e2']
-    def __init__(self, options = {}):
-        self.parameters.update(options)
-        super().__init__()
 
     def event_state(self, t, x):
         return {

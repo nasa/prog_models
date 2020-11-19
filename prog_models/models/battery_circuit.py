@@ -46,7 +46,7 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
         'v'  # Battery Voltage
     ]
 
-    parameters = { # Set to defaults
+    default_parameters = { # Set to defaults
         'V0': 4.183,        # Nominal Battery Voltage
         'Rp': 1e4,          # Battery Parasitic Resistance
         'qMax': 7856.3254,  # Max Charge

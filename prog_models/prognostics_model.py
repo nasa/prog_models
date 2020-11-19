@@ -20,7 +20,7 @@ class PrognosticsModel(ABC):
     various model parameters.
     """
 
-    parameters = {} # Configuration Parameters for model
+    default_parameters = {} # Configuration Parameters for model
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
@@ -48,6 +48,7 @@ class PrognosticsModel(ABC):
         -------
         m = PrognosticsModel({'config 1': 3.2})
         """
+        self.parameters = deepcopy(self.__class__.default_parameters)
         try:
             self.parameters.update(options)
         except TypeError:

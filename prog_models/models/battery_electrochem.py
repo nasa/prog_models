@@ -40,6 +40,9 @@ class BatteryElectroChemParamDict(dict):
         self['x0']['qnS'] = self['qnSMax']
         self['x0']['qnB'] = self['qnBMax']
 
+    def __deepcopy__(self, memo):
+        return BatteryElectroChemParamDict(self)
+
     def __init__(self, *args, **kwarg):
         super(BatteryElectroChemParamDict, self).__init__(*args, **kwarg)
         if not self.__setting:
@@ -111,7 +114,7 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
         'v'  # Battery Voltage
     ]
 
-    parameters = BatteryElectroChemParamDict({ # Set to defaults
+    default_parameters = BatteryElectroChemParamDict({ # Set to defaults
         'qMobile': 7600,
         'xnMax': 0.6,   # maximum mole fraction (neg electrode)
         'xnMin': 0,     # minimum mole fraction (neg electrode)

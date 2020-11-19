@@ -70,7 +70,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         'w'    # Mechanical Rotation (rad/sec)
     ]
 
-    parameters = { # Set to defaults
+    default_parameters = { # Set to defaults
         'process_noise': 0.1,
 
         # Environmental parameters
