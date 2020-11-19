@@ -85,19 +85,20 @@ class BatteryCircuit(deriv_prog_model.DerivProgModel):
 
     def dx(self, t, x, u): 
         parameters = self.parameters # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+        Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
         SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Rcp = parameters['Rcp0'] + parameters['Rcp1']*exp(parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
-        Tbdot = (Rcp*parameters['Rs']*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + parameters['Rs']*Vcp**2*parameters['hcp']) \
-                /(parameters['Jt']*Rcp*parameters['Rs'])
+        Tbdot = (Rcp*Rs*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + Rs*Vcp**2*parameters['hcp']) \
+                /(parameters['Jt']*Rcp*Rs)
         Vp = Vb - Vcp - Vcs
         ip = Vp/parameters['Rp']
         ib = u['i'] + ip
         icp = ib - Vcp/Rcp
-        ics = ib - Vcs/parameters['Rs']
+        ics = ib - Vcs/Rs
 
         return self.apply_process_noise({
             'tb':  Tbdot,

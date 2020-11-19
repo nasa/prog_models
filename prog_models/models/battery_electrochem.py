@@ -161,48 +161,49 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
-    def dx(self, t, x, u): 
+    def dx(self, t, x, u):
+        params = self.parameters
         # Negative Surface
-        CnBulk = x['qnB']/self.parameters['VolB']
-        CnSurface = x['qnS']/self.parameters['VolS']
-        xnS = x['qnS']/self.parameters['qSMax']
+        CnBulk = x['qnB']/params['VolB']
+        CnSurface = x['qnS']/params['VolS']
+        xnS = x['qnS']/params['qSMax']
 
-        qdotDiffusionBSn = (CnBulk-CnSurface)/self.parameters['tDiffusion']
-        qnBdot = -qdotDiffusionBSn
-        qnSdot = qdotDiffusionBSn - u['i']
+        qdotDiffusionBSn = (CnBulk-CnSurface)/params['tDiffusion']
 
-        Jn = u['i']/self.parameters['Sn']
-        Jn0 = self.parameters['kn']*((1-xnS)*xnS)**self.parameters['alpha']
+        Jn = u['i']/params['Sn']
+        Jn0 = params['kn']*((1-xnS)*xnS)**params['alpha']
 
-        VsnNominal = R*x['tb']/F/self.parameters['alpha']*asinh(Jn/(2*Jn0))
-        Vsndot = (VsnNominal-x['Vsn'])/self.parameters['tsn']
+        v_part = R*x['tb']/F/params['alpha']
+
+        VsnNominal = v_part*asinh(Jn/(2*Jn0))
+        Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
 
         # Positive Surface
-        CpBulk = x['qpB']/self.parameters['VolB']
-        CpSurface = x['qpS']/self.parameters['VolS']
-        xpS = x['qpS']/self.parameters['qSMax']
+        CpBulk = x['qpB']/params['VolB']
+        CpSurface = x['qpS']/params['VolS']
+        xpS = x['qpS']/params['qSMax']
         
-        qdotDiffusionBSp = (CpBulk-CpSurface)/self.parameters['tDiffusion']
+        qdotDiffusionBSp = (CpBulk-CpSurface)/params['tDiffusion']
         qpBdot = -qdotDiffusionBSp
         qpSdot = u['i'] + qdotDiffusionBSp
 
-        Jp = u['i']/self.parameters['Sp']
-        Jp0 = self.parameters['kp']*((1-xpS)*xpS)**self.parameters['alpha']
+        Jp = u['i']/params['Sp']
+        Jp0 = params['kp']*((1-xpS)*xpS)**params['alpha']
 
-        VspNominal = R*x['tb']/F/self.parameters['alpha']*asinh(Jp/(2*Jp0))
-        Vspdot = (VspNominal-x['Vsp'])/self.parameters['tsp']
+        VspNominal = v_part*asinh(Jp/(2*Jp0))
+        Vspdot = (VspNominal-x['Vsp'])/params['tsp']
 
         # Combined
-        VoNominal = u['i']*self.parameters['Ro']
-        Vodot = (VoNominal-x['Vo'])/self.parameters['to']
+        VoNominal = u['i']*params['Ro']
+        Vodot = (VoNominal-x['Vo'])/params['to']
 
         return self.apply_process_noise({
             'tb': 0,
             'Vo': Vodot,
             'Vsn': Vsndot,
             'Vsp': Vspdot,
-            'qnB': qnBdot,
-            'qnS': qnSdot,
+            'qnB': -qdotDiffusionBSn,
+            'qnS': qdotDiffusionBSn - u['i'],
             'qpB': qpBdot,
             'qpS': qpSdot
         })
@@ -218,17 +219,17 @@ class BatteryElectroChem(deriv_prog_model.DerivProgModel):
         VenParts = [
             self.parameters['An'][0] *(2*xnS-1)/F, # Ven0
             self.parameters['An'][1] *((2*xnS-1)**2  - (2 *xnS*(1-xnS)))/F, # Ven1
-            self.parameters['An'][2] *((2*xnS-1)**3  - (4 *xnS*(1-xnS))/(2*xnS-1)**(-1)) /F, #Ven2
-            self.parameters['An'][3] *((2*xnS-1)**4  - (6 *xnS*(1-xnS))/(2*xnS-1)**(-2)) /F, #Ven3
-            self.parameters['An'][4] *((2*xnS-1)**5  - (8 *xnS*(1-xnS))/(2*xnS-1)**(-3)) /F, #Ven4
-            self.parameters['An'][5] *((2*xnS-1)**6  - (10*xnS*(1-xnS))/(2*xnS-1)**(-4)) /F, #Ven5
-            self.parameters['An'][6] *((2*xnS-1)**7  - (12*xnS*(1-xnS))/(2*xnS-1)**(-5)) /F, #Ven6
-            self.parameters['An'][7] *((2*xnS-1)**8  - (14*xnS*(1-xnS))/(2*xnS-1)**(-6)) /F, #Ven7
-            self.parameters['An'][8] *((2*xnS-1)**9  - (16*xnS*(1-xnS))/(2*xnS-1)**(-7)) /F, #Ven8
-            self.parameters['An'][9] *((2*xnS-1)**10 - (18*xnS*(1-xnS))/(2*xnS-1)**(-8)) /F, #Ven9
-            self.parameters['An'][10]*((2*xnS-1)**11 - (20*xnS*(1-xnS))/(2*xnS-1)**(-9)) /F, #Ven10
-            self.parameters['An'][11]*((2*xnS-1)**12 - (22*xnS*(1-xnS))/(2*xnS-1)**(-10))/F, #Ven11
-            self.parameters['An'][12]*((2*xnS-1)**13 - (24*xnS*(1-xnS))/(2*xnS-1)**(-11))/F  #Ven12
+            self.parameters['An'][2] *((2*xnS-1)**3  - (4 *xnS*(1-xnS))*(2*xnS-1))/F, #Ven2
+            self.parameters['An'][3] *((2*xnS-1)**4  - (6 *xnS*(1-xnS))*(2*xnS-1)**2) /F, #Ven3
+            self.parameters['An'][4] *((2*xnS-1)**5  - (8 *xnS*(1-xnS))*(2*xnS-1)**3) /F, #Ven4
+            self.parameters['An'][5] *((2*xnS-1)**6  - (10*xnS*(1-xnS))*(2*xnS-1)**4) /F, #Ven5
+            self.parameters['An'][6] *((2*xnS-1)**7  - (12*xnS*(1-xnS))*(2*xnS-1)**5) /F, #Ven6
+            self.parameters['An'][7] *((2*xnS-1)**8  - (14*xnS*(1-xnS))*(2*xnS-1)**6) /F, #Ven7
+            self.parameters['An'][8] *((2*xnS-1)**9  - (16*xnS*(1-xnS))*(2*xnS-1)**7) /F, #Ven8
+            self.parameters['An'][9] *((2*xnS-1)**10 - (18*xnS*(1-xnS))*(2*xnS-1)**8) /F, #Ven9
+            self.parameters['An'][10]*((2*xnS-1)**11 - (20*xnS*(1-xnS))*(2*xnS-1)**9) /F, #Ven10
+            self.parameters['An'][11]*((2*xnS-1)**12 - (22*xnS*(1-xnS))*(2*xnS-1)**10)/F, #Ven11
+            self.parameters['An'][12]*((2*xnS-1)**13 - (24*xnS*(1-xnS))*(2*xnS-1)**11)/F  #Ven12
         ]
         Ven = self.parameters['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
 
