@@ -678,7 +678,12 @@ class TestModels(unittest.TestCase):
             'condition': 1,
             'mTop': 0.067876043046,
             'mBot': 9.445596253581e-4,
-            'pDiff': u0['pL'] - u0['pR']
+            'pDiff': u0['pL'] - u0['pR'],
+            'wb': 0,
+            'wi': 0,
+            'wk': 0,
+            'wr': 0,
+            'wt': 0
         }
 
         for key in m.states:
@@ -696,7 +701,12 @@ class TestModels(unittest.TestCase):
             'r': 6000,
             'v': 0,
             'x': 0,
-            'pDiff': u0['pL'] - u0['pR']
+            'pDiff': u0['pL'] - u0['pR'],
+            'wb': 0,
+            'wi': 0,
+            'wk': 0,
+            'wr': 0,
+            'wt': 0
         }
         for key in m.states:
             self.assertAlmostEqual(x[key], x_test[key], 7)
@@ -713,7 +723,7 @@ class TestModels(unittest.TestCase):
         for key in m.outputs:
             self.assertAlmostEqual(z[key], z_test[key], 7)
 
-        m.parameters['wr'] = 1
+        m.parameters['x0']['wr'] = 1
 
         x0 = m.initialize(u0)
         x0_test = {
@@ -726,7 +736,12 @@ class TestModels(unittest.TestCase):
             'Aet': 1e-5,
             'mTop': 0.067876043046,
             'mBot': 9.445596253581e-4,
-            'pDiff': u0['pL'] - u0['pR']
+            'pDiff': u0['pL'] - u0['pR'],
+            'wb': 0,
+            'wi': 0,
+            'wk': 0,
+            'wr': 1,
+            'wt': 0
         }
 
         for key in m.states:
@@ -743,7 +758,12 @@ class TestModels(unittest.TestCase):
             'r': 6000,
             'v': 0,
             'x': 0,
-            'pDiff': u0['pL'] - u0['pR']
+            'pDiff': u0['pL'] - u0['pR'],
+            'wb': 0,
+            'wi': 0,
+            'wk': 0,
+            'wr': 1,
+            'wt': 0
         }
         for key in m.states:
             self.assertAlmostEqual(x[key], x_test[key], 7)

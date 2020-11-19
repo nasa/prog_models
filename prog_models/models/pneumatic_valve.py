@@ -33,14 +33,19 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | v: Velocity of the piston (m/s)
         | x: Poisition of the piston (m)
         | pDiff: Difference in pressure between the left and the right 
+        | wb: Wear parameter for bottom leak
+        | wi: Wear parameter for internal leak
+        | wt: Wear parameter for top leak
+        | wk: Wear parameter for spring
+        | wr: Wear parameter for friction
 
     Outputs/Measurements:
-        | Q: 
-        | iB: 
-        | iT: 
-        | pB: 
-        | pT: 
-        | x: Position of piston
+        | Q: Flowrate 
+        | iB: Is the piston at the bottom (bool)
+        | iT: Is the piston at the top (bool)
+        | pB: Pressure at the bottom (Pa)
+        | pT: Pressure at the top (Pa)
+        | x: Position of piston (m)
     """
     events = [
         "Bottom Leak", 
@@ -65,7 +70,12 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "r",
         "v",
         "x",
-        "pDiff" # pL-pR
+        "pDiff", # pL-pR
+        'wb',
+        'wi',
+        'wk',
+        'wr',
+        'wt'
     ]
     outputs = [
         "Q",
@@ -129,13 +139,13 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'Ai': 0,
             'Aet': 1e-5,
             'k': 48000,
-            'r': 6000
+            'r': 6000,
+            'wb': 0,
+            'wi': 0,
+            'wk': 0,
+            'wr': 0,
+            'wt': 0
         },
-        'wb': 0,
-        'wi': 0,
-        'wk': 0,
-        'wr': 0,
-        'wt': 0
     }
 
     def __init__(self, config={}):
@@ -175,9 +185,9 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
         plugWeight = params['m']*params['g']
-        kdot = -params['wk']*abs(x['v']*springForce)
-        rdot = params['wr']*abs(x['v']*friction)
-        Aidot = params['wi']*abs(x['v']*friction)
+        kdot = -x['wk']*abs(x['v']*springForce)
+        rdot = x['wr']*abs(x['v']*friction)
+        Aidot = x['wi']*abs(x['v']*friction)
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
         mBotDotn = self.gas_flow(pInBot,pressureBot,params['Cb'],params['Ab'])
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
@@ -205,8 +215,8 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             pos = new_x
 
         return {
-            'Aeb': x['Aeb'] + params['wb'] * dt,
-            'Aet': x['Aet'] + params['wt'] * dt,
+            'Aeb': x['Aeb'] + x['wb'] * dt,
+            'Aet': x['Aet'] + x['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
             'k': x['k'] + kdot * dt,
             'mBot': x['mBot'] + mBotdot * dt,
@@ -215,6 +225,11 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'v': vel,
             'x': pos,
             'pDiff': u['pL']-u['pR'],
+            'wb': x['wb'],
+            'wi': x['wi'],
+            'wk': x['wk'],
+            'wr': x['wr'],
+            'wt': x['wt']
         }
     
     def output(self, t, x):
