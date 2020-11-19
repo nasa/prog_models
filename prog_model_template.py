@@ -33,7 +33,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
     ]
 
     # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
-    parameters = { # Set default parameters
+    default_parameters = { # Set default parameters
         'Example Parameter 1': 0,
         'process_noise': 0.1, # Process noise
     }
@@ -42,11 +42,9 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
         """
         Constructor for model
         """
+        # ADD OPTIONS CHECKS HERE
 
-        self.parameters.update(options) # Merge configuration options into default
-        # ADD PARAMETER CHECKS HERE
-
-        super().__init__() # Run Parent constructor
+        super().__init__(options) # Run Parent constructor
 
     def initialize(self, u, z):
         """
@@ -70,6 +68,8 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
 
         # REPLACE BELOW WITH LOGIC TO CALCULATE INITIAL STATE
         # NOTE: KEYS FOR x0 MATCH 'states' LIST ABOVE
+
+        # YOU CAN ACCESS ANY PARAMETERS USING self.parameters[key]
         x0 = {
             'Examples State 1': 99.2,
             'Examples State 2': False,
