@@ -2,7 +2,7 @@
 
 from prog_models import deriv_prog_model
 
-class ProgModelTemplate(deriv_prog_model.DerivProgModel):
+class DerivModelTemplate(deriv_prog_model.DerivProgModel):
     """
     Template for Deriv Prognostics Model
     """
