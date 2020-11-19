@@ -1,4 +1,6 @@
-from .. import prognostics_model
+from .. import prognostics_model, ProgModelException
+from math import sqrt, copysign
+from copy import deepcopy
 
 class PneumaticValve(prognostics_model.PrognosticsModel):
     """
@@ -21,11 +23,27 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | uTop: input pressure at the botton pneumatic port (Pa) 
 
     States:
+        | Aeb: Area of the leak at the bottom pneumatic port
+        | Aet: Area of the leak at the top pneumatic port
+        | Ai: Area of the internal leak
+        | k: Spring Coefficient
+        | mBot: Mass on bottom of piston (kg)
+        | mTop: Mass on top of the piston (kg)
+        | r: Friction Coefficient
+        | v: Velocity of the piston (m/s)
+        | x: Poisition of the piston (m)
+        | pDiff: Difference in pressure between the left and the right 
 
     Outputs/Measurements:
+        | Q: 
+        | iB: 
+        | iT: 
+        | pB: 
+        | pT: 
+        | x: Position of piston
     """
     events = [
-        "Bottom Leak", # TODO(CT): CONFIRM
+        "Bottom Leak", 
         "Top Leak", 
         "Internal Leak",
         "Spring Failure",
@@ -41,28 +59,23 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "Aeb",
         "Aet",
         "Ai",
-        "condition", # Consider removing
         "k",
         "mBot",
         "mTop",
         "r",
         "v",
-        "wb",
-        "wi",
-        "wk",
-        "wr",
-        "wt",
-        "x"
+        "x",
+        "pDiff" # pL-pR
     ]
     outputs = [
         "Q",
         "iB", 
         "iT",
         "pB",
-        "pT"
+        "pT",
         "x"
     ]
-    paramters = { # Set to defaults
+    default_parameters = { # Set to defaults
         'process_noise': 0.1,
 
         # Environmental Parameters
@@ -74,87 +87,170 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         'm': 50, # Plug mass (kg)
         'offsetX': 0.254, # Spring offset distance (m)
         'Ls': 0.0381, # Stroke Length (m)
-        'Ap': 8.107319666e-4, # Surface area of piston for gas contact (m^2)
-        'Vbot0': 8.107319666e-4, # Below piston "default" volume (m^3)
-        'Vtop0': 8.107319666e-4, # Above piston "default" volume (m^3)
+        'Ap': 8.1073196655599634694e-3, # Surface area of piston for gas contact (m^2)
+        'Vbot0': 8.107319665559963e-4, # Below piston "default" volume (m^3)
+        'Vtop0': 8.107319665559963e-4, # Above piston "default" volume (m^3)
+        'indicatorTol': 1e-3, # tolerance bound for open/close indicators
 
         # Flow Parameters
-        'pSupply': 5272420.89227839, # Supply Pressure (Pa)
-        'Av': 0.05067074791, # Surface area of plug end (m^2)
+        'pSupply': 5.272420892278394995e6, # Supply Pressure (Pa)
+        'Av': 0.050670747909749769389, # Surface area of plug end (m^2)
+        'Cv': 0.4358892767469993814, # flow coefficient assuming Cv of 1300 GPM
+        'rhoL': 70.99, # density of LH2 in kg/m^3
 
-        # Gaseous nitrogen params
-        'gn2_mass': 28.01e-3, # Molar mass of GN2 (kg/mol)
-        'gn2_temp': 293, # temperature of GN2 (K)
+        # Supply gas params
+        # Note: Default is nitrogen
+        'gas_mass': 28.01e-3, # Molar mass of used gas (kg/mol)
+        'gas_temp': 293, # temperature of used gas (K)
+        'gas_gamma': 1.4, 
+        'gas_z': 1,
+        'gas_R': 296.8225633702249454,
+
+        # Orifice params
+        'At': 1e-5,
+        'Ct': 0.62,
+        'Ab': 1e-5,
+        'Cb': 0.62,
+
+        # Limits
+        "AbMax": 4e-5,
+        "AtMax": 4e-5,
+        "AiMax": 1.7e-6,
+        "kMin": 3.95e4,
+        "rMax": 4e6,
 
         # Initial state
         'x0': {
             'x': 0,
             'v': 0,
-        }
+            'mTop': 0.067876043046174843,
+            'mBot': 9.4455962535380932526e-4,
+            'Aeb': 1e-5,
+            'Ai': 0,
+            'Aet': 1e-5,
+            'k': 48000,
+            'r': 6000
+        },
+        'wb': 0,
+        'wi': 0,
+        'wk': 0,
+        'wr': 0,
+        'wt': 0
     }
 
+    def __init__(self, config={}):
+        self.parameters = deepcopy(PneumaticValve.default_parameters)
+        super().__init__(config)
+
     def initialize(self, u, z = None):
-        return self.parameters['x0']
+        x0 = self.parameters['x0']
+        x0['pDiff'] = u['pL'] - u['pR']
+        return x0
+
+    def gas_flow(self, pIn, pOut, C, A):
+        k = self.parameters['gas_gamma']
+        T = self.parameters['gas_temp']
+        Z = self.parameters['gas_z']
+        R = self.parameters['gas_R']
+        threshold = ((k+1)/2)**(k/(k-1))
+
+        if pIn/pOut>=threshold:
+            return C*A*pIn*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
+        elif pIn/pOut<threshold and pIn>=pOut:
+            return C*A*pIn*sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
+        elif pOut/pIn>=threshold:
+            return -C*A*pOut*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
+        elif pOut/pIn<threshold and pOut>pIn:
+            return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
+        else:
+            raise ProgModelException('Unknown Condition')
     
     def next_state(self, t, x, u, dt):
-        xdot = x['v']
-        pInTop = eq(u['uTop'],0)*self.parameters['pAtm'] + eq(u['uTop'],1)*self.parameters['pSupply']
-        springForce = x['k']*(self.parameters['offsetX']+x['x'])
+        params = self.parameters # optimization
+        pInTop = params['pSupply'] if u['uTop'] else params['pAtm'] 
+        springForce = x['k']*(params['offsetX']+x['x'])
         friction = x['v']*x['r']
-        fluidForce = (u['pL']-u['pR'])*self.parameters['Av']
-        pInBot = eq(u['uBot'],0)*self.parameters['pAtm'] + eq(u['uBot'],1)*self.parameters['pSupply']
-        volumeBot = self.parameters['Vbot0'] + self.parameters['Ap']*x['x']
-        volumeTop = self.parameters['Vtop0'] + self.parameters['Ap']*(self.parameters['Ls']-x['x'])
-        plugWeight = self.parameters['m']*self.parameters['g']
-        kdot = -x['wk']*abs(x['v']*springForce)
-        rdot = x['wr']*abs(x['v']*friction)
-        Aidot = x['wi']*abs(x['v']*friction)
-        pressureBot = x['mBot']*self.parameters['R']*self.parameters['gn2_temp']/self.parameters['gn2_mass']/volumeBot
-        mBotDotn = PneumaticValve.gasFlow(pInBot,pressureBot,parameters.GN2,parameters.Cb,parameters.Ab)
-        pressureTop = x['mTop']*self.parameters['R']*self.parameters['gn2_temp']/self.parameters['gn2_mass']/volumeTop
-        leakBotToAtm = PneumaticValve.gasFlow(pressureBot,parameters.pAtm,parameters.GN2,1,Aeb)
-        gasForceTop = pressureTop*self.parameters['Ap']
-        gasForceBot = pressureBot*self.parameters['Ap']
-        leakTopToAtm = PneumaticValve.gasFlow(pressureTop,parameters.pAtm,parameters.GN2,1,Aet)
-        leakTopToBot = PneumaticValve.gasFlow(pressureTop,pressureBot,parameters.GN2,1,Ai)
+        fluidForce = (u['pL']-u['pR'])*params['Av']
+        pInBot = params['pSupply'] if u['uBot'] else params['pAtm'] 
+        volumeBot = params['Vbot0'] + params['Ap']*x['x']
+        volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
+        plugWeight = params['m']*params['g']
+        kdot = -params['wk']*abs(x['v']*springForce)
+        rdot = params['wr']*abs(x['v']*friction)
+        Aidot = params['wi']*abs(x['v']*friction)
+        pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
+        mBotDotn = self.gas_flow(pInBot,pressureBot,params['Cb'],params['Ab'])
+        pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
+        leakBotToAtm = self.gas_flow(pressureBot,params['pAtm'],1,x['Aeb'])
+        gasForceTop = pressureTop*params['Ap']
+        gasForceBot = pressureBot*params['Ap']
+        leakTopToAtm = self.gas_flow(pressureTop,params['pAtm'],1,x['Aet'])
+        leakTopToBot = self.gas_flow(pressureTop,pressureBot,1,x['Ai'])
         mBotdot = mBotDotn + leakTopToBot - leakBotToAtm
-        mTopDotn = PneumaticValve.gasFlow(pInTop,pressureTop,self.parameters['GN2'],self.parameters['Ct'],self.parameters['At'])
+        mTopDotn = self.gas_flow(pInTop,pressureTop,params['Ct'],params['At'])
         pistonForces = -fluidForce - plugWeight - friction - springForce + gasForceBot - gasForceTop
         mTopdot = mTopDotn - leakTopToBot - leakTopToAtm
-        vdot = pistonForces/self.parameters['m']
+        vdot = pistonForces/params['m']
 
-        # Update discrete state (1 == pushed bottom/closed, 2 == moving, 3 == pushed top/open)
-        condition = 1*((x==0 & pistonForces<0) | (x+xdot*dt<0)) \
-            + 2*((x==0 & pistonForces>0) | (x+xdot*dt>=0 & x>0 & x<self.parameters['Ls'] & x+xdot*dt<=self.parameters['Ls']) | (x==self.parameters['Ls'] & pistonForces<0))\
-            + 3*((x==self.parameters['Ls'] & pistonForces>0) | (x+xdot*dt>self.parameters['Ls']))
-
-        # Compute new x, v based on condition
-        pos = (condition==1)*0 + (condition==2)*(x['x']+xdot*dt) + (condition==3)*self.parameters['Ls']
-        vel = (condition==1)*0 + (condition==2)*(x['v']+vdot*dt) + (condition==3)*0
+        new_x = x['x']+x['v']*dt
+        if (x['x']==0 and pistonForces<0) or (new_x<0):
+            vel = 0
+            pos = 0
+        elif (x['x']==params['Ls'] and pistonForces>0) or (new_x>params['Ls']):
+            vel = 0
+            pos = params['Ls']
+        else:
+            # moving
+            vel = x['v'] + vdot*dt
+            pos = new_x
 
         return {
-            'Aeb': x['Aeb'] + x['wb'] * dt,
-            'Aet': x['Aet'] + x['wt'] * dt,
+            'Aeb': x['Aeb'] + params['wb'] * dt,
+            'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
-            'condition': x['condition'],
             'k': x['k'] + kdot * dt,
             'mBot': x['mBot'] + mBotdot * dt,
             'mTop': x['mTop'] + mTopdot * dt,
             'r': x['r'] + rdot * dt,
             'v': vel,
-            'wb': x['wb'],
-            'wi': x['wi'],
-            'wk': x['wk'],
-            'wr': x['wr'],
-            'wt': x['wt'],
-            'x': pos
+            'x': pos,
+            'pDiff': u['pL']-u['pR'],
         }
     
     def output(self, t, x):
-        return {}
+        parameters = self.parameters # Optimization
+        indicatorTopm = (x['x'] >= parameters['Ls']-parameters['indicatorTol'])
+        indicatorBotm = (x['x'] <= parameters['indicatorTol'])
+        maxFlow = parameters['Cv']*parameters['Av']*copysign(sqrt(2/parameters['rhoL']*abs(x['pDiff'])),x['pDiff'])
+        volumeBot = parameters['Vbot0'] + parameters['Ap']*x['x']
+        volumeTop = parameters['Vtop0'] + parameters['Ap']*(parameters['Ls']-x['x'])
+        trueFlow = maxFlow * max(0,x['x'])/parameters['Ls']
+        pressureTop = x['mTop']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeTop
+        pressureBot = x['mBot']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeBot
+
+        return {
+            'Q': trueFlow,
+            "iB": indicatorBotm, 
+            "iT": indicatorTopm,
+            "pB": 1e-6*pressureBot,
+            "pT": 1e-6*pressureTop,
+            "x": x['x']
+        }
 
     def event_state(self, t, x):
-        return {}
+        return {
+            "Bottom Leak": (self.parameters['AbMax'] - x['Aeb'])/(self.parameters['AbMax'] - self.parameters['x0']['Aeb']), 
+            "Top Leak": (self.parameters['AtMax'] - x['Aet'])/(self.parameters['AtMax'] - self.parameters['x0']['Aet']), 
+            "Internal Leak": (self.parameters['AiMax'] - x['Ai'])/(self.parameters['AiMax'] - self.parameters['x0']['Ai']),
+            "Spring Failure": (x['k'] - self.parameters['kMin'])/(self.parameters['x0']['k'] - self.parameters['kMin']),
+            "Friction Failure": (self.parameters['rMax'] - x['r'])/(self.parameters['rMax'] - self.parameters['x0']['r'])
+        }
 
     def threshold_met(self, t, x):
-        return {}
+        return {
+            "Bottom Leak": x['Aeb'] > self.parameters['AbMax'], 
+            "Top Leak": x['Aet'] > self.parameters['AtMax'], 
+            "Internal Leak": x['Ai'] > self.parameters['AiMax'],
+            "Spring Failure": x['k'] < self.parameters['kMin'],
+            "Friction Failure": x['r'] > self.parameters['rMax']
+        }

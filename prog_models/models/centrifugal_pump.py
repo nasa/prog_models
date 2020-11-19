@@ -6,7 +6,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     """
     Prognostics model for a centrifugal pump
 
-    This class implements an Centrifugal Pump model as described in the following paper:
+    This class implements a Centrifugal Pump model as described in the following paper:
     `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
 
     Events (4)
