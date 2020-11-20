@@ -14,14 +14,21 @@ Use
 ----
 See the examples for examples of use. Run examples using the command `python -m examples.[Example name]` command (e.g., `python -m examples.sim_example`). The examples are summarized below:
 
-* examples.sim_example
+* :download:`examples.sim_example <../examples/sim_example.py>`
     .. automodule:: examples.sim_example
+    |
 
-* examples.model_gen_example
+* :download:`examples.model_gen_example <../examples/model_gen_example.py>`
     .. automodule:: examples.model_gen_example
+    |
 
-* examples.benchmarking_example
+* :download:`examples.benchmarking_example <../examples/benchmarking_example.py>`
     .. automodule:: examples.benchmarking_example
+    |
+
+* :download:`examples.new_model_example <../examples/new_model_example.py>`
+    .. automodule:: examples.new_model_example
+    |
 
 Extending
 ----------
