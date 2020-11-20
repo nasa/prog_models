@@ -59,9 +59,7 @@ class PrognosticsModel(ABC):
 
         if not hasattr(self, 'inputs'):
             raise ProgModelTypeError('Must have `inputs` attribute')
-        if len(self.inputs) <= 0:
-            raise ProgModelTypeError('`inputs` attribute must have at least one input key')
-
+        
         if not hasattr(self, 'states'):
             raise ProgModelTypeError('Must have `states` attribute')
         if len(self.states) <= 0:
@@ -69,9 +67,7 @@ class PrognosticsModel(ABC):
 
         if not hasattr(self, 'outputs'):
             raise ProgModelTypeError('Must have `outputs` attribute')
-        if len(self.outputs) <= 0:
-            raise ProgModelTypeError('`outputs` attribute must have at least one output key')
-
+        
         if isinstance(self.parameters['process_noise'], Number):
             self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
 
@@ -400,7 +396,7 @@ class PrognosticsModel(ABC):
         # Configure
         config = { # Defaults
             'dt': 1.0,
-            'save_freq': 10,
+            'save_freq': 10.0,
             'horizon': 1e100 # Default horizon (in s), essentially inf
         }
         config.update(options)
