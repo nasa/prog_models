@@ -29,6 +29,9 @@ See the examples for examples of use. Run examples using the command `python -m 
 * :download:`examples.new_model_example <../examples/new_model_example.py>`
     .. automodule:: examples.new_model_example
     |
+* :download:`examples.sensitivity_example <../examples/sensitivity_example.py>`
+    .. automodule:: examples.sensitivity_example
+    |
 
 Extending
 ----------

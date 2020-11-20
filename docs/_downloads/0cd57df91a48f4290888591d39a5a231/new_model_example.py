@@ -64,7 +64,7 @@ class ThrownObject(DerivProgModel):
             'impact': max(x['x']/self.max_x,0) # 1 until falling begins, then it's fraction of height
         }
 
-if __name__ == '__main__':
+def run_example():
     # Demo model
     # Step 1: Create instance of model
     m = ThrownObject()
@@ -82,4 +82,6 @@ if __name__ == '__main__':
         print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
 
-
+# This allows the module to be executed directly 
+if __name__=='__main__':
+    run_example()

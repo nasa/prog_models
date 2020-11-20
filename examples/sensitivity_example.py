@@ -1,11 +1,11 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-
 """
-Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
+Example performing a sensitivity analysis on a new model. Can be run using the following command `python -m examples.sensitivity_example`
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
 from prog_models.deriv_prog_model import DerivProgModel
+import numpy as np
 
 # Model used in example
 class ThrownObject(DerivProgModel):
@@ -73,14 +73,35 @@ def run_example():
     def future_load(t):
         return {}
 
-    # Step 3: Simulate to impact
+    # Step 3: Setup range on parameters considered
+    thrower_height_range = np.arange(1.2, 2.1, 0.1)
+
+    # Step 4: Sim for each 
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
-    
-    # Print results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
-    print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
+    eods = np.empty(len(thrower_height_range))
+    for (i, thrower_height) in zip(range(len(thrower_height_range)), thrower_height_range):
+        m.parameters['thrower_height'] = thrower_height
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':1e-3, 'save_freq':10})
+        eods[i] = times[-1]
+
+    # Step 5: Analysis
+    print('For a reasonable range of heights, impact time is between {} and {}'.format(round(eods[0],3), round(eods[-1],3)))
+    sensitivity = (eods[-1]-eods[0])/(thrower_height_range[-1] - thrower_height_range[0])
+    print('  - Average sensitivity: {} s per cm height'.format(round(sensitivity/100, 6)))
+    print("  - It seems impact time is not very sensitive to thrower's height")
+
+    # Now lets repeat for throw speed
+    throw_speed_range = np.arange(20, 40, 1)
+    eods = np.empty(len(throw_speed_range))
+    for (i, throw_speed) in zip(range(len(throw_speed_range)), throw_speed_range):
+        m.parameters['throwing_speed'] = throw_speed
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':1e-3, 'save_freq':10})
+        eods[i] = times[-1]
+
+    print('\nFor a reasonable range of throwing speeds, impact time is between {} and {}'.format(round(eods[0],3), round(eods[-1],3)))
+    sensitivity = (eods[-1]-eods[0])/(throw_speed_range[-1] - throw_speed_range[0])
+    print('  - Average sensitivity: {} s per m/s speed'.format(round(sensitivity/100, 6)))
+    print("  - It seems impact time is much more dependent on throwing speed")
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

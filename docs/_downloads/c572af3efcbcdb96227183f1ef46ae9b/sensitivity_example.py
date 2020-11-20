@@ -1,11 +1,11 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-
 """
-Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
+Example performing a sensitivity analysis on a new model. Can be run using the following command `python -m examples.sensitivity_example`
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
 from prog_models.deriv_prog_model import DerivProgModel
+import numpy as np
 
 # Model used in example
 class ThrownObject(DerivProgModel):
@@ -73,14 +73,18 @@ def run_example():
     def future_load(t):
         return {}
 
-    # Step 3: Simulate to impact
+    # Step 3: Setup range on parameters considered
+    thrower_height_range = range(1, 2, 0.05)
+
+    # Step 4: Sim for each 
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
-    
-    # Print results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
-    print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
+    eods = np.empty(len(thrower_height_range))
+    for (i, thrower_height) in zip(range(len(thrower_height_range)), thrower_height_range):
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+        eods[i] = times[-1]
+
+    # Step 5: Analysis
+    print(zip(thrower_height_range, eods))
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
