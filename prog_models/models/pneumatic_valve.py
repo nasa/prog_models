@@ -210,7 +210,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             vel = x['v'] + vdot*dt
             pos = new_x
 
-        return {
+        return self.apply_process_noise({
             'Aeb': x['Aeb'] + x['wb'] * dt,
             'Aet': x['Aet'] + x['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
@@ -226,7 +226,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'wk': x['wk'],
             'wr': x['wr'],
             'wt': x['wt']
-        }
+        }, dt)
     
     def output(self, t, x):
         parameters = self.parameters # Optimization

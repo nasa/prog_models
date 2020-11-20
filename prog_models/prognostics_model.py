@@ -100,7 +100,7 @@ class PrognosticsModel(ABC):
         """
         pass
         
-    def apply_process_noise(self, x) -> dict:
+    def apply_process_noise(self, x, dt=1) -> dict:
         """
         Apply process noise to the state
 
@@ -124,7 +124,7 @@ class PrognosticsModel(ABC):
         | x = m.initialize(u, z) # Initialize first state
         | x = m.apply_process_noise(x) 
         """
-        return {key: x[key] + random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
+        return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
     @abstractmethod
     def next_state(self, t, x, u, dt) -> dict: 

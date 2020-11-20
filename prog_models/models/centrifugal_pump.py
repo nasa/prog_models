@@ -163,7 +163,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         wdot = (Te-friction-backTorque)/self.parameters['I']
         Qdot = 1/self.parameters['FluidI']*(Qo-x['Q'])
         QLeak = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
-        return {
+        return self.apply_process_noise({
             'A': x['A'] + Adot*dt,
             'Q': x['Q'] + Qdot*dt, 
             'To': x['To'] + Todot*dt,
@@ -176,7 +176,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'wRadial': x['wRadial'],
             'wThrust': x['wThrust'],
             'QLeak': QLeak
-        }
+        }, dt)
 
     def output(self, t, x):
         Qout = max(0,x['Q']-x['QLeak'])
