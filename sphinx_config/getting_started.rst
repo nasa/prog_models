@@ -18,6 +18,8 @@ See the examples for examples of use. Run examples using the command `python -m 
 * examples.sim_example
     .. automodule:: examples.sim_example
 
+* examples.model_gen_example
+    .. automodule:: examples.model_gen_example
 Extending
 ----------
 There are two methods of creating new models: 1. Implementing a new subclass of one of the base model clases (:class:`prog_models.prognostics_model.PrognosticsModel` or :class:`prog_models.deriv_prog_model.DerivProgModel`) or 2. use the model generator method (:py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`). These methods are described more below.
