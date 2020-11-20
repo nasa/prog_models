@@ -3,6 +3,7 @@
 import unittest
 from prog_models import *
 from prog_models.models import *
+from examples import *
 from copy import deepcopy
 from io import StringIO 
 import sys
@@ -785,13 +786,13 @@ def _test_ex():
     sys.stdout = StringIO()
 
     # Run example
-    import example 
+    sim_example.run_example()
 
     # Reset stdout 
     sys.stdout = _stdout
 
 if __name__ == '__main__':
     from timeit import timeit
-    print("\n\nExample Runtime: ", timeit(_test_ex))
+    print("\n\nExample Runtime: ", timeit(_test_ex, number=10))
     unittest.main()
     

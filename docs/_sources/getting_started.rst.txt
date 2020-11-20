@@ -10,11 +10,13 @@ Installing Dependencies
 You can do this using the included `requriements.txt` file. Use the following command:
     `pip install -r requirements.txt`
 
-
+.. highlight::python
 Use 
 ----
-See :py:mod:`example.py` for an example of use.
+See the examples for examples of use. Run examples using the command `python -m examples.[Example name]` command (e.g., `python -m examples.sim_example`). The examples are summarized below:
 
+* examples.sim_example
+    .. automodule:: examples.sim_example
 
 Extending
 ----------
