@@ -36,7 +36,8 @@ def run_example():
     # Simulate to threshold
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183})
+    options = {'save_freq': 100}
+    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, options)
 
     for i in range(len(times)): # Print Results
         print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))

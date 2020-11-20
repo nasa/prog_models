@@ -13,6 +13,7 @@ If you are new to this package, see `<getting_started.html>`__.
    prognostics_model
    deriv_prog_model
    exceptions
+   dev_guide
 
 Citing this repository
 -----------------------
