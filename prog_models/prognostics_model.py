@@ -400,7 +400,6 @@ class PrognosticsModel(ABC):
             'horizon': 1e100 # Default horizon (in s), essentially inf
         }
         config.update(options)
-        print(config)
         
         # Configuration validation
         if type(config['dt']) is not int and type(config['dt']) is not float:

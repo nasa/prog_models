@@ -79,5 +79,6 @@ def run_example():
         print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
 
+# This allows the module to be executed directly 
 if __name__=='__main__':
     run_example()
