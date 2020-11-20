@@ -319,7 +319,7 @@ class PrognosticsModel(ABC):
         config = { # Defaults
             'dt': 1,
             'save_freq': 10,
-            'threshold_eqn': (lambda t,x : {'a': False}), # Override threshold
+            'thresholds_met_eqn': (lambda x: False), # Override threshold
             'horizon': time
         }
         config.update(options)
@@ -411,13 +411,6 @@ class PrognosticsModel(ABC):
         if config['save_freq'] <= 0:
             raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
 
-        # TODO(CT): Add checks (e.g., stepsize, save_freq > 0)
-        if 'threshold_eqn' in config:
-            # Override threshold_met eqn
-            threshold_met_eqn = config['threshold_eqn']
-        else:
-            threshold_met_eqn = self.threshold_met
-
         # Setup
         t = 0
         u = future_loading_eqn(t)
@@ -440,7 +433,9 @@ class PrognosticsModel(ABC):
         next_state = self.next_state
         output = self.output
         event_state = self.event_state
-        if not threshold_keys:
+        if 'thresholds_met_eqn' in config:
+            check_thresholds = config['thresholds_met_eqn']
+        elif not threshold_keys:
             def check_thresholds(thresholds_met):
                 return any(thresholds_met.values())
         else:
@@ -452,7 +447,7 @@ class PrognosticsModel(ABC):
             t += dt
             u = future_loading_eqn(t)
             x = next_state(t, x, u, dt)
-            threshold_met = check_thresholds(threshold_met_eqn(t, x))
+            threshold_met = check_thresholds(self.threshold_met(t, x))
             if (t >= next_save):
                 next_save += save_freq
                 times = append(times,t)
