@@ -11,7 +11,6 @@ If you are new to this package, see `<getting_started.html>`__.
    getting_started
    models
    prognostics_model
-   deriv_prog_model
    exceptions
    dev_guide
 

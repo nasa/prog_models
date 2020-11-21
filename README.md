@@ -9,7 +9,6 @@ See documentation [here](docs/index.html)
  
 `prog_models/` - The prognostics model python package 
  |-`models/` - Example models 
- |-`deriv_prog_model.py` - Physics-based model superclass of degraded system behavior defined by the state derivative function
  |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior 
 `docs/` - Project documentation 
 `sphinx_config/` - Configuration for automatic documentation generation
@@ -17,7 +16,6 @@ See documentation [here](docs/index.html)
 `tests/` - Tests for prog_models
 `README.md` - The readme (this file)
 `requirements.txt` - python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`
-`deriv_model_template.py` - Template for Derivative Model
 `prog_model_template.py` - Template for Prognsotics Model 
 
 ## Notices

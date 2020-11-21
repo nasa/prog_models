@@ -1,5 +1,12 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+# INSTRUCTIONS:
+# 1. Copy this file- renaming to the name of your model
+# 2. Rename the class as desired
+# 3. Replace the events, inputs, states, outputs keys with those specific to the model
+# 4. Uncomment either dx or next_state function. dx for continuous models, and next_state for discrete
+# 5. Implement logic of model in each method
+
 from prog_models import prognostics_model
 
 class ProgModelTemplate(prognostics_model.PrognosticsModel):
@@ -78,39 +85,82 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
         }
         return x0
 
-    def next_state(self, t, x, u, dt):
-        """
-        State transition equation: Calculate next state
+    # UNCOMMENT THIS FUNCTION FOR CONTINUOUS MODELS
+    # def dx(self, t, x, u):
+    #     """
+    #     Returns the first derivative of state `x` at a specific time `t`, given state and input
 
-        Parameters
-        ----------
-        t : number
-            Current timestamp in seconds (≥ 0)
-            e.g., t = 3.4
-        x : dict
-            state, with keys defined by model.states
-            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-        u : dict
-            Inputs, with keys defined by model.inputs.
-            e.g., u = {'i':3.2} given inputs = ['i']
-        dt : number
-            Timestep size in seconds (≥ 0)
-            e.g., dt = 0.1
+    #     Parameters
+    #     ----------
+    #     t : number
+    #         Current timestamp in seconds (≥ 0)
+    #         e.g., t = 3.4
+    #     x : dict
+    #         state, with keys defined by model.states
+    #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+    #     u : dict
+    #         Inputs, with keys defined by model.inputs.
+    #         e.g., u = {'i':3.2} given inputs = ['i']
+
+    #     Returns
+    #     -------
+    #     dx : dict
+    #         First derivitive of state, with keys defined by model.states
+    #         e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
+        
+    #     Example
+    #     -------
+    #     | m = DerivProgModel() # Replace with specific model being simulated
+    #     | u = {'u1': 3.2}
+    #     | z = {'z1': 2.2}
+    #     | x = m.initialize(u, z) # Initialize first state
+    #     | dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u
+    #     """
+
+    #     # REPLACE THE FOLLOWING WITH SOMETHING SPECIFC TO YOUR MODEL
+    #     dxdt = {
+    #         'Examples State 1': 0.1,
+    #         'Examples State 2': -2.3,
+    #         'Examples State 3': 4.7,
+    #         'Examples State 4': 220
+    #     }
+
+    #     return dxdt
+
+    # UNCOMMENT THIS FUNCTION FOR DISCRETE MODELS
+    # def next_state(self, t, x, u, dt):
+    #     """
+    #     State transition equation: Calculate next state
+
+    #     Parameters
+    #     ----------
+    #     t : number
+    #         Current timestamp in seconds (≥ 0)
+    #         e.g., t = 3.4
+    #     x : dict
+    #         state, with keys defined by model.states
+    #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+    #     u : dict
+    #         Inputs, with keys defined by model.inputs.
+    #         e.g., u = {'i':3.2} given inputs = ['i']
+    #     dt : number
+    #         Timestep size in seconds (≥ 0)
+    #         e.g., dt = 0.1
         
 
-        Returns
-        -------
-        x : dict
-            Next state, with keys defined by model.states
-            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-        """
+    #     Returns
+    #     -------
+    #     x : dict
+    #         Next state, with keys defined by model.states
+    #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+    #     """
 
-        next_x = x
-        # ADD LOGIC TO CALCULATE next_x from x
+    #     next_x = x
+    #     # ADD LOGIC TO CALCULATE next_x from x
 
-        # Apply Process Noise and return
-        next_x = self._Model__apply_process_noise(next_x) 
-        return next_x
+    #     # Apply Process Noise and return
+    #     next_x = self._Model__apply_process_noise(next_x) 
+    #     return next_x
 
     def output(self, t, x):
         """

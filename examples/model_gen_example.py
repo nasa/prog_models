@@ -6,7 +6,7 @@ Model for this example is that of an object thrown into the air, predicting impa
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
-from prog_models.deriv_prog_model import DerivProgModel
+from prog_models.prognostics_model import PrognosticsModel
 
 def run_example():
     # Step 1: Define keys
@@ -64,7 +64,7 @@ def run_example():
     event_state.max_x = 0
     
     # Step 6: Generate model
-    m = DerivProgModel.generate_model(keys, initialize, dx, output, event_state_eqn = event_state, threshold_eqn=threshold_met)
+    m = PrognosticsModel.generate_model(keys, initialize, output, event_state_eqn = event_state, threshold_eqn=threshold_met, dx_eqn=dx)
 
     # Step 7: Setup for simulation 
     def future_load(t):

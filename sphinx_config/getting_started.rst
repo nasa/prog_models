@@ -38,17 +38,15 @@ See the examples for examples of use. Run examples using the command `python -m 
 
 Extending
 ----------
-There are two methods of creating new models: 1. Implementing a new subclass of one of the base model clases (:class:`prog_models.prognostics_model.PrognosticsModel` or :class:`prog_models.deriv_prog_model.DerivProgModel`) or 2. use the model generator method (:py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`). These methods are described more below.
+There are two methods of creating new models: 1. Implementing a new subclass of the base model class (:class:`prog_models.prognostics_model.PrognosticsModel`) or 2. use the model generator method (:py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`). These methods are described more below.
 
 1. Subclass Method
 ********************
 The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:
 
 .. autoclass:: prog_models.prognostics_model.PrognosticsModel
-|
-.. autoclass:: prog_models.deriv_prog_model.DerivProgModel
 
-To generate a new model create a new class for your model that inherits from one of these two base classes, whichever is more appropriate for your application. Alternatively, you can copy one of the templates :class:`prog_model_template.ProgModelTemplate` or :class:`deriv_model_template.ProgModelTemplate`, replacing the methods with logic defining your specific model.
+To generate a new model create a new class for your model that inherits from one of these two base classes, whichever is more appropriate for your application. Alternatively, you can copy one of the templates :class:`prog_model_template.ProgModelTemplate`, replacing the methods with logic defining your specific model.
 
 The analysis and simulation tools defined in :class:`prog_models.prognostics_model.PrognosticsModel` will then work with your new model. 
 

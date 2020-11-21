@@ -1,10 +1,10 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import deriv_prog_model
+from .. import prognostics_model
 
 from math import exp
 
-class BatteryCircuit(deriv_prog_model.DerivProgModel):
+class BatteryCircuit(prognostics_model.PrognosticsModel):
     """
     Prognostics model for a battery, represented by an electric circuit
     
