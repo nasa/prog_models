@@ -32,6 +32,9 @@ See the examples for examples of use. Run examples using the command `python -m 
 * :download:`examples.sensitivity_example <../examples/sensitivity_example.py>`
     .. automodule:: examples.sensitivity_example
     |
+* :download:`examples.noise_example <../examples/noise_example.py>`
+    .. automodule:: examples.noise_example
+    |
 
 Extending
 ----------

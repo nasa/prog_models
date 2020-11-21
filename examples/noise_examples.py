@@ -41,7 +41,6 @@ class ThrownObject(DerivProgModel):
             }
     
     def dx(self, t, x, u):
-        # apply_process_noise is used to add process noise to each step
         return self.apply_process_noise({
             'x': x['v'],
             'v': self.parameters['g'] # Acceleration of gravity
@@ -66,22 +65,43 @@ class ThrownObject(DerivProgModel):
         }
 
 def run_example():
-    # Demo model
-    # Step 1: Create instance of model
-    m = ThrownObject()
-
-    # Step 2: Setup for simulation 
     def future_load(t):
         return {}
-
-    # Step 3: Simulate to impact
     event = 'impact'
+
+    # Ex1: No noise
+    m = ThrownObject({'process_noise': 0})
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
-    
-    # Print results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
-    print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
+    print('Example without noise')
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
+    print('\t- impact time: {}s'.format(times[-1]))
+
+    # Ex2: with noise - same noise applied to every state
+    m = ThrownObject({'process_noise': 0.5})  # Noise with a std of 0.5 to every state
+    print('\nExample without same noise for every state')
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
+    print('\t- impact time: {}s'.format(times[-1]))
+
+    # Ex3: noise- more noise on position than velocity
+    m = ThrownObject({'process_noise': {'x': 0.25, 'v': 0.75}})  # Noise with a std of 0.2 to every state
+    print('\nExample with more noise on position than velocity')
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
+    print('\t- impact time: {}s'.format(times[-1]))
+
+    # Ex4: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
+    def apply_proportional_process_noise(self, x, dt = 1):
+        return {
+            'x': x['x'], # No noise on state
+            'v': x['v'] + dt*0.5*x['v']
+        }
+    m = ThrownObject({'process_noise': apply_proportional_process_noise})
+    print('\nExample with proportional noise on velocity')
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
+    print('\t- impact time: {}s'.format(times[-1]))
+
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

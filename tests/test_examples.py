@@ -60,3 +60,14 @@ class TestExamples(unittest.TestCase):
 
         # Reset stdout 
         sys.stdout = _stdout
+    
+    def test_noise_example(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        noise_examples.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout

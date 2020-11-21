@@ -5,6 +5,7 @@ from abc import abstractmethod, ABC
 from numbers import Number
 from numpy import array, append, random
 from copy import deepcopy
+import types
 
 class PrognosticsModel(ABC):
     """
@@ -70,6 +71,8 @@ class PrognosticsModel(ABC):
         
         if isinstance(self.parameters['process_noise'], Number):
             self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
+        elif callable(self.parameters['process_noise']):
+            self.apply_process_noise = types.MethodType(self.parameters['process_noise'], PrognosticsModel)
 
     @abstractmethod
     def initialize(self, u, z) -> dict:
@@ -109,6 +112,9 @@ class PrognosticsModel(ABC):
         x : dict
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        dt : Number
+            Time step. 
+            e.g., dt = 0.1
 
         Returns
         -------
