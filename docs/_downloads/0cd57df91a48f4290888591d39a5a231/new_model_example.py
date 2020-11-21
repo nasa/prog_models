@@ -5,10 +5,10 @@ Example defining and testing a new model. Can be run using the following command
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
-from prog_models.deriv_prog_model import DerivProgModel
+from prog_models.prognostics_model import PrognosticsModel
 
 # Model used in example
-class ThrownObject(DerivProgModel):
+class ThrownObject(PrognosticsModel):
     """
     Model that similates an object thrown into the air without air resistance
     """
@@ -41,10 +41,11 @@ class ThrownObject(DerivProgModel):
             }
     
     def dx(self, t, x, u):
-        return {
+        # apply_process_noise is used to add process noise to each step
+        return self.apply_process_noise({
             'x': x['v'],
             'v': self.parameters['g'] # Acceleration of gravity
-        }
+        })
 
     def output(self, t, x):
         return {

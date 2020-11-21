@@ -74,6 +74,8 @@ class PrognosticsModel(ABC):
         elif callable(self.parameters['process_noise']):
             self.apply_process_noise = types.MethodType(self.parameters['process_noise'], PrognosticsModel)
 
+        # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
+
     @abstractmethod
     def initialize(self, u, z) -> dict:
         """
@@ -132,7 +134,38 @@ class PrognosticsModel(ABC):
         """
         return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
-    @abstractmethod
+    def dx(self, t, x, u):
+        """
+        Returns the first derivative of state `x` at a specific time `t`, given state and input
+
+        Parameters
+        ----------
+        t : number
+            Current timestamp in seconds (≥ 0)
+            e.g., t = 3.4
+        x : dict
+            state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs.
+            e.g., u = {'i':3.2} given inputs = ['i']
+
+        Returns
+        -------
+        dx : dict
+            First derivitive of state, with keys defined by model.states
+            e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
+        
+        Example
+        -------
+        | m = DerivProgModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u
+        """
+        {}
+        
     def next_state(self, t, x, u, dt) -> dict: 
         """
         State transition equation: Calculate next state
@@ -167,8 +200,10 @@ class PrognosticsModel(ABC):
         | x = m.initialize(u, z) # Initialize first state
         | x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u
         """
-
-        pass
+        
+        # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
+        dx = self.dx(t, x, u)
+        return {key: x[key] + dx[key]*dt for key in x.keys()}
 
     @abstractmethod
     def output(self, t, x) -> dict:
@@ -474,7 +509,7 @@ class PrognosticsModel(ABC):
         return (times, inputs, states, outputs, event_states)
     
     @staticmethod
-    def generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
+    def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
         """
         Generate a new prognostics model from functions
 
@@ -484,10 +519,14 @@ class PrognosticsModel(ABC):
             Dictionary containing keys required by model. Must include `inputs`, `outputs`, and `states`. Can also include `events`
         initialize_eqn : callable
             Equation to initialize first state of the model. See `initialize`
-        next_state_eqn : callable
-            Equation to calculate next_state from current state. See `next_state`
         output_eqn : callable
             Equation to calculate the outputs (measurements) for the model. See `output`
+        next_state_eqn : callable
+            Equation to calculate next_state from current state. See `next_state`. 
+            Use this for discrete functions
+        dx_eqn : callable
+            Equation to calculate dx from current state. See `dx`. 
+            Use this for continuous functions
         event_state_eqn : callable, optional
             Equation to calculate the state for each event of the model. See `event_state`
         threshold_eqn : callable, optional
@@ -519,11 +558,20 @@ class PrognosticsModel(ABC):
         if not callable(initialize_eqn):
             raise ProgModelTypeError("Initialize Function must be callable")
 
-        if not callable(next_state_eqn):
-            raise ProgModelTypeError("Next_State Function must be callable")
-
         if not callable(output_eqn):
             raise ProgModelTypeError("Output Function must be callable")
+
+        if next_state_eqn and not callable(next_state_eqn):
+            raise ProgModelTypeError("Next_State Function must be callable")
+
+        if dx_eqn and not callable(dx_eqn):
+            raise ProgModelTypeError("dx Function must be callable")
+
+        if not next_state_eqn and not dx_eqn:
+            raise ProgModelTypeError("Either next_state or dx must be defined (but not both)")
+
+        if next_state_eqn and dx_eqn:
+            raise ProgModelTypeError("Either next_state or dx must be defined (but not both)")
 
         if event_state_eqn and not callable(event_state_eqn):
             raise ProgModelTypeError("Event State Function must be callable")
@@ -547,7 +595,7 @@ class PrognosticsModel(ABC):
             outputs = keys['outputs']
             def initialize():
                 pass
-            def next_state():
+            def dx():
                 pass
             def output():
                 pass
@@ -555,9 +603,12 @@ class PrognosticsModel(ABC):
         m = NewProgModel(config)
 
         m.initialize = initialize_eqn
-        m.next_state = next_state_eqn
         m.output = output_eqn
 
+        if next_state_eqn:
+            m.next_state = next_state_eqn
+        if dx_eqn:
+            m.dx = dx_eqn
         if 'events' in keys:
             m.events = keys['events']
         if event_state_eqn:

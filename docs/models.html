@@ -174,8 +174,12 @@ Circuit model</p></td>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>dt</strong> (<em>Number</em>) – Time step.
+e.g., dt = 0.1</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x</strong> – state, with applied noise, with keys defined by model.states
@@ -265,15 +269,18 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">dx_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keys</strong> (<em>dict</em>) – Dictionary containing keys required by model. Must include <cite>inputs</cite>, <cite>outputs</cite>, and <cite>states</cite>. Can also include <cite>events</cite></p></li>
 <li><p><strong>initialize_eqn</strong> (<em>callable</em>) – Equation to initialize first state of the model. See <cite>initialize</cite></p></li>
-<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite></p></li>
 <li><p><strong>output_eqn</strong> (<em>callable</em>) – Equation to calculate the outputs (measurements) for the model. See <cite>output</cite></p></li>
+<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite>.
+Use this for discrete functions</p></li>
+<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite>.
+Use this for continuous functions</p></li>
 <li><p><strong>event_state_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate the state for each event of the model. See <cite>event_state</cite></p></li>
 <li><p><strong>threshold_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate if the threshold has been met for each event in model. See <cite>threshold_met</cite></p></li>
 <li><p><strong>config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Any configuration parameters for the model</p></li>
@@ -300,7 +307,7 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 </div>
 <div class="line">}</div>
 <div class="line"><br /></div>
-<div class="line">m = DerivProgModel.generate_model(keys, initialize_eqn, dx_eqn, output_eqn, event_state_eqn, threshold_eqn)</div>
+<div class="line">m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)</div>
 </div>
 </dd></dl>
 
@@ -336,7 +343,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -568,8 +575,12 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>dt</strong> (<em>Number</em>) – Time step.
+e.g., dt = 0.1</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x</strong> – state, with applied noise, with keys defined by model.states
@@ -659,15 +670,18 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">dx_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keys</strong> (<em>dict</em>) – Dictionary containing keys required by model. Must include <cite>inputs</cite>, <cite>outputs</cite>, and <cite>states</cite>. Can also include <cite>events</cite></p></li>
 <li><p><strong>initialize_eqn</strong> (<em>callable</em>) – Equation to initialize first state of the model. See <cite>initialize</cite></p></li>
-<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite></p></li>
 <li><p><strong>output_eqn</strong> (<em>callable</em>) – Equation to calculate the outputs (measurements) for the model. See <cite>output</cite></p></li>
+<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite>.
+Use this for discrete functions</p></li>
+<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite>.
+Use this for continuous functions</p></li>
 <li><p><strong>event_state_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate the state for each event of the model. See <cite>event_state</cite></p></li>
 <li><p><strong>threshold_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate if the threshold has been met for each event in model. See <cite>threshold_met</cite></p></li>
 <li><p><strong>config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Any configuration parameters for the model</p></li>
@@ -694,7 +708,7 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 </div>
 <div class="line">}</div>
 <div class="line"><br /></div>
-<div class="line">m = DerivProgModel.generate_model(keys, initialize_eqn, dx_eqn, output_eqn, event_state_eqn, threshold_eqn)</div>
+<div class="line">m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)</div>
 </div>
 </dd></dl>
 
@@ -730,7 +744,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -975,8 +989,12 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>dt</strong> (<em>Number</em>) – Time step.
+e.g., dt = 0.1</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x</strong> – state, with applied noise, with keys defined by model.states
@@ -993,6 +1011,39 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.centrifugal_pump.CentrifugalPump.dx">
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.dx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dx</strong> – First derivitive of state, with keys defined by model.states
+e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = DerivProgModel() # Replace with specific model being simulated</div>
+<div class="line">u = {‘u1’: 3.2}</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">x = m.initialize(u, z) # Initialize first state</div>
+<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
 </div>
 </dd></dl>
 
@@ -1033,15 +1084,18 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keys</strong> (<em>dict</em>) – Dictionary containing keys required by model. Must include <cite>inputs</cite>, <cite>outputs</cite>, and <cite>states</cite>. Can also include <cite>events</cite></p></li>
 <li><p><strong>initialize_eqn</strong> (<em>callable</em>) – Equation to initialize first state of the model. See <cite>initialize</cite></p></li>
-<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite></p></li>
 <li><p><strong>output_eqn</strong> (<em>callable</em>) – Equation to calculate the outputs (measurements) for the model. See <cite>output</cite></p></li>
+<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite>.
+Use this for discrete functions</p></li>
+<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite>.
+Use this for continuous functions</p></li>
 <li><p><strong>event_state_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate the state for each event of the model. See <cite>event_state</cite></p></li>
 <li><p><strong>threshold_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate if the threshold has been met for each event in model. See <cite>threshold_met</cite></p></li>
 <li><p><strong>config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Any configuration parameters for the model</p></li>
@@ -1366,8 +1420,12 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>dt</strong> (<em>Number</em>) – Time step.
+e.g., dt = 0.1</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x</strong> – state, with applied noise, with keys defined by model.states
@@ -1384,6 +1442,39 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.models.pneumatic_valve.PneumaticValve.dx">
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.dx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
+e.g., t = 3.4</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
+e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dx</strong> – First derivitive of state, with keys defined by model.states
+e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = DerivProgModel() # Replace with specific model being simulated</div>
+<div class="line">u = {‘u1’: 3.2}</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">x = m.initialize(u, z) # Initialize first state</div>
+<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
 </div>
 </dd></dl>
 
@@ -1424,15 +1515,18 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keys</strong> (<em>dict</em>) – Dictionary containing keys required by model. Must include <cite>inputs</cite>, <cite>outputs</cite>, and <cite>states</cite>. Can also include <cite>events</cite></p></li>
 <li><p><strong>initialize_eqn</strong> (<em>callable</em>) – Equation to initialize first state of the model. See <cite>initialize</cite></p></li>
-<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite></p></li>
 <li><p><strong>output_eqn</strong> (<em>callable</em>) – Equation to calculate the outputs (measurements) for the model. See <cite>output</cite></p></li>
+<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite>.
+Use this for discrete functions</p></li>
+<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite>.
+Use this for continuous functions</p></li>
 <li><p><strong>event_state_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate the state for each event of the model. See <cite>event_state</cite></p></li>
 <li><p><strong>threshold_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate if the threshold has been met for each event in model. See <cite>threshold_met</cite></p></li>
 <li><p><strong>config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Any configuration parameters for the model</p></li>
@@ -1729,8 +1823,8 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deriv_prog_model.html">Derivative Prognostics Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
 </ul>
 
 <div class="relations">
