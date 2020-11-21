@@ -97,7 +97,14 @@ def run_example():
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
-    # Ex5: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
+    # Ex5: noise- Ex3 but triangle
+    m = ThrownObject({'process_noise_dist': 'triangular', 'process_noise': {'x': 0.25, 'v': 0.75}})  # Noise with a std of 0.2 to every state
+    print('\nExample with more noise on position than velocity')
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
+    print('\t- impact time: {}s'.format(times[-1]))
+
+    # Ex6: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
     def apply_proportional_process_noise(self, x, dt = 1):
         return {
             'x': x['x'], # No noise on state

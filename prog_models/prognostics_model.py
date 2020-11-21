@@ -75,6 +75,10 @@ class PrognosticsModel(ABC):
                 def uniform_process_noise(self, x, dt=1):
                     return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
                 self.apply_process_noise = types.MethodType(uniform_process_noise, self)
+            elif self.parameters['process_noise_dist'].lower() == "triangular":
+                def triangular_process_noise(self, x, dt=1):
+                    return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
+                self.apply_process_noise = types.MethodType(triangular_process_noise, self)
             else:
                 raise ProgModelTypeError("Unsupported Process noise distribution")
         
