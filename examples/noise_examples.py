@@ -70,47 +70,62 @@ def run_example():
     event = 'impact'
 
     # Ex1: No noise
-    m = ThrownObject({'process_noise': 0})
+    process_noise = 0
+    model_config = {'process_noise': process_noise}
+    m = ThrownObject(model_config)
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('Example without noise')
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex2: with noise - same noise applied to every state
-    m = ThrownObject({'process_noise': 0.5})  # Noise with a std of 0.5 to every state
+    process_noise = 0.5
+    model_config = {'process_noise': process_noise}
+    m = ThrownObject(model_config)  # Noise with a std of 0.5 to every state
     print('\nExample without same noise for every state')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex3: noise- more noise on position than velocity
-    m = ThrownObject({'process_noise': {'x': 0.25, 'v': 0.75}})  # Noise with a std of 0.2 to every state
+    process_noise = {'x': 0.25, 'v': 0.75}
+    model_config = {'process_noise': process_noise}
+    m = ThrownObject(model_config) 
     print('\nExample with more noise on position than velocity')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex4: noise- Ex3 but uniform
-    m = ThrownObject({'process_noise_dist': 'uniform', 'process_noise': {'x': 0.25, 'v': 0.75}})  # Noise with a std of 0.2 to every state
+    process_noise = {'x': 0.25, 'v': 0.75}
+    process_noise_dist = 'uniform'
+    model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
+    m = ThrownObject(model_config) 
     print('\nExample with more noise on position than velocity')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex5: noise- Ex3 but triangle
-    m = ThrownObject({'process_noise_dist': 'triangular', 'process_noise': {'x': 0.25, 'v': 0.75}})  # Noise with a std of 0.2 to every state
+    process_noise = {'x': 0.25, 'v': 0.75}
+    process_noise_dist = 'triangular'
+    model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
+    m = ThrownObject(model_config) 
     print('\nExample with more noise on position than velocity')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex6: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
+    # This can be used to do custom or more complex noise distributions
     def apply_proportional_process_noise(self, x, dt = 1):
         return {
             'x': x['x'], # No noise on state
             'v': x['v'] + dt*0.5*x['v']
         }
-    m = ThrownObject({'process_noise': apply_proportional_process_noise})
+    process_noise = apply_proportional_process_noise
+    model_config = {'process_noise': apply_proportional_process_noise}
+    m = ThrownObject(model_config)
     print('\nExample with proportional noise on velocity')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
