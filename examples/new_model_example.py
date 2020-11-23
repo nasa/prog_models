@@ -26,6 +26,7 @@ class ThrownObject(PrognosticsModel):
         'impact' # Event- object has impacted ground
     ]
 
+    # The Default parameters. Overwritten by passing parameters dictionary into constructor
     default_parameters = {
         'thrower_height': 1.83, # m
         'throwing_speed': 40, # m/s
@@ -52,6 +53,8 @@ class ThrownObject(PrognosticsModel):
             'x': x['x']
         }
 
+    # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
+    #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
     def threshold_met(self, t, x):
         return {
             'falling': x['v'] < 0,
@@ -82,6 +85,31 @@ def run_example():
     for i in range(len(times)):
         print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
+
+    # OK, now lets compare performance on different heavenly bodies. 
+    # This requires that we update the cofiguration
+    grav_moon = -1.62
+    opts = {
+        'g': grav_moon
+    }
+    # The first way to change the configuration is to pass in your desired config into construction of the model
+    m = ThrownObject(options=opts)
+    (times_moon, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+
+    grav_mars = -3.711
+    # You can also update the parameters after it's constructed
+    m.parameters['g'] = grav_mars
+    (times_mars, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+
+    grav_venus = -8.87
+    m.parameters['g'] = grav_venus
+    (times_venus, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+
+    print('Time to hit the ground: ')
+    print('\tvenus: {}s'.format(round(times_venus[-1],2)))
+    print('\tearth: {}s'.format(round(times[-1],2)))
+    print('\tmars: {}s'.format(round(times_mars[-1],2)))
+    print('\tmoon: {}s'.format(round(times_moon[-1],2)))
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
