@@ -77,31 +77,9 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, t, x):
                 pass
-        class empty_inputs(prognostics_model.PrognosticsModel):
-            inputs = []
-            states = ['x1', 'x2']
-            outputs = ['o1']
-            parameters = {'process_noise':0.1}
-            def initialize(self, u, z):
-                pass
-            def next_state(self, t, x, u, dt):
-                pass
-            def output(self, t, x):
-                pass
         class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
-            parameters = {'process_noise':0.1}
-            def initialize(self, u, z):
-                pass
-            def next_state(self, t, x, u, dt):
-                pass
-            def output(self, t, x):
-                pass
-        class empty_outputs(prognostics_model.PrognosticsModel):
-            inputs = ['i1']
-            states = ['x1', 'x2']
-            outputs = []
             parameters = {'process_noise':0.1}
             def initialize(self, u, z):
                 pass
@@ -157,20 +135,8 @@ class TestModels(unittest.TestCase):
             pass
 
         try: 
-            m = empty_inputs()
-            self.fail("Should not have worked, empty 'inputs'")
-        except ProgModelTypeError:
-            pass
-
-        try: 
             m = missing_outputs()
             self.fail("Should not have worked, missing 'outputs'")
-        except ProgModelTypeError:
-            pass
-
-        try: 
-            m = empty_outputs()
-            self.fail("Should not have worked, empty 'outputs'")
         except ProgModelTypeError:
             pass
 
