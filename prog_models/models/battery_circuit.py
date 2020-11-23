@@ -71,7 +71,6 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'ha': 0.5,          # Heat transfer coefficient, ambient
         'hcp': 19,
         'hcs': 1,
-        'process_noise': 0.1, # Process noise
         'x0': {             # Default initial state
             'tb': 18.95,   
             'qb': 7856.3254,

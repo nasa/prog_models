@@ -158,58 +158,9 @@ class TestModels(unittest.TestCase):
             self.fail("Should not have worked, missing 'output' method")
         except TypeError:
             pass
-    
-    def test_broken_prog_models(self):
-        class missing_events(MockModel, prognostics_model.PrognosticsModel):
-            def event_state(self, t, x):
-                pass
-            def threshold_met(self, t, x):
-                pass
-        class empty_events(MockModel, prognostics_model.PrognosticsModel):
-            events = []
-            def event_state(self, t, x):
-                pass
-            def threshold_met(self, t, x):
-                pass
-        class missing_event_state(MockModel, prognostics_model.PrognosticsModel):
-            events = ['e1']
-            def threshold_met(self, t, x):
-                pass
-        class missing_threshold_met(MockModel, prognostics_model.PrognosticsModel):
-            events = ['e1']
-            def event_state(self, t, x):
-                pass
-
-        try: 
-            m = missing_events()
-            self.fail("Should not have worked, missing 'events'")
-        except ProgModelTypeError:
-            pass
-
-        try: 
-            m = empty_events()
-            self.fail("Should not have worked, empty 'events'")
-        except ProgModelTypeError:
-            pass
-
-        try: 
-            m = missing_event_state()
-            self.fail("Should not have worked, missing 'event_state' method")
-        except TypeError:
-            pass
-
-        try: 
-            m = missing_threshold_met()
-            self.fail("Should not have worked, missing 'thresholds_met' method")
-        except TypeError:
-            pass
 
     def test_prog_model(self):
-        try:
-            m = MockProgModel()
-            self.fail("Should not have worked, missing `process_noise`")
-        except ProgModelTypeError:
-            pass
+        m = MockProgModel() # Should work- sets default
         m = MockProgModel({'process_noise': 0.0})
         x0 = m.initialize({}, {})
         self.assertEqual(x0, m.parameters['x0'])

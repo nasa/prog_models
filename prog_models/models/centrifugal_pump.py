@@ -71,8 +71,6 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     ]
 
     default_parameters = { # Set to defaults
-        'process_noise': 0.1,
-
         # Environmental parameters
         'pAtm': 101325,     # Atmospheric Pressure (Pa)
 

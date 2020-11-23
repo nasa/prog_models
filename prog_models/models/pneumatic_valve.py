@@ -86,8 +86,6 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "x"
     ]
     default_parameters = { # Set to defaults
-        'process_noise': 0.1,
-
         # Environmental Parameters
         'R': 8.314, # Universal Gas Constant
         'g': 9.81, # Acceleration due to gravity (m^2/s)
