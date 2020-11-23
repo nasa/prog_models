@@ -68,11 +68,24 @@ class PrognosticsModel(ABC):
 
         if not hasattr(self, 'outputs'):
             raise ProgModelTypeError('Must have `outputs` attribute')
+
+        if 'process_noise_dist' in self.parameters and self.parameters['process_noise_dist'].lower() not in ["gaussian", "normal"]:
+            # Update process noise distribution to custom 
+            if self.parameters['process_noise_dist'].lower() == "uniform":
+                def uniform_process_noise(self, x, dt=1):
+                    return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
+                self.apply_process_noise = types.MethodType(uniform_process_noise, self)
+            elif self.parameters['process_noise_dist'].lower() == "triangular":
+                def triangular_process_noise(self, x, dt=1):
+                    return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
+                self.apply_process_noise = types.MethodType(triangular_process_noise, self)
+            else:
+                raise ProgModelTypeError("Unsupported Process noise distribution")
         
         if isinstance(self.parameters['process_noise'], Number):
             self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
         elif callable(self.parameters['process_noise']):
-            self.apply_process_noise = types.MethodType(self.parameters['process_noise'], PrognosticsModel)
+            self.apply_process_noise = types.MethodType(self.parameters['process_noise'], self)
 
         # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
