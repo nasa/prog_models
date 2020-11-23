@@ -71,7 +71,6 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'ha': 0.5,          # Heat transfer coefficient, ambient
         'hcp': 19,
         'hcs': 1,
-        'process_noise': 0.1, # Process noise
         'x0': {             # Default initial state
             'tb': 18.95,   
             'qb': 7856.3254,
@@ -121,10 +120,10 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
-        return {
+        return self.apply_measurement_noise({
             't': x['tb'],
             'v': Vb - Vcp - Vcs
-        }
+        })
 
     def threshold_met(self, t, x):
         parameters = self.parameters

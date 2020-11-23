@@ -71,8 +71,6 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     ]
 
     default_parameters = { # Set to defaults
-        'process_noise': 0.1,
-
         # Environmental parameters
         'pAtm': 101325,     # Atmospheric Pressure (Pa)
 
@@ -181,13 +179,13 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     def output(self, t, x):
         Qout = max(0,x['Q']-x['QLeak'])
 
-        return {
+        return self.apply_measurement_noise({
             'Qout': Qout,
             'To': x['To'],
             'Tr': x['Tr'],
             'Tt': x['Tt'],
             'w': x['w']
-        }
+        })
 
     def event_state(self, t, x):
         return {

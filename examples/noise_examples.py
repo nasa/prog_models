@@ -31,7 +31,7 @@ class ThrownObject(PrognosticsModel):
         'thrower_height': 1.83, # m
         'throwing_speed': 40, # m/s
         'g': -9.81, # Acceleration due to gravity in m/s^2
-        'process_noise': 0.0 # Required by all models, amount of noise in each step
+        'process_noise': 0.0 # amount of noise in each step
     }
 
     def initialize(self, u, z):
@@ -48,9 +48,9 @@ class ThrownObject(PrognosticsModel):
         })
 
     def output(self, t, x):
-        return {
+        return self.apply_measurement_noise({
             'x': x['x']
-        }
+        })
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
@@ -104,7 +104,7 @@ def run_example():
     process_noise_dist = 'uniform'
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(model_config) 
-    print('\nExample with more noise on position than velocity')
+    print('\nExample with more uniform noise')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
@@ -114,12 +114,26 @@ def run_example():
     process_noise_dist = 'triangular'
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(model_config) 
-    print('\nExample with more noise on position than velocity')
+    print('\nExample with triangular process noise')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
-    # Ex6: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
+    # Ex6: Measurement noise
+    # Everything we've done with process noise, we can also do with measurement noise.
+    # Just use 'measurement_noise' and 'measurement_noise_dist' 
+    measurement_noise = {'x': 0.25} # For each output
+    measurement_noise_dist = 'uniform'
+    model_config = {'measurement_noise_dist': measurement_noise_dist, 'measurement_noise': measurement_noise}
+    m = ThrownObject(model_config) 
+    print('\nExample with measurement noise')
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
+    print('\t- outputs: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, outputs)])) 
+    print('\t- impact time: {}s'.format(times[-1]))
+    print(' note the output is sometimes not the same as state- that is the measurement noise')
+
+    # Ex7: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
     # This can be used to do custom or more complex noise distributions
     def apply_proportional_process_noise(self, x, dt = 1):
         return {

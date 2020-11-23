@@ -86,8 +86,6 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "x"
     ]
     default_parameters = { # Set to defaults
-        'process_noise': 0.1,
-
         # Environmental Parameters
         'R': 8.314, # Universal Gas Constant
         'g': 9.81, # Acceleration due to gravity (m^2/s)
@@ -239,14 +237,14 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         pressureTop = x['mTop']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeTop
         pressureBot = x['mBot']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeBot
 
-        return {
+        return self.apply_measurement_noise({
             'Q': trueFlow,
             "iB": indicatorBotm, 
             "iT": indicatorTopm,
             "pB": 1e-6*pressureBot,
             "pT": 1e-6*pressureTop,
             "x": x['x']
-        }
+        })
 
     def event_state(self, t, x):
         return {

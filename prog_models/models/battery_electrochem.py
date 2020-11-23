@@ -252,10 +252,10 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         ]
         Vep = self.parameters['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
 
-        return {
+        return self.apply_measurement_noise({
             't': x['tb'] - 273.15,
             'v': Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
-        }
+        })
 
     def threshold_met(self, t, x):
         z = self.output(t, x)
