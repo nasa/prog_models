@@ -237,14 +237,14 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         pressureTop = x['mTop']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeTop
         pressureBot = x['mBot']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeBot
 
-        return {
+        return self.apply_measurement_noise({
             'Q': trueFlow,
             "iB": indicatorBotm, 
             "iT": indicatorTopm,
             "pB": 1e-6*pressureBot,
             "pT": 1e-6*pressureTop,
             "x": x['x']
-        }
+        })
 
     def event_state(self, t, x):
         return {

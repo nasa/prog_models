@@ -49,9 +49,9 @@ class ThrownObject(PrognosticsModel):
         })
 
     def output(self, t, x):
-        return {
+        return self.apply_measurement_noise({
             'x': x['x']
-        }
+        })
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it

@@ -179,13 +179,13 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     def output(self, t, x):
         Qout = max(0,x['Q']-x['QLeak'])
 
-        return {
+        return self.apply_measurement_noise({
             'Qout': Qout,
             'To': x['To'],
             'Tr': x['Tr'],
             'Tt': x['Tt'],
             'w': x['w']
-        }
+        })
 
     def event_state(self, t, x):
         return {
