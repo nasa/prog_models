@@ -26,6 +26,7 @@ class ThrownObject(DerivProgModel):
         'impact' # Event- object has impacted ground
     ]
 
+    # The Default parameters. Overwritten by passing parameters dictionary into constructor
     default_parameters = {
         'thrower_height': 1.83, # m
         'throwing_speed': 40, # m/s
@@ -51,6 +52,8 @@ class ThrownObject(DerivProgModel):
             'x': x['x']
         }
 
+    # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
+    #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
     def threshold_met(self, t, x):
         return {
             'falling': x['v'] < 0,
