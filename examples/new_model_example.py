@@ -4,7 +4,6 @@
 Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
 """
 
-# Deriv prog model was selected because the model can be described as x' = x + dx*dt
 from prog_models.prognostics_model import PrognosticsModel
 
 # Model used in example
