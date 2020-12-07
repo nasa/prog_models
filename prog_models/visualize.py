@@ -3,7 +3,9 @@
 
 # Import packages
 # ============
-import numpy as np
+# import numpy as np
+from numpy import ndarray
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -18,11 +20,6 @@ mpl.rcParams['figure.titlesize'] = 'x-large'
 mpl.rcParams['figure.figsize']   = [10.0, 9.0]
 mpl.rcParams['figure.dpi']       = 100
 mpl.rcParams['savefig.dpi']      = 300
-
-# Import model examples to test functions
-# =======================================
-from examples.new_model_example import *
-from examples.model_gen_example import *
 
 
 # VISUALIZE FUNCTIONS
@@ -460,13 +457,13 @@ def set_labels(ax, opt, series_names, axis='all'):
 
 
 
-def plot_timeseries(t, s, legend=None, options=None, savefig=None):
+def plot_timeseries(t, s, legend=None, options=None):
     """
     Plot time series 's' parametrized by time 't'.
     The function plot time series (in a single plot or subplots) contained in the array of dictionary s, produced by a prognostic model.
 
-    Input legend, options, and savefig are optional (default is None). If provided, they must be dictionaries with options for legend, plot options, 
-    and save the figure on a file, respectively. 
+    Input legend, and options are optional (default is None). If provided, they must be dictionaries with options for legend, and 
+    plot options, respectively. 
     
     The function is capable of plotting time series in a single plot (options['compact']=True), or in multiple subplots in the same figure (options['compact']=False).
     Legends can be displayed in each subplot or only one subplot, and names of time series, axis labels, plot title, legend titles and other are all customizable.
@@ -481,7 +478,6 @@ def plot_timeseries(t, s, legend=None, options=None, savefig=None):
                                 {'x': 1.83, 'v': 0.75},  ])
     legend : dictionary of legend options. See 'set_legend' function for more details
     options : dictionary of plot options. See 'set_plot_options' function and other functions therein for more details
-    savefig : dictionary of save figure options. See 'set_savefig_options' function for more details. 
 
     Returns:
     --------
@@ -505,9 +501,11 @@ def plot_timeseries(t, s, legend=None, options=None, savefig=None):
     |                       options = {'compact': False, 'suptitle': 'state evolution', 'title': False,
     |                                  'xlabel': 'time', 'ylabel': {'x': 'position', 'v': 'velocity'}, 'display_labels': 'minimal'},
     |                       legend  = {'display': True, 'display_at_subplot': 'all'} )
+    | fig.savefig('example1.png', dpi=300)
     | fig = plot_timeseries(times, states)
+    | fig.savefig('example2.pdf', dpi=150)
     """
-    assert type(s) == np.ndarray,   "Time series vector s must be an array of dictionary"
+    assert type(s) == ndarray,   "Time series vector s must be an array of dictionary"
     assert type(s[0])==dict,        "Every element of the time series vector s must be a dictionary"
 
     series_names = list(s[0].keys())
@@ -518,7 +516,6 @@ def plot_timeseries(t, s, legend=None, options=None, savefig=None):
     # ====================
     fig_options    = set_plot_options(options)                      # Set up figure options
     legend_options = set_legend_options(legend, series_names)       # Set up legend options
-    sf_options     = set_savefig_options(savefig)                   # Setup figure options
     
     # Generate figure
     # =============
@@ -573,37 +570,5 @@ def plot_timeseries(t, s, legend=None, options=None, savefig=None):
     # ==============
     if fig_options['suptitle']:     fig.suptitle(fig_options['suptitle'], fontsize=fig_options['title_fontsize']) # Add subtitle
     if fig_options['tight_layout']: plt.tight_layout()  # If tight-layout
-    if sf_options['save']:          plt.savefig(sf_options['filename'], dpi=sf_options['dpi'])  # Save figure if required
         
     return fig
-
-
-if __name__ == '__main__':
-
-    print('Hello = ')
-
-    # New Model Example
-    # ===============
-    m = ThrownObject()
-
-    # Step 2: Setup for simulation 
-    def future_load(t):
-        return {}
-
-    # Step 3: Simulate to impact
-    event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load,
-                                                                             {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
-    
-
-    # Display states
-    # ==============
-    fig = plot_timeseries(times, states, 
-                          options = {'compact': False, 'suptitle': 'state evolution', 'title': True,
-                                     'xlabel': 'time', 'ylabel': {'x': 'position', 'v': 'velocity'}, 'display_labels': 'minimal'},
-                          legend  = {'display': True, 'display_at_subplot': 'all'} )
-    fig = plot_timeseries(times, states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
-                                                    'xlabel': 'time', 'ylabel':'position'})
-
-
-    plt.show()
