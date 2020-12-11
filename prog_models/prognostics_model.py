@@ -75,42 +75,14 @@ class PrognosticsModel(ABC):
         if not hasattr(self, 'outputs'):
             raise ProgModelTypeError('Must have `outputs` attribute')
 
-        if isinstance(self.parameters['process_noise'], Number):
-            self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
-        if 'process_noise_dist' in self.parameters and self.parameters['process_noise_dist'].lower() not in ["gaussian", "normal"]:
-            # Update process noise distribution to custom 
-            if self.parameters['process_noise_dist'].lower() == "uniform":
-                def uniform_process_noise(self, x, dt=1):
-                    return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
-                self.apply_process_noise = types.MethodType(uniform_process_noise, self)
-            elif self.parameters['process_noise_dist'].lower() == "triangular":
-                def triangular_process_noise(self, x, dt=1):
-                    return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
-                self.apply_process_noise = types.MethodType(triangular_process_noise, self)
-            else:
-                raise ProgModelTypeError("Unsupported process noise distribution")
-        if callable(self.parameters['process_noise']):
-            self.apply_process_noise = types.MethodType(self.parameters['process_noise'], self)
-
-        if isinstance(self.parameters['measurement_noise'], Number):
-            self.parameters['measurement_noise'] = {key: self.parameters['measurement_noise'] for key in self.outputs}
-        if 'measurement_noise_dist' in self.parameters and self.parameters['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
-            # Update measurment noise distribution to custom 
-            if self.parameters['measurement_noise_dist'].lower() == "uniform":
-                def uniform_noise(self, x):
-                    return {key: x[key] + random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) for key in self.outputs}
-                self.apply_measurement_noise = types.MethodType(uniform_noise, self)
-            elif self.parameters['measurement_noise_dist'].lower() == "triangular":
-                def triangular_noise(self, x):
-                    return {key: x[key] + random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) for key in self.outputs}
-                self.apply_measurement_noise = types.MethodType(triangular_noise, self)
-            else:
-                raise ProgModelTypeError("Unsupported measurement noise distribution")
-        if callable(self.parameters['measurement_noise']):
-            self.apply_measurement_noise = types.MethodType(self.parameters['measurement_noise'], self)
-
+        # Triggure noise set logic
+        self.set_config('process_noise', self.parameters['process_noise'])
+        self.set_config('measurement_noise', self.parameters['measurement_noise'])
         # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
+    def __str__(self):
+        return "{} Prognostics Model\n\tEvents: {}\n\tInputs: {}\n\tOutputs: {}".format(type(self).__name__, self.events, self.inputs, self.outputs)
+    
     @abstractmethod
     def initialize(self, u, z) -> dict:
         """
@@ -519,11 +491,12 @@ class PrognosticsModel(ABC):
             x = config['x']
         else:
             x = self.initialize(u, first_output)
-        times = array([t])
-        inputs = array([u])
-        states = array([deepcopy(x)]) # Avoid optimization where x is not copied
-        outputs = array([self.output(t, x)])
-        event_states = array([self.event_state(t, x)])
+        
+        times = [t]
+        inputs = [u]
+        states = [deepcopy(x)] # Avoid optimization where x is not copied
+        outputs = [self.output(t, x)]
+        event_states = [self.event_state(t, x)]
         dt = config['dt'] # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
@@ -533,6 +506,7 @@ class PrognosticsModel(ABC):
         # Optimization
         next_state = self.next_state
         output = self.output
+        thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
@@ -548,25 +522,25 @@ class PrognosticsModel(ABC):
             t += dt
             u = future_loading_eqn(t)
             x = next_state(t, x, u, dt)
-            threshold_met = check_thresholds(self.threshold_met(t, x))
+            threshold_met = check_thresholds(thresthold_met_eqn(t, x))
             if (t >= next_save):
                 next_save += save_freq
-                times = append(times,t)
-                inputs = append(inputs,u)
-                states = append(states,deepcopy(x))
-                outputs = append(outputs,output(t, x))
-                event_states = append(event_states,event_state(t, x))
+                times.append(t)
+                inputs.append(u)
+                states.append(deepcopy(x))
+                outputs.append(output(t, x))
+                event_states.append(event_state(t, x))
 
         # Save final state
         if times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
-            times = append(times,t)
-            inputs = append(inputs,u)
-            states = append(states,x)
-            outputs = append(outputs,self.output(t, x))
-            event_states = append(event_states,self.event_state(t, x))
+            times.append(t)
+            inputs.append(u)
+            states.append(deepcopy(x))
+            outputs.append(output(t, x))
+            event_states.append(event_state(t, x))
         
-        return (times, inputs, states, outputs, event_states)
+        return (array(times), array(inputs), array(states), array(outputs), array(event_states))
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
@@ -677,3 +651,41 @@ class PrognosticsModel(ABC):
             m.threshold_met = threshold_eqn
 
         return m
+
+    def set_config(self, key, value):
+        self.parameters[key] = value
+        if key == 'process_noise':
+            if isinstance(self.parameters['process_noise'], Number):
+                self.parameters['process_noise'] = {key: self.parameters['process_noise'] for key in self.states}
+            if 'process_noise_dist' in self.parameters and self.parameters['process_noise_dist'].lower() not in ["gaussian", "normal"]:
+                # Update process noise distribution to custom 
+                if self.parameters['process_noise_dist'].lower() == "uniform":
+                    def uniform_process_noise(self, x, dt=1):
+                        return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
+                    self.apply_process_noise = types.MethodType(uniform_process_noise, self)
+                elif self.parameters['process_noise_dist'].lower() == "triangular":
+                    def triangular_process_noise(self, x, dt=1):
+                        return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
+                    self.apply_process_noise = types.MethodType(triangular_process_noise, self)
+                else:
+                    raise ProgModelTypeError("Unsupported process noise distribution")
+            if callable(self.parameters['process_noise']):
+                self.apply_process_noise = types.MethodType(self.parameters['process_noise'], self)
+        elif key == 'measurement_noise':
+            if isinstance(self.parameters['measurement_noise'], Number):
+                self.parameters['measurement_noise'] = {key: self.parameters['measurement_noise'] for key in self.outputs}
+            if 'measurement_noise_dist' in self.parameters and self.parameters['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
+                # Update measurment noise distribution to custom 
+                if self.parameters['measurement_noise_dist'].lower() == "uniform":
+                    def uniform_noise(self, x):
+                        return {key: x[key] + random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) for key in self.outputs}
+                    self.apply_measurement_noise = types.MethodType(uniform_noise, self)
+                elif self.parameters['measurement_noise_dist'].lower() == "triangular":
+                    def triangular_noise(self, x):
+                        return {key: x[key] + random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) for key in self.outputs}
+                    self.apply_measurement_noise = types.MethodType(triangular_noise, self)
+                else:
+                    raise ProgModelTypeError("Unsupported measurement noise distribution")
+            if callable(self.parameters['measurement_noise']):
+                self.apply_measurement_noise = types.MethodType(self.parameters['measurement_noise'], self)
+            
