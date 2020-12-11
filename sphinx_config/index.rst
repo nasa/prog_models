@@ -21,7 +21,7 @@ Use the following to cite this repository:
 @misc{2020_nasa_prog_model,
     author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta},
     title     = {Prognostics Model Python Package},
-    month     = Oct,
+    month     = Dec,
     year      = 2020,
     version   = {0.1.0},
     url       = {TBD}
@@ -29,7 +29,7 @@ Use the following to cite this repository:
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, Prognostics Model Python Package, v0.0.1, Oct. 2020. URL TBD.
+C. Teubert, C. Kulkarni, M. Corbetta, Prognostics Model Python Package, v0.1.0, Dec. 2020. URL TBD.
 
 Indices and tables
 -----------------------
