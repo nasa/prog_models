@@ -469,6 +469,7 @@ class PrognosticsModel(ABC):
         # Configure
         config = { # Defaults
             'dt': 1.0,
+            'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100 # Default horizon (in s), essentially inf
         }
@@ -501,6 +502,9 @@ class PrognosticsModel(ABC):
         save_freq = config['save_freq']
         horizon = config['horizon']
         next_save = save_freq
+        save_pt_index = 0
+        save_pts = config['save_pts']
+        save_pts.append(1e99) # Add last endpoint
         threshold_met = False
 
         # Optimization
@@ -517,6 +521,13 @@ class PrognosticsModel(ABC):
             def check_thresholds(thresholds_met):
                 return any([thresholds_met[key] for key in threshold_keys])
 
+        def update_all():
+            times.append(t)
+            inputs.append(u)
+            states.append(deepcopy(x))
+            outputs.append(output(t, x))
+            event_states.append(event_state(t, x))
+        
         # Simulate
         while not threshold_met and t < horizon:
             t += dt
@@ -525,20 +536,15 @@ class PrognosticsModel(ABC):
             threshold_met = check_thresholds(thresthold_met_eqn(t, x))
             if (t >= next_save):
                 next_save += save_freq
-                times.append(t)
-                inputs.append(u)
-                states.append(deepcopy(x))
-                outputs.append(output(t, x))
-                event_states.append(event_state(t, x))
+                update_all()
+            if (t >= save_pts[save_pt_index]):
+                save_pt_index += 1
+                update_all()
 
         # Save final state
         if times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
-            times.append(t)
-            inputs.append(u)
-            states.append(deepcopy(x))
-            outputs.append(output(t, x))
-            event_states.append(event_state(t, x))
+            update_all()
         
         return (array(times), array(inputs), array(states), array(outputs), array(event_states))
     

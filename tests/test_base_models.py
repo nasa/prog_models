@@ -482,6 +482,24 @@ class TestModels(unittest.TestCase):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
+        ## Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
+        # Check times
+        self.assertAlmostEqual(times[0], 0, 5)
+        self.assertAlmostEqual(times[1], 1.5, 5)
+        self.assertAlmostEqual(times[2], 2.5, 5)
+        self.assertEqual(len(times), 4)
+        self.assertAlmostEqual(times[-1], 3.0, 5) # Save last step (even though it's not on a savepoint)
+        
+        ## Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
+        # Check times
+        self.assertAlmostEqual(times[0], 0, 5)
+        self.assertAlmostEqual(times[1], 1.5, 5)
+        self.assertAlmostEqual(times[2], 2.5, 5)
+        self.assertEqual(len(times), 3)
+        # Last step is a savepoint        
+
 def run_tests():
     unittest.main()
     
