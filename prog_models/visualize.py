@@ -1,9 +1,7 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-
 # Import packages
 # ============
-# import numpy as np
 from numpy import ndarray
 
 import matplotlib as mpl

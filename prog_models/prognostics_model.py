@@ -91,16 +91,16 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         u : dict
-            Inputs, with keys defined by model.inputs.
+            Inputs, with keys defined by model.inputs \n
             e.g., u = {'i':3.2} given inputs = ['i']
         z : dict
-            Outputs, with keys defined by model.outputs.
+            Outputs, with keys defined by model.outputs \n
             e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
 
         Returns
         -------
         x : dict
-            First state, with keys defined by model.states
+            First state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
 
         Example
@@ -119,13 +119,13 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         z : dict
-            output, with keys defined by model.outputs
+            output, with keys defined by model.outputs \n
             e.g., z = {'abc': 332.1, 'def': 221.003} given outputs = ['abc', 'def']
  
         Returns
         -------
         z : dict
-            output, with applied noise, with keys defined by model.outputs
+            output, with applied noise, with keys defined by model.outputs \n
             e.g., z = {'abc': 332.2, 'def': 221.043} given outputs = ['abc', 'def']
 
         Example
@@ -144,11 +144,10 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         x : dict
-            state, with keys defined by model.states
+            state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         dt : Number, optional
-            Time step. 
-            e.g., dt = 0.1
+            Time step (e.g., dt = 0.1)
 
         Returns
         -------
@@ -173,19 +172,19 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         t : number
-            Current timestamp in seconds (≥ 0)
+            Current timestamp in seconds (≥ 0) \n
             e.g., t = 3.4
         x : dict
-            state, with keys defined by model.states
+            state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         u : dict
-            Inputs, with keys defined by model.inputs.
+            Inputs, with keys defined by model.inputs \n
             e.g., u = {'i':3.2} given inputs = ['i']
 
         Returns
         -------
         dx : dict
-            First derivitive of state, with keys defined by model.states
+            First derivitive of state, with keys defined by model.states \n
             e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
         
         Example
@@ -195,6 +194,14 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         | dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u
+        
+        See Also
+        --------
+        next_state
+
+        Note
+        ----
+        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
         {}
         
@@ -205,16 +212,16 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         t : number
-            Current timestamp in seconds (≥ 0)
+            Current timestamp in seconds (≥ 0) \n
             e.g., t = 3.4
         x : dict
-            state, with keys defined by model.states
+            state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         u : dict
-            Inputs, with keys defined by model.inputs.
+            Inputs, with keys defined by model.inputs \n
             e.g., u = {'i':3.2} given inputs = ['i']
         dt : number
-            Timestep size in seconds (≥ 0)
+            Timestep size in seconds (≥ 0) \n
             e.g., dt = 0.1
         
 
@@ -231,6 +238,14 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         | x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u
+        
+        See Also
+        --------
+        dx
+
+        Note
+        ----
+        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
@@ -245,16 +260,16 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         t : number
-            Current timestamp in seconds (≥ 0.0)
+            Current timestamp in seconds (≥ 0.0) \n
             e.g., t = 3.4
         x : dict
-            state, with keys defined by model.states
+            state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         
         Returns
         -------
         z : dict
-            Outputs, with keys defined by model.outputs.
+            Outputs, with keys defined by model.outputs. \n
             e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
 
         Example
@@ -275,16 +290,16 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         t : number
-            Current timestamp in seconds (≥ 0.0)
+            Current timestamp in seconds (≥ 0.0)\n
             e.g., t = 3.4
         x : dict
-            state, with keys defined by model.states
+            state, with keys defined by model.states\n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         
         Returns
         -------
         event_state : dict
-            Event States, with keys defined by prognostics_model.events.
+            Event States, with keys defined by prognostics_model.events.\n
             e.g., event_state = {'EOL':0.32} given events = ['EOL']
 
         Example
@@ -298,6 +313,10 @@ class PrognosticsModel(ABC):
         Note
         ----
         Default is to return an empty array (for system models that do not include any events)
+        
+        See Also
+        --------
+        threshold_met
         """
 
         return {}
@@ -309,16 +328,16 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         t : number
-            Current timestamp in seconds (≥ 0.0)
+            Current timestamp in seconds (≥ 0.0)\n
             e.g., t = 3.4
         x : dict
-            state, with keys defined by model.states
+            state, with keys defined by model.states\n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         
         Returns
         -------
         thresholds_met : dict
-            If each threshold has been met (bool), with deys defined by prognostics_model.events
+            If each threshold has been met (bool), with deys defined by prognostics_model.events\n
             e.g., thresholds_met = {'EOL': False} given events = ['EOL']
 
         Example
@@ -332,6 +351,10 @@ class PrognosticsModel(ABC):
         Note
         ----
         If not overwritten, the default behavior is to say the threshold is met if the event state is <= 0
+        
+        See Also
+        --------
+        event_state
         """
 
         return {key: event_state <= 0 for (key, event_state) in self.event_state(t, x).items()} 
@@ -343,13 +366,14 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         time : number
-            Time to which the model will be simulated in seconds (≥ 0.0)
+            Time to which the model will be simulated in seconds (≥ 0.0) \n
             e.g., time = 200
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         options: dict, optional:
-            Configuration options for the simulation
-            Note: configuration of the model is set through model.parameters
+            Configuration options for the simulation \n
+            Note: configuration of the model is set through model.parameters \n
+            Supported parameters: see simulate_to_threshold
         
         Returns
         -------
@@ -390,22 +414,9 @@ class PrognosticsModel(ABC):
 
         # Configure 
         config = { # Defaults
-            'dt': 1,
-            'save_freq': 10,
-            'thresholds_met_eqn': (lambda x: False), # Override threshold
             'horizon': time
         }
         config.update(options)
-        
-        # Configuration validation
-        if type(config['dt']) is not int and type(config['dt']) is not float:
-            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
-        if config['dt'] <= 0:
-            raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
-        if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
-            raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
-        if config['save_freq'] <= 0:
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, config)
  
@@ -418,8 +429,15 @@ class PrognosticsModel(ABC):
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         options: dict, optional
-            Configuration options for the simulation
-            Note: configuration of the model is set through model.parameters
+            Configuration options for the simulation \n
+            Note: configuration of the model is set through model.parameters.\n
+            Supported parameters:\n
+             * dt : time step (s), e.g. {'dt': 0.1} \n
+             * save_freq : Frequency at which output is saved (s), e.g., {'save_freq': 10} \n
+             * save_pts : Additional custom times where output is saved (s), e.g., {'save_pts': [50, 75]} \n
+             * horizon : maximum time that the model will be simulated forward (s), e.g., {'horizon': 1000} \n
+             * x : optional, initial state dict, e.g., {'x': {'x1': 10, 'x2': -5.3}}\n
+             * thresholds_met_eqn : optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool
         threshold_keys: [str], optional
             Keys for events that will trigger the end of simulation. 
             If blank, simulation will occur if any event will be met ()
@@ -562,10 +580,10 @@ class PrognosticsModel(ABC):
         output_eqn : callable
             Equation to calculate the outputs (measurements) for the model. See `output`
         next_state_eqn : callable
-            Equation to calculate next_state from current state. See `next_state`. 
+            Equation to calculate next_state from current state. See `next_state`.\n
             Use this for discrete functions
         dx_eqn : callable
-            Equation to calculate dx from current state. See `dx`. 
+            Equation to calculate dx from current state. See `dx`. \n
             Use this for continuous functions
         event_state_eqn : callable, optional
             Equation to calculate the state for each event of the model. See `event_state`
@@ -659,6 +677,15 @@ class PrognosticsModel(ABC):
         return m
 
     def set_config(self, key, value):
+        """Set model confirguration. This is preferred over setting .parameters directly because it also includes the logic specific to process the parameter setting
+
+        Args:
+            key (string): configuration key to set
+            value: value to set that configuration value to
+
+        Raises:
+            ProgModelTypeError: Improper configuration for a model
+        """
         self.parameters[key] = value
         if key == 'process_noise':
             if isinstance(self.parameters['process_noise'], Number):

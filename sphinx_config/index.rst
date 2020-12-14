@@ -23,13 +23,13 @@ Use the following to cite this repository:
     title     = {Prognostics Model Python Package},
     month     = Dec,
     year      = 2020,
-    version   = {0.1.0},
+    version   = {0.2.0},
     url       = {TBD}
     }
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, Prognostics Model Python Package, v0.1.0, Dec. 2020. URL TBD.
+C. Teubert, C. Kulkarni, M. Corbetta, Prognostics Model Python Package, v0.2.0, Dec. 2020. URL TBD.
 
 Indices and tables
 -----------------------

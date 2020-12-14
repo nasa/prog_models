@@ -31,48 +31,41 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         | Tr: Radial Bearing Temperature (K)
         | Tt: Thrust Bearing Temperature (K)
         | w: Mechanical Rotation (rad/sec)
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state)
+        | measurement_noise : Measurement noise
+        | pAtm : Atmospheric pressure
+        | a0, a1, a2 : empirical coefficients for flow torque eqn
+        | A : impeller blade area
+        | b : 
+        | I : impeller/shaft/motor lumped inertia
+        | r : lumped friction parameter (minus bearing friction)
+        | R1, R2 :
+        | L1 : 
+        | FluidI: Pump fluid inertia
+        | c : Pump flow coefficient
+        | cLeak : Internal leak flow coefficient
+        | ALeak : Internal leak area
+        | mcThrust : 
+        | rThrust :
+        | HThrust1, HThrust2 : 
+        | mcRadial :
+        | rRadial :
+        | HRadial1, HRadial2 :
+        | mcOil : 
+        | HOil1, HOil2, HOil3 : 
+        | lim : Parameter limits (dict)
+        | x0 : Initial state
     """
-    events = [
-        'ImpellerWearFailure',
-        'PumpOilOverheat',
-        'RadialBearingOverheat',
-        'ThrustBearingOverheat'
-    ]
-    
-    inputs = [
-        'Tamb',     # Ambient Temperature (K)
-        'V',        # Voltage (V)
-        'pdisch',   # Discharge Pressure (Pa)
-        'psuc',     # Suction Pressure (Pa)
-        'wsync'     # Syncronous Rotational Speed of Supply Voltage (rad/sec)
-    ]
-
-    states = [
-        'A',
-        'Q',
-        'To',
-        'Tr',
-        'Tt',
-        'rRadial',
-        'rThrust',
-        'w',
-        'wA',
-        'wRadial',
-        'wThrust',
-        'QLeak'
-    ]
-
-    outputs = [
-        'Qout',# Discharge Flow (m^3/s)
-        'To',  # Oil Temperature (K)
-        'Tr',  # Radial Bearing Temperature (K)
-        'Tt',  # Thrust Bearing Temperature (K)
-        'w'    # Mechanical Rotation (rad/sec)
-    ]
+    events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
+    inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
+    states = ['A', 'Q', 'To', 'Tr', 'Tt', 'rRadial', 'rThrust', 'w', 'wA', 'wRadial', 'wThrust', 'QLeak']
+    outputs = ['Qout', 'To', 'Tr', 'Tt', 'w']
 
     default_parameters = { # Set to defaults
         # Environmental parameters
-        'pAtm': 101325,     # Atmospheric Pressure (Pa)
+        'pAtm': 101325,
 
         # Torque and pressure parameters
         'a0': 0.00149204,	# empirical coefficient for flow torque eqn

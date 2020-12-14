@@ -23,37 +23,48 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     Outputs: (2)
         | t: Temperature of battery (°C)
         | v: Voltage supplied by battery
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state)
+        | measurement_noise : Measurement noise
+        | V0 : Nominal Battery Voltage
+        | Rp : Battery Parasitic Resistance 
+        | qMax : Maximum Charge
+        | CMax : Max Capacity
+        | VEOD : End of Discharge Voltage Threshold
+        | Cb0 : Battery Capacity Parameter
+        | Cbp0 : Battery Capacity Parameter
+        | Cbp1 : Battery Capacity Parameter
+        | Cbp2 : Battery Capacity Parameter
+        | Cbp3 : Battery Capacity Parameter
+        | Rs : R-C Pair Parameter
+        | Cs : R-C Pair Parameter
+        | Rcp0 : R-C Pair Parameter
+        | Rcp1 : R-C Pair Parameter
+        | Rcp2 : R-C Pair Parameter
+        | Ccp : R-C Pair Parameter
+        | Ta : Ambient Temperature
+        | Jt : Temperature parameter
+        | ha : Heat transfer coefficient, ambient
+        | hcp : Heat transfer coefficient parameter
+        | hcs : Heat transfer coefficient - surface
+        | x0 : Initial state
     
     Note: This is much quicker but also less accurate as the electrochemistry model
     """
-    events = [
-        'EOD' # End of Discharge
-    ]
-    
-    inputs = [
-        'i' # Current
-    ]
-
-    states = [
-        'tb',
-        'qb',
-        'qcp',
-        'qcs'
-    ]
-
-    outputs = [
-        't', # Battery temperature (°C)
-        'v'  # Battery Voltage
-    ]
+    events = ['EOD']
+    inputs = ['i']
+    states = ['tb', 'qb', 'qcp', 'qcs']
+    outputs = ['t',  'v']
 
     default_parameters = { # Set to defaults
-        'V0': 4.183,        # Nominal Battery Voltage
-        'Rp': 1e4,          # Battery Parasitic Resistance
-        'qMax': 7856.3254,  # Max Charge
-        'CMax': 7777,       # Max Capacity
-        'VEOD': 3.0,        # End of Discharge Voltage Threshold
+        'V0': 4.183,
+        'Rp': 1e4,
+        'qMax': 7856.3254,
+        'CMax': 7777,
+        'VEOD': 3.0,
         # Capacitance 
-        'Cb0': 1878.155726,            # Battery Capacitance
+        'Cb0': 1878.155726,
         'Cbp0': -230,
         'Cbp1': 1.2,
         'Cbp2': 2079.9,
@@ -66,12 +77,12 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'Rcp2': 37.223,
         'Ccp': 14.8223,
         # Temperature Parameters
-        'Ta': 18.95,        # Ambient temperature (deg C)
+        'Ta': 18.95,
         'Jt': 800,
-        'ha': 0.5,          # Heat transfer coefficient, ambient
+        'ha': 0.5,
         'hcp': 19,
         'hcs': 1,
-        'x0': {             # Default initial state
+        'x0': {
             'tb': 18.95,   
             'qb': 7856.3254,
             'qcp': 0,
