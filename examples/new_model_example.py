@@ -110,6 +110,15 @@ def run_example():
     print('\tmars: {}s'.format(round(times_mars[-1],2)))
     print('\tmoon: {}s'.format(round(times_moon[-1],2)))
 
+    # We can also simulate until any event is met by neglecting the threshold_keys argument
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, options={'dt':0.005, 'save_freq':1})
+    threshs_met = m.threshold_met(times[-1], states[-1])
+    for (key, met) in threshs_met.items():
+        if met:
+            event_occured = key
+    print('\nThis event that occured first: ', event_occured)
+    # It falls before it hits the gorund, obviously
+
 # This allows the module to be executed directly 
 if __name__=='__main__':
     run_example()
