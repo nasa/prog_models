@@ -414,6 +414,7 @@ class PrognosticsModel(ABC):
 
         # Configure 
         config = { # Defaults
+            'thresholds_met_eqn': (lambda x: False), # Override threshold 
             'horizon': time
         }
         config.update(options)
