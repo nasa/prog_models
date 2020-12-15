@@ -29,8 +29,8 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.sensitivity_example <../examples/sensitivity_example.py>`
     .. automodule:: examples.sensitivity_example
     |
-* :download:`examples.noise_example <../examples/noise_example.py>`
-    .. automodule:: examples.noise_example
+* :download:`examples.noise_examples <../examples/noise_examples.py>`
+    .. automodule:: examples.noise_examples
     |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).

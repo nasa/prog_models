@@ -11,15 +11,13 @@ Models Summary
 +----------------------+----------------------------+-----------------------------------+---------------------------------+---------------------------------+
 |                      | Battery Model - Circuit    | Battery Model - Electro Chemistry | Centrifugal Pump                | Pneumatic Valve                 |
 +======================+============================+===================================+=================================+=================================+
-| Description          | Battery equivilant circuit | Battery Electro Chemistry Model   |                                 |                                 |
-+----------------------+----------------------------+-----------------------------------+---------------------------------+---------------------------------+
 | Events               | End of Discharge (EOD)     | End of Discharge (EOD)            | * Impeller Wear Failure         | * Leak-Bottom                   |
 |                      |                            |                                   | * Pump Oil Overheating          | * Leak-Top                      |
 |                      |                            |                                   | * Radial Bering Overheat        | * Leak-Internal                 |
 |                      |                            |                                   | * Thrust Beiring Overheat       | * Spring Failure                |
 |                      |                            |                                   |                                 | * Friction Failure              |
 +----------------------+----------------------------+-----------------------------------+---------------------------------+---------------------------------+
-| Inputs               | Current (i)                | Current (i)                       | * Ambient Temperature-K (Tamb)  | * Left Pressure-Pa (pL)         |
+| Inputs / Loading     | Current (i)                | Current (i)                       | * Ambient Temperature-K (Tamb)  | * Left Pressure-Pa (pL)         |
 |                      |                            |                                   | * Voltage (V)                   | * Right Pressure-Pa (pR)        |
 |                      |                            |                                   | * Discharge Pressure-Pa (pdisch)| * Bottom Port Pressure-Pa (uBot)|
 |                      |                            |                                   | * Suction Pressure-Pa (psuc)    | * Top Port Pressure-Pa (uTop)   |

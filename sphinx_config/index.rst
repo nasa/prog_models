@@ -13,6 +13,7 @@ If you are new to this package, see `<getting_started.html>`__.
    getting_started
    models
    prognostics_model
+   visualize
    exceptions
    dev_guide
 
