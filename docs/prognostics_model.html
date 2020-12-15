@@ -352,23 +352,6 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd></dl>
 
 <dl class="py method">
-<dt id="prog_models.prognostics_model.PrognosticsModel.set_config">
-<code class="sig-name descname">set_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.set_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set model confirguration. This is preferred over setting .parameters directly because it also includes the logic specific to process the parameter setting</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>string</em>) – configuration key to set</p></li>
-<li><p><strong>value</strong> – value to set that configuration value to</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – Improper configuration for a model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.simulate_to">
 <code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>

@@ -365,7 +365,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -498,23 +498,6 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">z = m.output(3.0, x) # Returns {‘o1’: 1.2}</div>
 </div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="prog_models.models.battery_circuit.BatteryCircuit.set_config">
-<code class="sig-name descname">set_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.set_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set model confirguration. This is preferred over setting .parameters directly because it also includes the logic specific to process the parameter setting</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>string</em>) – configuration key to set</p></li>
-<li><p><strong>value</strong> – value to set that configuration value to</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – Improper configuration for a model</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -899,7 +882,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -1032,23 +1015,6 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">z = m.output(3.0, x) # Returns {‘o1’: 1.2}</div>
 </div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.set_config">
-<code class="sig-name descname">set_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.set_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set model confirguration. This is preferred over setting .parameters directly because it also includes the logic specific to process the parameter setting</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>string</em>) – configuration key to set</p></li>
-<li><p><strong>value</strong> – value to set that configuration value to</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – Improper configuration for a model</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1445,7 +1411,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -1578,23 +1544,6 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">z = m.output(3.0, x) # Returns {‘o1’: 1.2}</div>
 </div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="prog_models.models.centrifugal_pump.CentrifugalPump.set_config">
-<code class="sig-name descname">set_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.set_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set model confirguration. This is preferred over setting .parameters directly because it also includes the logic specific to process the parameter setting</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>string</em>) – configuration key to set</p></li>
-<li><p><strong>value</strong> – value to set that configuration value to</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – Improper configuration for a model</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -2014,7 +1963,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -2147,23 +2096,6 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">z = m.output(3.0, x) # Returns {‘o1’: 1.2}</div>
 </div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="prog_models.models.pneumatic_valve.PneumaticValve.set_config">
-<code class="sig-name descname">set_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.set_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set model confirguration. This is preferred over setting .parameters directly because it also includes the logic specific to process the parameter setting</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>string</em>) – configuration key to set</p></li>
-<li><p><strong>value</strong> – value to set that configuration value to</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – Improper configuration for a model</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
