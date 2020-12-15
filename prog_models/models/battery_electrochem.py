@@ -67,6 +67,7 @@ class BatteryElectroChemParamDict(dict):
             except Exception as ex:
                 self.__setting = False
                 raise ex
+# TODO(CT): FIX- this is overwritten by the prog_model params class - fix
 
 class BatteryElectroChem(prognostics_model.PrognosticsModel):
     """
@@ -91,8 +92,14 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         | v: Voltage supplied by battery`
 
     Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state)
-        | measurement_noise : Measurement noise
+        | process_noise : Process noise (applied at dx/next_state). 
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise : Measurement noise (applied in output eqn)
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
         | qMobile : 
         | xnMax : Maximum mole fraction (neg electrode)
         | xnMin : Minimum mole fraction (neg electrode)

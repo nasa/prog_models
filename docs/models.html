@@ -167,8 +167,14 @@ Circuit model</p></td>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
-<div class="line">process_noise : Process noise (applied at dx/next_state)</div>
-<div class="line">measurement_noise : Measurement noise</div>
+<div class="line">process_noise : Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</div>
+<div class="line">process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</div>
+<div class="line">measurement_noise : Measurement noise (applied in output eqn)
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
+<div class="line">measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</div>
 <div class="line">V0 : Nominal Battery Voltage</div>
 <div class="line">Rp : Battery Parasitic Resistance</div>
 <div class="line">qMax : Maximum Charge</div>
@@ -220,6 +226,10 @@ Circuit model</p></td>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">z = m.apply_measurement_noise(z)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>measurement_noise</cite> and <cite>measurement_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -251,12 +261,16 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>process_noise</cite> and <cite>process_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.dx">
 <code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.dx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -343,7 +357,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.generate_model">
 <em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.generate_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a new prognostics model from functions</p>
+<dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -511,9 +525,9 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
-<p>Supported parameters: see simulate_to_threshold</p>
+<p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
 </ul>
 </dd>
@@ -557,11 +571,12 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold">
 <code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulate prognostics model until at least any or specified threshold(s) have been met</p>
+<dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
 <li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
@@ -684,8 +699,14 @@ If blank, simulation will occur if any event will be met ()</p></li>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
-<div class="line">process_noise : Process noise (applied at dx/next_state)</div>
-<div class="line">measurement_noise : Measurement noise</div>
+<div class="line">process_noise : Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</div>
+<div class="line">process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</div>
+<div class="line">measurement_noise : Measurement noise (applied in output eqn)
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
+<div class="line">measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</div>
 <div class="line">qMobile :</div>
 <div class="line">xnMax : Maximum mole fraction (neg electrode)</div>
 <div class="line">xnMin : Minimum mole fraction (neg electrode)</div>
@@ -737,6 +758,10 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">z = m.apply_measurement_noise(z)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>measurement_noise</cite> and <cite>measurement_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -768,12 +793,16 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>process_noise</cite> and <cite>process_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.dx">
 <code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.dx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -860,7 +889,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.generate_model">
 <em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.generate_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a new prognostics model from functions</p>
+<dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1028,9 +1057,9 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
-<p>Supported parameters: see simulate_to_threshold</p>
+<p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
 </ul>
 </dd>
@@ -1074,11 +1103,12 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold">
 <code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulate prognostics model until at least any or specified threshold(s) have been met</p>
+<dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
 <li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
@@ -1214,8 +1244,14 @@ If blank, simulation will occur if any event will be met ()</p></li>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
-<div class="line">process_noise : Process noise (applied at dx/next_state)</div>
-<div class="line">measurement_noise : Measurement noise</div>
+<div class="line">process_noise : Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</div>
+<div class="line">process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</div>
+<div class="line">measurement_noise : Measurement noise (applied in output eqn)
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
+<div class="line">measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</div>
 <div class="line">pAtm : Atmospheric pressure</div>
 <div class="line">a0, a1, a2 : empirical coefficients for flow torque eqn</div>
 <div class="line">A : impeller blade area</div>
@@ -1266,6 +1302,10 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">z = m.apply_measurement_noise(z)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>measurement_noise</cite> and <cite>measurement_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1297,12 +1337,16 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>process_noise</cite> and <cite>process_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.dx">
 <code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.dx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1389,7 +1433,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.generate_model">
 <em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.generate_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a new prognostics model from functions</p>
+<dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1557,9 +1601,9 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
-<p>Supported parameters: see simulate_to_threshold</p>
+<p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
 </ul>
 </dd>
@@ -1603,11 +1647,12 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold">
 <code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulate prognostics model until at least any or specified threshold(s) have been met</p>
+<dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
 <li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
@@ -1760,8 +1805,14 @@ If blank, simulation will occur if any event will be met ()</p></li>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
-<div class="line">process_noise : Process noise (applied at dx/next_state)</div>
-<div class="line">measurement_noise : Measurement noise</div>
+<div class="line">process_noise : Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</div>
+<div class="line">process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</div>
+<div class="line">measurement_noise : Measurement noise (applied in output eqn)
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
+<div class="line">measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</div>
 <div class="line">g : Acceleration due to gravity (m/s^2)</div>
 <div class="line">pAtm : Atmospheric pressure (Pa)</div>
 <div class="line">m : Plug mass (kg)</div>
@@ -1818,6 +1869,10 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">z = m.apply_measurement_noise(z)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>measurement_noise</cite> and <cite>measurement_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1849,12 +1904,16 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>process_noise</cite> and <cite>process_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.dx">
 <code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.dx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1941,7 +2000,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.generate_model">
 <em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.generate_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a new prognostics model from functions</p>
+<dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2109,9 +2168,9 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
-<p>Supported parameters: see simulate_to_threshold</p>
+<p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
 </ul>
 </dd>
@@ -2155,11 +2214,12 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold">
 <code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulate prognostics model until at least any or specified threshold(s) have been met</p>
+<dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
 <li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>

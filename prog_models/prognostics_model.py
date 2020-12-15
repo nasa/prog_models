@@ -68,46 +68,44 @@ class PrognosticsModel(ABC):
     A general time-variant state space model of system degradation behavior.
 
     The PrognosticsModel class is a wrapper around a mathematical model of a
-    system as represented by a state, output, input, and threshold equations.
-    It is a subclass of the Model class, with the addition of a threshold
-    equation, which defines when some condition, such as end-of-life, has
-    been reached.
+    system as represented by a state, output, input, event_state and threshold equations.
 
     A Model also has a parameters structure, which contains fields for
     various model parameters.
+
+    Parameters
+    ----------
+    options : dict, optional
+        Configuration parameters for model. Parameters supported by every model include:\n
+            * process_noise : Process noise (applied at dx/next_state). 
+                Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x\n
+            * process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)\n
+            * measurement_noise : Measurement noise (applied in output eqn)
+                Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
+            * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
+    
+    Raises
+    ------
+    ProgModelTypeError
+
+    Example
+    -------
+    m = PrognosticsModel({'process_noise': 3.2})
     """
 
     default_parameters = {
         'process_noise': 0.1,
         'measurement_noise': 0.0
     } # Configuration Parameters for model
+
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
     events = [] # Identifiers for each event
 
     def __init__(self, options = {}):
-        """
-        Construct new PrognosticsModel
-
-        Parameters
-        ----------
-        options : dict, optional
-            Configuration parameters for model 
-        
-        Returns
-        -------
-        model : PrognosticsModel
-            Constructed Prognostics Model
-
-        Raises
-        ------
-        ProgModelTypeError
-
-        Example
-        -------
-        m = PrognosticsModel({'config 1': 3.2})
-        """
         self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters)
         try:
             self.parameters.update(options)
@@ -192,7 +190,11 @@ class PrognosticsModel(ABC):
         -------
         | m = PrognosticsModel() # Replace with specific model being simulated
         | z = {'z1': 2.2}
-        | z = m.apply_measurement_noise(z) 
+        | z = m.apply_measurement_noise(z)
+
+        Note
+        ----
+        Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
         return {key: z[key] + random.normal(0, self.parameters['measurement_noise'][key]) for key in self.outputs}
 
@@ -222,12 +224,16 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         | x = m.apply_process_noise(x) 
+
+        Note
+        ----
+        Configured using parameters `process_noise` and `process_noise_dist`
         """
         return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
     def dx(self, t, x, u):
         """
-        Returns the first derivative of state `x` at a specific time `t`, given state and input
+        Calculate the first derivative of state `x` at a specific time `t`, given state and input
 
         Parameters
         ----------
@@ -430,10 +436,10 @@ class PrognosticsModel(ABC):
             e.g., time = 200
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
-        options: dict, optional:
+        options: dict, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters \n
-            Supported parameters: see simulate_to_threshold
+            Supported parameters: see `simulate_to_threshold`
         
         Returns
         -------
@@ -483,12 +489,14 @@ class PrognosticsModel(ABC):
  
     def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}, threshold_keys = None) -> tuple:
         """
-        Simulate prognostics model until at least any or specified threshold(s) have been met
+        Simulate prognostics model until any or specified threshold(s) have been met
 
         Parameters
         ----------
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
+        first_output : dict
+            First measured output, needed to initialize state
         options: dict, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
@@ -630,7 +638,7 @@ class PrognosticsModel(ABC):
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
         """
-        Generate a new prognostics model from functions
+        Generate a new prognostics model from individual model functions
 
         Parameters
         ----------
@@ -714,13 +722,10 @@ class PrognosticsModel(ABC):
             outputs = keys['outputs']
             def initialize():
                 pass
-            def dx():
-                pass
             def output():
                 pass
 
         m = NewProgModel(config)
-
         m.initialize = initialize_eqn
         m.output = output_eqn
 

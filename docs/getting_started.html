@@ -110,12 +110,38 @@
 <em class="property">class </em><code class="sig-prename descclassname">prog_models.prognostics_model.</code><code class="sig-name descname">PrognosticsModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general time-variant state space model of system degradation behavior.</p>
 <p>The PrognosticsModel class is a wrapper around a mathematical model of a
-system as represented by a state, output, input, and threshold equations.
-It is a subclass of the Model class, with the addition of a threshold
-equation, which defines when some condition, such as end-of-life, has
-been reached.</p>
+system as represented by a state, output, input, event_state and threshold equations.</p>
 <p>A Model also has a parameters structure, which contains fields for
 various model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration parameters for model. Parameters supported by every model include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p>
+</dd>
+</dl>
+</li>
+<li><p>process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</p></li>
+<li><dl class="simple">
+<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
+</dd>
+</dl>
+</li>
+<li><p>measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – </p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
 </dd></dl>
 
 <p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
