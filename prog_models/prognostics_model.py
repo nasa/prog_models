@@ -3,7 +3,7 @@
 from . import ProgModelInputException, ProgModelTypeError
 from abc import abstractmethod, ABC
 from numbers import Number
-from numpy import array, append, random
+from numpy import random
 from copy import deepcopy
 import types
 
@@ -625,7 +625,7 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
-        return (times, array(inputs), array(states), array(outputs), array(event_states))
+        return (times, inputs, states, outputs, event_states)
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
