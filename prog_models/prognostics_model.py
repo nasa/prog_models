@@ -29,39 +29,55 @@ class PrognosticsModelParameters(dict):
         super().__setitem__(key, value)
         
         if key == 'process_noise':
-            if isinstance(self['process_noise'], Number):
-                self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
-            if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in ["gaussian", "normal"]:
-                # Update process noise distribution to custom 
-                if self['process_noise_dist'].lower() == "uniform":
-                    def uniform_process_noise(self, x, dt=1):
-                        return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
-                    self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
-                elif self['process_noise_dist'].lower() == "triangular":
-                    def triangular_process_noise(self, x, dt=1):
-                        return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
-                    self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
-                else:
-                    raise ProgModelTypeError("Unsupported process noise distribution")
-            if callable(self['process_noise']):
+            if callable(self['process_noise']): # Provided a function
                 self.__m.apply_process_noise = types.MethodType(self['process_noise'], self.__m)
+            else: # Not a function
+                # Process noise is single number - convert to dict
+                if isinstance(self['process_noise'], Number):
+                    self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
+                
+                # Process distribution type
+                if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in ["gaussian", "normal"]:
+                    # Uxpdate process noise distribution to custom 
+                    if self['process_noise_dist'].lower() == "uniform":
+                        def uniform_process_noise(self, x, dt=1):
+                            return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
+                        self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
+                    elif self['process_noise_dist'].lower() == "triangular":
+                        def triangular_process_noise(self, x, dt=1):
+                            return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
+                        self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
+                    else:
+                        raise ProgModelTypeError("Unsupported process noise distribution")
+                
+                # Make sure every key is present (single value already handled above)
+                if not all([key in self['process_noise'] for key in self.__m.states]):
+                    raise ProgModelTypeError("Process noise must have ever key in model.states")
         elif key == 'measurement_noise':
-            if isinstance(self['measurement_noise'], Number):
-                self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
-            if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
-                # Update measurment noise distribution to custom 
-                if self['measurement_noise_dist'].lower() == "uniform":
-                    def uniform_noise(self, x):
-                        return {key: x[key] + random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) for key in self.outputs}
-                    self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
-                elif self['measurement_noise_dist'].lower() == "triangular":
-                    def triangular_noise(self, x):
-                        return {key: x[key] + random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) for key in self.outputs}
-                    self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
-                else:
-                    raise ProgModelTypeError("Unsupported measurement noise distribution")
             if callable(self['measurement_noise']):
                 self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
+            else:
+                # Process noise is single number - convert to dict
+                if isinstance(self['measurement_noise'], Number):
+                    self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
+                
+                # Process distribution type
+                if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
+                    # Update measurment noise distribution to custom 
+                    if self['measurement_noise_dist'].lower() == "uniform":
+                        def uniform_noise(self, x):
+                            return {key: x[key] + random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) for key in self.outputs}
+                        self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
+                    elif self['measurement_noise_dist'].lower() == "triangular":
+                        def triangular_noise(self, x):
+                            return {key: x[key] + random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) for key in self.outputs}
+                        self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
+                    else:
+                        raise ProgModelTypeError("Unsupported measurement noise distribution")
+                
+                # Make sure every key is present (single value already handled above)
+                if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
+                    raise ProgModelTypeError("Measurement noise must have ever key in model.states")
 
 class PrognosticsModel(ABC):
     """
@@ -130,9 +146,17 @@ class PrognosticsModel(ABC):
                 raise ProgModelTypeError('Must have `states` attribute')
             if len(self.states) <= 0:
                 raise ProgModelTypeError('`states` attribute must have at least one state key')
+            try:
+                a = iter(self.states)
+            except TypeError:
+                raise ProgModelTypeError('model.states must be iterable')
 
             if not hasattr(self, 'outputs'):
                 raise ProgModelTypeError('Must have `outputs` attribute')
+            try:
+                a = iter(self.outputs)
+            except TypeError:
+                raise ProgModelTypeError('model.outputs must be iterable')
         except Exception:
             raise ProgModelTypeError('Could not initialize model')
 
@@ -475,8 +499,8 @@ class PrognosticsModel(ABC):
         """
         
         # Input Validation
-        if not isinstance(time, Number) or time <= 0:
-            raise ProgModelInputException("'time' must be number greater than 0, was {} ({})".format(time, type(time)))
+        if not isinstance(time, Number) or time < 0:
+            raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
 
         # Configure 
         config = { # Defaults
@@ -501,12 +525,12 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
-             * dt : time step (s), e.g. {'dt': 0.1} \n
-             * save_freq : Frequency at which output is saved (s), e.g., {'save_freq': 10} \n
-             * save_pts : Additional custom times where output is saved (s), e.g., {'save_pts': [50, 75]} \n
-             * horizon : maximum time that the model will be simulated forward (s), e.g., {'horizon': 1000} \n
-             * x : optional, initial state dict, e.g., {'x': {'x1': 10, 'x2': -5.3}}\n
-             * thresholds_met_eqn : optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool
+             * dt (Number0: time step (s), e.g. {'dt': 0.1} \n
+             * save_freq (Number): Frequency at which output is saved (s), e.g., {'save_freq': 10} \n
+             * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {'save_pts': [50, 75]} \n
+             * horizon (Number): maximum time that the model will be simulated forward (s), e.g., {'horizon': 1000} \n
+             * x (dict): optional, initial state dict, e.g., {'x': {'x1': 10, 'x2': -5.3}}\n
+             * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool
         threshold_keys: [str], optional
             Keys for events that will trigger the end of simulation. 
             If blank, simulation will occur if any event will be met ()
@@ -563,14 +587,24 @@ class PrognosticsModel(ABC):
         config.update(options)
         
         # Configuration validation
-        if type(config['dt']) is not int and type(config['dt']) is not float:
+        if not isinstance(config['dt'], Number):
             raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
         if config['dt'] <= 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
-        if type(config['save_freq']) is not int and type(config['save_freq']) is not float:
+        if not isinstance(config['save_freq'], Number):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
             raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
+        if not isinstance(config['horizon'], Number):
+            raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
+        if config['horizon'] < 0:
+            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['horizon']))
+        if 'x' in config and not all([state in config['x'] for state in self.states]):
+            raise ProgModelInputException("'x' must contain every state in model.states")
+        if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
+            raise ProgModelInputException("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
+        if 'thresholds_met_eqn' in config and config['thresholds_met_eqn'].__code__.co_argcount != 1:
+            raise ProgModelInputException("'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
 
         # Setup
         t = 0
@@ -601,7 +635,8 @@ class PrognosticsModel(ABC):
         event_state = self.event_state
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
-        elif not threshold_keys:
+        elif threshold_keys is None: 
+            # Note: Dont use implicit boolean in this check- it would then activate for an empty array
             def check_thresholds(thresholds_met):
                 return any(thresholds_met.values())
         else:

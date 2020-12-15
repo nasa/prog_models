@@ -13,7 +13,7 @@ class MockModel():
         'x0': {'a': 1, 'b': [3, 2], 'c': -3.2}
     }
 
-    def initialize(self, u, z):
+    def initialize(self, u = {}, z = {}):
         return deepcopy(self.parameters['x0'])
 
     def next_state(self, t, x, u, dt):
@@ -159,11 +159,81 @@ class TestModels(unittest.TestCase):
         except TypeError:
             pass
 
+    def __noise_test(self, noise_key, dist_key, keys):
+        m = MockProgModel({noise_key: 0.0})
+        for key in keys:
+            self.assertIn(key, m.parameters[noise_key])
+            self.assertAlmostEqual(m.parameters[noise_key][key], 0.0)
+
+        i = 0
+        noise = {}
+        for key in keys:
+            noise[key] = i
+            i += 1
+        m = MockProgModel({noise_key: noise})
+        for key in keys:
+            self.assertIn(key, m.parameters[noise_key])
+            self.assertAlmostEqual(m.parameters[noise_key][key], noise[key])
+
+        def add_one(self, x):
+            return {key: value + 1 for (key, value) in x.items()}
+        m = MockProgModel({noise_key: add_one})
+        x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
+        self.assertEqual(x[keys[0]], 2)
+
+        try:
+            noise = {}
+            for i in range(len(keys)-1):
+                noise[keys[i]] = i
+            m = MockProgModel({noise_key: noise})
+            self.fail("Should have raised exception at missing process_noise key")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            noise = []
+            m = MockProgModel({noise_key: noise})
+            self.fail("Should have raised exception - inproper format")
+        except Exception:
+            pass            
+
+        # Test that it ignores process_noise_dist in case where process_noise is a function
+        m = MockProgModel({noise_key: add_one, dist_key: 'invalid one'})
+        x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
+        self.assertEqual(x[keys[0]], 2)
+
+        # Invalid dist
+        try:
+            noise = {key : 0.0 for key in keys}
+            m = MockProgModel({noise_key: noise, dist_key: 'invalid one'})
+            self.fail("Invalid noise distribution")
+        except ProgModelTypeError:
+            pass
+
+        # Invalid dist
+        try:
+            m = MockProgModel({noise_key: 0, dist_key: 'invalid one'})
+            self.fail("Invalid noise distribution")
+        except ProgModelTypeError:
+            pass
+
+        # Valid distributions
+        m = MockProgModel({noise_key: 0, dist_key: 'uniform'})
+        m = MockProgModel({noise_key: 0, dist_key: 'gaussian'})
+        m = MockProgModel({noise_key: 0, dist_key: 'normal'})
+        m = MockProgModel({noise_key: 0, dist_key: 'triangular'})
+        
+    def test_process_noise(self):
+        self.__noise_test('process_noise', 'process_noise_dist', MockProgModel.states)
+
+    def test_measurement_noise(self):
+        self.__noise_test('measurement_noise', 'measurement_noise_dist', MockProgModel.outputs)
+
     def test_prog_model(self):
         m = MockProgModel() # Should work- sets default
         m = MockProgModel({'process_noise': 0.0})
-        x0 = m.initialize({}, {})
-        self.assertEqual(x0, m.parameters['x0'])
+        x0 = m.initialize()
+        self.assertDictEqual(x0, m.parameters['x0'])
         x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
@@ -377,18 +447,70 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
+        # Non-iterable state
+        try:
+            keys = {
+                'states': 10, # should be a list
+                'inputs': ['i1', 'i2'],
+                'outputs': ['o1'],
+                'events': ['e1']
+            }
+            def dx(t, x, u):
+                return {'a': u['i1'], 'b': 0, 'c': u['i2']}
+            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
+            self.fail("Should have failed- non iterable states")
+        except ProgModelTypeError:
+            pass
+
+        try:
+            keys = {
+                'states': ['a', 'b', 'c'], 
+                'inputs': ['i1', 'i2'],
+                'outputs': -2,# should be a list
+                'events': ['e1']
+            }
+            def dx(t, x, u):
+                return {'a': u['i1'], 'b': 0, 'c': u['i2']}
+            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
+            self.fail("Should have failed- non iterable outputs")
+        except ProgModelTypeError:
+            pass
+
+
     def test_sim_to_thresh(self):
         m = MockProgModel({'process_noise': 0.0})
         def load(t):
             return {'i1': 1, 'i2': 2.1}
 
+        # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
+        # Any event, manual
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
+        # Only event 2
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e2'])
+        self.assertAlmostEqual(times[-1], 15.0, 5)
+
+        # Threshold before event
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0, 'horizon': 5.0}, threshold_keys=['e2'])
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+
+        # Threshold after event
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=['e2'])
+        self.assertAlmostEqual(times[-1], 15.0, 5)
+
+        # No thresholds
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
+        self.assertAlmostEqual(times[-1], 20.0, 5)
+
+        # Custom thresholds met eqn- both keys
+        def thresh_met(thresholds):
+            return all(thresholds.values())
+        config = {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0, 'thresholds_met_eqn': thresh_met}
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, config, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
 
         try:
@@ -411,11 +533,8 @@ class TestModels(unittest.TestCase):
             return {'i1': 1, 'i2': 2.1}
         
         ## Check inputs
-        try:
-            m.simulate_to(0, load, {'o1': 0.8})
-            self.fail("Should have failed- time must be greater than 0")
-        except ProgModelInputException:
-            pass
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8})
+        self.assertEqual(len(times), 1)
 
         try:
             m.simulate_to(-30, load, {'o1': 0.8})
@@ -430,13 +549,13 @@ class TestModels(unittest.TestCase):
             pass
 
         try:
-            m.simulate_to([12], load, {})
+            m.simulate_to(12, load, {})
             self.fail("Should have failed- output must contain each field (e.g., o1)")
         except ProgModelInputException:
             pass
 
         try:
-            m.simulate_to([12], 132, {})
+            m.simulate_to(12, 132, {})
             self.fail("Should have failed- future_load should be callable")
         except ProgModelInputException:
             pass
@@ -482,7 +601,13 @@ class TestModels(unittest.TestCase):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
-        ## Simulate
+        ## Check dt > save_freq
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 0.1})
+        for t in range(0, 7):
+            self.assertAlmostEqual(times[t], t/2, 5)
+        self.assertEqual(len(times), 7, "Should be 7 elements in times") # Didn't save last state (because same as savepoint)
+
+        ## Custom Savepoint test - with last state saving
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
@@ -491,7 +616,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 4)
         self.assertAlmostEqual(times[-1], 3.0, 5) # Save last step (even though it's not on a savepoint)
         
-        ## Simulate
+        ## Custom Savepoint test
         (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
@@ -499,6 +624,70 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(times[2], 2.5, 5)
         self.assertEqual(len(times), 3)
         # Last step is a savepoint        
+
+    def test_sim_prog_inproper_config(self):
+        m = MockProgModel({'process_noise': 0.0})
+        def load(t):
+            return {'i1': 1, 'i2': 2.1}
+        
+        ## Check inputs
+        config = {'dt': [1, 2]}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
+        config = {'dt': -1}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
+        config = {'save_freq': [1, 2]}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
+        config = {'save_freq': -1}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
+        config = {'horizon': [1, 2]}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
+        config = {'horizon': -1}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+        
+        config = {'thresholds_met_eqn': -1}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
+        # incorrect number of arguments
+        config = {'thresholds_met_eqn': lambda a, b: print(a, b)}
+        try:
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            self.fail()
+        except ProgModelInputException:
+            pass
+
 
 def run_tests():
     unittest.main()
