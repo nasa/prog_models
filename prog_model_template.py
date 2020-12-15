@@ -124,8 +124,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
     #         'Examples State 3': 4.7,
     #         'Examples State 4': 220
     #     }
-
-    #     return dxdt
+    #     return self.apply_process_noise(dxdt)
 
     # UNCOMMENT THIS FUNCTION FOR DISCRETE MODELS
     # def next_state(self, t, x, u, dt):
@@ -159,8 +158,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
     #     # ADD LOGIC TO CALCULATE next_x from x
 
     #     # Apply Process Noise and return
-    #     next_x = self._Model__apply_process_noise(next_x) 
-    #     return next_x
+    #     return self.apply_process_noise(next_x) 
 
     def output(self, t, x):
         """
@@ -189,7 +187,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
             'Example Output 2': 0.0  
         }
 
-        return z
+        return self.apply_measurement_noise(z)
 
     def event_state(self, t, x):
         """
