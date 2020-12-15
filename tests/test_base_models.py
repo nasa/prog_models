@@ -688,7 +688,6 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
-
 def run_tests():
     unittest.main()
     
