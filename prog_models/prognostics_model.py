@@ -8,12 +8,16 @@ from copy import deepcopy
 import types
 
 class PrognosticsModelParameters(dict):
+    """
+    Prognostics Model Parameters - this class replaces a standard dictionary. 
+    It includes the extra logic to process the different supported manners of defining noise.
+    """
     def __init__(self, model, *args, **kwarg):
         super().__init__(*args, **kwarg)
         self.__m = model
 
     def __setitem__(self, key, value):
-        """Set model confirguration
+        """Set model configuration, overrides dict.__setitem__()
 
         Args:
             key (string): configuration key to set
@@ -31,11 +35,11 @@ class PrognosticsModelParameters(dict):
                 # Update process noise distribution to custom 
                 if self['process_noise_dist'].lower() == "uniform":
                     def uniform_process_noise(self, x, dt=1):
-                        return {key: x[key] + dt*random.uniform(-self['process_noise'][key], self['process_noise'][key]) for key in self.__m.states}
+                        return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
                     self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                 elif self['process_noise_dist'].lower() == "triangular":
                     def triangular_process_noise(self, x, dt=1):
-                        return {key: x[key] + dt*random.triangular(-self['process_noise'][key], 0, self['process_noise'][key]) for key in self.__m.states}
+                        return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
                     self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                 else:
                     raise ProgModelTypeError("Unsupported process noise distribution")
@@ -48,11 +52,11 @@ class PrognosticsModelParameters(dict):
                 # Update measurment noise distribution to custom 
                 if self['measurement_noise_dist'].lower() == "uniform":
                     def uniform_noise(self, x):
-                        return {key: x[key] + random.uniform(-self['measurement_noise'][key], self['measurement_noise'][key]) for key in self.__m.outputs}
+                        return {key: x[key] + random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) for key in self.outputs}
                     self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                 elif self['measurement_noise_dist'].lower() == "triangular":
                     def triangular_noise(self, x):
-                        return {key: x[key] + random.triangular(-self['measurement_noise'][key], 0, self['measurement_noise'][key]) for key in self.__m.outputs}
+                        return {key: x[key] + random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) for key in self.outputs}
                     self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                 else:
                     raise ProgModelTypeError("Unsupported measurement noise distribution")
@@ -77,9 +81,9 @@ class PrognosticsModel(ABC):
         'process_noise': 0.1,
         'measurement_noise': 0.0
     } # Configuration Parameters for model
-    inputs = []     # Identifiers for each input
+    # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
-    outputs = []    # Identifiers for each output
+    # outputs = []    # Identifiers for each output
     events = [] # Identifiers for each event
 
     def __init__(self, options = {}):
@@ -110,27 +114,34 @@ class PrognosticsModel(ABC):
         except TypeError:
             raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(options)))
 
-        if 'process_noise' not in self.parameters:
-            self.parameters['process_noise'] = 0.1
+        try:
+            if 'process_noise' not in self.parameters:
+                self.parameters['process_noise'] = 0.1
+            else:
+                self.parameters['process_noise'] = self.parameters['process_noise'] # To force  __setitem__
 
-        if 'measurement_noise' not in self.parameters:
-            self.parameters['measurement_noise'] = 0.0
+            if 'measurement_noise' not in self.parameters:
+                self.parameters['measurement_noise'] = 0.0
+            else:
+                self.parameters['measurement_noise'] = self.parameters['measurement_noise']
 
-        if not hasattr(self, 'inputs'):
-            raise ProgModelTypeError('Must have `inputs` attribute')
-        
-        if not hasattr(self, 'states'):
-            raise ProgModelTypeError('Must have `states` attribute')
-        if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
+            if not hasattr(self, 'inputs'):
+                raise ProgModelTypeError('Must have `inputs` attribute')
+            
+            if not hasattr(self, 'states'):
+                raise ProgModelTypeError('Must have `states` attribute')
+            if len(self.states) <= 0:
+                raise ProgModelTypeError('`states` attribute must have at least one state key')
 
-        if not hasattr(self, 'outputs'):
-            raise ProgModelTypeError('Must have `outputs` attribute')
+            if not hasattr(self, 'outputs'):
+                raise ProgModelTypeError('Must have `outputs` attribute')
+        except Exception:
+            raise ProgModelTypeError('Could not initialize model')
 
         # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
     def __str__(self):
-        return "{} Prognostics Model\n\tEvents: {}\n\tInputs: {}\n\tOutputs: {}".format(type(self).__name__, self.events, self.inputs, self.outputs)
+        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events, self.inputs, self.outputs)
     
     @abstractmethod
     def initialize(self, u, z) -> dict:
@@ -614,7 +625,7 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
-        return (array(times), array(inputs), array(states), array(outputs), array(event_states))
+        return (times, array(inputs), array(states), array(outputs), array(event_states))
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):

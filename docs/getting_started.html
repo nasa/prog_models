@@ -40,13 +40,13 @@
 <div class="section" id="installing-dependencies">
 <h2>Installing Dependencies<a class="headerlink" href="#installing-dependencies" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>You can do this using the included <cite>requriements.txt</cite> file. Use the following command:</dt><dd><p><cite>pip install -r requirements.txt</cite></p>
+<dt>You can install dependencies using the included <cite>requirements.txt</cite> file. This file enumerates all the dependencies of this package. Use the following command to install dependencies:</dt><dd><p><cite>pip install -r requirements.txt</cite></p>
 </dd>
 </dl>
 </div>
 <div class="section" id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
-<p>See the examples for examples of use. Run examples using the command <cite>python -m examples.[Example name]</cite> command (e.g., <cite>python -m examples.sim_example</cite>). The examples are summarized below:</p>
+<p>See the below examples for examples of use. Run these examples using the command <cite>python -m examples.[Example name]</cite> (e.g., <cite>python -m examples.sim_example</cite>). The examples are summarized below:</p>
 <ul>
 <li><dl>
 <dt><a class="reference download internal" download="" href="_downloads/ab38aa91d2b6882ae3b7b87138c4e6cc/sim_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_example</span></code></a></dt><dd><span class="target" id="module-examples.sim_example"></span><p>An example where a battery is simulated first for a set period of time and then till threshold is met. Run using the command <cite>python -m examples.sim_example</cite></p>
@@ -97,10 +97,11 @@
 </dl>
 </li>
 </ul>
+<p>There is also an included tutorial (<a class="reference download internal" download="" href="_downloads/200bc74cf412da163fa7fd0ac3a7bb56/tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">tutorial</span></code></a>).</p>
 </div>
 <div class="section" id="extending">
 <h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
-<p>There are two methods of creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
+<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
 <div class="section" id="subclass-method">
 <h3>1. Subclass Method<a class="headerlink" href="#subclass-method" title="Permalink to this headline">¶</a></h3>
 <p>The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:</p>
@@ -117,12 +118,14 @@ been reached.</p>
 various model parameters.</p>
 </dd></dl>
 
-<p>To generate a new model create a new class for your model that inherits from one of these two base classes, whichever is more appropriate for your application. Alternatively, you can copy one of the templates <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
+<p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
 <p>The analysis and simulation tools defined in <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> will then work with your new model.</p>
+<p>See <a class="reference download internal" download="" href="_downloads/0cd57df91a48f4290888591d39a5a231/new_model_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model_example</span></code></a> for an example of this approach.</p>
 </div>
 <div class="section" id="model-generator-method">
 <h3>2. Model Generator Method<a class="headerlink" href="#model-generator-method" title="Permalink to this headline">¶</a></h3>
-<p>The second way to generate a new model is using the model generator method <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>. Pass a map of the keys for input, state, output, events (optional), and the required transition equations into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
+<p>The second way to generate a new model is using the model generator method <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>. Pass a map of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
+<p>See <a class="reference download internal" download="" href="_downloads/372c5d88908153732880cb80c16532ac/model_gen_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model_example</span></code></a> for an example of this approach.</p>
 </div>
 </div>
 </div>

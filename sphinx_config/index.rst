@@ -1,7 +1,9 @@
 Prognostics Models Python Package
 =============================================================
 
-The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
+The NASA PCoE Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
+
+The Prognostics Models Package was developed by researchers of the NASA Prognostics Center of Excellence (PCoE). 
 
 If you are new to this package, see `<getting_started.html>`__.
 

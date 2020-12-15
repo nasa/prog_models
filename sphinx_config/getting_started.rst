@@ -7,25 +7,22 @@ The foundation of this package is the class :class:`prog_models.prognostics_mode
 
 Installing Dependencies
 -----------------------
-You can do this using the included `requriements.txt` file. Use the following command:
+You can install dependencies using the included `requirements.txt` file. This file enumerates all the dependencies of this package. Use the following command to install dependencies:
     `pip install -r requirements.txt`
 
 Use 
 ----
-See the examples for examples of use. Run examples using the command `python -m examples.[Example name]` command (e.g., `python -m examples.sim_example`). The examples are summarized below:
+See the below examples for examples of use. Run these examples using the command `python -m examples.[Example name]` (e.g., `python -m examples.sim_example`). The examples are summarized below:
 
 * :download:`examples.sim_example <../examples/sim_example.py>`
     .. automodule:: examples.sim_example
     |
-
 * :download:`examples.model_gen_example <../examples/model_gen_example.py>`
     .. automodule:: examples.model_gen_example
     |
-
 * :download:`examples.benchmarking_example <../examples/benchmarking_example.py>`
     .. automodule:: examples.benchmarking_example
     |
-
 * :download:`examples.new_model_example <../examples/new_model_example.py>`
     .. automodule:: examples.new_model_example
     |
@@ -36,9 +33,11 @@ See the examples for examples of use. Run examples using the command `python -m 
     .. automodule:: examples.noise_example
     |
 
+There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
+
 Extending
 ----------
-There are two methods of creating new models: 1. Implementing a new subclass of the base model class (:class:`prog_models.prognostics_model.PrognosticsModel`) or 2. use the model generator method (:py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`). These methods are described more below.
+There are two methods for creating new models: 1. Implementing a new subclass of the base model class (:class:`prog_models.prognostics_model.PrognosticsModel`) or 2. use the model generator method (:py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`). These methods are described more below.
 
 1. Subclass Method
 ********************
@@ -46,10 +45,14 @@ The first method for creating a new prog_model is by creating a new subclass of 
 
 .. autoclass:: prog_models.prognostics_model.PrognosticsModel
 
-To generate a new model create a new class for your model that inherits from one of these two base classes, whichever is more appropriate for your application. Alternatively, you can copy one of the templates :class:`prog_model_template.ProgModelTemplate`, replacing the methods with logic defining your specific model.
+To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template :class:`prog_model_template.ProgModelTemplate`, replacing the methods with logic defining your specific model.
 
 The analysis and simulation tools defined in :class:`prog_models.prognostics_model.PrognosticsModel` will then work with your new model. 
 
+See :download:`examples.new_model_example <../examples/new_model_example.py>` for an example of this approach.
+
 2. Model Generator Method
 *************************
-The second way to generate a new model is using the model generator method :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`. Pass a map of the keys for input, state, output, events (optional), and the required transition equations into the method, and it will return a constructed model. See :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model` for more detail.
+The second way to generate a new model is using the model generator method :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`. Pass a map of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model` for more detail.
+
+See :download:`examples.new_model_example <../examples/model_gen_example.py>` for an example of this approach.
