@@ -453,12 +453,12 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
-<li><p>dt : time step (s), e.g. {‘dt’: 0.1}</p></li>
-<li><p>save_freq : Frequency at which output is saved (s), e.g., {‘save_freq’: 10}</p></li>
-<li><p>save_pts : Additional custom times where output is saved (s), e.g., {‘save_pts’: [50, 75]}</p></li>
-<li><p>horizon : maximum time that the model will be simulated forward (s), e.g., {‘horizon’: 1000}</p></li>
-<li><p>x : optional, initial state dict, e.g., {‘x’: {‘x1’: 10, ‘x2’: -5.3}}</p></li>
-<li><p>thresholds_met_eqn : optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
+<li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
+<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., {‘save_freq’: 10}</p></li>
+<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {‘save_pts’: [50, 75]}</p></li>
+<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., {‘horizon’: 1000}</p></li>
+<li><p>x (dict): optional, initial state dict, e.g., {‘x’: {‘x1’: 10, ‘x2’: -5.3}}</p></li>
+<li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
 </ul>
 </div></blockquote>
 </p></li>
