@@ -5,9 +5,10 @@ from abc import abstractmethod, ABC
 from numbers import Number
 from numpy import random
 from copy import deepcopy
+from collections import UserDict
 import types
 
-class PrognosticsModelParameters(dict):
+class PrognosticsModelParameters(UserDict):
     """
     Prognostics Model Parameters - this class replaces a standard dictionary. 
     It includes the extra logic to process the different supported manners of defining noise.
