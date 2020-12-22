@@ -13,9 +13,11 @@ class PrognosticsModelParameters(UserDict):
     Prognostics Model Parameters - this class replaces a standard dictionary. 
     It includes the extra logic to process the different supported manners of defining noise.
     """
-    def __init__(self, model, *args, **kwarg):
-        super().__init__(*args, **kwarg)
+    def __init__(self, model, dict_in = {}):
+        super().__init__()
         self.__m = model
+        for (key, value) in dict_in.items():
+            self[key] = value
 
     def __setitem__(self, key, value):
         """Set model configuration, overrides dict.__setitem__()
@@ -123,23 +125,7 @@ class PrognosticsModel(ABC):
     events = [] # Identifiers for each event
 
     def __init__(self, options = {}):
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters)
         try:
-            self.parameters.update(options)
-        except TypeError:
-            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(options)))
-
-        try:
-            if 'process_noise' not in self.parameters:
-                self.parameters['process_noise'] = 0.1
-            else:
-                self.parameters['process_noise'] = self.parameters['process_noise'] # To force  __setitem__
-
-            if 'measurement_noise' not in self.parameters:
-                self.parameters['measurement_noise'] = 0.0
-            else:
-                self.parameters['measurement_noise'] = self.parameters['measurement_noise']
-
             if not hasattr(self, 'inputs'):
                 raise ProgModelTypeError('Must have `inputs` attribute')
             
@@ -159,7 +145,26 @@ class PrognosticsModel(ABC):
             except TypeError:
                 raise ProgModelTypeError('model.outputs must be iterable')
         except Exception:
-            raise ProgModelTypeError('Could not initialize model')
+            raise ProgModelTypeError('Could not check model configuration')
+
+        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters)
+        try:
+            self.parameters.update(options)
+        except TypeError:
+            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(options)))
+
+        try:
+            if 'process_noise' not in self.parameters:
+                self.parameters['process_noise'] = 0.1
+            else:
+                self.parameters['process_noise'] = self.parameters['process_noise'] # To force  __setitem__
+
+            if 'measurement_noise' not in self.parameters:
+                self.parameters['measurement_noise'] = 0.0
+            else:
+                self.parameters['measurement_noise'] = self.parameters['measurement_noise']
+        except Exception:
+            raise ProgModelTypeError('Model noise poorly configured')
 
         # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
