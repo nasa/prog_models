@@ -30,23 +30,26 @@ Use
 ----
 See the below examples for examples of use. Run these examples using the command `python -m examples.[Example name]` (e.g., `python -m examples.sim_example`). The examples are summarized below:
 
-* :download:`examples.sim_example <../examples/sim_example.py>`
-    .. automodule:: examples.sim_example
+* :download:`examples.sim <../examples/sim.py>`
+    .. automodule:: examples.sim
     |
-* :download:`examples.model_gen_example <../examples/model_gen_example.py>`
-    .. automodule:: examples.model_gen_example
+* :download:`examples.model_gen <../examples/model_gen.py>`
+    .. automodule:: examples.model_gen
     |
-* :download:`examples.benchmarking_example <../examples/benchmarking_example.py>`
-    .. automodule:: examples.benchmarking_example
+* :download:`examples.benchmarking <../examples/benchmarking.py>`
+    .. automodule:: examples.benchmarking
     |
-* :download:`examples.new_model_example <../examples/new_model_example.py>`
-    .. automodule:: examples.new_model_example
+* :download:`examples.new_model <../examples/new_model.py>`
+    .. automodule:: examples.new_model
     |
-* :download:`examples.sensitivity_example <../examples/sensitivity_example.py>`
-    .. automodule:: examples.sensitivity_example
+* :download:`examples.sensitivity <../examples/sensitivity.py>`
+    .. automodule:: examples.sensitivity
     |
-* :download:`examples.noise_examples <../examples/noise_examples.py>`
-    .. automodule:: examples.noise_examples
+* :download:`examples.noise <../examples/noise.py>`
+    .. automodule:: examples.noise
+    |
+* :download:`examples.visualize <../examples/visualize.py>`
+    .. automodule:: examples.visualize
     |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).

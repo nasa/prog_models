@@ -12,7 +12,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        sim_example.run_example()
+        sim.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -23,7 +23,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        benchmarking_example.run_example()
+        benchmarking.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -34,7 +34,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        new_model_example.run_example()
+        new_model.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -45,7 +45,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        sensitivity_example.run_example()
+        sensitivity.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -56,7 +56,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        model_gen_example.run_example()
+        model_gen.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -67,7 +67,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        noise_examples.run_example()
+        noise.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -78,7 +78,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        visualize_example.run_example()
+        visualize.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout

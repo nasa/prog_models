@@ -5,7 +5,7 @@ Example performing a sensitivity analysis on a new model. Can be run using the f
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
 from prog_models.prognostics_model import PrognosticsModel
-from .new_model_example import ThrownObject
+from .new_model import ThrownObject
 import numpy as np
 
 def run_example():

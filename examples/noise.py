@@ -6,7 +6,7 @@ Example defining and testing a new model. Can be run using the following command
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
 from prog_models.prognostics_model import PrognosticsModel
-from .new_model_example import ThrownObject
+from .new_model import ThrownObject
 
 def run_example():
     def future_load(t):
