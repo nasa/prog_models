@@ -321,7 +321,7 @@ def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
     if 'minimal' in opt['display_labels']:
         if subplot_num+1 == nrows*ncols and opt['xlabel']:         set_labels(ax, opt, series_names, axis='x')
         if (subplot_num+1 == 1 or ncols==1) and opt['ylabel']:     set_labels(ax, opt, series_names, axis='y')
-        if subplot_num+1 == 1:                                     ax.set_xticks([], [])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
+        if subplot_num+1 == 1:                                     ax.set_xticks([], minor=[])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
     elif 'all' in opt['display_labels']:    
         set_labels(ax, opt, series_names)
     return
