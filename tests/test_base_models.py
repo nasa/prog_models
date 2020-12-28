@@ -36,10 +36,7 @@ class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
             }
 
     def threshold_met(self, x):
-        return {
-            'e1': self.event_state(x)['e1'] < 1e-6, 
-            'e2': self.event_state(x)['e2'] < 1e-6, 
-            }
+        return {key : value < 1e-6 for (key, value) in self.event_state(x).items()}
 
 class TestModels(unittest.TestCase):
     def test_templates(self):
