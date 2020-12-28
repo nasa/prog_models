@@ -35,27 +35,27 @@ def run_example():
             }
     
     # Step 3: Define dx equation
-    def dx(t, x, u):
+    def dx(x, u):
         return {
             'x': x['v'],
             'v': -9.81 # Acceleration of gravity
         }
 
     # Step 3: Define equation for calculating output/measuremetn
-    def output(t, x):
+    def output(x):
         return {
             'x': x['x']
         }
 
     # Step 4: Define threshold equation
-    def threshold_met(t, x):
+    def threshold_met(x):
         return {
             'falling': x['v'] < 0,
             'impact': x['x'] <= 0
         }
 
     # Step 5 (optional): Define event state equation- measurement of how close you are to threshold (0-1)
-    def event_state(t, x): 
+    def event_state(x): 
         event_state.max_x = max(event_state.max_x, x['x']) # Maximum altitude
         return {
             'falling': max(x['v']/throwing_speed,0), # Throwing speed is max speed

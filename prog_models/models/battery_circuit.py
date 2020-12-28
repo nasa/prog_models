@@ -99,7 +99,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
-    def dx(self, t, x, u): 
+    def dx(self, x, u): 
         parameters = self.parameters # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
@@ -123,13 +123,13 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
             'qcs': ics,
         })
     
-    def event_state(self, t, x):
+    def event_state(self, x):
         parameters = self.parameters
         return {
             'EOD': (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
         }
 
-    def output(self, t, x):
+    def output(self, x):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -142,7 +142,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
             'v': Vb - Vcp - Vcs
         })
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

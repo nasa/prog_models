@@ -12,7 +12,6 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Prognostics Model" href="prognostics_model.html" />
@@ -263,14 +262,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -294,7 +290,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
+<div class="line">dx = m.dx(x, u) # Returns first derivative of state given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -308,18 +304,13 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.</p>
@@ -336,7 +327,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">event_state = m.event_state(3.0, x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
+<div class="line">event_state = m.event_state(x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -429,14 +420,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -462,7 +450,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
+<div class="line">x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -476,18 +464,13 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
@@ -510,7 +493,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -519,7 +502,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>kwargs</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
 <p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
@@ -564,29 +547,30 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
 <li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
+If blank, simulation will occur if any event will be met ()</p></li>
+<li><p><strong>options</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
 <li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
-<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., {‘save_freq’: 10}</p></li>
-<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {‘save_pts’: [50, 75]}</p></li>
-<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., {‘horizon’: 1000}</p></li>
-<li><p>x (dict): optional, initial state dict, e.g., {‘x’: {‘x1’: 10, ‘x2’: -5.3}}</p></li>
+<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
+<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
+<li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
 </ul>
 </div></blockquote>
+<p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>
 </p></li>
-<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
-If blank, simulation will occur if any event will be met ()</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -628,18 +612,13 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events</p>
@@ -656,7 +635,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">threshold_met = m.threshold_met(t=3.2, x) # returns {‘e1’: False, ‘e2’: False}</div>
+<div class="line">threshold_met = m.threshold_met(x) # returns {‘e1’: False, ‘e2’: False}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -795,14 +774,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -826,7 +802,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
+<div class="line">dx = m.dx(x, u) # Returns first derivative of state given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -840,18 +816,13 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.</p>
@@ -868,7 +839,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">event_state = m.event_state(3.0, x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
+<div class="line">event_state = m.event_state(x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -961,14 +932,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -994,7 +962,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
+<div class="line">x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -1008,18 +976,13 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
@@ -1042,7 +1005,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1051,7 +1014,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>kwargs</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
 <p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
@@ -1096,29 +1059,30 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
 <li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
+If blank, simulation will occur if any event will be met ()</p></li>
+<li><p><strong>options</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
 <li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
-<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., {‘save_freq’: 10}</p></li>
-<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {‘save_pts’: [50, 75]}</p></li>
-<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., {‘horizon’: 1000}</p></li>
-<li><p>x (dict): optional, initial state dict, e.g., {‘x’: {‘x1’: 10, ‘x2’: -5.3}}</p></li>
+<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
+<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
+<li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
 </ul>
 </div></blockquote>
+<p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>
 </p></li>
-<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
-If blank, simulation will occur if any event will be met ()</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1160,18 +1124,13 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events</p>
@@ -1188,7 +1147,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">threshold_met = m.threshold_met(t=3.2, x) # returns {‘e1’: False, ‘e2’: False}</div>
+<div class="line">threshold_met = m.threshold_met(x) # returns {‘e1’: False, ‘e2’: False}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1339,14 +1298,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -1370,7 +1326,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
+<div class="line">dx = m.dx(x, u) # Returns first derivative of state given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -1384,18 +1340,13 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.</p>
@@ -1412,7 +1363,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">event_state = m.event_state(3.0, x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
+<div class="line">event_state = m.event_state(x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1505,14 +1456,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -1538,7 +1486,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
+<div class="line">x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -1552,18 +1500,13 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
@@ -1586,7 +1529,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1595,7 +1538,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>kwargs</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
 <p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
@@ -1640,29 +1583,30 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
 <li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
+If blank, simulation will occur if any event will be met ()</p></li>
+<li><p><strong>options</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
 <li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
-<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., {‘save_freq’: 10}</p></li>
-<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {‘save_pts’: [50, 75]}</p></li>
-<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., {‘horizon’: 1000}</p></li>
-<li><p>x (dict): optional, initial state dict, e.g., {‘x’: {‘x1’: 10, ‘x2’: -5.3}}</p></li>
+<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
+<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
+<li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
 </ul>
 </div></blockquote>
+<p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>
 </p></li>
-<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
-If blank, simulation will occur if any event will be met ()</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1704,18 +1648,13 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events</p>
@@ -1732,7 +1671,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">threshold_met = m.threshold_met(t=3.2, x) # returns {‘e1’: False, ‘e2’: False}</div>
+<div class="line">threshold_met = m.threshold_met(x) # returns {‘e1’: False, ‘e2’: False}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1906,14 +1845,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -1937,7 +1873,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
+<div class="line">dx = m.dx(x, u) # Returns first derivative of state given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -1951,18 +1887,13 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.</p>
@@ -1979,7 +1910,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">event_state = m.event_state(3.0, x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
+<div class="line">event_state = m.event_state(x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -2072,14 +2003,11 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
 <li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
 </p></li>
@@ -2105,7 +2033,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
+<div class="line">x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -2119,18 +2047,13 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
@@ -2153,7 +2076,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2162,7 +2085,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>options</strong> (<em>kwargs</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
 <p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
 </p></li>
@@ -2207,29 +2130,30 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
 <li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
+If blank, simulation will occur if any event will be met ()</p></li>
+<li><p><strong>options</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters.</p>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
 <li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
-<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., {‘save_freq’: 10}</p></li>
-<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {‘save_pts’: [50, 75]}</p></li>
-<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., {‘horizon’: 1000}</p></li>
-<li><p>x (dict): optional, initial state dict, e.g., {‘x’: {‘x1’: 10, ‘x2’: -5.3}}</p></li>
+<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
+<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
+<li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
 </ul>
 </div></blockquote>
+<p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>
 </p></li>
-<li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
-If blank, simulation will occur if any event will be met ()</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2271,18 +2195,13 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – <p>Current timestamp in seconds (≥ 0.0)</p>
-<p>e.g., t = 3.4</p>
-</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
 <p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
-</p></li>
-</ul>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events</p>
@@ -2299,7 +2218,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">threshold_met = m.threshold_met(t=3.2, x) # returns {‘e1’: False, ‘e2’: False}</div>
+<div class="line">threshold_met = m.threshold_met(x) # returns {‘e1’: False, ‘e2’: False}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

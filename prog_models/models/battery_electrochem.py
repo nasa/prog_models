@@ -176,7 +176,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
-    def dx(self, t, x, u):
+    def dx(self, x, u):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -223,12 +223,12 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
             'qpS': qpSdot
         })
         
-    def event_state(self, t, x):
+    def event_state(self, x):
         return {
             'EOD': (x['qnS'] + x['qnB'])/self.parameters['qnMax']
         }
 
-    def output(self, t, x):
+    def output(self, x):
         # Negative Surface
         xnS = x['qnS']/self.parameters['qSMax']
         VenParts = [
@@ -272,8 +272,8 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
             'v': Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
         })
 
-    def threshold_met(self, t, x):
-        z = self.output(t, x)
+    def threshold_met(self, x):
+        z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
         return {

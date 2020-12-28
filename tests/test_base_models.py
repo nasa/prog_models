@@ -5,38 +5,40 @@ from prog_models.models import *
 from copy import deepcopy
 
 class MockModel():
-    states = ['a', 'b', 'c']
+    states = ['a', 'b', 'c', 't']
     inputs = ['i1', 'i2']
     outputs = ['o1']
     default_parameters = {
         'p1': 1.2,
-        'x0': {'a': 1, 'b': [3, 2], 'c': -3.2}
+        'x0': {'a': 1, 'b': [3, 2], 'c': -3.2, 't': 0}
     }
 
     def initialize(self, u = {}, z = {}):
         return deepcopy(self.parameters['x0'])
 
-    def next_state(self, t, x, u, dt):
+    def next_state(self, x, u, dt):
         x['a']+= u['i1']*dt
         x['c']-= u['i2']
+        x['t']+= dt
         return x
 
-    def output(self, t, x):
+    def output(self, x):
         return {'o1': x['a'] + sum(x['b']) + x['c']}
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     events = ['e1', 'e2']
 
-    def event_state(self, t, x):
+    def event_state(self, x):
+        t = x['t']
         return {
             'e1': max(1-t/5.0,0),
             'e2': max(1-t/15.0,0)
             }
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         return {
-            'e1': self.event_state(t, x)['e1'] < 1e-6, 
-            'e2': self.event_state(t, x)['e2'] < 1e-6, 
+            'e1': self.event_state(x)['e1'] < 1e-6, 
+            'e2': self.event_state(x)['e2'] < 1e-6, 
             }
 
 class TestModels(unittest.TestCase):
@@ -52,9 +54,9 @@ class TestModels(unittest.TestCase):
             parameters = {'process_noise':0.1}
             def initialize(self, u, z):
                 pass
-            def next_state(self, t, x, u, dt):
+            def next_state(self, x, u, dt):
                 pass
-            def output(self, t, x):
+            def output(self, x):
                 pass
         class empty_states(prognostics_model.PrognosticsModel):
             states = []
@@ -63,9 +65,9 @@ class TestModels(unittest.TestCase):
             parameters = {'process_noise':0.1}
             def initialize(self, u, z):
                 pass
-            def next_state(self, t, x, u, dt):
+            def next_state(self, x, u, dt):
                 pass
-            def output(self, t, x):
+            def output(self, x):
                 pass
         class missing_inputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
@@ -73,9 +75,9 @@ class TestModels(unittest.TestCase):
             parameters = {'process_noise':0.1}
             def initialize(self, u, z):
                 pass
-            def next_state(self, t, x, u, dt):
+            def next_state(self, x, u, dt):
                 pass
-            def output(self, t, x):
+            def output(self, x):
                 pass
         class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
@@ -83,29 +85,19 @@ class TestModels(unittest.TestCase):
             parameters = {'process_noise':0.1}
             def initialize(self, u, z):
                 pass
-            def next_state(self, t, x, u, dt):
+            def next_state(self, x, u, dt):
                 pass
-            def output(self, t, x):
+            def output(self, x):
                 pass
         class missing_initiialize(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
             parameters = {'process_noise':0.1}
-            def next_state(self, t, x, u, dt):
+            def next_state(self, x, u, dt):
                 pass
-            def output(self, t, x):
+            def output(self, x):
                 pass
-        # This one is broken with merging deriv  model and prognsotics model
-        # class missing_next_state(prognostics_model.PrognosticsModel):
-        #     inputs = ['i1']
-        #     states = ['x1', 'x2']
-        #     outputs = ['o1']
-        #     parameters = {'process_noise':0.1}
-        #     def initialize(self, u, z):
-        #         pass
-        #     def output(self, t, x):
-        #         pass
         class missing_output(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -113,7 +105,7 @@ class TestModels(unittest.TestCase):
             parameters = {'process_noise':0.1}
             def initialize(self, u, z):
                 pass
-            def next_state(self, t, x, u, dt):
+            def next_state(self, x, u, dt):
                 pass
 
         try: 
@@ -234,68 +226,71 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(process_noise = 0.0)
         x0 = m.initialize()
         self.assertDictEqual(x0, m.parameters['x0'])
-        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
         self.assertEqual(x['b'], [3, 2])
-        z = m.output(0, x)
+        z = m.output(x)
         self.assertAlmostEqual(z['o1'], 0.8, 5)
-        e = m.event_state(0, {})
-        t = m.threshold_met(0, {})
+        e = m.event_state({'t': 0})
+        t = m.threshold_met({'t': 0})
         self.assertAlmostEqual(e['e1'], 1.0, 5)
         self.assertFalse(t['e1'])
-        e = m.event_state(5, {})
+        e = m.event_state({'t': 5})
         self.assertAlmostEqual(e['e1'], 0.0, 5)
-        t = m.threshold_met(5, {})
+        t = m.threshold_met({'t': 5})
         self.assertTrue(t['e1'])
-        t = m.threshold_met(10, {})
+        t = m.threshold_met({'t': 10})
         self.assertTrue(t['e1'])
 
     def test_model_gen(self):
         keys = {
-            'states': ['a', 'b', 'c'],
+            'states': ['a', 'b', 'c', 't'],
             'inputs': ['i1', 'i2'],
             'outputs': ['o1'],
             'events': ['e1']
         }
 
         def initialize(u, z):
-            return {'a': 1, 'b': 3, 'c': -3.2}
+            return {'a': 1, 'b': 3, 'c': -3.2, 't': 0}
 
-        def next_state(t, x, u, dt):
+        def next_state(x, u, dt):
             x['a']+= u['i1']*dt
             x['c']-= u['i2']
+            x['t']+= dt
             return x
 
-        def dx(t, x, u):
-            return {'a': u['i1'], 'b': 0, 'c': u['i2']}
+        def dx(x, u):
+            return {'a': u['i1'], 'b': 0, 'c': u['i2'], 't':1}
 
-        def output(t, x):
+        def output(x):
             return {'o1': x['a'] + x['b'] + x['c']}
 
-        def event_state(t, x):
+        def event_state(x):
+            t = x['t']
             return {'e1': max(1-t/5.0,0)}
 
-        def threshold_met(t, x):
+        def threshold_met(x):
+            t = x['t']
             return {'e1': max(1-t/5.0,0) < 1e-6}
 
         m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn = next_state, event_state_eqn = event_state, threshold_eqn = threshold_met)
         x0 = m.initialize({}, {})
-        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
         self.assertEqual(x['b'], 3)
-        z = m.output(0, x)
+        z = m.output(x)
         self.assertAlmostEqual(z['o1'], -1.2, 5)
-        e = m.event_state(0, {})
-        t = m.threshold_met(0, {})
+        e = m.event_state({'t': 0})
+        t = m.threshold_met({'t': 0})
         self.assertAlmostEqual(e['e1'], 1.0, 5)
         self.assertFalse(t['e1'])
-        e = m.event_state(5, {})
+        e = m.event_state({'t': 5})
         self.assertAlmostEqual(e['e1'], 0.0, 5)
-        t = m.threshold_met(5.1, {})
+        t = m.threshold_met({'t': 5.1})
         self.assertTrue(t['e1'])
-        t = m.threshold_met(10, {})
+        t = m.threshold_met({'t': 10})
         self.assertTrue(t['e1'])
 
         # Without event_state or threshold
@@ -306,53 +301,55 @@ class TestModels(unittest.TestCase):
         }
         m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn=next_state)
         x0 = m.initialize({}, {})
-        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
         self.assertEqual(x['b'], 3)
-        z = m.output(0, x)
+        z = m.output(x)
         self.assertAlmostEqual(z['o1'], -1.2, 5)
-        e = m.event_state(5, {})
+        e = m.event_state({'t': 5})
         self.assertDictEqual(e, {})
-        t = m.threshold_met(5.1, {})
+        t = m.threshold_met({'t': 5.1})
         self.assertDictEqual(t, {})
 
         # Deriv Model
         m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
         x0 = m.initialize({}, {})
-        dx = m.dx(0, x0, {'i1': 1, 'i2': 2.1})
+        dx = m.dx(x0, {'i1': 1, 'i2': 2.1})
         self.assertAlmostEqual(dx['a'], 1, 6)
         self.assertAlmostEqual(dx['b'], 0, 6)
         self.assertAlmostEqual(dx['c'], 2.1, 6)
-        x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -2.99, 6)
         self.assertEqual(x['b'], 3)
 
     def test_broken_model_gen(self):
         keys = {
-            'states': ['a', 'b', 'c'],
+            'states': ['a', 'b', 'c', 't'],
             'inputs': ['i1', 'i2'],
             'outputs': ['o1'],
             'events': ['e1']
         }
 
         def initialize(u, z):
-            return {'a': 1, 'b': [3, 2], 'c': -3.2}
+            return {'a': 1, 'b': [3, 2], 'c': -3.2, 't': 0}
 
-        def next_state(t, x, u, dt):
+        def next_state(x, u, dt):
             x['a']+= u['i1']*dt
             x['c']-= u['i2']
+            x['t']+= dt
             return x
 
-        def output(t, x):
+        def output(x):
             return {'o1': x['a'] + sum(x['b']) + x['c']}
 
-        def event_state(t, x):
+        def event_state(x):
+            t = x['t']
             return {'e1': max(1-t/5.0,0)}
 
-        def threshold_met(t, x):
-            print("Time: ", t)
+        def threshold_met(x):
+            t = x['t']
             return {'e1': max(1-t/5.0,0) < 1e-6}
 
         try:

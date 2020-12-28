@@ -188,7 +188,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         else:
             raise ProgModelException('Unknown Condition')
     
-    def next_state(self, t, x, u, dt):
+    def next_state(self, x, u, dt):
         params = self.parameters # optimization
         pInTop = params['pSupply'] if u['uTop'] else params['pAtm'] 
         springForce = x['k']*(params['offsetX']+x['x'])
@@ -245,7 +245,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'wt': x['wt']
         }, dt)
     
-    def output(self, t, x):
+    def output(self, x):
         parameters = self.parameters # Optimization
         indicatorTopm = (x['x'] >= parameters['Ls']-parameters['indicatorTol'])
         indicatorBotm = (x['x'] <= parameters['indicatorTol'])
@@ -265,7 +265,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             "x": x['x']
         })
 
-    def event_state(self, t, x):
+    def event_state(self, x):
         return {
             "Bottom Leak": (self.parameters['AbMax'] - x['Aeb'])/(self.parameters['AbMax'] - self.parameters['x0']['Aeb']), 
             "Top Leak": (self.parameters['AtMax'] - x['Aet'])/(self.parameters['AtMax'] - self.parameters['x0']['Aet']), 
@@ -274,7 +274,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             "Friction Failure": (self.parameters['rMax'] - x['r'])/(self.parameters['rMax'] - self.parameters['x0']['r'])
         }
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         return {
             "Bottom Leak": x['Aeb'] > self.parameters['AbMax'], 
             "Top Leak": x['Aet'] > self.parameters['AtMax'], 

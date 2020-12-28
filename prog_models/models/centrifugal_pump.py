@@ -140,7 +140,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         x0['QLeak'] = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
         return x0
 
-    def next_state(self, t, x, u, dt):
+    def next_state(self, x, u, dt):
         Todot = 1/self.parameters['mcOil'] * (self.parameters['HOil1']*(x['Tt']-x['To']) + self.parameters['HOil2']*(x['Tr']-x['To']) + self.parameters['HOil3']*(u['Tamb']-x['To']))
         Ttdot = 1/self.parameters['mcThrust'] * (x['rThrust']*x['w']*x['w'] - self.parameters['HThrust1']*(x['Tt']-u['Tamb']) - self.parameters['HThrust2']*(x['Tt']-x['To']))
         Adot = -x['wA']*x['Q']*x['Q']
@@ -175,7 +175,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'QLeak': QLeak
         }, dt)
 
-    def output(self, t, x):
+    def output(self, x):
         Qout = max(0,x['Q']-x['QLeak'])
 
         return self.apply_measurement_noise({
@@ -186,7 +186,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'w': x['w']
         })
 
-    def event_state(self, t, x):
+    def event_state(self, x):
         return {
             'ImpellerWearFailure': (x['A'] - self.parameters['lim']['A'])/(self.parameters['x0']['A'] - self.parameters['lim']['A']),
             'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['x0']['Tt'] - self.parameters['lim']['Tt']),
@@ -194,7 +194,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['x0']['To'] - self.parameters['lim']['To'])
         }
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         return {
             'ImpellerWearFailure': x['A'] <= self.parameters['lim']['A'],
             'ThrustBearingOverheat': x['Tt'] >= self.parameters['lim']['Tt'],

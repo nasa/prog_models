@@ -1,6 +1,6 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from . import ProgModelInputException, ProgModelTypeError
+from . import ProgModelInputException, ProgModelTypeError, ProgModelException
 from abc import abstractmethod, ABC
 from numbers import Number
 from numpy import random
@@ -262,15 +262,12 @@ class PrognosticsModel(ABC):
         """
         return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
 
-    def dx(self, t, x, u):
+    def dx(self, x, u):
         """
         Calculate the first derivative of state `x` at a specific time `t`, given state and input
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0) \n
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -290,7 +287,7 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u
+        | dx = m.dx(x, u) # Returns first derivative of state given input u
         
         See Also
         --------
@@ -300,17 +297,14 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        {}
+        raise ProgModelException('dx not defined - please use next_state()')
         
-    def next_state(self, t, x, u, dt) -> dict: 
+    def next_state(self, x, u, dt) -> dict: 
         """
         State transition equation: Calculate next state
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0) \n
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -334,7 +328,7 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u
+        | x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u
         
         See Also
         --------
@@ -346,19 +340,16 @@ class PrognosticsModel(ABC):
         """
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
-        dx = self.dx(t, x, u)
+        dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in x.keys()}
 
     @abstractmethod
-    def output(self, t, x) -> dict:
+    def output(self, x) -> dict:
         """
         Calculate next state, forward one timestep
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0.0) \n
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -378,17 +369,14 @@ class PrognosticsModel(ABC):
         | z = m.output(3.0, x) # Returns {'o1': 1.2}
         """
 
-        pass
+        return {}
 
-    def event_state(self, t, x) -> dict:
+    def event_state(self, x) -> dict:
         """
         Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0.0)\n
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states\n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -405,7 +393,7 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | event_state = m.event_state(3.0, x) # Returns {'e1': 0.8, 'e2': 0.6}
+        | event_state = m.event_state(x) # Returns {'e1': 0.8, 'e2': 0.6}
 
         Note
         ----
@@ -418,15 +406,12 @@ class PrognosticsModel(ABC):
 
         return {}
     
-    def threshold_met(self, t, x) -> dict:
+    def threshold_met(self, x) -> dict:
         """
         For each event threshold, calculate if it has been met
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0.0)\n
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states\n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -443,7 +428,7 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | threshold_met = m.threshold_met(t=3.2, x) # returns {'e1': False, 'e2': False}
+        | threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
 
         Note
         ----
@@ -454,7 +439,7 @@ class PrognosticsModel(ABC):
         event_state
         """
 
-        return {key: event_state <= 0 for (key, event_state) in self.event_state(t, x).items()} 
+        return {key: event_state <= 0 for (key, event_state) in self.event_state(x).items()} 
 
     def simulate_to(self, time, future_loading_eqn, first_output, **kwargs) -> tuple:
         """
@@ -625,8 +610,8 @@ class PrognosticsModel(ABC):
         times = [t]
         inputs = [u]
         states = [deepcopy(x)] # Avoid optimization where x is not copied
-        outputs = [self.output(t, x)]
-        event_states = [self.event_state(t, x)]
+        outputs = [self.output(x)]
+        event_states = [self.event_state(x)]
         dt = config['dt'] # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
@@ -655,15 +640,15 @@ class PrognosticsModel(ABC):
             times.append(t)
             inputs.append(u)
             states.append(deepcopy(x))
-            outputs.append(output(t, x))
-            event_states.append(event_state(t, x))
+            outputs.append(output(x))
+            event_states.append(event_state(x))
         
         # Simulate
         while not threshold_met and t < horizon:
             t += dt
             u = future_loading_eqn(t)
-            x = next_state(t, x, u, dt)
-            threshold_met = check_thresholds(thresthold_met_eqn(t, x))
+            x = next_state(x, u, dt)
+            threshold_met = check_thresholds(thresthold_met_eqn(x))
             if (t >= next_save):
                 next_save += save_freq
                 update_all()

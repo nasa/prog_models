@@ -25,7 +25,8 @@ def run_example():
     eods = np.empty(len(thrower_height_range))
     for (i, thrower_height) in zip(range(len(thrower_height_range)), thrower_height_range):
         m.parameters['thrower_height'] = thrower_height
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':1e-3, 'save_freq':10})
+        z_i = {'x': thrower_height} # First output 
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, z_i, threshold_keys=[event], dt =1e-3, save_freq =10)
         eods[i] = times[-1]
 
     # Step 5: Analysis
