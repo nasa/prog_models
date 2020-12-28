@@ -20,7 +20,7 @@ def run_example():
         elif (t < 1800):
             i = 4
         elif (t < 3000):
-            i = 2
+            i = 2     
         else:
             i = 3
         return {'i': i}

@@ -45,13 +45,20 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
         'process_noise': 0.1, # Process noise
     }
 
-    def __init__(self, options = {}):
+    def __init__(self, **kwargs):
         """
         Constructor for model
         """
         # ADD OPTIONS CHECKS HERE
 
-        super().__init__(options) # Run Parent constructor
+        # e.g., Checking for required parameters
+        # if not 'required_param' in kwargs: 
+        #   throw Exception;
+
+        # e.g. 2, Modify parameters
+        # kwargs['some_param'] = some_function(kwargs['some_param'])
+
+        super().__init__(**kwargs) # Run Parent constructor
 
     def initialize(self, u, z):
         """

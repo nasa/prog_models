@@ -88,11 +88,9 @@ def run_example():
     # OK, now lets compare performance on different heavenly bodies. 
     # This requires that we update the cofiguration
     grav_moon = -1.62
-    opts = {
-        'g': grav_moon
-    }
+
     # The first way to change the configuration is to pass in your desired config into construction of the model
-    m = ThrownObject(options=opts)
+    m = ThrownObject(g = grav_moon)
     (times_moon, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
 
     grav_mars = -3.711

@@ -5,7 +5,7 @@ from prog_models.models.centrifugal_pump import CentrifugalPump
 
 class TestCentrifugalPump(unittest.TestCase):
     def test_centrifugal_pump(self):
-        pump = CentrifugalPump({'process_noise': 0})
+        pump = CentrifugalPump(process_noise= 0)
 
         cycle_time = 3600
         def future_loading(t):

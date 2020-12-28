@@ -94,7 +94,7 @@ class PrognosticsModel(ABC):
 
     Parameters
     ----------
-    options : dict, optional
+    kwargs : keyword arguments, optional
         Configuration parameters for model. Parameters supported by every model include:\n
             * process_noise : Process noise (applied at dx/next_state). 
                 Can be number (e.g., .2) applied to every state, a dictionary of values for each 
@@ -104,6 +104,7 @@ class PrognosticsModel(ABC):
                 Can be number (e.g., .2) applied to every output, a dictionary of values for each 
                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
             * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
+        E.g., PrognosticsModel(process_noise: 0.3, measurement_noise: {'z1': 0.1, 'z2': 0.3})
     
     Raises
     ------
@@ -124,7 +125,7 @@ class PrognosticsModel(ABC):
     # outputs = []    # Identifiers for each output
     events = [] # Identifiers for each event
 
-    def __init__(self, options = {}):
+    def __init__(self, **kwargs):
         try:
             if not hasattr(self, 'inputs'):
                 raise ProgModelTypeError('Must have `inputs` attribute')
@@ -149,9 +150,9 @@ class PrognosticsModel(ABC):
 
         self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters)
         try:
-            self.parameters.update(options)
+            self.parameters.update(kwargs)
         except TypeError:
-            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(options)))
+            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(kwargs)))
 
         try:
             if 'process_noise' not in self.parameters:
@@ -766,7 +767,7 @@ class PrognosticsModel(ABC):
             def output():
                 pass
 
-        m = NewProgModel(config)
+        m = NewProgModel(**config)
         m.initialize = initialize_eqn
         m.output = output_eqn
 

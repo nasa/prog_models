@@ -5,7 +5,7 @@ from prog_models.models.pneumatic_valve import PneumaticValve
 
 class TestPneumaticValve(unittest.TestCase):
     def test_pneumatic_valve(self):
-        m = PneumaticValve({'process_noise': 0})
+        m = PneumaticValve(process_noise= 0)
 
         cycle_time = 20
         def future_loading(t):

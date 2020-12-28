@@ -160,7 +160,7 @@ class TestModels(unittest.TestCase):
             pass
 
     def __noise_test(self, noise_key, dist_key, keys):
-        m = MockProgModel({noise_key: 0.0})
+        m = MockProgModel(**{noise_key: 0.0})
         for key in keys:
             self.assertIn(key, m.parameters[noise_key])
             self.assertAlmostEqual(m.parameters[noise_key][key], 0.0)
@@ -170,14 +170,14 @@ class TestModels(unittest.TestCase):
         for key in keys:
             noise[key] = i
             i += 1
-        m = MockProgModel({noise_key: noise})
+        m = MockProgModel(**{noise_key: noise})
         for key in keys:
             self.assertIn(key, m.parameters[noise_key])
             self.assertAlmostEqual(m.parameters[noise_key][key], noise[key])
 
         def add_one(self, x):
             return {key: value + 1 for (key, value) in x.items()}
-        m = MockProgModel({noise_key: add_one})
+        m = MockProgModel(**{noise_key: add_one})
         x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
         self.assertEqual(x[keys[0]], 2)
 
@@ -185,43 +185,43 @@ class TestModels(unittest.TestCase):
             noise = {}
             for i in range(len(keys)-1):
                 noise[keys[i]] = i
-            m = MockProgModel({noise_key: noise})
+            m = MockProgModel(**{noise_key: noise})
             self.fail("Should have raised exception at missing process_noise key")
         except ProgModelTypeError:
             pass
 
         try:
             noise = []
-            m = MockProgModel({noise_key: noise})
+            m = MockProgModel(**{noise_key: noise})
             self.fail("Should have raised exception - inproper format")
         except Exception:
             pass            
 
         # Test that it ignores process_noise_dist in case where process_noise is a function
-        m = MockProgModel({noise_key: add_one, dist_key: 'invalid one'})
+        m = MockProgModel(**{noise_key: add_one, dist_key: 'invalid one'})
         x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
         self.assertEqual(x[keys[0]], 2)
 
         # Invalid dist
         try:
             noise = {key : 0.0 for key in keys}
-            m = MockProgModel({noise_key: noise, dist_key: 'invalid one'})
+            m = MockProgModel(**{noise_key: noise, dist_key: 'invalid one'})
             self.fail("Invalid noise distribution")
         except ProgModelTypeError:
             pass
 
         # Invalid dist
         try:
-            m = MockProgModel({noise_key: 0, dist_key: 'invalid one'})
+            m = MockProgModel(**{noise_key: 0, dist_key: 'invalid one'})
             self.fail("Invalid noise distribution")
         except ProgModelTypeError:
             pass
 
         # Valid distributions
-        m = MockProgModel({noise_key: 0, dist_key: 'uniform'})
-        m = MockProgModel({noise_key: 0, dist_key: 'gaussian'})
-        m = MockProgModel({noise_key: 0, dist_key: 'normal'})
-        m = MockProgModel({noise_key: 0, dist_key: 'triangular'})
+        m = MockProgModel(**{noise_key: 0, dist_key: 'uniform'})
+        m = MockProgModel(**{noise_key: 0, dist_key: 'gaussian'})
+        m = MockProgModel(**{noise_key: 0, dist_key: 'normal'})
+        m = MockProgModel(**{noise_key: 0, dist_key: 'triangular'})
         
     def test_process_noise(self):
         self.__noise_test('process_noise', 'process_noise_dist', MockProgModel.states)
@@ -231,7 +231,7 @@ class TestModels(unittest.TestCase):
 
     def test_prog_model(self):
         m = MockProgModel() # Should work- sets default
-        m = MockProgModel({'process_noise': 0.0})
+        m = MockProgModel(process_noise = 0.0)
         x0 = m.initialize()
         self.assertDictEqual(x0, m.parameters['x0'])
         x = m.next_state(0, x0, {'i1': 1, 'i2': 2.1}, 0.1)
@@ -478,7 +478,7 @@ class TestModels(unittest.TestCase):
 
 
     def test_sim_to_thresh(self):
-        m = MockProgModel({'process_noise': 0.0})
+        m = MockProgModel(process_noise = 0.0)
         def load(t):
             return {'i1': 1, 'i2': 2.1}
 
@@ -520,7 +520,7 @@ class TestModels(unittest.TestCase):
             pass
 
     def test_sim_past_thresh(self):
-        m = MockProgModel({'process_noise': 0.0})
+        m = MockProgModel(process_noise = 0.0)
         def load(t):
             return {'i1': 1, 'i2': 2.1}
 
@@ -528,7 +528,7 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(times[-1], 6.0, 5)
         
     def test_sim_prog(self):
-        m = MockProgModel({'process_noise': 0.0})
+        m = MockProgModel(process_noise = 0.0)
         def load(t):
             return {'i1': 1, 'i2': 2.1}
         
@@ -626,7 +626,7 @@ class TestModels(unittest.TestCase):
         # Last step is a savepoint        
 
     def test_sim_prog_inproper_config(self):
-        m = MockProgModel({'process_noise': 0.0})
+        m = MockProgModel(process_noise = 0.0)
         def load(t):
             return {'i1': 1, 'i2': 2.1}
         

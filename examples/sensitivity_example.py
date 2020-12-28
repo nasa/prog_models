@@ -5,64 +5,8 @@ Example performing a sensitivity analysis on a new model. Can be run using the f
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
 from prog_models.prognostics_model import PrognosticsModel
+from .new_model_example import ThrownObject
 import numpy as np
-
-# Model used in example
-class ThrownObject(PrognosticsModel):
-    """
-    Model that similates an object thrown into the air without air resistance
-    """
-
-    inputs = [] # no inputs, no way to control
-    states = [
-        'x', # Position (m) 
-        'v'  # Velocity (m/s)
-        ]
-    outputs = [ # Anything we can measure
-        'x' # Position (m)
-    ]
-    events = [
-        'falling', # Event- object is falling
-        'impact' # Event- object has impacted ground
-    ]
-
-    default_parameters = {
-        'thrower_height': 1.83, # m
-        'throwing_speed': 40, # m/s
-        'g': -9.81, # Acceleration due to gravity in m/s^2
-        'process_noise': 0.0 # amount of noise in each step
-    }
-
-    def initialize(self, u, z):
-        self.max_x = 0.0
-        return {
-            'x': self.parameters['thrower_height'], # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is an professional baseball pitcher
-            }
-    
-    def dx(self, t, x, u):
-        return {
-            'x': x['v'],
-            'v': self.parameters['g'] # Acceleration of gravity
-        }
-
-    def output(self, t, x):
-        return {
-            'x': x['x']
-        }
-
-    def threshold_met(self, t, x):
-        return {
-            'falling': x['v'] < 0,
-            'impact': x['x'] <= 0
-        }
-
-    def event_state(self, t, x): 
-        self.max_x = max(self.max_x, x['x']) # Maximum altitude
-        return {
-            'falling': max(x['v']/self.parameters['throwing_speed'],0), # Throwing speed is max speed
-            'impact': max(x['x']/self.max_x,0) # 1 until falling begins, then it's fraction of height
-        }
 
 def run_example():
     # Demo model
