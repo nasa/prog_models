@@ -68,10 +68,17 @@ To generate a new model create a new class for your model that inherits from thi
 
 The analysis and simulation tools defined in :class:`prog_models.prognostics_model.PrognosticsModel` will then work with your new model. 
 
-See :download:`examples.new_model_example <../examples/new_model_example.py>` for an example of this approach.
+See :download:`examples.new_model <../examples/new_model.py>` for an example of this approach.
 
 2. Model Generator Method
 *************************
 The second way to generate a new model is using the model generator method :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`. Pass a map of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model` for more detail.
 
-See :download:`examples.new_model_example <../examples/model_gen_example.py>` for an example of this approach.
+See :download:`examples.model_gen <../examples/model_gen.py>` for an example of this approach.
+
+Tips
+----
+* To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., 'SOH_50') override the event_state and threshold_met equations to also predict that additional state
+* If you're only doing diagnostics without prognostics- just have an dx equation with no change of state and don't perform prediction. The state estimator can still be used to estimate if any of the events have occured. 
+* Sudden events use a binary event_state (1=healthy, 0=failed)
+* You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 ('event 2': event_1 and [OTHER LOGIC])

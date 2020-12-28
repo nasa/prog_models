@@ -35,7 +35,7 @@
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <p>The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
-<p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>)</p>
+<p>The foundation of this package is the class <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>)</p>
 <p>A few definitions:</p>
 <ul class="simple">
 <li><p><strong>events</strong>: some state that can be predicted (e.g., system failure). An event has either occured or not.</p></li>
@@ -119,7 +119,7 @@
 </div>
 <div class="section" id="extending">
 <h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
-<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
+<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
 <div class="section" id="subclass-method">
 <h3>1. Subclass Method<a class="headerlink" href="#subclass-method" title="Permalink to this headline">¶</a></h3>
 <p>The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:</p>
@@ -164,14 +164,23 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 </dd></dl>
 
 <p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
-<p>The analysis and simulation tools defined in <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> will then work with your new model.</p>
-<p>See <code class="xref download docutils literal notranslate"><span class="pre">examples.new_model_example</span></code> for an example of this approach.</p>
+<p>The analysis and simulation tools defined in <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> will then work with your new model.</p>
+<p>See <a class="reference download internal" download="" href="_downloads/e4947713746e05efe1e55cf84e8ac3f8/new_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model</span></code></a> for an example of this approach.</p>
 </div>
 <div class="section" id="model-generator-method">
 <h3>2. Model Generator Method<a class="headerlink" href="#model-generator-method" title="Permalink to this headline">¶</a></h3>
 <p>The second way to generate a new model is using the model generator method <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>. Pass a map of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
-<p>See <code class="xref download docutils literal notranslate"><span class="pre">examples.new_model_example</span></code> for an example of this approach.</p>
+<p>See <a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a> for an example of this approach.</p>
 </div>
+</div>
+<div class="section" id="tips">
+<h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., ‘SOH_50’) override the event_state and threshold_met equations to also predict that additional state</p></li>
+<li><p>If you’re only doing diagnostics without prognostics- just have an dx equation with no change of state and don’t perform prediction. The state estimator can still be used to estimate if any of the events have occured.</p></li>
+<li><p>Sudden events use a binary event_state (1=healthy, 0=failed)</p></li>
+<li><p>You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 (‘event 2’: event_1 and [OTHER LOGIC])</p></li>
+</ul>
 </div>
 </div>
 
@@ -197,6 +206,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 <li class="toctree-l2"><a class="reference internal" href="#installing-dependencies">Installing Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tips">Tips</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
