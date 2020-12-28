@@ -7,15 +7,10 @@ Visualization Module Example
 import matplotlib.pyplot as plt
 from prog_models.visualize import plot_timeseries
 
-from .new_model_example import *
+from .new_model_example import ThrownObject
 
-
-if __name__ == '__main__':
-
+def run_example():
     print('Visualize Module Example')
-
-    # New Model Example
-    # ===============
     m = ThrownObject()
 
     # Step 2: Setup for simulation 
@@ -24,8 +19,9 @@ if __name__ == '__main__':
 
     # Step 3: Simulate to impact
     event = 'impact'
+    first_output = {'x':m.parameters['thrower_height']}
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load,
-                                                                             {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+                                                                             first_output, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
     
 
     # Display states
@@ -36,6 +32,7 @@ if __name__ == '__main__':
                           legend  = {'display': True, 'display_at_subplot': 'all'} )
     fig = plot_timeseries(times, states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
                                                     'xlabel': 'time', 'ylabel':'position'})
-
-
     plt.show()
+
+if __name__ == '__main__':
+    run_example()
