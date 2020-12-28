@@ -104,7 +104,7 @@ class PrognosticsModel(ABC):
                 Can be number (e.g., .2) applied to every output, a dictionary of values for each 
                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
             * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
-        E.g., PrognosticsModel(process_noise: 0.3, measurement_noise: {'z1': 0.1, 'z2': 0.3})
+        E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {'z1': 0.1, 'z2': 0.3})
     
     Raises
     ------
@@ -456,7 +456,7 @@ class PrognosticsModel(ABC):
 
         return {key: event_state <= 0 for (key, event_state) in self.event_state(t, x).items()} 
 
-    def simulate_to(self, time, future_loading_eqn, first_output, options = {}) -> tuple:
+    def simulate_to(self, time, future_loading_eqn, first_output, **kwargs) -> tuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -467,7 +467,7 @@ class PrognosticsModel(ABC):
             e.g., time = 200
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
-        options: dict, optional
+        options: kwargs, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters \n
             Supported parameters: see `simulate_to_threshold`
@@ -514,11 +514,11 @@ class PrognosticsModel(ABC):
             'thresholds_met_eqn': (lambda x: False), # Override threshold 
             'horizon': time
         }
-        config.update(options)
+        kwargs.update(config) # Config should override kwargs
 
-        return self.simulate_to_threshold(future_loading_eqn, first_output, config)
+        return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output, options = {}, threshold_keys = None) -> tuple:
+    def simulate_to_threshold(self, future_loading_eqn, first_output, threshold_keys = None, **kwargs) -> tuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -528,19 +528,20 @@ class PrognosticsModel(ABC):
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : dict
             First measured output, needed to initialize state
-        options: dict, optional
+        threshold_keys: [str], optional
+            Keys for events that will trigger the end of simulation. 
+            If blank, simulation will occur if any event will be met ()
+        options: keyword arguments, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
              * dt (Number0: time step (s), e.g. {'dt': 0.1} \n
-             * save_freq (Number): Frequency at which output is saved (s), e.g., {'save_freq': 10} \n
-             * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., {'save_pts': [50, 75]} \n
-             * horizon (Number): maximum time that the model will be simulated forward (s), e.g., {'horizon': 1000} \n
-             * x (dict): optional, initial state dict, e.g., {'x': {'x1': 10, 'x2': -5.3}}\n
-             * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool
-        threshold_keys: [str], optional
-            Keys for events that will trigger the end of simulation. 
-            If blank, simulation will occur if any event will be met ()
+             * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
+             * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
+             * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
+             * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
+             * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
+            e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns
         -------
@@ -591,7 +592,7 @@ class PrognosticsModel(ABC):
             'save_freq': 10.0,
             'horizon': 1e100 # Default horizon (in s), essentially inf
         }
-        config.update(options)
+        config.update(kwargs)
         
         # Configuration validation
         if not isinstance(config['dt'], Number):

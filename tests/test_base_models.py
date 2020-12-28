@@ -482,39 +482,39 @@ class TestModels(unittest.TestCase):
         def load(t):
             return {'i1': 1, 'i2': 2.1}
 
-        # Any event, default
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        # Any event, default8
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
         # Any event, manual
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
         # Only event 2
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
 
         # Threshold before event
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0, 'horizon': 5.0}, threshold_keys=['e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 5.0}, threshold_keys=['e2'])
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
         # Threshold after event
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=['e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=['e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
 
         # No thresholds
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
         self.assertAlmostEqual(times[-1], 20.0, 5)
 
         # Custom thresholds met eqn- both keys
         def thresh_met(thresholds):
             return all(thresholds.values())
         config = {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0, 'thresholds_met_eqn': thresh_met}
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, config, threshold_keys=['e1', 'e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
 
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2', 'e3'])
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
             self.fail("Should fail- extra threshold key")
         except ProgModelInputException:
             pass
@@ -524,7 +524,7 @@ class TestModels(unittest.TestCase):
         def load(t):
             return {'i1': 1, 'i2': 2.1}
 
-        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 6.0, 5)
         
     def test_sim_prog(self):
@@ -555,13 +555,13 @@ class TestModels(unittest.TestCase):
             pass
 
         try:
-            m.simulate_to(12, 132, {})
+            m.simulate_to(12, 132, {'o1': 0.8})
             self.fail("Should have failed- future_load should be callable")
         except ProgModelInputException:
             pass
 
         ## Simulate
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
 
         # Check times
         for t in range(0, 4):
@@ -596,19 +596,19 @@ class TestModels(unittest.TestCase):
             self.assertAlmostEqual(es['e1'], ei, 5)
 
         ## Check last state saving
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
         ## Check dt > save_freq
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 0.1})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 0.1})
         for t in range(0, 7):
             self.assertAlmostEqual(times[t], t/2, 5)
         self.assertEqual(len(times), 7, "Should be 7 elements in times") # Didn't save last state (because same as savepoint)
 
         ## Custom Savepoint test - with last state saving
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
         self.assertAlmostEqual(times[1], 1.5, 5)
@@ -617,7 +617,7 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(times[-1], 3.0, 5) # Save last step (even though it's not on a savepoint)
         
         ## Custom Savepoint test
-        (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, {'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
         self.assertAlmostEqual(times[1], 1.5, 5)
@@ -633,57 +633,57 @@ class TestModels(unittest.TestCase):
         ## Check inputs
         config = {'dt': [1, 2]}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            self.fail("should have failed - dt must be number")
         except ProgModelInputException:
             pass
 
         config = {'dt': -1}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            self.fail("Should have failed- dt must be positive")
         except ProgModelInputException:
             pass
 
         config = {'save_freq': [1, 2]}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            self.fail("Should have failed- save_freq must be number")
         except ProgModelInputException:
             pass
 
         config = {'save_freq': -1}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            self.fail("Should have failed- save_freq must be positive")
         except ProgModelInputException:
             pass
 
         config = {'horizon': [1, 2]}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            self.fail("Should have failed Horizon should be number")
         except ProgModelInputException:
             pass
 
         config = {'horizon': -1}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            self.fail("Should have failed- horizon must be positive")
         except ProgModelInputException:
             pass
         
         config = {'thresholds_met_eqn': -1}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
-            self.fail()
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            self.fail("Should have failed- thresholds_met_eqn must be callable")
         except ProgModelInputException:
             pass
 
         # incorrect number of arguments
         config = {'thresholds_met_eqn': lambda a, b: print(a, b)}
         try:
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, config)
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
             self.fail()
         except ProgModelInputException:
             pass
