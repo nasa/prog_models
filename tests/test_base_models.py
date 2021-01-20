@@ -135,13 +135,6 @@ class TestModels(unittest.TestCase):
         except TypeError:
             pass
 
-        # This is broken with integration of deriv and prog model
-        # try: 
-        #     m = missing_next_state()
-        #     self.fail("Should not have worked, missing 'next_state' method")
-        # except TypeError:
-        #     pass
-
         try: 
             m = missing_output()
             self.fail("Should not have worked, missing 'output' method")
