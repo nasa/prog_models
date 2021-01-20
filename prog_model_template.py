@@ -45,13 +45,20 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
         'process_noise': 0.1, # Process noise
     }
 
-    def __init__(self, options = {}):
+    def __init__(self, **kwargs):
         """
         Constructor for model
         """
         # ADD OPTIONS CHECKS HERE
 
-        super().__init__(options) # Run Parent constructor
+        # e.g., Checking for required parameters
+        # if not 'required_param' in kwargs: 
+        #   throw Exception;
+
+        # e.g. 2, Modify parameters
+        # kwargs['some_param'] = some_function(kwargs['some_param'])
+
+        super().__init__(**kwargs) # Run Parent constructor
 
     def initialize(self, u, z):
         """
@@ -124,8 +131,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
     #         'Examples State 3': 4.7,
     #         'Examples State 4': 220
     #     }
-
-    #     return dxdt
+    #     return self.apply_process_noise(dxdt)
 
     # UNCOMMENT THIS FUNCTION FOR DISCRETE MODELS
     # def next_state(self, t, x, u, dt):
@@ -159,8 +165,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
     #     # ADD LOGIC TO CALCULATE next_x from x
 
     #     # Apply Process Noise and return
-    #     next_x = self._Model__apply_process_noise(next_x) 
-    #     return next_x
+    #     return self.apply_process_noise(next_x) 
 
     def output(self, t, x):
         """
@@ -189,7 +194,7 @@ class ProgModelTemplate(prognostics_model.PrognosticsModel):
             'Example Output 2': 0.0  
         }
 
-        return z
+        return self.apply_measurement_noise(z)
 
     def event_state(self, t, x):
         """

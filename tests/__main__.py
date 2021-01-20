@@ -8,7 +8,7 @@ from .test_battery import TestBattery
 from io import StringIO 
 import sys
 import unittest
-from examples import sim_example
+from examples import sim as sim_example
 
 def _test_ex():
     # set stdout (so it wont print)

@@ -5,7 +5,7 @@ from prog_models.models.pneumatic_valve import PneumaticValve
 
 class TestPneumaticValve(unittest.TestCase):
     def test_pneumatic_valve(self):
-        m = PneumaticValve({'process_noise': 0})
+        m = PneumaticValve(process_noise= 0)
 
         cycle_time = 20
         def future_loading(t):
@@ -51,7 +51,7 @@ class TestPneumaticValve(unittest.TestCase):
         for key in m.states:
             self.assertAlmostEqual(x0[key], x0_test[key], 7)
         
-        x = m.next_state(0, x0, future_loading(0), 0.1)
+        x = m.next_state(x0, future_loading(0), 0.1)
         x_test = {
             'Aeb': 1e-5,
             'Aet': 1e-5,
@@ -73,7 +73,7 @@ class TestPneumaticValve(unittest.TestCase):
         for key in m.states:
             self.assertAlmostEqual(x[key], x_test[key], 7)
 
-        z = m.output(0.1, x)
+        z = m.output(x)
         z_test = {
             "Q": 0,
             "iB": True, 
@@ -109,7 +109,7 @@ class TestPneumaticValve(unittest.TestCase):
         for key in m.states:
             self.assertAlmostEqual(x0[key], x0_test[key], 7)
         
-        x = m.next_state(0, x0, future_loading(0), 0.1)
+        x = m.next_state(x0, future_loading(0), 0.1)
         x_test = {
             'Aeb': 1e-5,
             'Aet': 1e-5,
@@ -130,5 +130,6 @@ class TestPneumaticValve(unittest.TestCase):
         for key in m.states:
             self.assertAlmostEqual(x[key], x_test[key], 7)
 
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(0, m.initialize(future_loading(0))), {'dt': 0.01, 'horizon': 800, 'save_freq': 60})# , 'save_freq': 60
+        config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
         self.assertAlmostEqual(times[-1], 782.53, 0)

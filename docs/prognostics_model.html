@@ -5,17 +5,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prognostics Model &#8212; Prognostics Models Python Package 0.1 documentation</title>
+    <title>Prognostics Model &#8212; Prognostics Models Python Package 0.2.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Exceptions" href="exceptions.html" />
+    <link rel="next" title="Visualization" href="visualize.html" />
     <link rel="prev" title="Models" href="models.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -37,15 +36,73 @@
 <h1>Prognostics Model<a class="headerlink" href="#prognostics-model" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="prog_models.prognostics_model.PrognosticsModel">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.prognostics_model.</code><code class="sig-name descname">PrognosticsModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.prognostics_model.</code><code class="sig-name descname">PrognosticsModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general time-variant state space model of system degradation behavior.</p>
 <p>The PrognosticsModel class is a wrapper around a mathematical model of a
-system as represented by a state, output, input, and threshold equations.
-It is a subclass of the Model class, with the addition of a threshold
-equation, which defines when some condition, such as end-of-life, has
-been reached.</p>
+system as represented by a state, output, input, event_state and threshold equations.</p>
 <p>A Model also has a parameters structure, which contains fields for
 various model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration parameters for model. Parameters supported by every model include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p>
+</dd>
+</dl>
+</li>
+<li><p>process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</p></li>
+<li><dl class="simple">
+<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
+</dd>
+</dl>
+</li>
+<li><p>measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+</ul>
+</div></blockquote>
+<p>E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {‘z1’: 0.1, ‘z2’: 0.3})</p>
+</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – </p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
+<dl class="py method">
+<dt id="prog_models.prognostics_model.PrognosticsModel.apply_measurement_noise">
+<code class="sig-name descname">apply_measurement_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply measurement noise to the measurement</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>z</strong> (<em>dict</em>) – <p>output, with keys defined by model.outputs</p>
+<p>e.g., z = {‘abc’: 332.1, ‘def’: 221.003} given outputs = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>z</strong> – output, with applied noise, with keys defined by model.outputs</p>
+<p>e.g., z = {‘abc’: 332.2, ‘def’: 221.043} given outputs = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = PrognosticsModel() # Replace with specific model being simulated</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">z = m.apply_measurement_noise(z)</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>measurement_noise</cite> and <cite>measurement_noise_dist</cite></p>
+</div>
+</dd></dl>
+
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.apply_process_noise">
 <code class="sig-name descname">apply_process_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dt</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.apply_process_noise" title="Permalink to this definition">¶</a></dt>
@@ -53,10 +110,10 @@ various model parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
-<li><p><strong>dt</strong> (<em>Number</em>) – Time step.
-e.g., dt = 0.1</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p></li>
+<li><p><strong>dt</strong> (<em>Number</em><em>, </em><em>optional</em>) – Time step (e.g., dt = 0.1)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -75,26 +132,31 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
 <div class="line">x = m.apply_process_noise(x)</div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configured using parameters <cite>process_noise</cite> and <cite>process_noise_dist</cite></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.dx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
+<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.dx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
-e.g., t = 3.4</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
-<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
-e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – <p>Inputs, with keys defined by model.inputs</p>
+<p>e.g., u = {‘i’:3.2} given inputs = [‘i’]</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>dx</strong> – First derivitive of state, with keys defined by model.states
-e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def’]</p>
+<dd class="field-even"><p><p><strong>dx</strong> – First derivitive of state, with keys defined by model.states</p>
+<p>e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def’]</p>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -106,26 +168,32 @@ e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u</div>
+<div class="line">dx = m.dx(x, u) # Returns first derivative of state given input u</div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel.next_state" title="prog_models.prognostics_model.PrognosticsModel.next_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">next_state</span></code></a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A model should overwrite either <cite>next_state</cite> or <cite>dx</cite>. Override <cite>dx</cite> for continuous models, and <cite>next_state</cite> for discrete, where the behavior cannot be described by the first derivative</p>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
-e.g., t = 3.4</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
-</ul>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.
-e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
+<dd class="field-even"><p><p><strong>event_state</strong> – Event States, with keys defined by prognostics_model.events.</p>
+<p>e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -137,28 +205,34 @@ e.g., event_state = {‘EOL’:0.32} given events = [‘EOL’]</p>
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">event_state = m.event_state(3.0, x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
+<div class="line">event_state = m.event_state(x) # Returns {‘e1’: 0.8, ‘e2’: 0.6}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Default is to return an empty array (for system models that do not include any events)</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel.threshold_met" title="prog_models.prognostics_model.PrognosticsModel.threshold_met"><code class="xref py py-obj docutils literal notranslate"><span class="pre">threshold_met</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.generate_model">
 <em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.generate_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a new prognostics model from functions</p>
+<dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keys</strong> (<em>dict</em>) – Dictionary containing keys required by model. Must include <cite>inputs</cite>, <cite>outputs</cite>, and <cite>states</cite>. Can also include <cite>events</cite></p></li>
 <li><p><strong>initialize_eqn</strong> (<em>callable</em>) – Equation to initialize first state of the model. See <cite>initialize</cite></p></li>
 <li><p><strong>output_eqn</strong> (<em>callable</em>) – Equation to calculate the outputs (measurements) for the model. See <cite>output</cite></p></li>
-<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – Equation to calculate next_state from current state. See <cite>next_state</cite>.
-Use this for discrete functions</p></li>
-<li><p><strong>dx_eqn</strong> (<em>callable</em>) – Equation to calculate dx from current state. See <cite>dx</cite>.
-Use this for continuous functions</p></li>
+<li><p><strong>next_state_eqn</strong> (<em>callable</em>) – <p>Equation to calculate next_state from current state. See <cite>next_state</cite>.</p>
+<p>Use this for discrete functions</p>
+</p></li>
+<li><p><strong>dx_eqn</strong> (<em>callable</em>) – <p>Equation to calculate dx from current state. See <cite>dx</cite>.</p>
+<p>Use this for continuous functions</p>
+</p></li>
 <li><p><strong>event_state_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate the state for each event of the model. See <cite>event_state</cite></p></li>
 <li><p><strong>threshold_eqn</strong> (<em>callable</em><em>, </em><em>optional</em>) – Equation to calculate if the threshold has been met for each event in model. See <cite>threshold_met</cite></p></li>
 <li><p><strong>config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Any configuration parameters for the model</p></li>
@@ -196,15 +270,18 @@ Use this for continuous functions</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
-e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
-<li><p><strong>z</strong> (<em>dict</em>) – Outputs, with keys defined by model.outputs.
-e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – <p>Inputs, with keys defined by model.inputs</p>
+<p>e.g., u = {‘i’:3.2} given inputs = [‘i’]</p>
+</p></li>
+<li><p><strong>z</strong> (<em>dict</em>) – <p>Outputs, with keys defined by model.outputs</p>
+<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>x</strong> – First state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+<dd class="field-even"><p><p><strong>x</strong> – First state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -221,19 +298,20 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0)
-e.g., t = 3.4</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
-<li><p><strong>u</strong> (<em>dict</em>) – Inputs, with keys defined by model.inputs.
-e.g., u = {‘i’:3.2} given inputs = [‘i’]</p></li>
-<li><p><strong>dt</strong> (<em>number</em>) – Timestep size in seconds (≥ 0)
-e.g., dt = 0.1</p></li>
+<li><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – <p>Inputs, with keys defined by model.inputs</p>
+<p>e.g., u = {‘i’:3.2} given inputs = [‘i’]</p>
+</p></li>
+<li><p><strong>dt</strong> (<em>number</em>) – <p>Timestep size in seconds (≥ 0)</p>
+<p>e.g., dt = 0.1</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -250,26 +328,32 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">x = m.next_state(3.0, x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
+<div class="line">x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u</div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel.dx" title="prog_models.prognostics_model.PrognosticsModel.dx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dx</span></code></a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A model should overwrite either <cite>next_state</cite> or <cite>dx</cite>. Override <cite>dx</cite> for continuous models, and <cite>next_state</cite> for discrete, where the behavior cannot be described by the first derivative</p>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.output">
-<em class="property">abstract </em><code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.output" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
-e.g., t = 3.4</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
-</ul>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>z</strong> – Outputs, with keys defined by model.outputs.
-e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+<dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
+<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -287,16 +371,19 @@ e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>time</strong> (<em>number</em>) – Time to which the model will be simulated in seconds (≥ 0.0)
-e.g., time = 200</p></li>
+<li><p><strong>time</strong> (<em>number</em>) – <p>Time to which the model will be simulated in seconds (≥ 0.0)</p>
+<p>e.g., time = 200</p>
+</p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional:</em>) – Configuration options for the simulation
-Note: configuration of the model is set through model.parameters</p></li>
+<li><p><strong>options</strong> (<em>kwargs</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<p>Note: configuration of the model is set through model.parameters</p>
+<p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -338,16 +425,30 @@ Note: configuration of the model is set through model.parameters</p></li>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulate prognostics model until at least any or specified threshold(s) have been met</p>
+<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Configuration options for the simulation
-Note: configuration of the model is set through model.parameters</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
 <li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
 If blank, simulation will occur if any event will be met ()</p></li>
+<li><p><strong>options</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
+<p>Note: configuration of the model is set through model.parameters.</p>
+<p>Supported parameters:</p>
+<blockquote>
+<div><ul>
+<li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
+<li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
+<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
+<li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
+<li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
+</ul>
+</div></blockquote>
+<p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -389,20 +490,18 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.prognostics_model.PrognosticsModel.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>number</em>) – Current timestamp in seconds (≥ 0.0)
-e.g., t = 3.4</p></li>
-<li><p><strong>x</strong> (<em>dict</em>) – state, with keys defined by model.states
-e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p></li>
-</ul>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events
-e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
+<dd class="field-even"><p><p><strong>thresholds_met</strong> – If each threshold has been met (bool), with deys defined by prognostics_model.events</p>
+<p>e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
@@ -414,11 +513,15 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 <div class="line">u = {‘u1’: 3.2}</div>
 <div class="line">z = {‘z1’: 2.2}</div>
 <div class="line">x = m.initialize(u, z) # Initialize first state</div>
-<div class="line">threshold_met = m.threshold_met(t=3.2, x) # returns {‘e1’: False, ‘e2’: False}</div>
+<div class="line">threshold_met = m.threshold_met(x) # returns {‘e1’: False, ‘e2’: False}</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If not overwritten, the default behavior is to say the threshold is met if the event state is &lt;= 0</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel.event_state" title="prog_models.prognostics_model.PrognosticsModel.event_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">event_state</span></code></a></p>
 </div>
 </dd></dl>
 
@@ -447,6 +550,7 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
 </ul>
@@ -456,7 +560,7 @@ e.g., thresholds_met = {‘EOL’: False} given events = [‘EOL’]</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="models.html" title="previous chapter">Models</a></li>
-      <li>Next: <a href="exceptions.html" title="next chapter">Exceptions</a></li>
+      <li>Next: <a href="visualize.html" title="next chapter">Visualization</a></li>
   </ul></li>
 </ul>
 </div>

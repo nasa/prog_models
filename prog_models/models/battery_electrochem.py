@@ -67,6 +67,7 @@ class BatteryElectroChemParamDict(dict):
             except Exception as ex:
                 self.__setting = False
                 raise ex
+# TODO(CT): FIX- this is overwritten by the prog_model params class - fix
 
 class BatteryElectroChem(prognostics_model.PrognosticsModel):
     """
@@ -89,59 +90,73 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
     Outputs/Measurements: (2)
         | t: Temperature of battery (°C) 
         | v: Voltage supplied by battery`
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state). 
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise : Measurement noise (applied in output eqn)
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
+        | qMobile : 
+        | xnMax : Maximum mole fraction (neg electrode)
+        | xnMin : Minimum mole fraction (neg electrode)
+        | xpMax : Maximum mole fraction (pos electrode)
+        | xpMin : Minimum mole fraction (pos electrode) - note xn + xp = 1
+        | Ro : for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)
+        | alpha : anodic/cathodic electrochemical transfer coefficient
+        | Sn : Surface area (- electrode) 
+        | Sp : Surface area (+ electrode)
+        | kn : lumped constant for BV (- electrode)
+        | kp : lumped constant for BV (+ electrode)
+        | Vol : total interior battery volume/2 (for computing concentrations)
+        | VolSFraction : fraction of total volume occupied by surface volume
+        | tDiffusion : diffusion time constant (increasing this causes decrease in diffusion rate)
+        | to : for Ohmic voltage
+        | tsn : for surface overpotential (neg)
+        | tsp : for surface overpotential (pos)
+        | U0p : Redlich-Kister parameter (+ electrode)
+        | Ap : Redlich-Kister parameters (+ electrode)
+        | U0n : Redlich-Kister parameter (- electrode)
+        | An : Redlich-Kister parameters (- electrode)
+        | VEOD : End of Discharge Voltage Threshold
+        | x0 : Initial state
     """
-    events = [
-        'EOD' # End of Discharge
-    ]
-    
-    inputs = [
-        'i' # Current
-    ]
-
-    states = [
-        'tb',
-        'Vo',
-        'Vsn',
-        'Vsp',
-        'qnB',
-        'qnS',
-        'qpB',
-        'qpS'
-    ]
-
-    outputs = [
-        't', # Battery temperature (°C)
-        'v'  # Battery Voltage
-    ]
+    events = ['EOD']
+    inputs = ['i']
+    states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
+    outputs = ['t', 'v']
 
     default_parameters = BatteryElectroChemParamDict({ # Set to defaults
         'qMobile': 7600,
-        'xnMax': 0.6,   # maximum mole fraction (neg electrode)
-        'xnMin': 0,     # minimum mole fraction (neg electrode)
-        'xpMax': 1.0,   # maximum mole fraction (pos electrode)
-        'xpMin': 0.4,   # minimum mole fraction (pos electrode) -> note xn+xp=1
-        'Ro': 0.117215, # for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)
+        'xnMax': 0.6,
+        'xnMin': 0,
+        'xpMax': 1.0,
+        'xpMin': 0.4,
+        'Ro': 0.117215,
         
         # Li-ion parameters
-        'alpha': 0.5,   # anodic/cathodic electrochemical transfer coefficient
-        'Sn': 0.000437545, # surface area (- electrode)
-        'Sp': 0.00030962, # surface area (+ electrode)
-        'kn': 2120.96,  # lumped constant for BV (- electrode)
-        'kp': 248898,   # lumped constant for BV (+ electrode)
-        'Vol': 2e-5,    # total interior battery volume/2 (for computing concentrations)
-        'VolSFraction': 0.1, # fraction of total volume occupied by surface volume
+        'alpha': 0.5,
+        'Sn': 0.000437545,
+        'Sp': 0.00030962,
+        'kn': 2120.96,
+        'kp': 248898,
+        'Vol': 2e-5,
+        'VolSFraction': 0.1,
 
         # time constants
-        'tDiffusion': 7e6, # diffusion time constant (increasing this causes decrease in diffusion rate)
-        'to': 6.08671,  # for Ohmic voltage
-        'tsn': 1001.38, # for surface overpotential (neg)
-        'tsp': 46.4311, # for surface overpotential (pos)
+        'tDiffusion': 7e6,
+        'to': 6.08671,
+        'tsn': 1001.38,
+        'tsp': 46.4311,
 
-        # Redlich-Kister parameters (positive electrode)
+        # Redlich-Kister parameters (+ electrode)
         'U0p': 4.03,
         'Ap': [-31593.7, 0.106747, 24606.4, -78561.9, 13317.9, 307387, 84916.1, -1.07469e+06, 2285.04, 990894, 283920, -161513, -469218],
 
-        # Redlich-Kister parameters (negative electrode)
+        # Redlich-Kister parameters (- electrode)
         'U0n': 0.01,
         'An': [86.19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
@@ -161,7 +176,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
-    def dx(self, t, x, u):
+    def dx(self, x, u):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -208,12 +223,12 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
             'qpS': qpSdot
         })
         
-    def event_state(self, t, x):
+    def event_state(self, x):
         return {
             'EOD': (x['qnS'] + x['qnB'])/self.parameters['qnMax']
         }
 
-    def output(self, t, x):
+    def output(self, x):
         # Negative Surface
         xnS = x['qnS']/self.parameters['qSMax']
         VenParts = [
@@ -257,8 +272,8 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
             'v': Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
         })
 
-    def threshold_met(self, t, x):
-        z = self.output(t, x)
+    def threshold_met(self, x):
+        z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
         return {

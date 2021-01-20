@@ -46,20 +46,47 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | pB: Pressure at the bottom (Pa)
         | pT: Pressure at the top (Pa)
         | x: Position of piston (m)
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state). 
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise : Measurement noise (applied in output eqn)
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
+        | g : Acceleration due to gravity (m/s^2)
+        | pAtm : Atmospheric pressure (Pa)
+        | m : Plug mass (kg)
+        | offsetX : Spring offset distance (m)
+        | Ls : Stroke Length (m)
+        | Ap : Surface area of piston for gas contact (m^2)
+        | Vbot0 : Below piston "default" volume (m^3)
+        | Vtop0 : Above piston "default" volume (m^3)
+        | indicatorTol : tolerance bound for open/close indicators
+        | pSupply : Supply Pressure (Pa)
+        | Av : Surface area of plug end (m^2)
+        | Cv : flow coefficient assuming Cv of 1300 GPM
+        | rhoL : density of LH2 in kg/m^3
+        | gas_mass : Molar mass of used gas (kg/mol)
+        | gas_temp : temperature of used gas (K)
+        | gas_gamma : 
+        | gas_z :
+        | gas_R :
+        | At :
+        | Ct : 
+        | Ab :
+        | Cb : 
+        | AbMax : Max limit for state Aeb
+        | AtMax : Max limit for state Aet
+        | AiMax : Max limit for state Ai
+        | kMin : Min limit for state k
+        | rMax : Max limit for state r
+        | x0 : Initial state
     """
-    events = [
-        "Bottom Leak", 
-        "Top Leak", 
-        "Internal Leak",
-        "Spring Failure",
-        "Friction Failure"
-    ]
-    inputs = [
-        "pL",
-        "pR",
-        "uBot",
-        "uTop"
-    ]
+    events = ["Bottom Leak", "Top Leak", "Internal Leak", "Spring Failure", "Friction Failure"]
+    inputs = ["pL", "pR", "uBot", "uTop"]
     states = [
         "Aeb",
         "Aet",
@@ -77,39 +104,31 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         'wr',
         'wt'
     ]
-    outputs = [
-        "Q",
-        "iB", 
-        "iT",
-        "pB",
-        "pT",
-        "x"
-    ]
+    outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
     default_parameters = { # Set to defaults
         # Environmental Parameters
         'R': 8.314, # Universal Gas Constant
-        'g': 9.81, # Acceleration due to gravity (m^2/s)
-        'pAtm': 101325, # Atmospheric pressure (Pa)
+        'g': 9.81, 
+        'pAtm': 101325,
 
         # Valve Parameters
-        'm': 50, # Plug mass (kg)
-        'offsetX': 0.254, # Spring offset distance (m)
-        'Ls': 0.0381, # Stroke Length (m)
-        'Ap': 8.1073196655599634694e-3, # Surface area of piston for gas contact (m^2)
-        'Vbot0': 8.107319665559963e-4, # Below piston "default" volume (m^3)
-        'Vtop0': 8.107319665559963e-4, # Above piston "default" volume (m^3)
-        'indicatorTol': 1e-3, # tolerance bound for open/close indicators
+        'm': 50,
+        'offsetX': 0.254,
+        'Ls': 0.0381,
+        'Ap': 8.1073196655599634694e-3,
+        'Vbot0': 8.107319665559963e-4,
+        'Vtop0': 8.107319665559963e-4,
+        'indicatorTol': 1e-3,
 
         # Flow Parameters
-        'pSupply': 5.272420892278394995e6, # Supply Pressure (Pa)
-        'Av': 0.050670747909749769389, # Surface area of plug end (m^2)
-        'Cv': 0.4358892767469993814, # flow coefficient assuming Cv of 1300 GPM
-        'rhoL': 70.99, # density of LH2 in kg/m^3
+        'pSupply': 5.272420892278394995e6,
+        'Av': 0.050670747909749769389,
+        'Cv': 0.4358892767469993814,
+        'rhoL': 70.99,
 
-        # Supply gas params
-        # Note: Default is nitrogen
-        'gas_mass': 28.01e-3, # Molar mass of used gas (kg/mol)
-        'gas_temp': 293, # temperature of used gas (K)
+        # Supply gas params (Note: Default is nitrogen)
+        'gas_mass': 28.01e-3,
+        'gas_temp': 293,
         'gas_gamma': 1.4, 
         'gas_z': 1,
         'gas_R': 296.8225633702249454,
@@ -169,7 +188,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         else:
             raise ProgModelException('Unknown Condition')
     
-    def next_state(self, t, x, u, dt):
+    def next_state(self, x, u, dt):
         params = self.parameters # optimization
         pInTop = params['pSupply'] if u['uTop'] else params['pAtm'] 
         springForce = x['k']*(params['offsetX']+x['x'])
@@ -226,7 +245,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'wt': x['wt']
         }, dt)
     
-    def output(self, t, x):
+    def output(self, x):
         parameters = self.parameters # Optimization
         indicatorTopm = (x['x'] >= parameters['Ls']-parameters['indicatorTol'])
         indicatorBotm = (x['x'] <= parameters['indicatorTol'])
@@ -246,7 +265,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             "x": x['x']
         })
 
-    def event_state(self, t, x):
+    def event_state(self, x):
         return {
             "Bottom Leak": (self.parameters['AbMax'] - x['Aeb'])/(self.parameters['AbMax'] - self.parameters['x0']['Aeb']), 
             "Top Leak": (self.parameters['AtMax'] - x['Aet'])/(self.parameters['AtMax'] - self.parameters['x0']['Aet']), 
@@ -255,7 +274,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             "Friction Failure": (self.parameters['rMax'] - x['r'])/(self.parameters['rMax'] - self.parameters['x0']['r'])
         }
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         return {
             "Bottom Leak": x['Aeb'] > self.parameters['AbMax'], 
             "Top Leak": x['Aet'] > self.parameters['AtMax'], 

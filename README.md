@@ -7,16 +7,18 @@ See documentation [here](docs/index.html)
  
 ## Directory Structure 
  
-`prog_models/` - The prognostics model python package 
- |-`models/` - Example models 
- |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior 
-`docs/` - Project documentation 
-`sphinx_config/` - Configuration for automatic documentation generation
-`examples/` - Example python scripts using prog_models 
-`tests/` - Tests for prog_models
-`README.md` - The readme (this file)
-`requirements.txt` - python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`
-`prog_model_template.py` - Template for Prognsotics Model 
+`prog_models/` - The prognostics model python package<br />
+&nbsp;&nbsp; |-`models/` - Example models<br /> 
+&nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
+&nbsp;&nbsp; |-`visualize.py` - Visualization tools<br />
+`docs/` - Project documentation<br />
+`sphinx_config/` - Configuration for automatic documentation generation<br />
+`examples/` - Example python scripts using prog_models<br />
+`tests/` - Tests for prog_models<br />
+`README.md` - The readme (this file)<br />
+`requirements.txt` - python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`<br />
+`prog_model_template.py` - Template for Prognsotics Model<br />
+`tutorial.ipynb` - Tutorial (Juypter Notebook)
 
 ## Notices
 

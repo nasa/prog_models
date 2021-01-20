@@ -5,14 +5,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Getting Started &#8212; Prognostics Models Python Package 0.1 documentation</title>
+    <title>Getting Started &#8212; Prognostics Models Python Package 0.2.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Models" href="models.html" />
@@ -36,20 +35,30 @@
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <p>The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
-<p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>)</p>
+<p>The foundation of this package is the class <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>)</p>
+<p>A few definitions:</p>
+<ul class="simple">
+<li><p><strong>events</strong>: some state that can be predicted (e.g., system failure). An event has either occured or not.</p></li>
+<li><p><strong>event state</strong>: progress towards event occuring. Defined as a number where an event state of 0 indicates the event has occured and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occuring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called “State of Health”</p></li>
+<li><p><strong>inputs</strong>: control applied to the system being modeled (e.g., current drawn from a battery)</p></li>
+<li><p><strong>outputs</strong>: measured sensor values from a system (e.g., voltage and temperature of a battery)</p></li>
+<li><p><strong>states</strong>: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be.</p></li>
+<li><p><strong>process noise</strong>: stochastic process representing uncertainty in the model transition.</p></li>
+<li><p><strong>measurement noise</strong>: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects</p></li>
+</ul>
 <div class="section" id="installing-dependencies">
 <h2>Installing Dependencies<a class="headerlink" href="#installing-dependencies" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>You can do this using the included <cite>requriements.txt</cite> file. Use the following command:</dt><dd><p><cite>pip install -r requirements.txt</cite></p>
+<dt>You can install dependencies using the included <cite>requirements.txt</cite> file. This file enumerates all the dependencies of this package. Use the following command to install dependencies:</dt><dd><p><cite>pip install -r requirements.txt</cite></p>
 </dd>
 </dl>
 </div>
 <div class="section" id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
-<p>See the examples for examples of use. Run examples using the command <cite>python -m examples.[Example name]</cite> command (e.g., <cite>python -m examples.sim_example</cite>). The examples are summarized below:</p>
+<p>See the below examples for examples of use. Run these examples using the command <cite>python -m examples.[Example name]</cite> (e.g., <cite>python -m examples.sim_example</cite>). The examples are summarized below:</p>
 <ul>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/ab38aa91d2b6882ae3b7b87138c4e6cc/sim_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_example</span></code></a></dt><dd><span class="target" id="module-examples.sim_example"></span><p>An example where a battery is simulated first for a set period of time and then till threshold is met. Run using the command <cite>python -m examples.sim_example</cite></p>
+<dt><a class="reference download internal" download="" href="_downloads/2573c3db18f7a8b99d347500726179ab/sim.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim</span></code></a></dt><dd><span class="target" id="module-examples.sim"></span><p>An example where a battery is simulated first for a set period of time and then till threshold is met. Run using the command <cite>python -m examples.sim_example</cite></p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -57,7 +66,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/372c5d88908153732880cb80c16532ac/model_gen_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen_example</span></code></a></dt><dd><span class="target" id="module-examples.model_gen_example"></span><p>Example of generating a models from constituant parts. Can be run using the following command <cite>python -m examples.model_gen_example</cite></p>
+<dt><a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a></dt><dd><span class="target" id="module-examples.model_gen"></span><p>Example of generating a models from constituant parts. Can be run using the following command <cite>python -m examples.model_gen_example</cite></p>
 <p>Model for this example is that of an object thrown into the air, predicting impact event</p>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -66,7 +75,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/f970960da825ceb736fa070c31c0b0e8/benchmarking_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.benchmarking_example</span></code></a></dt><dd><span class="target" id="module-examples.benchmarking_example"></span><p>Example of benchmarking models. Can be run using the following command <cite>python -m examples.benchmarking_example</cite></p>
+<dt><a class="reference download internal" download="" href="_downloads/c5f01fb79e30655f6d28daf756382ba2/benchmarking.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.benchmarking</span></code></a></dt><dd><span class="target" id="module-examples.benchmarking"></span><p>Example of benchmarking models. Can be run using the following command <cite>python -m examples.benchmarking_example</cite></p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -74,7 +83,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/0cd57df91a48f4290888591d39a5a231/new_model_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model_example</span></code></a></dt><dd><span class="target" id="module-examples.new_model_example"></span><p>Example defining and testing a new model. Can be run using the following command <cite>python -m examples.new_model_example</cite></p>
+<dt><a class="reference download internal" download="" href="_downloads/e4947713746e05efe1e55cf84e8ac3f8/new_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model</span></code></a></dt><dd><span class="target" id="module-examples.new_model"></span><p>Example defining and testing a new model. Can be run using the following command <cite>python -m examples.new_model_example</cite></p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -82,7 +91,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/c572af3efcbcdb96227183f1ef46ae9b/sensitivity_example.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sensitivity_example</span></code></a></dt><dd><span class="target" id="module-examples.sensitivity_example"></span><p>Example performing a sensitivity analysis on a new model. Can be run using the following command <cite>python -m examples.sensitivity_example</cite></p>
+<dt><a class="reference download internal" download="" href="_downloads/1e173741004c18e2e2f97234d3eb4521/sensitivity.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sensitivity</span></code></a></dt><dd><span class="target" id="module-examples.sensitivity"></span><p>Example performing a sensitivity analysis on a new model. Can be run using the following command <cite>python -m examples.sensitivity_example</cite></p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -90,40 +99,88 @@
 </dl>
 </li>
 <li><dl>
-<dt><code class="xref download docutils literal notranslate"><span class="pre">examples.noise_example</span></code></dt><dd><div class="line-block">
+<dt><a class="reference download internal" download="" href="_downloads/3dbddda7f577417b5e7a6a8ec6c72695/noise.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.noise</span></code></a></dt><dd><span class="target" id="module-examples.noise"></span><p>Example defining and testing a new model. Can be run using the following command <cite>python -m examples.new_model_example</cite></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference download internal" download="" href="_downloads/e3c96fc1e21c9f4f92da1c6f0d5aa6b1/visualize.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.visualize</span></code></a></dt><dd><span class="target" id="module-examples.visualize"></span><p>Visualization Module Example</p>
+<div class="line-block">
 <div class="line"><br /></div>
 </div>
 </dd>
 </dl>
 </li>
 </ul>
+<p>There is also an included tutorial (<a class="reference download internal" download="" href="_downloads/200bc74cf412da163fa7fd0ac3a7bb56/tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">tutorial</span></code></a>).</p>
 </div>
 <div class="section" id="extending">
 <h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
-<p>There are two methods of creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
+<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
 <div class="section" id="subclass-method">
 <h3>1. Subclass Method<a class="headerlink" href="#subclass-method" title="Permalink to this headline">¶</a></h3>
 <p>The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:</p>
 <dl class="py class">
 <dt id="prog_models.prognostics_model.PrognosticsModel">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.prognostics_model.</code><code class="sig-name descname">PrognosticsModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">options</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">prog_models.prognostics_model.</code><code class="sig-name descname">PrognosticsModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general time-variant state space model of system degradation behavior.</p>
 <p>The PrognosticsModel class is a wrapper around a mathematical model of a
-system as represented by a state, output, input, and threshold equations.
-It is a subclass of the Model class, with the addition of a threshold
-equation, which defines when some condition, such as end-of-life, has
-been reached.</p>
+system as represented by a state, output, input, event_state and threshold equations.</p>
 <p>A Model also has a parameters structure, which contains fields for
 various model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration parameters for model. Parameters supported by every model include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p>
+</dd>
+</dl>
+</li>
+<li><p>process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</p></li>
+<li><dl class="simple">
+<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
+</dd>
+</dl>
+</li>
+<li><p>measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+</ul>
+</div></blockquote>
+<p>E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {‘z1’: 0.1, ‘z2’: 0.3})</p>
+</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – </p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
 </dd></dl>
 
-<p>To generate a new model create a new class for your model that inherits from one of these two base classes, whichever is more appropriate for your application. Alternatively, you can copy one of the templates <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
-<p>The analysis and simulation tools defined in <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> will then work with your new model.</p>
+<p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
+<p>The analysis and simulation tools defined in <a class="reference internal" href="#prog_models.prognostics_model.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></code></a> will then work with your new model.</p>
+<p>See <a class="reference download internal" download="" href="_downloads/e4947713746e05efe1e55cf84e8ac3f8/new_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model</span></code></a> for an example of this approach.</p>
 </div>
 <div class="section" id="model-generator-method">
 <h3>2. Model Generator Method<a class="headerlink" href="#model-generator-method" title="Permalink to this headline">¶</a></h3>
-<p>The second way to generate a new model is using the model generator method <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>. Pass a map of the keys for input, state, output, events (optional), and the required transition equations into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
+<p>The second way to generate a new model is using the model generator method <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a>. Pass a map of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.prognostics_model.PrognosticsModel.generate_model" title="prog_models.prognostics_model.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.prognostics_model.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
+<p>See <a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a> for an example of this approach.</p>
 </div>
+</div>
+<div class="section" id="tips">
+<h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., ‘SOH_50’) override the event_state and threshold_met equations to also predict that additional state</p></li>
+<li><p>If you’re only doing diagnostics without prognostics- just have an dx equation with no change of state and don’t perform prediction. The state estimator can still be used to estimate if any of the events have occured.</p></li>
+<li><p>Sudden events use a binary event_state (1=healthy, 0=failed)</p></li>
+<li><p>You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 (‘event 2’: event_1 and [OTHER LOGIC])</p></li>
+</ul>
 </div>
 </div>
 
@@ -149,10 +206,12 @@ various model parameters.</p>
 <li class="toctree-l2"><a class="reference internal" href="#installing-dependencies">Installing Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tips">Tips</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
 </ul>

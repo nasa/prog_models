@@ -20,7 +20,7 @@ def run_example():
         elif (t < 1800):
             i = 4
         elif (t < 3000):
-            i = 2
+            i = 2     
         else:
             i = 3
         return {'i': i}
@@ -36,8 +36,11 @@ def run_example():
     # Simulate to threshold
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
-    options = {'save_freq': 100}
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, options)
+    options = {
+        'save_freq': 100, # Frequency at which results are saved
+        'dt': 2 # Timestep
+    }
+    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
     for i in range(len(times)): # Print Results
         print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))

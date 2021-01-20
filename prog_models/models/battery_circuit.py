@@ -23,37 +23,54 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     Outputs: (2)
         | t: Temperature of battery (°C)
         | v: Voltage supplied by battery
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state). 
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise : Measurement noise (applied in output eqn)
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
+        | V0 : Nominal Battery Voltage
+        | Rp : Battery Parasitic Resistance 
+        | qMax : Maximum Charge
+        | CMax : Max Capacity
+        | VEOD : End of Discharge Voltage Threshold
+        | Cb0 : Battery Capacity Parameter
+        | Cbp0 : Battery Capacity Parameter
+        | Cbp1 : Battery Capacity Parameter
+        | Cbp2 : Battery Capacity Parameter
+        | Cbp3 : Battery Capacity Parameter
+        | Rs : R-C Pair Parameter
+        | Cs : R-C Pair Parameter
+        | Rcp0 : R-C Pair Parameter
+        | Rcp1 : R-C Pair Parameter
+        | Rcp2 : R-C Pair Parameter
+        | Ccp : R-C Pair Parameter
+        | Ta : Ambient Temperature
+        | Jt : Temperature parameter
+        | ha : Heat transfer coefficient, ambient
+        | hcp : Heat transfer coefficient parameter
+        | hcs : Heat transfer coefficient - surface
+        | x0 : Initial state
     
     Note: This is much quicker but also less accurate as the electrochemistry model
     """
-    events = [
-        'EOD' # End of Discharge
-    ]
-    
-    inputs = [
-        'i' # Current
-    ]
-
-    states = [
-        'tb',
-        'qb',
-        'qcp',
-        'qcs'
-    ]
-
-    outputs = [
-        't', # Battery temperature (°C)
-        'v'  # Battery Voltage
-    ]
+    events = ['EOD']
+    inputs = ['i']
+    states = ['tb', 'qb', 'qcp', 'qcs']
+    outputs = ['t',  'v']
 
     default_parameters = { # Set to defaults
-        'V0': 4.183,        # Nominal Battery Voltage
-        'Rp': 1e4,          # Battery Parasitic Resistance
-        'qMax': 7856.3254,  # Max Charge
-        'CMax': 7777,       # Max Capacity
-        'VEOD': 3.0,        # End of Discharge Voltage Threshold
+        'V0': 4.183,
+        'Rp': 1e4,
+        'qMax': 7856.3254,
+        'CMax': 7777,
+        'VEOD': 3.0,
         # Capacitance 
-        'Cb0': 1878.155726,            # Battery Capacitance
+        'Cb0': 1878.155726,
         'Cbp0': -230,
         'Cbp1': 1.2,
         'Cbp2': 2079.9,
@@ -66,12 +83,12 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'Rcp2': 37.223,
         'Ccp': 14.8223,
         # Temperature Parameters
-        'Ta': 18.95,        # Ambient temperature (deg C)
+        'Ta': 18.95,
         'Jt': 800,
-        'ha': 0.5,          # Heat transfer coefficient, ambient
+        'ha': 0.5,
         'hcp': 19,
         'hcs': 1,
-        'x0': {             # Default initial state
+        'x0': {
             'tb': 18.95,   
             'qb': 7856.3254,
             'qcp': 0,
@@ -82,7 +99,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     def initialize(self, u, z):
         return self.parameters['x0']
 
-    def dx(self, t, x, u): 
+    def dx(self, x, u): 
         parameters = self.parameters # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
@@ -106,13 +123,13 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
             'qcs': ics,
         })
     
-    def event_state(self, t, x):
+    def event_state(self, x):
         parameters = self.parameters
         return {
             'EOD': (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
         }
 
-    def output(self, t, x):
+    def output(self, x):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -125,7 +142,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
             'v': Vb - Vcp - Vcs
         })
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

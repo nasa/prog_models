@@ -1,11 +1,7 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-
 # Import packages
 # ============
-# import numpy as np
-from numpy import ndarray
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -35,19 +31,23 @@ def get_subplot_dim(num_subplots, rowfirst=True):
     nrows and ncols are initialized to 1. If num_subplots==1, then subplots are not needed, and the function returns nrows=ncols=1.
     The command fig.add_subplot(nrows,ncols,1) generates a normal plot (no subplots).
 
-    Parameters:
-    -----------
-    num_subplots : int, number of subplots the figure should contain
-    rowfirst     : Boolean, whether to add a new row first or a new column first to increase the number of rows and columns if necessary.
+    Parameters
+    ----------
+    num_subplots : int
+                   number of subplots the figure should contain
+    rowfirst     : Boolean
+                   whether to add a new row first or a new column first to increase the number of rows and columns if necessary.
                    Default is rowfirst=True.
     
-    Returns:
-    --------
-    nrows : int, number of subplots along the rows (vertical axis) of the figure
-    ncols : int, number of subplots along the columns (horizontal axis) of the figure
+    Returns
+    -------
+    nrows : int
+            number of subplots along the rows (vertical axis) of the figure
+    ncols : int
+            number of subplots along the columns (horizontal axis) of the figure
 
-    Example:
-    --------
+    Example
+    -------
     | states = np.random.randn(1000,5) # let us consider a state vector with 5 dimensions, and 1000 values of the states (one for each time step)
     | n_states = states.shape[-1]     # get the number of states (5)
     | print(get_subplot_dim(n_states)) # 3, 2
@@ -77,25 +77,26 @@ def set_plot_options(opt):
     The visualize library works with specific values to generate the plots.
     if those are not specified by the users, this function assign them their default values.
 
-    Parameters:
-    -----------
-    opt : dictionary of plot options. Acceptable entries are:
-          'figsize' : tuple of 2 floats, width and height of the figure
-          'compact' : Boolean, whether to plot a "compact" figure. If compact, all time series are displayd in one plot (multiple colored lines)
-          'xlabel'  : string, label for the x-axis. Default is 'time'
-          'ylabel'  : string, label for the y-axis. Default is 'state' 
-          'title'   : string or empty list or None, plot title. Default is empty list (no title)
-          'title_fontsize' : string or float, plot title fontsixe. Default is 'x-large'
-          'suptitle'       : string or empty list or None, plot suptitle. Default is empty list (no suptitle)
-          'ticklabel_fontsize' : string or float, tick label font sizes. Defaullt is 'small'
-          'tight_layout' : Boolean, whether to use tight layout (minimize figure blank space around the graph)
-          'display_labels' : string, whether to display x and y-labels in the figure.
+    Parameters
+    ----------
+    opt : dictionary of plot options. Acceptable entries are:\n
+          * 'figsize' : tuple of 2 floats, width and height of the figure
+          * 'compact' : Boolean, whether to plot a "compact" figure. If compact, all time series are displayd in one plot (multiple colored lines)
+          * 'xlabel'  : string, label for the x-axis. Default is 'time'
+          * 'ylabel'  : string, label for the y-axis. Default is 'state' 
+          * 'title'   : string or empty list or None, plot title. Default is empty list (no title)
+          * 'title_fontsize' : string or float, plot title fontsixe. Default is 'x-large'
+          * 'suptitle'       : string or empty list or None, plot suptitle. Default is empty list (no suptitle)
+          * 'ticklabel_fontsize' : string or float, tick label font sizes. Defaullt is 'small'
+          * 'tight_layout' : Boolean, whether to use tight layout (minimize figure blank space around the graph)
+          * 'display_labels' : string, whether to display x and y-labels in the figure.
 
-    Returns:
-    --------
-    opt : dictionary of plot options with default values added.
+    Returns
+    -------
+    opt : dict
+        dict of plot options with default values added.
 
-    Example:
+    Example
     -------
     | opt = {}
     | opt = set_plot_options(opt)
@@ -154,17 +155,18 @@ def set_legend_options(leg_opt, s_names):
     The visualize library works with specific values for some legend options.
     if those are not specified by the users, this function assign them their default values.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     leg_opt : dictionary of entries for the legend specified by the user. 
     s_names : list of strings, names of the time series in the current plot, whose names should appear in the legend.
 
-    Returns:
-    --------
-    leg_opt : dictionary of enetries for the legend.
+    Returns
+    -------
+    leg_opt : dict
+        dictionary of enetries for the legend.
 
-    Example:
-    --------
+    Example
+    -------
     | s_names = ['x', 'v']
     | leg_opt = {'display': True, 'labels': None, 'loc'='best', 'fontsize', 14}
     | leg_opt = set_legend_options(leg_opt, s_names)
@@ -197,20 +199,21 @@ def set_savefig_options(sfo):
     """
     Set all remaining save figure options given the options already specified by the user "sfo".
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     sfo : dictionary of options to save the current figure
-          if not provided, a figure will not be saved by default. Otherwise, sfo should provide the following dictionary entries:
-          'save' (Boolean, whether to save the figure or not, True or False) 
-          'dpi' (int, resolution of the figure in dots per inch)
-          'filename' (string, figure filename, including file type, e.g., .pdf or .png. Default is 'timeseries_plot.pdf')
+          if not provided, a figure will not be saved by default. Otherwise, sfo should provide the following dictionary entries:\n
+           * 'save' (Boolean, whether to save the figure or not, True or False) 
+           * 'dpi' (int, resolution of the figure in dots per inch)
+           * 'filename' (string, figure filename, including file type, e.g., .pdf or .png. Default is 'timeseries_plot.pdf')
     
-    Returns:
-    --------
-    sfo  : dictionary of default save figure options.
+    Returns
+    -------
+    sfo  : dict
+        dict of default save figure options.
 
-    Example:
-    --------
+    Example
+    -------
     | fig = plt.figure()
     | ax = fig.add_subplot(111)
     | ax.plot([0, 1], [3, 4])
@@ -231,26 +234,27 @@ def set_legend(ax, item, s_names, leg_opt):
     Set legend for axis 'ax' for the 'item-th' time series entry. All time series labels are defined in 's_names'.
     For a comprehensive explanation of all legend options, see the Matplotlib guide on their website.
 
-    Parameters:
+    Parameters
     ----------
     ax      : matplotlib axis object
     item    : int, index of the time series to be displayed in the legend
     s_names : list of strings, names of all time series in the plot or subplot
-    leg_opt : dictionary containing all legend options necessary to place and modify the legend. Dictionary entries can be:
-              'bbox_to_anchor' (tuple, coordinates of the legend location), 
-              'ncol' (int, number of columns of the legend),
-              'fontsize' (int, legend font size),
-              'fancybox' (Boolean, Use a fancybox for the legend, True or False),
-              'shadow' (Boolean, Whether the legend box should have a shadow, True or False)
-              'facecolor' (string with color code, background color of the legend box),
-              'edgecolor' (string with color code, edge color of the legend box),
-              'title' (string, legend title)
+    leg_opt : dictionary containing all legend options necessary to place and modify the legend. Dictionary entries can be:\n
+               * 'bbox_to_anchor' (tuple, coordinates of the legend location), 
+               * 'ncol' (int, number of columns of the legend),
+               * 'fontsize' (int, legend font size),
+               * 'fancybox' (Boolean, Use a fancybox for the legend, True or False),
+               * 'shadow' (Boolean, Whether the legend box should have a shadow, True or False)
+               * 'facecolor' (string with color code, background color of the legend box),
+               * 'edgecolor' (string with color code, edge color of the legend box),
+               * 'title' (string, legend title)
     
-    Returns:
-    --------
-    axis object with legend
+    Returns
+    -------
+    ax : axis object
+        axis object with legend
 
-    Example:
+    Example
     -------
     | s_names = list(s.keys())
     | ax = fig.add_subplot()
@@ -286,25 +290,26 @@ def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
     """
     Display label option for time series plot
 
-    Parameters:
-    -----------
-    nrows        : int, number of subplot rows in plot
-    ncols        : int, number of subplot columns in plot
-    subplot_num  : int, subplot number
-    ax           : matplotlib axis object, current axis
-    opt          : dict, display options for the plot.
-                   minimum options to be included are:
-                   1. 'display_labels' = 'minimal' or 'all'. if 'minimal', only the minimum number of axis ticks and labels are displayed according
-                   to the number of subplots. If 'all', then all x-ticks, x-labels, y-ticks, and y-labels will be displayed for each subplot.
-                   2. 'xlabel' and 'ylabel'. strings containing the xlabels and ylabels to display.
-    series_names : list of strings, names of the time series
+    Parameters
+    ----------
+    nrows        : int
+        number of subplot rows in plot
+    ncols        : int
+        number of subplot columns in plot
+    subplot_num  : int
+        subplot number
+    ax           : matplotlib axis object
+        current axis
+    opt          : dict
+        display options for the plot. Minimum options to be included are:\n
+         1. 'display_labels' = 'minimal' or 'all'. if 'minimal', only the minimum number of axis ticks and labels are displayed according
+            to the number of subplots. If 'all', then all x-ticks, x-labels, y-ticks, and y-labels will be displayed for each subplot.\n
+         2. 'xlabel' and 'ylabel'. strings containing the xlabels and ylabels to display.
+    series_names : list of strings
+        names of the time series
 
-    Returns:
-    --------
-    Nothing, the function modifies current axis "ax"
-
-    Example:
-    --------
+    Example
+    -------
     | nrows, ncols = 2, 1
     | subplot_num = 0
     | fig = plt.figure()
@@ -316,7 +321,7 @@ def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
     if 'minimal' in opt['display_labels']:
         if subplot_num+1 == nrows*ncols and opt['xlabel']:         set_labels(ax, opt, series_names, axis='x')
         if (subplot_num+1 == 1 or ncols==1) and opt['ylabel']:     set_labels(ax, opt, series_names, axis='y')
-        if subplot_num+1 == 1:                                     ax.set_xticks([], [])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
+        if subplot_num+1 == 1:                                     ax.set_xticks([], minor=[])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
     elif 'all' in opt['display_labels']:    
         set_labels(ax, opt, series_names)
     return
@@ -329,17 +334,21 @@ def extract_option(opt, idx, series_names):
     the option corresponding to the series name at index idx, "series_names[idx]" if opt is a dictionary,
     or return the option "opt" if opt is neither a dictionary or a list.
 
-    Parameters:
-    -----------
-    opt             :   dictionary of strings (label names) corresponding to entries in series_names, list of strings corresponding to the series names (in order), or a simple string
-    idx             :   int, index of the option to extract in label options if opt is a string, or index of the corresponding series_names to extract if opt is a dictionary
-    series_names    :   list of strings, series names used if opt is a dictionary
+    Parameters
+    ----------
+    opt             :   dictionary of strings 
+        dictionary of label name) corresponding to entries in series_names, list of strings corresponding to the series names (in order), or a simple string
+    idx             :   int
+        index of the option to extract in label options if opt is a string, or index of the corresponding series_names to extract if opt is a dictionary
+    series_names    :   list of strings
+        series names used if opt is a dictionary
 
-    Returns:
-    --------
-    string, option corresponding to the index idx (if opt is a list of strings), corresponding to the series_names[idx] if opt is dictionary, or simply return opt if neither of those
+    Returns
+    -------
+    option: string
+        option corresponding to the index idx (if opt is a list of strings), corresponding to the series_names[idx] if opt is dictionary, or simply return opt if neither of those
 
-    Examples:
+    Examples
     --------
     | Example 1:
     | ...........
@@ -371,23 +380,19 @@ def set_ax_options(ax, opts):
     """
     Set label options for plot axis.
 
-    The function set a number of labels defined in dictionary "opts" for the current axis "ax".
-    At the moment, the options that can be set are:
-        title, title_fontsize, xlabel, ylabel, xticks, xtick_rotation, xtick_fontsize, tticks, ytick_rotation, ytick_fontsize
+    The function set a number of labels defined in dictionary "opts" for the current axis "ax".\n
+    At the moment, the options that can be set are:\n
+        title, title_fontsize, xlabel, ylabel, xticks, xtick_rotation, xtick_fontsize, tticks, ytick_rotation, ytick_fontsize\n
     Input options are not mandatory, so only a subset of them can be defined.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ax : matplotlib axis object
         matplotlib axis to visualize in figure
-    opts :  dictionary
+    opts : dict
         display options for the axis / subplot. Available: title, title_fontsize, xlabel, ylabel, xticks, xtick_rotation, xtick_fontsize, tticks, ytick_rotation, ytick_fontsize
-    
-    Returns:
-    -------
-    Nothing. This function does not return anything as the input ax object is modified.
 
-    Example:
+    Example
     -------
     | opts = {'title': 'this is a test title', 
     |         'title_fontsize': 16, 'xlabel': 'time', 'ylabel': 'state value',
@@ -409,25 +414,20 @@ def set_labels(ax, opt, series_names, axis='all'):
     Set labels of axis "ax" according to figure options "opt" and the time series names "series_names."
     The function can set both x and y axis when input axis=='all' (default), or rather set only x or y axis (axis='x' or axis='y', respectively).
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ax : matplotlib axis object
         axis to add labels and tick options to
     opt : dictionary of label options
         options must include labels and ticks for both x and y axes; 'xlabel', 'xticks', 'ylabel', 'yticks'
         if 'xticks' is not empty (or None), then options can include also 'xtick_rotation', to rotate the axis ticks w.r.t. the plot, as well as 'xtick_fontsize', to change tick fontsize.
         the same applies to 'yticks'.
-        
     series_names : list of strings
         name of time series
     axis : string to decide which axis to display the options on.
-           options are: 'x', 'y', or 'all' for both x and y
-    
-    Returns:
-    --------
-    Nothing. This function modifies the ax object without returning anything.
+        options are: 'x', 'y', or 'all' for both x and y
 
-    Example:
+    Example
     -------
     | fig = plt.figure()
     | ax = fig.add_subplot(221)
@@ -469,22 +469,27 @@ def plot_timeseries(t, s, legend=None, options=None):
     Legends can be displayed in each subplot or only one subplot, and names of time series, axis labels, plot title, legend titles and other are all customizable.
     Please read the help of the other functions suggested below for more info.
 
-    Parameters:
-    -----------
-    t : numpy array or list of floats, time vector
-    s : array of dictionaries. Each entry of the array is a dictionary with all time series, and one value per time series (corresponding to the time instant).
-        Example: s = np.array([ {'x': 0.0,  'v': 1.0}, 
-                                {'x': 1.0,  'v': 0.9},
-                                {'x': 1.83, 'v': 0.75},  ])
-    legend : dictionary of legend options. See 'set_legend' function for more details
-    options : dictionary of plot options. See 'set_plot_options' function and other functions therein for more details
+    Parameters
+    ----------
+    t : list of floats
+        time vector
+    s : array of dictionaries
+        Each entry of the array is a dictionary with all time series, and one value per time series (corresponding to the time instant).\n
+        Example: s = [ {'x': 0.0,  'v': 1.0},\n 
+                       {'x': 1.0,  'v': 0.9},\n
+                       {'x': 1.83, 'v': 0.75},...]
+    legend : dict
+        dict of legend options. See 'set_legend' function for more details
+    options : dict
+        dict of plot options. See 'set_plot_options' function and other functions therein for more details
 
-    Returns:
-    --------
-    fig : matplotlib figure object corresponding to the generated figure.
+    Returns
+    -------
+    fig : matplotlib figure object 
+        object corresponding to the generated figure.
      
-    Example:
-    --------
+    Example
+    -------
     | # New Model Example
     | # ===============
     | m = ThrownObject()
@@ -505,9 +510,6 @@ def plot_timeseries(t, s, legend=None, options=None):
     | fig = plot_timeseries(times, states)
     | fig.savefig('example2.pdf', dpi=150)
     """
-    assert type(s) == ndarray,   "Time series vector s must be an array of dictionary"
-    assert type(s[0])==dict,        "Every element of the time series vector s must be a dictionary"
-
     series_names = list(s[0].keys())
     m = len(series_names)
     n = len(s)

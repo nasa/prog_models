@@ -22,7 +22,7 @@ copyright = '2020 United States Government as represented by the Administrator o
 author = 'Chris Teubert, Chetan Kulkarni, and Matteo Corbetta'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -39,9 +39,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
-autodoc_mock_imports = ['numpy', 'filtpy']
-
 
 # -- Options for HTML output -------------------------------------------------
 

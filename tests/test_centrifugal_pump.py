@@ -5,7 +5,7 @@ from prog_models.models.centrifugal_pump import CentrifugalPump
 
 class TestCentrifugalPump(unittest.TestCase):
     def test_centrifugal_pump(self):
-        pump = CentrifugalPump({'process_noise': 0})
+        pump = CentrifugalPump(process_noise= 0)
 
         cycle_time = 3600
         def future_loading(t):
@@ -44,7 +44,7 @@ class TestCentrifugalPump(unittest.TestCase):
         for key in pump.states:
             self.assertAlmostEqual(x0[key], x0_test[key], 7)
         
-        x = pump.next_state(0, x0, future_loading(0), 1)
+        x = pump.next_state(x0, future_loading(0), 1)
         x_test = {
             'w': 372.68973081274,
             'Q': 0.017417462,
@@ -62,7 +62,7 @@ class TestCentrifugalPump(unittest.TestCase):
         for key in pump.states:
             self.assertAlmostEqual(x[key], x_test[key], 7)
 
-        z = pump.output(0, x)
+        z = pump.output(x)
         z_test = {
             'Qout': 0.0174,
             'To': 290,
@@ -76,5 +76,5 @@ class TestCentrifugalPump(unittest.TestCase):
 
         pump.parameters['x0']['wA'] = 1e-2
         pump.parameters['x0']['wThrust'] = 1e-10
-        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(0, pump.initialize(future_loading(0),{})))
+        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
         self.assertAlmostEqual(times[-1], 23891)

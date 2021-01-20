@@ -31,48 +31,47 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         | Tr: Radial Bearing Temperature (K)
         | Tt: Thrust Bearing Temperature (K)
         | w: Mechanical Rotation (rad/sec)
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state). 
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise : Measurement noise (applied in output eqn)
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
+        | pAtm : Atmospheric pressure
+        | a0, a1, a2 : empirical coefficients for flow torque eqn
+        | A : impeller blade area
+        | b : 
+        | I : impeller/shaft/motor lumped inertia
+        | r : lumped friction parameter (minus bearing friction)
+        | R1, R2 :
+        | L1 : 
+        | FluidI: Pump fluid inertia
+        | c : Pump flow coefficient
+        | cLeak : Internal leak flow coefficient
+        | ALeak : Internal leak area
+        | mcThrust : 
+        | rThrust :
+        | HThrust1, HThrust2 : 
+        | mcRadial :
+        | rRadial :
+        | HRadial1, HRadial2 :
+        | mcOil : 
+        | HOil1, HOil2, HOil3 : 
+        | lim : Parameter limits (dict)
+        | x0 : Initial state
     """
-    events = [
-        'ImpellerWearFailure',
-        'PumpOilOverheat',
-        'RadialBearingOverheat',
-        'ThrustBearingOverheat'
-    ]
-    
-    inputs = [
-        'Tamb',     # Ambient Temperature (K)
-        'V',        # Voltage (V)
-        'pdisch',   # Discharge Pressure (Pa)
-        'psuc',     # Suction Pressure (Pa)
-        'wsync'     # Syncronous Rotational Speed of Supply Voltage (rad/sec)
-    ]
-
-    states = [
-        'A',
-        'Q',
-        'To',
-        'Tr',
-        'Tt',
-        'rRadial',
-        'rThrust',
-        'w',
-        'wA',
-        'wRadial',
-        'wThrust',
-        'QLeak'
-    ]
-
-    outputs = [
-        'Qout',# Discharge Flow (m^3/s)
-        'To',  # Oil Temperature (K)
-        'Tr',  # Radial Bearing Temperature (K)
-        'Tt',  # Thrust Bearing Temperature (K)
-        'w'    # Mechanical Rotation (rad/sec)
-    ]
+    events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
+    inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
+    states = ['A', 'Q', 'To', 'Tr', 'Tt', 'rRadial', 'rThrust', 'w', 'wA', 'wRadial', 'wThrust', 'QLeak']
+    outputs = ['Qout', 'To', 'Tr', 'Tt', 'w']
 
     default_parameters = { # Set to defaults
         # Environmental parameters
-        'pAtm': 101325,     # Atmospheric Pressure (Pa)
+        'pAtm': 101325,
 
         # Torque and pressure parameters
         'a0': 0.00149204,	# empirical coefficient for flow torque eqn
@@ -141,7 +140,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         x0['QLeak'] = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
         return x0
 
-    def next_state(self, t, x, u, dt):
+    def next_state(self, x, u, dt):
         Todot = 1/self.parameters['mcOil'] * (self.parameters['HOil1']*(x['Tt']-x['To']) + self.parameters['HOil2']*(x['Tr']-x['To']) + self.parameters['HOil3']*(u['Tamb']-x['To']))
         Ttdot = 1/self.parameters['mcThrust'] * (x['rThrust']*x['w']*x['w'] - self.parameters['HThrust1']*(x['Tt']-u['Tamb']) - self.parameters['HThrust2']*(x['Tt']-x['To']))
         Adot = -x['wA']*x['Q']*x['Q']
@@ -176,7 +175,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'QLeak': QLeak
         }, dt)
 
-    def output(self, t, x):
+    def output(self, x):
         Qout = max(0,x['Q']-x['QLeak'])
 
         return self.apply_measurement_noise({
@@ -187,7 +186,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'w': x['w']
         })
 
-    def event_state(self, t, x):
+    def event_state(self, x):
         return {
             'ImpellerWearFailure': (x['A'] - self.parameters['lim']['A'])/(self.parameters['x0']['A'] - self.parameters['lim']['A']),
             'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['x0']['Tt'] - self.parameters['lim']['Tt']),
@@ -195,7 +194,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
             'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['x0']['To'] - self.parameters['lim']['To'])
         }
 
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         return {
             'ImpellerWearFailure': x['A'] <= self.parameters['lim']['A'],
             'ThrustBearingOverheat': x['Tt'] >= self.parameters['lim']['Tt'],

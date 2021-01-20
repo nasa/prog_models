@@ -40,27 +40,27 @@ class ThrownObject(PrognosticsModel):
             'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is an professional baseball pitcher
             }
     
-    def dx(self, t, x, u):
+    def dx(self, x, u):
         # apply_process_noise is used to add process noise to each step
         return self.apply_process_noise({
             'x': x['v'],
             'v': self.parameters['g'] # Acceleration of gravity
         })
 
-    def output(self, t, x):
+    def output(self, x):
         return self.apply_measurement_noise({
             'x': x['x']
         })
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         return {
             'falling': x['v'] < 0,
             'impact': x['x'] <= 0
         }
 
-    def event_state(self, t, x): 
+    def event_state(self, x): 
         self.max_x = max(self.max_x, x['x']) # Maximum altitude
         return {
             'falling': max(x['v']/self.parameters['throwing_speed'],0), # Throwing speed is max speed
@@ -88,11 +88,9 @@ def run_example():
     # OK, now lets compare performance on different heavenly bodies. 
     # This requires that we update the cofiguration
     grav_moon = -1.62
-    opts = {
-        'g': grav_moon
-    }
+
     # The first way to change the configuration is to pass in your desired config into construction of the model
-    m = ThrownObject(options=opts)
+    m = ThrownObject(g = grav_moon)
     (times_moon, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
 
     grav_mars = -3.711
@@ -109,6 +107,15 @@ def run_example():
     print('\tearth: {}s'.format(round(times[-1],2)))
     print('\tmars: {}s'.format(round(times_mars[-1],2)))
     print('\tmoon: {}s'.format(round(times_moon[-1],2)))
+
+    # We can also simulate until any event is met by neglecting the threshold_keys argument
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, options={'dt':0.005, 'save_freq':1})
+    threshs_met = m.threshold_met(states[-1])
+    for (key, met) in threshs_met.items():
+        if met:
+            event_occured = key
+    print('\nThis event that occured first: ', event_occured)
+    # It falls before it hits the gorund, obviously
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
