@@ -466,7 +466,7 @@ class TestModels(unittest.TestCase):
 
     def test_sim_to_thresh(self):
         m = MockProgModel(process_noise = 0.0)
-        def load(t):
+        def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
         # Any event, default8
@@ -508,7 +508,7 @@ class TestModels(unittest.TestCase):
 
     def test_sim_past_thresh(self):
         m = MockProgModel(process_noise = 0.0)
-        def load(t):
+        def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
         (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
@@ -516,7 +516,7 @@ class TestModels(unittest.TestCase):
         
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
-        def load(t):
+        def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
         ## Check inputs
@@ -614,7 +614,7 @@ class TestModels(unittest.TestCase):
 
     def test_sim_prog_inproper_config(self):
         m = MockProgModel(process_noise = 0.0)
-        def load(t):
+        def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
         ## Check inputs

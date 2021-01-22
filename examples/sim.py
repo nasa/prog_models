@@ -11,7 +11,7 @@ def run_example():
     # batt = battery_electrochem.BatteryElectroChem() # Uncomment this to use Electro Chemistry Model
 
     # Step 2: Define future loading function 
-    def future_loading(t):
+    def future_loading(t, x=None):
         # Variable (piece-wise) future loading scheme 
         if (t < 600):
             i = 2

@@ -10,7 +10,7 @@ def run_example():
     batt = BatteryCircuit()
     
     # Step 2: Define future loading function 
-    def future_loading(t):
+    def future_loading(t, x=None):
         # Variable (piece-wise) future loading scheme 
         if (t < 600):
             i = 2

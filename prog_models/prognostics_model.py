@@ -403,7 +403,7 @@ class PrognosticsModel(ABC):
         --------
         threshold_met
         """
-
+    
         return {}
     
     def threshold_met(self, x) -> dict:
@@ -646,7 +646,7 @@ class PrognosticsModel(ABC):
         # Simulate
         while not threshold_met and t < horizon:
             t += dt
-            u = future_loading_eqn(t)
+            u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
             threshold_met = check_thresholds(thresthold_met_eqn(x))
             if (t >= next_save):

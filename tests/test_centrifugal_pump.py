@@ -8,7 +8,7 @@ class TestCentrifugalPump(unittest.TestCase):
         pump = CentrifugalPump(process_noise= 0)
 
         cycle_time = 3600
-        def future_loading(t):
+        def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2.0:
                 V = 471.2389
