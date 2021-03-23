@@ -3,6 +3,7 @@
 import unittest
 from prog_models.models.battery_circuit import BatteryCircuit
 from prog_models.models.battery_electrochem import BatteryElectroChem
+from prog_models.models.battery_electrochem_thermal import BatteryElectroChemThermal
 
 def future_loading(t, x=None):
     # Variable (piece-wise) future loading scheme 
@@ -26,5 +27,10 @@ class TestBattery(unittest.TestCase):
 
     def test_battery_electrochem(self):
         batt = BatteryElectroChem()
+        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        # TODO(CT): More
+
+    def test_battery_electrochem_thermal(self):
+        batt = BatteryElectroChemThermal()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         # TODO(CT): More

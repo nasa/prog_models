@@ -3,12 +3,16 @@
 An example where a battery is simulated first for a set period of time and then till threshold is met. Run using the command `python -m examples.sim_example`
 """
 
-from prog_models.models import battery_circuit, battery_electrochem
+from prog_models.models.battery_circuit import BatteryCircuit
+from prog_models.models.battery_electrochem import BatteryElectroChem
+from prog_models.models.battery_electrochem_thermal import BatteryElectroChemThermal
+
 
 def run_example(): 
     # Step 1: Create a model object
-    batt = battery_circuit.BatteryCircuit()
-    # batt = battery_electrochem.BatteryElectroChem() # Uncomment this to use Electro Chemistry Model
+    # batt = BatteryCircuit()
+    batt = BatteryElectroChem() # Uncomment this to use Electro Chemistry Model
+    # batt = BatteryElectroChemThermal() # Uncomment this to use Electro Chemistry Model with thermal affects
 
     # Step 2: Define future loading function 
     def future_loading(t, x=None):
