@@ -123,7 +123,8 @@ class PrognosticsModel(ABC):
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
-    events = [] # Identifiers for each event
+    observables = []  # Identifies for each observable
+    events = []       # Identifiers for each event
 
     def __init__(self, **kwargs):
         try:
@@ -343,6 +344,32 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in x.keys()}
 
+    def observables(self, x) -> dict:
+        """
+        Calculate observables where
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        obs : dict
+            Observables, with keys defined by model.observables. \n
+            e.g., obs = {'tMax':33, 'iMax':19} given observables = ['tMax', 'iMax']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | obs = m.observables(3.0, x) # Returns {'tMax':33, 'iMax':19}
+        """
+        return {}
+
     @abstractmethod
     def output(self, x) -> dict:
         """
@@ -358,7 +385,7 @@ class PrognosticsModel(ABC):
         -------
         z : dict
             Outputs, with keys defined by model.outputs. \n
-            e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+            e.g., z = {'t':12.4, 'v':3.3} given outputs = ['t', 'v']
 
         Example
         -------
