@@ -143,7 +143,7 @@ Circuit model</p></td>
 <h2><a class="toc-backref" href="#contents">Battery Model - Circuit</a><a class="headerlink" href="#battery-model-circuit" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.models.battery_circuit.</code><code class="sig-name descname">BatteryCircuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">prog_models.models.battery_circuit.</span></code><code class="sig-name descname"><span class="pre">BatteryCircuit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prognostics model for a battery, represented by an electric circuit</p>
 <p>This class implements an equivilant circuit model as described in the following paper:
 <cite>M. Daigle and S. Sankararaman, “Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1055/</cite></p>
@@ -196,7 +196,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 <p>Note: This is much quicker but also less accurate as the electrochemistry model</p>
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.apply_measurement_noise">
-<code class="sig-name descname">apply_measurement_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_measurement_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply measurement noise to the measurement</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -227,7 +227,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.apply_process_noise">
-<code class="sig-name descname">apply_process_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dt</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.apply_process_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_process_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.apply_process_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -262,7 +262,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">dx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -304,7 +304,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">event_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -341,7 +341,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">generate_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'process_noise':</span> <span class="pre">0.1}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -387,7 +387,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate initial state given inputs and outputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -420,7 +420,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">next_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -463,8 +463,37 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd></dl>
 
 <dl class="py method">
+<dt id="prog_models.models.battery_circuit.BatteryCircuit.observables">
+<code class="sig-name descname"><span class="pre">observables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate observables where</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>obs</strong> – Observables, with keys defined by model.observables.</p>
+<p>e.g., obs = {‘tMax’:33, ‘iMax’:19} given observables = [‘tMax’, ‘iMax’]</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = PrognosticsModel() # Replace with specific model being simulated</div>
+<div class="line">u = {‘u1’: 3.2}</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">x = m.initialize(u, z) # Initialize first state</div>
+<div class="line">obs = m.observables(3.0, x) # Returns {‘tMax’:33, ‘iMax’:19}</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -474,7 +503,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
-<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given outputs = [‘t’, ‘v’]</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -493,7 +522,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -547,7 +576,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -612,7 +641,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_circuit.BatteryCircuit.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">threshold_met</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_circuit.BatteryCircuit.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -654,7 +683,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <h2><a class="toc-backref" href="#contents">Battery Model - Electro Chemistry</a><a class="headerlink" href="#battery-model-electro-chemistry" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.models.battery_electrochem.</code><code class="sig-name descname">BatteryElectroChem</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">prog_models.models.battery_electrochem.</span></code><code class="sig-name descname"><span class="pre">BatteryElectroChem</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prognostics model for a battery, represented by an electrochemical equations.</p>
 <p>This class implements an Electro chemistry model as described in the following paper:
 <cite>M. Daigle and C. Kulkarni, “Electrochemistry-based Battery Modeling for Prognostics,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/</cite></p>
@@ -708,7 +737,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 </dl>
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.apply_measurement_noise">
-<code class="sig-name descname">apply_measurement_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_measurement_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply measurement noise to the measurement</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -739,7 +768,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.apply_process_noise">
-<code class="sig-name descname">apply_process_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dt</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.apply_process_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_process_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.apply_process_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -774,7 +803,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">dx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -816,7 +845,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">event_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -853,7 +882,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">generate_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'process_noise':</span> <span class="pre">0.1}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -899,7 +928,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate initial state given inputs and outputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -932,7 +961,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">next_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -975,8 +1004,37 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd></dl>
 
 <dl class="py method">
+<dt id="prog_models.models.battery_electrochem.BatteryElectroChem.observables">
+<code class="sig-name descname"><span class="pre">observables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate observables where</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>obs</strong> – Observables, with keys defined by model.observables.</p>
+<p>e.g., obs = {‘tMax’:33, ‘iMax’:19} given observables = [‘tMax’, ‘iMax’]</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = PrognosticsModel() # Replace with specific model being simulated</div>
+<div class="line">u = {‘u1’: 3.2}</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">x = m.initialize(u, z) # Initialize first state</div>
+<div class="line">obs = m.observables(3.0, x) # Returns {‘tMax’:33, ‘iMax’:19}</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -986,7 +1044,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
-<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given outputs = [‘t’, ‘v’]</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -1005,7 +1063,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1059,7 +1117,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1124,7 +1182,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">threshold_met</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.battery_electrochem.BatteryElectroChem.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1166,7 +1224,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <h2><a class="toc-backref" href="#contents">Pump Model</a><a class="headerlink" href="#pump-model" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.models.centrifugal_pump.</code><code class="sig-name descname">CentrifugalPump</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">prog_models.models.centrifugal_pump.</span></code><code class="sig-name descname"><span class="pre">CentrifugalPump</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prognostics model for a centrifugal pump</p>
 <p>This class implements a Centrifugal Pump model as described in the following paper:
 <cite>M. Daigle and K. Goebel, “Model-based Prognostics with Concurrent Damage Progression Processes,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes</cite></p>
@@ -1232,7 +1290,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 </dl>
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.apply_measurement_noise">
-<code class="sig-name descname">apply_measurement_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_measurement_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply measurement noise to the measurement</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1263,7 +1321,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.apply_process_noise">
-<code class="sig-name descname">apply_process_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dt</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.apply_process_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_process_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.apply_process_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1298,7 +1356,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">dx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1340,7 +1398,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">event_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1377,7 +1435,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">generate_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'process_noise':</span> <span class="pre">0.1}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1423,7 +1481,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">z</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate initial state given inputs and outputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1456,7 +1514,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">next_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1499,8 +1557,37 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd></dl>
 
 <dl class="py method">
+<dt id="prog_models.models.centrifugal_pump.CentrifugalPump.observables">
+<code class="sig-name descname"><span class="pre">observables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate observables where</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>obs</strong> – Observables, with keys defined by model.observables.</p>
+<p>e.g., obs = {‘tMax’:33, ‘iMax’:19} given observables = [‘tMax’, ‘iMax’]</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = PrognosticsModel() # Replace with specific model being simulated</div>
+<div class="line">u = {‘u1’: 3.2}</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">x = m.initialize(u, z) # Initialize first state</div>
+<div class="line">obs = m.observables(3.0, x) # Returns {‘tMax’:33, ‘iMax’:19}</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1510,7 +1597,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
-<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given outputs = [‘t’, ‘v’]</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -1529,7 +1616,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1583,7 +1670,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1648,7 +1735,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.centrifugal_pump.CentrifugalPump.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">threshold_met</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.centrifugal_pump.CentrifugalPump.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1690,7 +1777,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <h2><a class="toc-backref" href="#contents">Pneumatic Valve</a><a class="headerlink" href="#pneumatic-valve" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve">
-<em class="property">class </em><code class="sig-prename descclassname">prog_models.models.pneumatic_valve.</code><code class="sig-name descname">PneumaticValve</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">prog_models.models.pneumatic_valve.</span></code><code class="sig-name descname"><span class="pre">PneumaticValve</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prognostics model for a pneumatic valve.</p>
 <p>This class implements a Pneumatic Valve model as described in the following paper:
 <cite>M. Daigle and K. Goebel, “A Model-based Prognostics Approach Applied to Pneumatic Valves,” International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602</cite></p>
@@ -1779,7 +1866,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 </dl>
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.apply_measurement_noise">
-<code class="sig-name descname">apply_measurement_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_measurement_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply measurement noise to the measurement</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1810,7 +1897,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.apply_process_noise">
-<code class="sig-name descname">apply_process_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dt</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.apply_process_noise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">apply_process_noise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.apply_process_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply process noise to the state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1845,7 +1932,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.dx">
-<code class="sig-name descname">dx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.dx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">dx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.dx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the first derivative of state <cite>x</cite> at a specific time <cite>t</cite>, given state and input</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1887,7 +1974,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.event_state">
-<code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.event_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">event_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.event_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1924,7 +2011,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.generate_model">
-<em class="property">static </em><code class="sig-name descname">generate_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">initialize_eqn</span></em>, <em class="sig-param"><span class="n">output_eqn</span></em>, <em class="sig-param"><span class="n">next_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">event_state_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threshold_eqn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">{'process_noise': 0.1}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.generate_model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">generate_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_state_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_eqn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'process_noise':</span> <span class="pre">0.1}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.generate_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1970,7 +2057,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">z</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate initial state given inputs and outputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2003,7 +2090,7 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.next_state">
-<code class="sig-name descname">next_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.next_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">next_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.next_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>State transition equation: Calculate next state</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2046,8 +2133,37 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd></dl>
 
 <dl class="py method">
+<dt id="prog_models.models.pneumatic_valve.PneumaticValve.observables">
+<code class="sig-name descname"><span class="pre">observables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">dict</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.observables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate observables where</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>obs</strong> – Observables, with keys defined by model.observables.</p>
+<p>e.g., obs = {‘tMax’:33, ‘iMax’:19} given observables = [‘tMax’, ‘iMax’]</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="line-block">
+<div class="line">m = PrognosticsModel() # Replace with specific model being simulated</div>
+<div class="line">u = {‘u1’: 3.2}</div>
+<div class="line">z = {‘z1’: 2.2}</div>
+<div class="line">x = m.initialize(u, z) # Initialize first state</div>
+<div class="line">obs = m.observables(3.0, x) # Returns {‘tMax’:33, ‘iMax’:19}</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.output">
-<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.output" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate next state, forward one timestep</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2057,7 +2173,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p><strong>z</strong> – Outputs, with keys defined by model.outputs.</p>
-<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given inputs = [‘t’, ‘v’]</p>
+<p>e.g., z = {‘t’:12.4, ‘v’:3.3} given outputs = [‘t’, ‘v’]</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -2076,7 +2192,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.simulate_to">
-<code class="sig-name descname">simulate_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2130,7 +2246,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold">
-<code class="sig-name descname">simulate_to_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">future_loading_eqn</span></em>, <em class="sig-param"><span class="n">first_output</span></em>, <em class="sig-param"><span class="n">threshold_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">simulate_to_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2195,7 +2311,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <dl class="py method">
 <dt id="prog_models.models.pneumatic_valve.PneumaticValve.threshold_met">
-<code class="sig-name descname">threshold_met</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.threshold_met" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">threshold_met</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.pneumatic_valve.PneumaticValve.threshold_met" title="Permalink to this definition">¶</a></dt>
 <dd><p>For each event threshold, calculate if it has been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
