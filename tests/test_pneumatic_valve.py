@@ -8,7 +8,7 @@ class TestPneumaticValve(unittest.TestCase):
         m = PneumaticValve(process_noise= 0)
 
         cycle_time = 20
-        def future_loading(t):
+        def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
                 return {

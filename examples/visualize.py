@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
 Visualization Module Example
@@ -14,7 +14,7 @@ def run_example():
     m = ThrownObject()
 
     # Step 2: Setup for simulation 
-    def future_load(t):
+    def future_load(t, x=None):
         return {}
 
     # Step 3: Simulate to impact

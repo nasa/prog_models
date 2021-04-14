@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 """
 Example of generating a models from constituant parts. Can be run using the following command `python -m examples.model_gen_example`
 
@@ -67,7 +67,7 @@ def run_example():
     m = PrognosticsModel.generate_model(keys, initialize, output, event_state_eqn = event_state, threshold_eqn=threshold_met, dx_eqn=dx)
 
     # Step 7: Setup for simulation 
-    def future_load(t):
+    def future_load(t, x=None):
         return {}
 
     # Step 8: Simulate to impact

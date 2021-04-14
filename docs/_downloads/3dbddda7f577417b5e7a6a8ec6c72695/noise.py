@@ -9,7 +9,7 @@ from prog_models.prognostics_model import PrognosticsModel
 from .new_model import ThrownObject
 
 def run_example():
-    def future_load(t):
+    def future_load(t, x=None):
         return {}
     event = 'impact'
 
