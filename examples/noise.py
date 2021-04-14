@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
 Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
@@ -9,7 +9,7 @@ from prog_models.prognostics_model import PrognosticsModel
 from .new_model import ThrownObject
 
 def run_example():
-    def future_load(t):
+    def future_load(t, x=None):
         return {}
     event = 'impact'
 

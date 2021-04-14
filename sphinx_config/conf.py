@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'Prognostics Models Python Package'
-copyright = '2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.'
+copyright = '2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.'
 author = 'Chris Teubert, Chetan Kulkarni, and Matteo Corbetta'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
