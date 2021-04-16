@@ -34,8 +34,8 @@ jobs:
     - name: Upload Lint Results
       uses: actions/upload-artifact@v2
       with: 
-        name: lint_results_{{matrix.python-version}}
-        path: lint_results_{{matrix.python-version}}.txt
+        name: lint_results_${{matrix.python-version}}
+        path: lint_results_${{matrix.python-version}}.txt
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
       with:
