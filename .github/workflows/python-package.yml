@@ -30,18 +30,12 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         flake8 prog_models --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 prog_models --count --exit-zero --show-source --max-complexity=10 --max-line-length=127 --statistics --tee --output-file=lint_results_${{ matrix.python-version }}.txt
-        flake8 prog_models --benchmark --tee --output-file=benchmark_results_${{ matrix.python-version }}.txt
+        flake8 prog_models --count --benchmark --exit-zero --show-source --max-complexity=10 --max-line-length=127 --statistics --tee --output-file=lint_results_${{ matrix.python-version }}.txt
     - name: Upload Lint Results
       uses: actions/upload-artifact@v2
       with: 
         name: lint_results_{{matrix.python-version}}
         path: lint_results_{{matrix.python-version}}.txt
-    - name: Upload Benchmark Results
-      uses: actions/upload-artifact@v2
-      with: 
-        name: benchmark_results_{{matrix.python-version}}
-        path: benchmark_results_{{matrix.python-version}}.txt 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
       with:
