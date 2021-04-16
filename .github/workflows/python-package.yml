@@ -6,6 +6,8 @@ name: Python package
 on:
   push:
   pull_request:
+    paths:
+      - prog_models
 
 jobs:
   build:
@@ -42,7 +44,6 @@ jobs:
         languages: 'python' 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
-      
   test:
     runs-on: ubuntu-latest
     strategy:
