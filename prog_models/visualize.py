@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 # Import packages
 # ============
@@ -495,7 +495,7 @@ def plot_timeseries(t, s, legend=None, options=None):
     | m = ThrownObject()
     | 
     | # Step 2: Setup for simulation 
-    | def future_load(t):
+    | def future_load(t, x=None):
     |     return {}
     | 
     | # Step 3: Simulate to impact

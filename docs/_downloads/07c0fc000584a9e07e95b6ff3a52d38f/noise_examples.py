@@ -68,7 +68,7 @@ class ThrownObject(PrognosticsModel):
         }
 
 def run_example():
-    def future_load(t):
+    def future_load(t, x=None):
         return {}
     event = 'impact'
 

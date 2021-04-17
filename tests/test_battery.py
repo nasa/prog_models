@@ -4,7 +4,7 @@ import unittest
 from prog_models.models.battery_circuit import BatteryCircuit
 from prog_models.models.battery_electrochem import BatteryElectroChem
 
-def future_loading(t):
+def future_loading(t, x=None):
     # Variable (piece-wise) future loading scheme 
     if (t < 600):
         i = 2

@@ -70,7 +70,7 @@ def run_example():
     m = ThrownObject()
 
     # Step 2: Setup for simulation 
-    def future_load(t):
+    def future_load(t, x=None):
         return {}
 
     # Step 3: Setup range on parameters considered
