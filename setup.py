@@ -8,7 +8,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name = 'prog_models',
-    version = '1.0.0',
+    version = '1.0.1',
     description = 'The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -31,7 +31,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only'
     ],
     keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management'],
-    packages=find_packages(include=['prog_models']),
+    packages=['prog_models', 'prog_models.models'],
     python_requires='>=3.6, <3.9',
     install_requires = [
         'numpy',
