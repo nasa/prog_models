@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model, ProgModelException
+from .. import prognostics_model
+from ..exceptions import ProgModelException
 from math import sqrt, copysign
 from copy import deepcopy
 

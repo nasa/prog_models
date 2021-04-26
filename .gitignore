@@ -95,3 +95,6 @@ venv.bak/
 
 # Cython debug symbols
 cython_debug/
+.pypirc
+
+ex.pickle

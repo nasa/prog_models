@@ -6,7 +6,7 @@ Model for this example is that of an object thrown into the air, predicting impa
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 def run_example():
     # Step 1: Define keys

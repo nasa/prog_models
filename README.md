@@ -2,10 +2,14 @@
 
 The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
 
+## Installation 
+`pip3 install prog_models`
+
 ## Documentation
-See documentation [here](docs/index.html)
+See documentation [here](https://github.com/nasa/prog_models/tree/master/docs)
  
-## Directory Structure 
+## Repository Directory Structure 
+Here is the directory structure for the github repository https://github.com/nasa/
  
 `prog_models/` - The prognostics model python package<br />
 &nbsp;&nbsp; |-`models/` - Example models<br /> 
