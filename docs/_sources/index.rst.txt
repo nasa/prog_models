@@ -27,7 +27,7 @@ Use the following to cite this repository:
     month     = Dec,
     year      = 2020,
     version   = {0.2.0},
-    url       = {TBD}
+    url       = {https://github.com/nasa/prog_models}
     }
 
 The corresponding reference should look like this:
