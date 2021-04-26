@@ -12,8 +12,10 @@
 
 import os
 import sys
+import pkg_resources
+sys.path.insert(0, os.path.abspath('../src'))
 sys.path.insert(0, os.path.abspath('..'))
-
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
@@ -22,15 +24,15 @@ copyright = '2021 United States Government as represented by the Administrator o
 author = 'Chris Teubert, Chetan Kulkarni, and Matteo Corbetta'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
-
+from prog_models import __version__ as version
+release = version
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', "sphinx.ext.githubpages", 'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 """
 Example of generating a models from constituant parts. Can be run using the following command `python -m examples.model_gen_example`
 
@@ -6,7 +6,7 @@ Model for this example is that of an object thrown into the air, predicting impa
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 def run_example():
     # Step 1: Define keys

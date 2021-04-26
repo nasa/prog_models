@@ -24,6 +24,24 @@ Here is the directory structure for the github repository https://github.com/nas
 `prog_model_template.py` - Template for Prognsotics Model<br />
 `tutorial.ipynb` - Tutorial (Juypter Notebook)
 
+## Citing this repository
+Use the following to cite this repository:
+
+```
+@misc{2020_nasa_prog_models,
+    author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni},
+    title     = {Prognostics Models Python Package},
+    month     = Apr,
+    year      = 2021,
+    version   = {1.0},
+    url       = {https://github.com/nasa/prog_models}
+    }
+```
+
+The corresponding reference should look like this:
+
+C. Teubert, M. Corbetta, and C. Kulkarni, Prognostics Models Python Package, v1.0, Apr. 2021. URL https://github.com/nasa/prog_models.
+
 ## Notices
 
 Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.

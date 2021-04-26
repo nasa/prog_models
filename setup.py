@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import pkg_resources
 import pathlib
 
 here = pathlib.Path(__file__).parent.resolve()
@@ -8,7 +9,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name = 'prog_models',
-    version = '1.0.1',
+    version = pkg_resources.require("prog_models")[0].version,
     description = 'The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -31,7 +32,8 @@ setup(
         'Programming Language :: Python :: 3 :: Only'
     ],
     keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management'],
-    packages=['prog_models', 'prog_models.models'],
+    package_dir = {"":"src"},
+    packages = find_packages(where = 'src'),
     python_requires='>=3.6, <3.9',
     install_requires = [
         'numpy',

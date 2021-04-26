@@ -3,3 +3,5 @@
 from .prognostics_model import PrognosticsModel
 from . import models
 from .exceptions import ProgModelException, ProgModelInputException, ProgModelTypeError
+
+__version__ = '1.0.2'
