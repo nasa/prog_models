@@ -26,17 +26,21 @@ if __name__ == '__main__':
     print("\nExample Runtime: ", timeit(_test_ex, number=10))
 
     l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
     print("\n\nTesting Base Models")
-    unittest.TextTestRunner().run(l.loadTestsFromTestCase(TestModels))
+    result = runner.run(l.loadTestsFromTestCase(TestModels)).wasSuccessful()
 
     print("\n\nTesting Examples")
-    unittest.TextTestRunner().run(l.loadTestsFromTestCase(TestExamples))
+    result = runner.run(l.loadTestsFromTestCase(TestExamples)).wasSuccessful() and result
 
     print("\n\nTesting Centrifugal Pump model")
-    unittest.TextTestRunner().run(l.loadTestsFromTestCase(TestCentrifugalPump))
+    result = runner.run(l.loadTestsFromTestCase(TestCentrifugalPump)).wasSuccessful() and result
 
     print("\n\nTesting Pneumatic Valve model")
-    unittest.TextTestRunner().run(l.loadTestsFromTestCase(TestPneumaticValve))
+    result = runner.run(l.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful() and result
 
     print("\n\nTesting Battery models")
-    unittest.TextTestRunner().run(l.loadTestsFromTestCase(TestBattery))
+    result = runner.run(l.loadTestsFromTestCase(TestBattery)).wasSuccessful() and result
+
+    if not result:
+        raise Exception("Failed test")
