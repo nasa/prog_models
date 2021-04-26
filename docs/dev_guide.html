@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Developers Guide &#8212; Prognostics Models Python Package 1.0.0 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Developers Guide &#8212; Prognostics Models Python Package 1.0.2 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -31,7 +32,7 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="developers-guide">
+  <section id="developers-guide">
 <h1><a class="toc-backref" href="#contents">Developers Guide</a><a class="headerlink" href="#developers-guide" title="Permalink to this headline">¶</a></h1>
 <p>This document includes some details relevant for developers.</p>
 <div class="contents topic" id="contents">
@@ -56,13 +57,13 @@
 </li>
 </ul>
 </div>
-<div class="section" id="branching-strategy">
+<section id="branching-strategy">
 <h2><a class="toc-backref" href="#contents">Branching Strategy</a><a class="headerlink" href="#branching-strategy" title="Permalink to this headline">¶</a></h2>
 <p>Our project is following the git strategy described <a class="reference external" href="https://nvie.com/posts/a-successful-git-branching-model/">here</a>. Release branches are not required. Details specific to each branch are described below.</p>
 <p><cite>master</cite>: Every merge into the master branch is done using a pull request (never commiting directly), is assigned a release number, and must comply with the release checklist. The release checklist is a software assurance tool.</p>
 <p><cite>dev</cite>: Every commit on the dev branch should be functional. All unit tests must function before commiting to dev or merging another branch.</p>
 <p><cite>Feature Branches</cite>: These branches include changes specific to a new feature. Before merging into dev unit tests should all run, tests should be added for the feature, and documentation should be updated, as appropriate.</p>
-<div class="section" id="release-checklist">
+<section id="release-checklist">
 <h3><a class="toc-backref" href="#contents">Release Checklist</a><a class="headerlink" href="#release-checklist" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Code review - all software must be checked by someone other than the author</p></li>
@@ -73,15 +74,15 @@
 <li><p>Write release notes</p></li>
 <li><p>For releases adding new features- ensure that NASA release process has been followed</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="npr-7150">
+</section>
+</section>
+<section id="npr-7150">
 <h2><a class="toc-backref" href="#contents">NPR 7150</a><a class="headerlink" href="#npr-7150" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Software Classification: Class-E (Research Software)</p></li>
 <li><p>Safety Criticality: Not Safety Critical</p></li>
 </ul>
-<div class="section" id="compliance-notation-legend">
+<section id="compliance-notation-legend">
 <h3><a class="toc-backref" href="#contents">Compliance Notation Legend</a><a class="headerlink" href="#compliance-notation-legend" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>FC: Fully Compliant</p></li>
@@ -90,8 +91,8 @@
 <li><p>NC: Not Compliant</p></li>
 <li><p>NA: Not Applicable</p></li>
 </ul>
-</div>
-<div class="section" id="compliance-matrix">
+</section>
+<section id="compliance-matrix">
 <h3><a class="toc-backref" href="#contents">Compliance Matrix</a><a class="headerlink" href="#compliance-matrix" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
@@ -175,17 +176,17 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="aquisition-options">
+</section>
+<section id="aquisition-options">
 <h3><a class="toc-backref" href="#contents">Aquisition Options</a><a class="headerlink" href="#aquisition-options" title="Permalink to this headline">¶</a></h3>
 <p>Assessed, there are some existing prognostics tools, but no general python package that can support model-based prognostics like we need.</p>
-</div>
-<div class="section" id="cybersecurity-assessment">
+</section>
+<section id="cybersecurity-assessment">
 <h3><a class="toc-backref" href="#contents">Cybersecurity Assessment</a><a class="headerlink" href="#cybersecurity-assessment" title="Permalink to this headline">¶</a></h3>
 <p>Assessed, no significant Cybersecurity concerns were identified- research software.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
           </div>

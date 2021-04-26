@@ -33,14 +33,14 @@ Use the following to cite this repository:
     title     = {Prognostics Models Python Package},
     month     = Apr,
     year      = 2021,
-    version   = {0.3.0},
+    version   = {1.0},
     url       = {https://github.com/nasa/prog_models}
     }
 ```
 
 The corresponding reference should look like this:
 
-C. Teubert, M. Corbetta, and C. Kulkarni, Prognostics Models Python Package, v0.3.0, Apr. 2021. URL https://github.com/nasa/prog_models.
+C. Teubert, M. Corbetta, and C. Kulkarni, Prognostics Models Python Package, v1.0, Apr. 2021. URL https://github.com/nasa/prog_models.
 
 ## Notices
 
