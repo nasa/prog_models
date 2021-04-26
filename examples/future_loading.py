@@ -3,7 +3,7 @@
 An example demonstrating ways to use future loading. Run using the command `python -m examples.future_loading`
 """
 
-from prog_models.models.battery_circuit import BatteryCircuit
+from prog_models.models import BatteryCircuit
 from statistics import mean
 from prog_models.visualize import plot_timeseries
 import matplotlib.pyplot as plt

@@ -4,7 +4,7 @@
 Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
 """
 
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 # Model used in example
 class ThrownObject(PrognosticsModel):
