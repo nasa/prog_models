@@ -3,7 +3,7 @@
 Example of benchmarking models. Can be run using the following command `python -m examples.benchmarking_example`
 """
 from timeit import timeit
-from prog_models.models.battery_circuit import BatteryCircuit
+from prog_models.models import BatteryCircuit
 
 def run_example():
     # Step 1: Create a model object

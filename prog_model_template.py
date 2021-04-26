@@ -7,9 +7,9 @@
 # 4. Uncomment either dx or next_state function. dx for continuous models, and next_state for discrete
 # 5. Implement logic of model in each method
 
-from prog_models import prognostics_model
+from prog_models import PrognosticsModel
 
-class ProgModelTemplate(prognostics_model.PrognosticsModel):
+class ProgModelTemplate(PrognosticsModel):
     """
     Template for Prognostics Model
     """
