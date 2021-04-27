@@ -82,14 +82,3 @@ class TestExamples(unittest.TestCase):
 
         # Reset stdout 
         sys.stdout = _stdout
-
-    def test_visualize_example(self):
-        # set stdout (so it wont print)
-        _stdout = sys.stdout
-        sys.stdout = StringIO()
-
-        # Run example
-        visualize.run_example()
-
-        # Reset stdout 
-        sys.stdout = _stdout
