@@ -6,7 +6,7 @@ The NASA Prognostic Model Package is a python modeling framework focused on defi
 `pip3 install prog_models`
 
 ## Documentation
-See documentation [here](https://github.com/nasa/prog_models/tree/master/docs)
+See documentation [here](https://nasa.github.io/prog_models/)
  
 ## Repository Directory Structure 
 Here is the directory structure for the github repository https://github.com/nasa/
