@@ -9,8 +9,8 @@ class BatteryElectroChemEOL(Battery):
     default_parameters['x0']['Ro'] = 0.117215
     default_parameters['x0']['D'] = 7e6
     default_parameters['wq'] = -1
-    default_parameters['wr'] = -1e-2
-    default_parameters['wd'] = -1e-2 
+    default_parameters['wr'] = 1e-2
+    default_parameters['wd'] = 1e-2 
     default_parameters['qMaxThreshold'] = 3800
 
     def dx(self, x, u):
