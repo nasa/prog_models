@@ -106,7 +106,7 @@ derived_callbacks = {
 }
 
 
-class BatteryElectroChem(PrognosticsModel):
+class BatteryElectroChemEOD(PrognosticsModel):
     """
     Prognostics model for a battery, represented by an electrochemical equations.
 
@@ -321,6 +321,38 @@ class BatteryElectroChem(PrognosticsModel):
         }
 
 class BatteryElectroChemEOL(PrognosticsModel):
+    """
+    Prognostics model for a battery degredation, represented by an electrochemical equations.
+
+    This class implements an Electro chemistry model as described in the following paper:
+    `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
+
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+
+    Events: (1)
+        InsufficientCapacity: Insufficient battery capacity
+
+    Inputs/Loading: (1)
+        i: Current draw on the battery
+
+    States: (3)
+        qMax, Ro, D
+
+    Outputs/Measurements: (2)
+
+    Model Configuration Parameters:
+        | process_noise : Process noise (applied at dx/next_state). 
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise : Measurement noise (applied in output eqn)
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
+        | qMaxThreshold : Threshold for qMax (for threshold_met and event_state)
+        | wq, wr, wd : Wear rate for qMax, Ro, and D respectively
+        | x0 : Initial state
+    """
     states = ['qMax', 'Ro', 'D']
     events = ['InsufficientCapacity']
     inputs = ['i']
@@ -368,14 +400,41 @@ def merge_dicts(a : dict, b : dict):
         else:
             a[key] = b[key]
 
-Battery = BatteryElectroChem
-class BatteryElectroChemEODEOL(BatteryElectroChemEOL, Battery):
-    inputs = Battery.inputs
-    outputs = Battery.outputs
-    states = Battery.states + BatteryElectroChemEOL.states
-    events = Battery.events + BatteryElectroChemEOL.events
+class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
+    """
+    Prognostics model for a battery degredation and discharge, represented by an electrochemical equations.
 
-    default_parameters = Battery.default_parameters
+    This class implements an Electro chemistry model as described in the following papers:
+
+    1. `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
+
+    2. `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/`
+
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+
+    Events: (2)
+        | EOD: End of Discharge
+        | InsufficientCapacity: Insufficient battery capacity
+
+    Inputs/Loading: (1)
+        i: Current draw on the battery
+
+    States: (3)
+        qMax, Ro, D
+
+    Outputs/Measurements: (2)
+        | t: Temperature of battery (°C) 
+        | v: Voltage supplied by battery`
+
+    Model Configuration Parameters:
+        | see: BatteryElectroChemEOD, BatteryElectroChemEOL
+    """
+    inputs = BatteryElectroChemEOD.inputs
+    outputs = BatteryElectroChemEOD.outputs
+    states = BatteryElectroChemEOD.states + BatteryElectroChemEOL.states
+    events = BatteryElectroChemEOD.events + BatteryElectroChemEOL.events
+
+    default_parameters = BatteryElectroChemEOD.default_parameters
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)
 
@@ -393,7 +452,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, Battery):
         # self.parameters['tDiffusion'] = x['D']
         
         # Calculate 
-        x_dot = Battery.dx(self, x, u)
+        x_dot = BatteryElectroChemEOD.dx(self, x, u)
         x_dot.update(BatteryElectroChemEOL.dx(self, x, u))
         return x_dot
 
@@ -406,14 +465,16 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, Battery):
         # self.parameters['Ro'] = x['Ro']
         # self.parameters['tDiffusion'] = x['D']
         
-        return Battery.output(self, x)
+        return BatteryElectroChemEOD.output(self, x)
 
     def event_state(self, x):
-        e_state = Battery.event_state(self, x)
+        e_state = BatteryElectroChemEOD.event_state(self, x)
         e_state.update(BatteryElectroChemEOL.event_state(self, x))
         return e_state
 
     def threshold_met(self, x):
-        t_met = Battery.threshold_met(self, x)
+        t_met = BatteryElectroChemEOD.threshold_met(self, x)
         t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
         return t_met
+
+BatteryElectroChem = BatteryElectroChemEODEOL
