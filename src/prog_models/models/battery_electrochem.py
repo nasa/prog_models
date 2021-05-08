@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
+from .. import PrognosticsModel
 
 from math import asinh, log
 
@@ -106,7 +106,7 @@ derived_callbacks = {
 }
 
 
-class BatteryElectroChem(prognostics_model.PrognosticsModel):
+class BatteryElectroChem(PrognosticsModel):
     """
     Prognostics model for a battery, represented by an electrochemical equations.
 
@@ -213,7 +213,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
     def get_derived_callbacks(self):
         return derived_callbacks
 
-    def initialize(self, u, z):
+    def initialize(self, u = {}, z = {}):
         return self.parameters['x0']
 
     def dx(self, x, u):
@@ -319,3 +319,101 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         return {
              'EOD': z['v'] < self.parameters['VEOD']
         }
+
+class BatteryElectroChemEOL(PrognosticsModel):
+    states = ['qMax', 'Ro', 'D']
+    events = ['InsufficientCapacity']
+    inputs = ['i']
+    outputs = []
+
+    default_parameters = {
+        'x0': {
+            'qMax': 7600,
+            'Ro': 0.117215,
+            'D': 7e6
+        },
+        'wq': -1e-2,
+        'wr': 1e-2,
+        'wd': 1e-2,
+        'qMaxThreshold': 3800
+    }
+
+    def initialize(self, u = {}, z = {}):
+        return self.parameters['x0']
+
+    def dx(self, x, u):
+        params = self.parameters
+
+        return {
+            'qMax': params['wq'] * abs(u['i']),
+            'Ro': params['wr'] * abs(u['i']),
+            'D': params['wd'] * abs(u['i'])
+        }
+
+    def event_state(self, x):
+        e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
+        return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
+
+    def threshold_met(self, x):
+        return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
+
+    def output(self, x):
+        return []
+
+def merge_dicts(a : dict, b : dict):
+    """Merge dict b into a"""
+    for key in b:
+        if key in a and isinstance(a[key], dict) and isinstance(b[key], dict):
+            merge_dicts(a[key], b[key])
+        else:
+            a[key] = b[key]
+
+Battery = BatteryElectroChem
+class BatteryElectroChemEODEOL(BatteryElectroChemEOL, Battery):
+    inputs = Battery.inputs
+    outputs = Battery.outputs
+    states = Battery.states + BatteryElectroChemEOL.states
+    events = Battery.events + BatteryElectroChemEOL.events
+
+    default_parameters = Battery.default_parameters
+    merge_dicts(default_parameters,
+        BatteryElectroChemEOL.default_parameters)
+
+    def initialize(self, u = {}, z = {}):
+        return self.parameters['x0']
+
+    def dx(self, x, u):
+        params = self.parameters
+
+        # TODO(CT): Set parameters from EOD model
+        # self.parameters['qMobile'] = x['qMax']* (params['xnMax'] - params['xnMin'])
+        # # Make sure it's actually resetting qMax
+        # # Consider ability to register callback for derived params
+        # self.parameters['Ro'] = x['Ro']
+        # self.parameters['tDiffusion'] = x['D']
+        
+        # Calculate 
+        x_dot = Battery.dx(self, x, u)
+        x_dot.update(BatteryElectroChemEOL.dx(self, x, u))
+        return x_dot
+
+    def output(self, x):
+        params = self.parameters
+        # TODO(CT): Set parameters from EOD model
+        # self.parameters['qMobile'] = x['qMax']* (params['xnMax'] - params['xnMin'])
+        # # Make sure it's actually resetting qMax
+        # # Consider ability to register callback for derived params
+        # self.parameters['Ro'] = x['Ro']
+        # self.parameters['tDiffusion'] = x['D']
+        
+        return Battery.output(self, x)
+
+    def event_state(self, x):
+        e_state = Battery.event_state(self, x)
+        e_state.update(BatteryElectroChemEOL.event_state(self, x))
+        return e_state
+
+    def threshold_met(self, x):
+        t_met = Battery.threshold_met(self, x)
+        t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
+        return t_met
