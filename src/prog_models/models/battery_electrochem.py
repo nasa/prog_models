@@ -212,8 +212,15 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         VoNominal = u['i']*params['Ro']
         Vodot = (VoNominal-x['Vo'])/params['to']
 
+        # Thermal Effects
+        voltage_eta = x['Vo'] + x['Vsn'] + x['Vsp'] # (Vep - Ven) - V;
+        mC = 37.04 # kg/m2/(K-s^2)
+        tau = 100
+
+        Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
+
         return self.apply_process_noise({
-            'tb': 0,
+            'tb': Tbdot,
             'Vo': Vodot,
             'Vsn': Vsndot,
             'Vsp': Vspdot,
