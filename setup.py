@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import pkg_resources
 import pathlib
 
 here = pathlib.Path(__file__).parent.resolve()

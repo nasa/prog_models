@@ -96,7 +96,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         }
     }
 
-    def initialize(self, u, z):
+    def initialize(self, u={}, z={}):
         return self.parameters['x0']
 
     def dx(self, x, u): 

@@ -143,7 +143,7 @@ class PrognosticsModel(ABC):
             if not hasattr(self, 'outputs'):
                 raise ProgModelTypeError('Must have `outputs` attribute')
             try:
-                a = iter(self.outputs)
+                iter(self.outputs)
             except TypeError:
                 raise ProgModelTypeError('model.outputs must be iterable')
         except Exception:
@@ -171,7 +171,7 @@ class PrognosticsModel(ABC):
         # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
     def __str__(self):
-        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events, self.inputs, self.outputs)
+        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
     
     @abstractmethod
     def initialize(self, u, z) -> dict:

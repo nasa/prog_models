@@ -3,7 +3,6 @@
 from .. import prognostics_model
 from ..exceptions import ProgModelException
 from math import sqrt, copysign
-from copy import deepcopy
 
 class PneumaticValve(prognostics_model.PrognosticsModel):
     """
