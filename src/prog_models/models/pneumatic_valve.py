@@ -1,8 +1,10 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
 from ..exceptions import ProgModelException
 from math import sqrt, copysign
+
 
 class PneumaticValve(prognostics_model.PrognosticsModel):
     """
@@ -73,13 +75,13 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | rhoL : density of LH2 in kg/m^3
         | gas_mass : Molar mass of used gas (kg/mol)
         | gas_temp : temperature of used gas (K)
-        | gas_gamma : 
+        | gas_gamma :
         | gas_z :
         | gas_R :
         | At :
-        | Ct : 
+        | Ct :
         | Ab :
-        | Cb : 
+        | Cb :
         | AbMax : Max limit for state Aeb
         | AtMax : Max limit for state Aet
         | AiMax : Max limit for state Ai
@@ -99,7 +101,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "r",
         "v",
         "x",
-        "pDiff", # pL-pR
+        "pDiff",  # pL-pR
         'wb',
         'wi',
         'wk',
@@ -107,9 +109,9 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         'wt'
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
-    default_parameters = { # Set to defaults
+    default_parameters = {  # Set to defaults
         # Environmental Parameters
-        'R': 8.314, # Universal Gas Constant
+        'R': 8.314,  # Universal Gas Constant
         'g': 9.81, 
         'pAtm': 101325,
 
@@ -248,7 +250,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         }, dt)
     
     def output(self, x):
-        parameters = self.parameters # Optimization
+        parameters = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= parameters['Ls']-parameters['indicatorTol'])
         indicatorBotm = (x['x'] <= parameters['indicatorTol'])
         maxFlow = parameters['Cv']*parameters['Av']*copysign(sqrt(2/parameters['rhoL']*abs(x['pDiff'])),x['pDiff'])
