@@ -1,0 +1,9 @@
+path_classifiers:
+  test:
+    - tests
+  examples:
+    - examples
+  docs:
+    - docs
+    - sphinx_config
+    - forms
