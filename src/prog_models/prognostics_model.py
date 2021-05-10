@@ -18,9 +18,18 @@ class PrognosticsModelParameters(UserDict):
     def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model
-        self.callbacks = callbacks
+        self.callbacks = {}
         for (key, value) in dict_in.items():
             self[key] = value
+
+        # Add and run callbacks
+        # Has to be done here so the base parameters are all set 
+        self.callbacks = callbacks
+        for key in callbacks:
+            if key in self:
+                for callback in self.callbacks[key]:
+                    changes = callback(self)
+                    self.update(changes)
 
     def __setitem__(self, key, value):
         """Set model configuration, overrides dict.__setitem__()
@@ -36,7 +45,7 @@ class PrognosticsModelParameters(UserDict):
 
         if key in self.callbacks:
             for callback in self.callbacks[key]:
-                changes = callback(value)
+                changes = callback(self)
                 self.update(changes) # Merge in changes
         
         if key == 'process_noise':
