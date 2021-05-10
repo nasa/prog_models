@@ -96,15 +96,13 @@ def update_qSBmax(params):
 
 derived_callbacks = {
     'qMobile': [update_qmax],
-    'xnMax': [update_qmax], 
-    'xnMin': [update_qmax],
     'VolSFraction': [update_vols, update_qpSBmin, update_qpSBmax, update_qSBmax],
     'Vol': [update_vols],
     'qMax': [update_qpmin, update_qpmax, update_qpSBmin, update_qpSBmax, update_qnmin, update_qnmax, update_qpSBmin, update_qpSBmax, update_qSBmax],
     'xpMin': [update_qpmin, update_qpSBmin],
     'xpMax': [update_qpmax, update_qpSBmax],
-    'xnMin': [update_qnmin, update_qnSBmin],
-    'xnMax': [update_qnmax, update_qnSBmax]
+    'xnMin': [update_qmax, update_qnmin, update_qnSBmin],
+    'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
 }
 
 
