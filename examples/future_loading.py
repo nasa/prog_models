@@ -1,4 +1,5 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 """
 An example demonstrating ways to use future loading. Run using the command `python -m examples.future_loading`
 """
@@ -34,8 +35,8 @@ def run_example():
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
     # Now lets plot the inputs and event_states
-    input_fig = plot_timeseries(times, inputs, options={'ylabel': 'Variable Load Current (amps)'})
-    event_states_fig = plot_timeseries(times, event_states, options={'ylabel': 'Variable Load Event State'})
+    plot_timeseries(times, inputs, options={'ylabel': 'Variable Load Current (amps)'})
+    plot_timeseries(times, event_states, options={'ylabel': 'Variable Load Event State'})
 
     ## Example 2: Moving Average loading 
     # This is useful in cases where you are running reoccuring simulations, and are measuring the actual load on the system, 
@@ -70,8 +71,8 @@ def run_example():
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
     # Now lets plot the inputs and event_states
-    input_fig = plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
-    event_states_fig = plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
+    plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
+    plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
 
     # In this case, this estimate is wrong because loading will not be steady, but at least it would give you an approximation. 
     # Users should adjust noise accordingly
@@ -101,8 +102,8 @@ def run_example():
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
     # Now lets plot the inputs and event_states
-    input_fig = plot_timeseries(times, inputs, options={'ylabel': 'Variable Gaussian Current (amps)'})
-    event_states_fig = plot_timeseries(times, event_states, options={'ylabel': 'Variable Gaussian Event State'})
+    plot_timeseries(times, inputs, options={'ylabel': 'Variable Gaussian Current (amps)'})
+    plot_timeseries(times, event_states, options={'ylabel': 'Variable Gaussian Event State'})
 
     # Example 4: Gaussian- increasing with time
     # For this we're using moving average. This is realistic because the further out from current time you get, 
@@ -140,8 +141,8 @@ def run_example():
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
     # Now lets plot the inputs and event_states
-    input_fig = plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
-    event_states_fig = plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
+    plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
+    plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
     
     # In this example future_loading.t has to be updated with current time before each prediction.
     
@@ -163,8 +164,8 @@ def run_example():
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
     # Now lets plot the inputs and event_states
-    input_fig = plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
-    event_states_fig = plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
+    plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
+    plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
 
     # In this example future_loading.t has to be updated with current time before each prediction.
 

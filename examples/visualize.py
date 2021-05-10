@@ -1,4 +1,5 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
 Visualization Module Example
@@ -29,11 +30,11 @@ def run_example():
 
     # Display states
     # ==============
-    fig = plot_timeseries(times, states, 
+    plot_timeseries(times, states, 
                           options = {'compact': False, 'suptitle': 'state evolution', 'title': True,
                                      'xlabel': 'time', 'ylabel': {'x': 'position', 'v': 'velocity'}, 'display_labels': 'minimal'},
                           legend  = {'display': True, 'display_at_subplot': 'all'} )
-    fig = plot_timeseries(times, states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
+    plot_timeseries(times, states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
                                                     'xlabel': 'time', 'ylabel':'position'})
     plt.show()
 
