@@ -14,6 +14,11 @@ class PrognosticsModelParameters(UserDict):
     """
     Prognostics Model Parameters - this class replaces a standard dictionary.
     It includes the extra logic to process the different supported manners of defining noise.
+
+    Args:
+        model: PrognosticsModel for which the params correspond
+        dict_in: Initial parameters
+        callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
     def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
@@ -108,12 +113,18 @@ class PrognosticsModelParameters(UserDict):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.states")
 
     def register_derived_callback(self, key, callback):
+        """Register a new callback for derived parameters
+
+        Args:
+            key (string): key for which the callback is triggered
+            callback (function): callback function f(parameters) -> updates (dict)
+        """
         if key in self.callbacks:
             self.callbacks[key].append(callback)
         else:
             self.callbacks[key] = [callback]
 
-        # Run callback
+        # Run new callback
         if key in self:
             updates = callback(self[key])
             self.update(updates)
@@ -211,6 +222,11 @@ class PrognosticsModel(ABC):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
 
     def get_derived_callbacks(self):
+        """Returns all the callbacks for derived parameters. Default is no callbacks
+
+        Returns:
+            dict(key[string] : callback_fcn): Dictionary of callbacks
+        """
         return {}
     
     @abstractmethod

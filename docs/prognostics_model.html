@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Prognostics Model &#8212; Prognostics Models Python Package 1.0.2 documentation</title>
+    <title>Prognostics Model &#8212; Prognostics Models Python Package 1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -177,7 +177,8 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>A model should overwrite either <cite>next_state</cite> or <cite>dx</cite>. Override <cite>dx</cite> for continuous models, and <cite>next_state</cite> for discrete, where the behavior cannot be described by the first derivative</p>
+<p>A model should overwrite either <cite>next_state</cite> or <cite>dx</cite>. Override <cite>dx</cite> for continuous models,
+and <cite>next_state</cite> for discrete, where the behavior cannot be described by the first derivative</p>
 </div>
 </dd></dl>
 
@@ -262,6 +263,20 @@ e.g., x = {‘abc’: 332.2, ‘def’: 221.043} given states = [‘abc’, ‘d
 <div class="line"><br /></div>
 <div class="line">m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)</div>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="prog_models.prognostics_model.PrognosticsModel.get_derived_callbacks">
+<code class="sig-name descname"><span class="pre">get_derived_callbacks</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.prognostics_model.PrognosticsModel.get_derived_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the callbacks for derived parameters. Default is no callbacks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>callback_fcn): Dictionary of callbacks</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict(key[string]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
