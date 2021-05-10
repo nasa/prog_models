@@ -29,8 +29,3 @@ class TestBattery(unittest.TestCase):
         batt = BatteryElectroChem()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         # TODO(CT): More
-
-    def test_battery_electrochem_thermal(self):
-        batt = BatteryElectroChemThermal()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-        # TODO(CT): More
