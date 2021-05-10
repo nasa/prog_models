@@ -4,6 +4,7 @@ from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
 
+
 class MockModel():
     states = ['a', 'b', 'c', 't']
     inputs = ['i1', 'i2']
@@ -25,6 +26,7 @@ class MockModel():
     def output(self, x):
         return {'o1': x['a'] + sum(x['b']) + x['c']}
 
+
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     events = ['e1', 'e2']
 
@@ -38,13 +40,57 @@ class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     def threshold_met(self, x):
         return {key : value < 1e-6 for (key, value) in self.event_state(x).items()}
 
+def derived_callback(config):
+    return {
+        'p2': config['p1']  # New config
+    }
+
+def derived_callback2(config):
+    return {  # Testing chained update
+        'p3': config['p2'], 
+    }
+
+def derived_callback3(config):
+    return {  # Testing 2nd chained update 
+        'p4': -2 * config['p2'], 
+    }
+
+
+class MockModelWithDerived(MockProgModel):
+    def get_derived_callbacks(self):
+        return {
+            'p1': [derived_callback],
+            'p2': [derived_callback2, derived_callback3]
+        }
+
+
 class TestModels(unittest.TestCase):
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
         # TODO(CT): More
 
+    def test_derived(self):
+        m = MockModelWithDerived()
+        self.assertAlmostEqual(m.parameters['p1'], 1.2, 5)
+        self.assertAlmostEqual(m.parameters['p2'], 1.2, 5)
+        self.assertAlmostEqual(m.parameters['p3'], 1.2, 5)
+        self.assertAlmostEqual(m.parameters['p4'], -2.4, 5)
+
+        m.parameters['p1'] = 2.4
+        self.assertAlmostEqual(m.parameters['p1'], 2.4, 5)
+        self.assertAlmostEqual(m.parameters['p2'], 2.4, 5)
+        self.assertAlmostEqual(m.parameters['p3'], 2.4, 5)
+        self.assertAlmostEqual(m.parameters['p4'], -4.8, 5)
+
+        m.parameters['p2'] = 5
+        self.assertAlmostEqual(m.parameters['p1'], 2.4, 5)  # No change
+        self.assertAlmostEqual(m.parameters['p2'], 5, 5)
+        self.assertAlmostEqual(m.parameters['p3'], 5, 5)
+        self.assertAlmostEqual(m.parameters['p4'], -10, 5)
+
     def test_broken_models(self):
+
         class missing_states(prognostics_model.PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
@@ -55,6 +101,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class empty_states(prognostics_model.PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
@@ -66,6 +113,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_inputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -76,6 +124,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
@@ -86,6 +135,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_initiialize(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -95,6 +145,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_output(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
