@@ -64,27 +64,27 @@ def update_qpSBmax(params):
     # max charge at surface and pos electrode
     return {
         'qpSMax': params['qMax']*params['xpMax']*params['VolSFraction'],
-        'qpBMax': params['qMax']*params['xpMax']*(1.0-params['VolSFraction']),
-        'x0': {
-            **params['x0'],
-            'qnS': params['qMax']*params['xpMax']*params['VolSFraction'],
-            'qnB': params['qMax']*params['xpMax']*(1.0-params['VolSFraction'])
-        }
+        'qpBMax': params['qMax']*params['xpMax']*(1.0-params['VolSFraction'])
     }
 
 def update_qnSBmin(params):
     # min charge at surface and bulk pos electrode
     return {
-        'qpSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
-        'qpBMin': params['qMax']*params['xnMin']*(1.0-params['VolSFraction'])
+        'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
+        'qnBMin': params['qMax']*params['xnMin']*(1.0-params['VolSFraction'])
 
     }
 
 def update_qnSBmax(params):
     # max charge at surface and pos electrode
     return {
-        'qpSMax': params['qMax']*params['xnMax']*params['VolSFraction'],
-        'qpBMax': params['qMax']*params['xnMax']*(1.0-params['VolSFraction'])
+        'qnSMax': params['qMax']*params['xnMax']*params['VolSFraction'],
+        'qnBMax': params['qMax']*params['xnMax']*(1.0-params['VolSFraction']),
+        'x0': {
+            **params['x0'],
+            'qnS': params['qMax']*params['xnMax']*params['VolSFraction'],
+            'qnB': params['qMax']*params['xnMax']*(1.0-params['VolSFraction'])
+        }
     }
 
 def update_qSBmax(params):
