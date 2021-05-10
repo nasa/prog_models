@@ -15,9 +15,10 @@ class PrognosticsModelParameters(UserDict):
     Prognostics Model Parameters - this class replaces a standard dictionary.
     It includes the extra logic to process the different supported manners of defining noise.
     """
-    def __init__(self, model, dict_in = {}):
+    def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model
+        self.callbacks = callbacks
         for (key, value) in dict_in.items():
             self[key] = value
 
@@ -32,6 +33,11 @@ class PrognosticsModelParameters(UserDict):
             ProgModelTypeError: Improper configuration for a model
         """
         super().__setitem__(key, value)
+
+        if key in self.callbacks:
+            for callback in self.callbacks[key]:
+                changes = callback(value)
+                self.update(changes) # Merge in changes
         
         if key == 'process_noise':
             if callable(self['process_noise']):  # Provided a function
@@ -92,6 +98,16 @@ class PrognosticsModelParameters(UserDict):
                 if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.states")
 
+    def register_derived_callback(self, key, callback):
+        if key in self.callbacks:
+            self.callbacks[key].append(callback)
+        else:
+            self.callbacks[key] = [callback]
+
+        # Run callback
+        if key in self:
+            updates = callback(self[key])
+            self.update(updates)
 
 class PrognosticsModel(ABC):
     """
@@ -161,7 +177,7 @@ class PrognosticsModel(ABC):
         except Exception:
             raise ProgModelTypeError('Could not check model configuration')
 
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters)
+        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.get_derived_callbacks())
         try:
             self.parameters.update(kwargs)
         except TypeError:
@@ -184,6 +200,9 @@ class PrognosticsModel(ABC):
 
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
+
+    def get_derived_callbacks(self):
+        return {}
     
     @abstractmethod
     def initialize(self, u, z) -> dict:
