@@ -365,7 +365,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
             'D': 7e6
         },
         'wq': -1e-2,
-        'wr': 1e-2,
+        'wr': 1e-6,
         'wd': 1e-2,
         'qMaxThreshold': 3800
     }
@@ -434,49 +434,10 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     states = BatteryElectroChemEOD.states + BatteryElectroChemEOL.states
     events = BatteryElectroChemEOD.events + BatteryElectroChemEOL.events
 
-    default_parameters = BatteryElectroChemParamDict({ # Set to defaults
-        'qMobile': 7600,
-        'xnMax': 0.6,
-        'xnMin': 0,
-        'xpMax': 1.0,
-        'xpMin': 0.4,
-        'Ro': 0.117215,
-        
-        # Li-ion parameters
-        'alpha': 0.5,
-        'Sn': 0.000437545,
-        'Sp': 0.00030962,
-        'kn': 2120.96,
-        'kp': 248898,
-        'Vol': 2e-5,
-        'VolSFraction': 0.1,
-
-        # time constants
-        'tDiffusion': 7e6,
-        'to': 6.08671,
-        'tsn': 1001.38,
-        'tsp': 46.4311,
-
-        # Redlich-Kister parameters (+ electrode)
-        'U0p': 4.03,
-        'Ap': [-31593.7, 0.106747, 24606.4, -78561.9, 13317.9, 307387, 84916.1, -1.07469e+06, 2285.04, 990894, 283920, -161513, -469218],
-
-        # Redlich-Kister parameters (- electrode)
-        'U0n': 0.01,
-        'An': [86.19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
-        'x0': {
-            'Vo': 0,
-            'Vsn': 0,
-            'Vsp': 0,
-            'tb': 292.1 # in K, about 18.95 C
-        },
-
-        'process_noise': 1e-3,
-
-        # End of discharge voltage threshold
-        'VEOD': 3.0
-    })
+    default_parameters = { # Set to defaults
+    }
+    merge_dicts(default_parameters,
+        BatteryElectroChemEOD.default_parameters)
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)
 
@@ -486,12 +447,10 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     def dx(self, x, u):
         params = self.parameters
 
-        # TODO(CT): Set parameters from EOD model
-        # self.parameters['qMobile'] = x['qMax']* (params['xnMax'] - params['xnMin'])
-        # # Make sure it's actually resetting qMax
-        # # Consider ability to register callback for derived params
-        # self.parameters['Ro'] = x['Ro']
-        # self.parameters['tDiffusion'] = x['D']
+        # Set EOD Parameters (corresponding to health)
+        self.parameters['qMobile'] = x['qMax']
+        self.parameters['Ro'] = x['Ro']
+        self.parameters['tDiffusion'] = x['D']
         
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
@@ -500,13 +459,13 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
 
     def output(self, x):
         params = self.parameters
-        # TODO(CT): Set parameters from EOD model
-        # self.parameters['qMobile'] = x['qMax']* (params['xnMax'] - params['xnMin'])
-        # # Make sure it's actually resetting qMax
-        # # Consider ability to register callback for derived params
-        # self.parameters['Ro'] = x['Ro']
-        # self.parameters['tDiffusion'] = x['D']
+
+        # Set EOD Parameters (corresponding to health)
+        self.parameters['qMobile'] = x['qMax']
+        self.parameters['Ro'] = x['Ro']
+        self.parameters['tDiffusion'] = x['D']
         
+        # Calculate
         return BatteryElectroChemEOD.output(self, x)
 
     def event_state(self, x):
