@@ -1,8 +1,10 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
 
 from math import exp
+
 
 class BatteryCircuit(prognostics_model.PrognosticsModel):
     """
@@ -63,7 +65,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     states = ['tb', 'qb', 'qcp', 'qcs']
     outputs = ['t',  'v']
 
-    default_parameters = { # Set to defaults
+    default_parameters = {  # Set to defaults
         'V0': 4.183,
         'Rp': 1e4,
         'qMax': 7856.3254,
@@ -96,11 +98,11 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         }
     }
 
-    def initialize(self, u, z):
+    def initialize(self, u={}, z={}):
         return self.parameters['x0']
 
     def dx(self, x, u): 
-        parameters = self.parameters # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+        parameters = self.parameters  # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

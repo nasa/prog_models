@@ -1,73 +1,110 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
 
 from math import asinh, log
 
 # Constants of nature
-R = 8.3144621; # universal gas constant, J/K/mol
-F = 96487;     # Faraday's constant, C/mol
+R = 8.3144621;  # universal gas constant, J/K/mol
+F = 96487;      # Faraday's constant, C/mol
 
-class BatteryElectroChemParamDict(dict):
-    """
-    A custom dictionary class that updates derives parameters every time any other parameter is updated (and at creation)
-    """
-    __setting = False
-    def __update_derived_params(self):
-        self['qMax'] = self['qMobile']/(self['xnMax']-self['xnMin']) # note qMax = qn+qp
-        # Volumes (total volume is 2*P.Vol), assume volume at each electrode is the
-        # same and the surface/bulk split is the same for both electrodes
-        self['VolS'] = self['VolSFraction']*self['Vol'] # surface volume
-        self['VolB'] = self['Vol'] - self['VolS'] # bulk volume
+def update_qmax(params):
+    # note qMax = qn+qp
+    return {
+        'qMax': params['qMobile']/(params['xnMax']-params['xnMin'])
+    }
 
-        # set up charges (Li ions)
-        self['qpMin'] = self['qMax']*self['xpMin'] # min charge at pos electrode
-        self['qpMax'] = self['qMax']*self['xpMax'] # max charge at pos electrode
-        self['qpSMin'] = self['qMax']*self['xpMin']*self['VolSFraction'] # min charge at surface, pos electrode
-        self['qpBMin'] = self['qMax']*self['xpMin']*(self['Vol'] - self['VolS'])/self['Vol'] # min charge at bulk, pos electrode
-        self['qpSMax'] = self['qMax']*self['xpMax']*self['VolS']/self['Vol'] # max charge at surface, pos electrode
-        self['qpBMax'] = self['qMax']*self['xpMax']*self['VolB']/self['Vol'] # max charge at bulk, pos electrode
-        self['qnMin'] = self['qMax']*self['xnMin'] # max charge at neg electrode
-        self['qnMax'] = self['qMax']*self['xnMax'] # max charge at neg electrode
-        self['qnSMax'] = self['qMax']*self['xnMax']*self['VolSFraction'] # max charge at surface, neg electrode
-        self['qnBMax'] = self['qMax']*self['xnMax']*(1-self['VolSFraction']) # max charge at bulk, neg electrode
-        self['qnSMin'] = self['qMax']*self['xnMin']*self['VolSFraction'] # min charge at surface, neg electrode
-        self['qnBMin'] = self['qMax']*self['xnMin']*(1-self['VolSFraction']) # min charge at bulk, neg electrode
-        self['qSMax'] = self['qMax']*self['VolSFraction'] # max charge at surface (pos and neg)
-        self['qBMax'] = self['qMax']*(1-self['VolSFraction']) # max charge at bulk (pos and neg)
-        self['x0']['qpS'] = self['qpSMin']
-        self['x0']['qpB'] = self['qpBMin']
-        self['x0']['qnS'] = self['qnSMax']
-        self['x0']['qnB'] = self['qnBMax']
+def update_vols(params):
+    # Volumes (total volume is 2*P.Vol), assume volume at each electrode is the
+    # same and the surface/bulk split is the same for both electrodes
+    return {
+        'VolS': params['VolSFraction']*params['Vol'],
+        'VolB': params['Vol']*(1.0-params['VolSFraction'])
+    }
 
-    def __deepcopy__(self, memo):
-        return BatteryElectroChemParamDict(self)
+# set up charges (Li ions)
+def update_qpmin(params):
+    # min charge at pos electrode
+    return {
+        'qpMin': params['qMax']*params['xpMin'] 
+    }
 
-    def __init__(self, *args, **kwarg):
-        super(BatteryElectroChemParamDict, self).__init__(*args, **kwarg)
-        if not self.__setting:
-            try:
-                self.__setting = True
-                self.__update_derived_params()
-                self.__setting = False
-            except Exception as ex:
-                self.__setting = False
-                raise ex
-    
-    def __delitem__(self, item):
-        raise Exception('You cannot delete items from the electrochem battery parameters. Every item is important')
+def update_qpmax(params):
+    # max charge at pos electrode
+    return {
+        'qpMax': params['qMax']*params['xpMax'] 
+    }
 
-    def __setitem__(self, item, value):
-        super(BatteryElectroChemParamDict, self).__setitem__(item, value)
-        if not self.__setting:
-            try:
-                self.__setting = True
-                self.__update_derived_params()
-                self.__setting = False
-            except Exception as ex:
-                self.__setting = False
-                raise ex
-# TODO(CT): FIX- this is overwritten by the prog_model params class - fix
+def update_qnmin(params):
+    # min charge at negative electrode
+    return {
+        'qnMin': params['qMax']*params['xnMin'] 
+    }
+
+def update_qnmax(params):
+    # max charge at negative electrode
+    return {
+        'qnMax': params['qMax']*params['xnMax'] 
+    }
+
+def update_qpSBmin(params):
+    # min charge at surface and bulk pos electrode
+    return {
+        'qpSMin': params['qMax']*params['xpMin']*params['VolSFraction'],
+        'qpBMin': params['qMax']*params['xpMin']*(1.0-params['VolSFraction']),
+        'x0': {
+            **params['x0'],
+            'qpS': params['qMax']*params['xpMin']*params['VolSFraction'],
+            'qpB': params['qMax']*params['xpMin']*(1.0-params['VolSFraction'])
+        }
+    }
+
+def update_qpSBmax(params):
+    # max charge at surface and pos electrode
+    return {
+        'qpSMax': params['qMax']*params['xpMax']*params['VolSFraction'],
+        'qpBMax': params['qMax']*params['xpMax']*(1.0-params['VolSFraction'])
+    }
+
+def update_qnSBmin(params):
+    # min charge at surface and bulk pos electrode
+    return {
+        'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
+        'qnBMin': params['qMax']*params['xnMin']*(1.0-params['VolSFraction'])
+
+    }
+
+def update_qnSBmax(params):
+    # max charge at surface and pos electrode
+    return {
+        'qnSMax': params['qMax']*params['xnMax']*params['VolSFraction'],
+        'qnBMax': params['qMax']*params['xnMax']*(1.0-params['VolSFraction']),
+        'x0': {
+            **params['x0'],
+            'qnS': params['qMax']*params['xnMax']*params['VolSFraction'],
+            'qnB': params['qMax']*params['xnMax']*(1.0-params['VolSFraction'])
+        }
+    }
+
+def update_qSBmax(params):
+    # max charge at surface, bulk (pos and neg)
+    return {
+        'qSMax': params['qMax']*params['VolSFraction'],
+        'qBMax': params['qMax']*(1.0-params['VolSFraction']),
+    }
+
+derived_callbacks = {
+    'qMobile': [update_qmax],
+    'VolSFraction': [update_vols, update_qpSBmin, update_qpSBmax, update_qSBmax],
+    'Vol': [update_vols],
+    'qMax': [update_qpmin, update_qpmax, update_qpSBmin, update_qpSBmax, update_qnmin, update_qnmax, update_qpSBmin, update_qpSBmax, update_qSBmax],
+    'xpMin': [update_qpmin, update_qpSBmin],
+    'xpMax': [update_qpmax, update_qpSBmax],
+    'xnMin': [update_qmax, update_qnmin, update_qnSBmin],
+    'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
+}
+
 
 class BatteryElectroChem(prognostics_model.PrognosticsModel):
     """
@@ -100,7 +137,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
                     Can be number (e.g., .2) applied to every output, a dictionary of values for each 
                     output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | qMobile : 
+        | qMobile :
         | xnMax : Maximum mole fraction (neg electrode)
         | xnMin : Minimum mole fraction (neg electrode)
         | xpMax : Maximum mole fraction (pos electrode)
@@ -129,7 +166,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
 
-    default_parameters = BatteryElectroChemParamDict({ # Set to defaults
+    default_parameters = {  # Set to defaults
         'qMobile': 7600,
         'xnMax': 0.6,
         'xnMin': 0,
@@ -164,14 +201,17 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
             'Vo': 0,
             'Vsn': 0,
             'Vsp': 0,
-            'tb': 292.1 # in K, about 18.95 C
+            'tb': 292.1  # in K, about 18.95 C
         },
 
         'process_noise': 1e-3,
 
         # End of discharge voltage threshold
         'VEOD': 3.0
-    })
+    }
+
+    def get_derived_callbacks(self):
+        return derived_callbacks
 
     def initialize(self, u, z):
         return self.parameters['x0']
@@ -239,38 +279,38 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         # Negative Surface
         xnS = x['qnS']/self.parameters['qSMax']
         VenParts = [
-            self.parameters['An'][0] *(2*xnS-1)/F, # Ven0
-            self.parameters['An'][1] *((2*xnS-1)**2  - (2 *xnS*(1-xnS)))/F, # Ven1
-            self.parameters['An'][2] *((2*xnS-1)**3  - (4 *xnS*(1-xnS))*(2*xnS-1))/F, #Ven2
-            self.parameters['An'][3] *((2*xnS-1)**4  - (6 *xnS*(1-xnS))*(2*xnS-1)**2) /F, #Ven3
-            self.parameters['An'][4] *((2*xnS-1)**5  - (8 *xnS*(1-xnS))*(2*xnS-1)**3) /F, #Ven4
-            self.parameters['An'][5] *((2*xnS-1)**6  - (10*xnS*(1-xnS))*(2*xnS-1)**4) /F, #Ven5
-            self.parameters['An'][6] *((2*xnS-1)**7  - (12*xnS*(1-xnS))*(2*xnS-1)**5) /F, #Ven6
-            self.parameters['An'][7] *((2*xnS-1)**8  - (14*xnS*(1-xnS))*(2*xnS-1)**6) /F, #Ven7
-            self.parameters['An'][8] *((2*xnS-1)**9  - (16*xnS*(1-xnS))*(2*xnS-1)**7) /F, #Ven8
-            self.parameters['An'][9] *((2*xnS-1)**10 - (18*xnS*(1-xnS))*(2*xnS-1)**8) /F, #Ven9
-            self.parameters['An'][10]*((2*xnS-1)**11 - (20*xnS*(1-xnS))*(2*xnS-1)**9) /F, #Ven10
-            self.parameters['An'][11]*((2*xnS-1)**12 - (22*xnS*(1-xnS))*(2*xnS-1)**10)/F, #Ven11
-            self.parameters['An'][12]*((2*xnS-1)**13 - (24*xnS*(1-xnS))*(2*xnS-1)**11)/F  #Ven12
+            self.parameters['An'][0] *(2*xnS-1)/F,  # Ven0
+            self.parameters['An'][1] *((2*xnS-1)**2  - (2 *xnS*(1-xnS)))/F,  # Ven1
+            self.parameters['An'][2] *((2*xnS-1)**3  - (4 *xnS*(1-xnS))*(2*xnS-1))/F,  #Ven2
+            self.parameters['An'][3] *((2*xnS-1)**4  - (6 *xnS*(1-xnS))*(2*xnS-1)**2) /F,  #Ven3
+            self.parameters['An'][4] *((2*xnS-1)**5  - (8 *xnS*(1-xnS))*(2*xnS-1)**3) /F,  #Ven4
+            self.parameters['An'][5] *((2*xnS-1)**6  - (10*xnS*(1-xnS))*(2*xnS-1)**4) /F,  #Ven5
+            self.parameters['An'][6] *((2*xnS-1)**7  - (12*xnS*(1-xnS))*(2*xnS-1)**5) /F,  #Ven6
+            self.parameters['An'][7] *((2*xnS-1)**8  - (14*xnS*(1-xnS))*(2*xnS-1)**6) /F,  #Ven7
+            self.parameters['An'][8] *((2*xnS-1)**9  - (16*xnS*(1-xnS))*(2*xnS-1)**7) /F,  #Ven8
+            self.parameters['An'][9] *((2*xnS-1)**10 - (18*xnS*(1-xnS))*(2*xnS-1)**8) /F,  #Ven9
+            self.parameters['An'][10]*((2*xnS-1)**11 - (20*xnS*(1-xnS))*(2*xnS-1)**9) /F,  #Ven10
+            self.parameters['An'][11]*((2*xnS-1)**12 - (22*xnS*(1-xnS))*(2*xnS-1)**10)/F,  #Ven11
+            self.parameters['An'][12]*((2*xnS-1)**13 - (24*xnS*(1-xnS))*(2*xnS-1)**11)/F   #Ven12
         ]
         Ven = self.parameters['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
 
         # Positive Surface
         xpS = x['qpS']/self.parameters['qSMax']
         VepParts = [
-            self.parameters['Ap'][0] *(2*xpS-1)/F, #Vep0
-            self.parameters['Ap'][1] *((2*xpS-1)**2  - (2 *xpS*(1-xpS)))/F, #Vep1
-            self.parameters['Ap'][2] *((2*xpS-1)**3  - (4 *xpS*(1-xpS))/(2*xpS-1)**(-1)) /F, #Vep2
-            self.parameters['Ap'][3] *((2*xpS-1)**4  - (6 *xpS*(1-xpS))/(2*xpS-1)**(-2)) /F, #Vep3
-            self.parameters['Ap'][4] *((2*xpS-1)**5  - (8 *xpS*(1-xpS))/(2*xpS-1)**(-3)) /F, #Vep4
-            self.parameters['Ap'][5] *((2*xpS-1)**6  - (10*xpS*(1-xpS))/(2*xpS-1)**(-4)) /F, #Vep5
-            self.parameters['Ap'][6] *((2*xpS-1)**7  - (12*xpS*(1-xpS))/(2*xpS-1)**(-5)) /F, #Vep6
-            self.parameters['Ap'][7] *((2*xpS-1)**8  - (14*xpS*(1-xpS))/(2*xpS-1)**(-6)) /F, #Vep7
-            self.parameters['Ap'][8] *((2*xpS-1)**9  - (16*xpS*(1-xpS))/(2*xpS-1)**(-7)) /F, #Vep8
-            self.parameters['Ap'][9] *((2*xpS-1)**10 - (18*xpS*(1-xpS))/(2*xpS-1)**(-8)) /F, #Vep9
-            self.parameters['Ap'][10]*((2*xpS-1)**11 - (20*xpS*(1-xpS))/(2*xpS-1)**(-9)) /F, #Vep10
-            self.parameters['Ap'][11]*((2*xpS-1)**12 - (22*xpS*(1-xpS))/(2*xpS-1)**(-10))/F, #Vep11
-            self.parameters['Ap'][12]*((2*xpS-1)**13 - (24*xpS*(1-xpS))/(2*xpS-1)**(-11))/F  #Vep12
+            self.parameters['Ap'][0] *(2*xpS-1)/F,  #Vep0
+            self.parameters['Ap'][1] *((2*xpS-1)**2  - (2 *xpS*(1-xpS)))/F,  #Vep1
+            self.parameters['Ap'][2] *((2*xpS-1)**3  - (4 *xpS*(1-xpS))/(2*xpS-1)**(-1)) /F,  #Vep2
+            self.parameters['Ap'][3] *((2*xpS-1)**4  - (6 *xpS*(1-xpS))/(2*xpS-1)**(-2)) /F,  #Vep3
+            self.parameters['Ap'][4] *((2*xpS-1)**5  - (8 *xpS*(1-xpS))/(2*xpS-1)**(-3)) /F,  #Vep4
+            self.parameters['Ap'][5] *((2*xpS-1)**6  - (10*xpS*(1-xpS))/(2*xpS-1)**(-4)) /F,  #Vep5
+            self.parameters['Ap'][6] *((2*xpS-1)**7  - (12*xpS*(1-xpS))/(2*xpS-1)**(-5)) /F,  #Vep6
+            self.parameters['Ap'][7] *((2*xpS-1)**8  - (14*xpS*(1-xpS))/(2*xpS-1)**(-6)) /F,  #Vep7
+            self.parameters['Ap'][8] *((2*xpS-1)**9  - (16*xpS*(1-xpS))/(2*xpS-1)**(-7)) /F,  #Vep8
+            self.parameters['Ap'][9] *((2*xpS-1)**10 - (18*xpS*(1-xpS))/(2*xpS-1)**(-8)) /F,  #Vep9
+            self.parameters['Ap'][10]*((2*xpS-1)**11 - (20*xpS*(1-xpS))/(2*xpS-1)**(-9)) /F,  #Vep10
+            self.parameters['Ap'][11]*((2*xpS-1)**12 - (22*xpS*(1-xpS))/(2*xpS-1)**(-10))/F,  #Vep11
+            self.parameters['Ap'][12]*((2*xpS-1)**13 - (24*xpS*(1-xpS))/(2*xpS-1)**(-11))/F   #Vep12
         ]
         Vep = self.parameters['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
 

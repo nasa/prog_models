@@ -1,8 +1,10 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
 
 import math
+
 
 class CentrifugalPump(prognostics_model.PrognosticsModel):
     """
@@ -35,34 +37,34 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         | w: Mechanical Rotation (rad/sec)
 
     Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state). 
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+        | process_noise : Process noise (applied at dx/next_state).
+                    Can be number (e.g., .2) applied to every state, a dictionary of values for each
                     state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
         | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                    Can be number (e.g., .2) applied to every output, a dictionary of values for each
                     output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
         | pAtm : Atmospheric pressure
         | a0, a1, a2 : empirical coefficients for flow torque eqn
         | A : impeller blade area
-        | b : 
+        | b :
         | I : impeller/shaft/motor lumped inertia
         | r : lumped friction parameter (minus bearing friction)
         | R1, R2 :
-        | L1 : 
+        | L1 :
         | FluidI: Pump fluid inertia
         | c : Pump flow coefficient
         | cLeak : Internal leak flow coefficient
         | ALeak : Internal leak area
-        | mcThrust : 
+        | mcThrust :
         | rThrust :
-        | HThrust1, HThrust2 : 
+        | HThrust1, HThrust2 :
         | mcRadial :
         | rRadial :
         | HRadial1, HRadial2 :
-        | mcOil : 
-        | HOil1, HOil2, HOil3 : 
+        | mcOil :
+        | HOil1, HOil2, HOil3 :
         | lim : Parameter limits (dict)
         | x0 : Initial state
     """
@@ -71,7 +73,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     states = ['A', 'Q', 'To', 'Tr', 'Tt', 'rRadial', 'rThrust', 'w', 'wA', 'wRadial', 'wThrust', 'QLeak']
     outputs = ['Qout', 'To', 'Tr', 'Tt', 'w']
 
-    default_parameters = { # Set to defaults
+    default_parameters = {  # Set to defaults
         # Environmental parameters
         'pAtm': 101325,
 
@@ -123,7 +125,7 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
 
         # Initial state
         'x0': {
-            'w': 376.991118431, # 3600 rpm (rad/sec)
+            'w': 376.991118431,  # 3600 rpm (rad/sec)
             'Q': 0,
             'Tt': 290,
             'Tr': 290,
@@ -139,12 +141,16 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
 
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
-        x0['QLeak'] = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
+        x0['QLeak'] = math.copysign(\
+            self.parameters['cLeak']*self.parameters['ALeak']*\
+                math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
         return x0
 
     def next_state(self, x, u, dt):
-        Todot = 1/self.parameters['mcOil'] * (self.parameters['HOil1']*(x['Tt']-x['To']) + self.parameters['HOil2']*(x['Tr']-x['To']) + self.parameters['HOil3']*(u['Tamb']-x['To']))
-        Ttdot = 1/self.parameters['mcThrust'] * (x['rThrust']*x['w']*x['w'] - self.parameters['HThrust1']*(x['Tt']-u['Tamb']) - self.parameters['HThrust2']*(x['Tt']-x['To']))
+        Todot = 1/self.parameters['mcOil'] * (self.parameters['HOil1']*(x['Tt']-x['To']) + self.parameters['HOil2']*(x['Tr']-x['To'])\
+            + self.parameters['HOil3']*(u['Tamb']-x['To']))
+        Ttdot = 1/self.parameters['mcThrust'] * (x['rThrust']*x['w']*x['w'] - self.parameters['HThrust1']*(x['Tt']-u['Tamb'])\
+            - self.parameters['HThrust2']*(x['Tt']-x['To']))
         Adot = -x['wA']*x['Q']*x['Q']
         rRadialdot = x['wRadial']*x['rRadial']*x['w']*x['w']
         rThrustdot = x['wThrust']*x['wThrust']*x['w']*x['w']
@@ -156,12 +162,14 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
         Qout = max(0,x['Q']-QLeak)
         slip = max(-1,(min(1,slipn)))
         deltaP = ppump+u['psuc']-u['pdisch']
-        Te = 3*self.parameters['R2']/slip/(u['wsync']+0.00001)*u['V']**2/((self.parameters['R1']+self.parameters['R2']/slip)**2+(u['wsync']*self.parameters['L1'])**2)
+        Te = 3*self.parameters['R2']/slip/(u['wsync']+0.00001)*u['V']**2 \
+            /((self.parameters['R1']+self.parameters['R2']/slip)**2+(u['wsync']*self.parameters['L1'])**2)
         backTorque = -self.parameters['a2']*Qout**2 + self.parameters['a1']*x['w']*Qout + self.parameters['a0']*x['w']**2
         Qo = math.copysign(self.parameters['c']*math.sqrt(abs(deltaP)), deltaP)
         wdot = (Te-friction-backTorque)/self.parameters['I']
         Qdot = 1/self.parameters['FluidI']*(Qo-x['Q'])
-        QLeak = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
+        QLeak = math.copysign(self.parameters['cLeak']*self.parameters['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
+            u['psuc']-u['pdisch'])
         return self.apply_process_noise({
             'A': x['A'] + Adot*dt,
             'Q': x['Q'] + Qdot*dt, 

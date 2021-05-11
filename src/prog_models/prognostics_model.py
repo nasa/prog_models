@@ -1,4 +1,5 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException
 from abc import abstractmethod, ABC
@@ -8,16 +9,32 @@ from copy import deepcopy
 from collections import UserDict
 import types
 
+
 class PrognosticsModelParameters(UserDict):
     """
-    Prognostics Model Parameters - this class replaces a standard dictionary. 
+    Prognostics Model Parameters - this class replaces a standard dictionary.
     It includes the extra logic to process the different supported manners of defining noise.
+
+    Args:
+        model: PrognosticsModel for which the params correspond
+        dict_in: Initial parameters
+        callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    def __init__(self, model, dict_in = {}):
+    def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model
+        self.callbacks = {}
         for (key, value) in dict_in.items():
             self[key] = value
+
+        # Add and run callbacks
+        # Has to be done here so the base parameters are all set 
+        self.callbacks = callbacks
+        for key in callbacks:
+            if key in self:
+                for callback in self.callbacks[key]:
+                    changes = callback(self)
+                    self.update(changes)
 
     def __setitem__(self, key, value):
         """Set model configuration, overrides dict.__setitem__()
@@ -30,25 +47,34 @@ class PrognosticsModelParameters(UserDict):
             ProgModelTypeError: Improper configuration for a model
         """
         super().__setitem__(key, value)
+
+        if key in self.callbacks:
+            for callback in self.callbacks[key]:
+                changes = callback(self)
+                self.update(changes) # Merge in changes
         
         if key == 'process_noise':
-            if callable(self['process_noise']): # Provided a function
+            if callable(self['process_noise']):  # Provided a function
                 self.__m.apply_process_noise = types.MethodType(self['process_noise'], self.__m)
-            else: # Not a function
+            else:  # Not a function
                 # Process noise is single number - convert to dict
                 if isinstance(self['process_noise'], Number):
                     self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Uxpdate process noise distribution to custom 
+                    # Update process noise distribution to custom
                     if self['process_noise_dist'].lower() == "uniform":
                         def uniform_process_noise(self, x, dt=1):
-                            return {key: x[key] + dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) for key in self.states}
+                            return {key: x[key] + \
+                                dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) \
+                                    for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                     elif self['process_noise_dist'].lower() == "triangular":
                         def triangular_process_noise(self, x, dt=1):
-                            return {key: x[key] + dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) for key in self.states}
+                            return {key: x[key] + \
+                                dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) \
+                                    for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                     else:
                         raise ProgModelTypeError("Unsupported process noise distribution")
@@ -66,14 +92,18 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update measurment noise distribution to custom 
+                    # Update measurement noise distribution to custom
                     if self['measurement_noise_dist'].lower() == "uniform":
                         def uniform_noise(self, x):
-                            return {key: x[key] + random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) for key in self.outputs}
+                            return {key: x[key] + \
+                                random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) \
+                                    for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                     elif self['measurement_noise_dist'].lower() == "triangular":
                         def triangular_noise(self, x):
-                            return {key: x[key] + random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) for key in self.outputs}
+                            return {key: x[key] + \
+                                random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) \
+                                    for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                     else:
                         raise ProgModelTypeError("Unsupported measurement noise distribution")
@@ -81,6 +111,23 @@ class PrognosticsModelParameters(UserDict):
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.states")
+
+    def register_derived_callback(self, key, callback):
+        """Register a new callback for derived parameters
+
+        Args:
+            key (string): key for which the callback is triggered
+            callback (function): callback function f(parameters) -> updates (dict)
+        """
+        if key in self.callbacks:
+            self.callbacks[key].append(callback)
+        else:
+            self.callbacks[key] = [callback]
+
+        # Run new callback
+        if key in self:
+            updates = callback(self[key])
+            self.update(updates)
 
 class PrognosticsModel(ABC):
     """
@@ -96,12 +143,12 @@ class PrognosticsModel(ABC):
     ----------
     kwargs : keyword arguments, optional
         Configuration parameters for model. Parameters supported by every model include:\n
-            * process_noise : Process noise (applied at dx/next_state). 
-                Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+            * process_noise : Process noise (applied at dx/next_state).
+                Can be number (e.g., .2) applied to every state, a dictionary of values for each
                 state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x\n
             * process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)\n
             * measurement_noise : Measurement noise (applied in output eqn)
-                Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                Can be number (e.g., .2) applied to every output, a dictionary of values for each
                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
             * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
         E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {'z1': 0.1, 'z2': 0.3})
@@ -115,10 +162,11 @@ class PrognosticsModel(ABC):
     m = PrognosticsModel({'process_noise': 3.2})
     """
 
+    # Configuration Parameters for model
     default_parameters = {
         'process_noise': 0.1,
         'measurement_noise': 0.0
-    } # Configuration Parameters for model
+    }
 
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
@@ -143,13 +191,13 @@ class PrognosticsModel(ABC):
             if not hasattr(self, 'outputs'):
                 raise ProgModelTypeError('Must have `outputs` attribute')
             try:
-                a = iter(self.outputs)
+                iter(self.outputs)
             except TypeError:
                 raise ProgModelTypeError('model.outputs must be iterable')
         except Exception:
             raise ProgModelTypeError('Could not check model configuration')
 
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters)
+        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.get_derived_callbacks())
         try:
             self.parameters.update(kwargs)
         except TypeError:
@@ -171,7 +219,15 @@ class PrognosticsModel(ABC):
         # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
     def __str__(self):
-        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events, self.inputs, self.outputs)
+        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
+
+    def get_derived_callbacks(self):
+        """Returns all the callbacks for derived parameters. Default is no callbacks
+
+        Returns:
+            dict(key[string] : callback_fcn): Dictionary of callbacks
+        """
+        return {}
     
     @abstractmethod
     def initialize(self, u, z) -> dict:
@@ -296,7 +352,8 @@ class PrognosticsModel(ABC):
 
         Note
         ----
-        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
+        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models,
+        and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
         raise ProgModelException('dx not defined - please use next_state()')
         
@@ -521,9 +578,9 @@ class PrognosticsModel(ABC):
         if not isinstance(time, Number) or time < 0:
             raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
 
-        # Configure 
+        # Configure
         config = { # Defaults
-            'thresholds_met_eqn': (lambda x: False), # Override threshold 
+            'thresholds_met_eqn': (lambda x: False), # Override threshold
             'horizon': time
         }
         kwargs.update(config) # Config should override kwargs
@@ -541,7 +598,7 @@ class PrognosticsModel(ABC):
         first_output : dict
             First measured output, needed to initialize state
         threshold_keys: [str], optional
-            Keys for events that will trigger the end of simulation. 
+            Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
         options: keyword arguments, optional
             Configuration options for the simulation \n
@@ -733,7 +790,7 @@ class PrognosticsModel(ABC):
         |     'outputs': ['z1'],
         |     'events': ['e1', 'e2']
         | }
-        | 
+        |
         | m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)
         """
         # Input validation
@@ -775,8 +832,10 @@ class PrognosticsModel(ABC):
             inputs = keys['inputs']
             states = keys['states']
             outputs = keys['outputs']
+            
             def initialize():
                 pass
+
             def output():
                 pass
 
