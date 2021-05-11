@@ -445,8 +445,6 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         return self.parameters['x0']
 
     def dx(self, x, u):
-        params = self.parameters
-
         # Set EOD Parameters (corresponding to health)
         self.parameters['qMobile'] = x['qMax']
         self.parameters['Ro'] = x['Ro']
@@ -458,8 +456,6 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         return x_dot
 
     def output(self, x):
-        params = self.parameters
-
         # Set EOD Parameters (corresponding to health)
         self.parameters['qMobile'] = x['qMax']
         self.parameters['Ro'] = x['Ro']
