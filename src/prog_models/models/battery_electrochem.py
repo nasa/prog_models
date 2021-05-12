@@ -230,7 +230,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
 
         v_part = R*x['tb']/F/params['alpha']
 
-        VsnNominal = v_part*asinh(Jn/(2*Jn0))
+        VsnNominal = v_part*asinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
 
         # Positive Surface
@@ -245,7 +245,7 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         Jp = u['i']/params['Sp']
         Jp0 = params['kp']*((1-xpS)*xpS)**params['alpha']
 
-        VspNominal = v_part*asinh(Jp/(2*Jp0))
+        VspNominal = v_part*asinh(Jp/(Jp0+Jp0))
         Vspdot = (VspNominal-x['Vsp'])/params['tsp']
 
         # Combined
@@ -269,43 +269,48 @@ class BatteryElectroChem(prognostics_model.PrognosticsModel):
         }
 
     def output(self, x):
+        params = self.parameters
+        An = params['An']
         # Negative Surface
-        xnS = x['qnS']/self.parameters['qSMax']
+        xnS = x['qnS']/params['qSMax']
+        xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
         VenParts = [
-            self.parameters['An'][0] *(2*xnS-1)/F,  # Ven0
-            self.parameters['An'][1] *((2*xnS-1)**2  - (2 *xnS*(1-xnS)))/F,  # Ven1
-            self.parameters['An'][2] *((2*xnS-1)**3  - (4 *xnS*(1-xnS))*(2*xnS-1))/F,  #Ven2
-            self.parameters['An'][3] *((2*xnS-1)**4  - (6 *xnS*(1-xnS))*(2*xnS-1)**2) /F,  #Ven3
-            self.parameters['An'][4] *((2*xnS-1)**5  - (8 *xnS*(1-xnS))*(2*xnS-1)**3) /F,  #Ven4
-            self.parameters['An'][5] *((2*xnS-1)**6  - (10*xnS*(1-xnS))*(2*xnS-1)**4) /F,  #Ven5
-            self.parameters['An'][6] *((2*xnS-1)**7  - (12*xnS*(1-xnS))*(2*xnS-1)**5) /F,  #Ven6
-            self.parameters['An'][7] *((2*xnS-1)**8  - (14*xnS*(1-xnS))*(2*xnS-1)**6) /F,  #Ven7
-            self.parameters['An'][8] *((2*xnS-1)**9  - (16*xnS*(1-xnS))*(2*xnS-1)**7) /F,  #Ven8
-            self.parameters['An'][9] *((2*xnS-1)**10 - (18*xnS*(1-xnS))*(2*xnS-1)**8) /F,  #Ven9
-            self.parameters['An'][10]*((2*xnS-1)**11 - (20*xnS*(1-xnS))*(2*xnS-1)**9) /F,  #Ven10
-            self.parameters['An'][11]*((2*xnS-1)**12 - (22*xnS*(1-xnS))*(2*xnS-1)**10)/F,  #Ven11
-            self.parameters['An'][12]*((2*xnS-1)**13 - (24*xnS*(1-xnS))*(2*xnS-1)**11)/F   #Ven12
+            An[0] *(xnS2-1)/F,  # Ven0
+            An[1] *((xnS2-1)**2  - ((xnS + xnS)*(1-xnS)))/F,  # Ven1
+            An[2] *((xnS2-1)**3  - (4 *xnS*(1-xnS))*(xnS2-1))/F,  #Ven2
+            An[3] *((xnS2-1)**4  - (6 *xnS*(1-xnS))*(xnS2-1)**2) /F,  #Ven3
+            An[4] *((xnS2-1)**5  - (8 *xnS*(1-xnS))*(xnS2-1)**3) /F,  #Ven4
+            An[5] *((xnS2-1)**6  - (10*xnS*(1-xnS))*(xnS2-1)**4) /F,  #Ven5
+            An[6] *((xnS2-1)**7  - (12*xnS*(1-xnS))*(xnS2-1)**5) /F,  #Ven6
+            An[7] *((xnS2-1)**8  - (14*xnS*(1-xnS))*(xnS2-1)**6) /F,  #Ven7
+            An[8] *((xnS2-1)**9  - (16*xnS*(1-xnS))*(xnS2-1)**7) /F,  #Ven8
+            An[9] *((xnS2-1)**10 - (18*xnS*(1-xnS))*(xnS2-1)**8) /F,  #Ven9
+            An[10]*((xnS2-1)**11 - (20*xnS*(1-xnS))*(xnS2-1)**9) /F,  #Ven10
+            An[11]*((xnS2-1)**12 - (22*xnS*(1-xnS))*(xnS2-1)**10)/F,  #Ven11
+            An[12]*((xnS2-1)**13 - (24*xnS*(1-xnS))*(xnS2-1)**11)/F   #Ven12
         ]
-        Ven = self.parameters['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
+        Ven = params['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
 
         # Positive Surface
-        xpS = x['qpS']/self.parameters['qSMax']
+        Ap = params['Ap']
+        xpS = x['qpS']/params['qSMax']
+        xpS2 = xpS + xpS
         VepParts = [
-            self.parameters['Ap'][0] *(2*xpS-1)/F,  #Vep0
-            self.parameters['Ap'][1] *((2*xpS-1)**2  - (2 *xpS*(1-xpS)))/F,  #Vep1
-            self.parameters['Ap'][2] *((2*xpS-1)**3  - (4 *xpS*(1-xpS))/(2*xpS-1)**(-1)) /F,  #Vep2
-            self.parameters['Ap'][3] *((2*xpS-1)**4  - (6 *xpS*(1-xpS))/(2*xpS-1)**(-2)) /F,  #Vep3
-            self.parameters['Ap'][4] *((2*xpS-1)**5  - (8 *xpS*(1-xpS))/(2*xpS-1)**(-3)) /F,  #Vep4
-            self.parameters['Ap'][5] *((2*xpS-1)**6  - (10*xpS*(1-xpS))/(2*xpS-1)**(-4)) /F,  #Vep5
-            self.parameters['Ap'][6] *((2*xpS-1)**7  - (12*xpS*(1-xpS))/(2*xpS-1)**(-5)) /F,  #Vep6
-            self.parameters['Ap'][7] *((2*xpS-1)**8  - (14*xpS*(1-xpS))/(2*xpS-1)**(-6)) /F,  #Vep7
-            self.parameters['Ap'][8] *((2*xpS-1)**9  - (16*xpS*(1-xpS))/(2*xpS-1)**(-7)) /F,  #Vep8
-            self.parameters['Ap'][9] *((2*xpS-1)**10 - (18*xpS*(1-xpS))/(2*xpS-1)**(-8)) /F,  #Vep9
-            self.parameters['Ap'][10]*((2*xpS-1)**11 - (20*xpS*(1-xpS))/(2*xpS-1)**(-9)) /F,  #Vep10
-            self.parameters['Ap'][11]*((2*xpS-1)**12 - (22*xpS*(1-xpS))/(2*xpS-1)**(-10))/F,  #Vep11
-            self.parameters['Ap'][12]*((2*xpS-1)**13 - (24*xpS*(1-xpS))/(2*xpS-1)**(-11))/F   #Vep12
+            Ap[0] *(xpS2-1)/F,  #Vep0
+            Ap[1] *((xpS2-1)**2  - ((xpS + xpS)*(1-xpS)))/F,  #Vep1 
+            Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
+            Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
+            Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
+            Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
+            Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
+            Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
+            Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
+            Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
+            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
+            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
+            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
         ]
-        Vep = self.parameters['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
 
         return self.apply_measurement_noise({
             't': x['tb'] - 273.15,

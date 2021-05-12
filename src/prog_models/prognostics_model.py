@@ -692,16 +692,16 @@ class PrognosticsModel(ABC):
         
         times = [t]
         inputs = [u]
-        states = [deepcopy(x)] # Avoid optimization where x is not copied
+        states = [deepcopy(x)]  # Avoid optimization where x is not copied
         outputs = [self.output(x)]
         event_states = [self.event_state(x)]
-        dt = config['dt'] # saving to optimize access in while loop
+        dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
         next_save = save_freq
         save_pt_index = 0
         save_pts = config['save_pts']
-        save_pts.append(1e99) # Add last endpoint
+        save_pts.append(1e99)  # Add last endpoint
 
         # Optimization
         next_state = self.next_state
