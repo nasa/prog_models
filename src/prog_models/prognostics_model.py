@@ -32,7 +32,7 @@ class PrognosticsModelParameters(UserDict):
         self.callbacks = callbacks
         for key in callbacks:
             if key in self:
-                for callback in self.callbacks[key]:
+                for callback in callbacks[key]:
                     changes = callback(self)
                     self.update(changes)
 
@@ -256,7 +256,7 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         """
-        pass
+        return {}
 
     def apply_measurement_noise(self, z) -> dict:
         """
@@ -284,7 +284,9 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return {key: z[key] + random.normal(0, self.parameters['measurement_noise'][key]) for key in self.outputs}
+        return {key: z[key] \
+            + random.normal(0, self.parameters['measurement_noise'][key]) \
+                for key in z.keys()}
 
         
     def apply_process_noise(self, x, dt=1) -> dict:
@@ -317,7 +319,9 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
+        return {key: x[key] + \
+            dt*random.normal(0, self.parameters['process_noise'][key]) \
+                for key in x.keys()}
 
     def dx(self, x, u):
         """
@@ -452,7 +456,6 @@ class PrognosticsModel(ABC):
         | x = m.initialize(u, z) # Initialize first state
         | z = m.output(3.0, x) # Returns {'o1': 1.2}
         """
-
         return {}
 
     def event_state(self, x) -> dict:
@@ -487,7 +490,6 @@ class PrognosticsModel(ABC):
         --------
         threshold_met
         """
-    
         return {}
     
     def threshold_met(self, x) -> dict:
@@ -522,8 +524,8 @@ class PrognosticsModel(ABC):
         --------
         event_state
         """
-
-        return {key: event_state <= 0 for (key, event_state) in self.event_state(x).items()} 
+        return {key: event_state <= 0 \
+            for (key, event_state) in self.event_state(x).items()} 
 
     def simulate_to(self, time, future_loading_eqn, first_output, **kwargs) -> tuple:
         """
@@ -686,10 +688,7 @@ class PrognosticsModel(ABC):
         # Setup
         t = 0
         u = future_loading_eqn(t)
-        if 'x' in config:
-            x = config['x']
-        else:
-            x = self.initialize(u, first_output)
+        x = self.initialize(u, first_output)
         
         times = [t]
         inputs = [u]
@@ -703,7 +702,6 @@ class PrognosticsModel(ABC):
         save_pt_index = 0
         save_pts = config['save_pts']
         save_pts.append(1e99) # Add last endpoint
-        threshold_met = False
 
         # Optimization
         next_state = self.next_state
@@ -728,17 +726,18 @@ class PrognosticsModel(ABC):
             event_states.append(event_state(x))
         
         # Simulate
-        while not threshold_met and t < horizon:
+        while t < horizon:
             t += dt
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
-            threshold_met = check_thresholds(thresthold_met_eqn(x))
             if (t >= next_save):
                 next_save += save_freq
                 update_all()
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
+            if check_thresholds(thresthold_met_eqn(x)):
+                break
 
         # Save final state
         if times[-1] != t:
