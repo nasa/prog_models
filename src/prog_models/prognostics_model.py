@@ -855,37 +855,55 @@ class PrognosticsModel(ABC):
 
         return m
 
-    def calc_error(self, times, inputs, outputs):
+    def calc_error(self, times, inputs, outputs, **kwargs):
         """Calculate error between simulated and observed
 
         Args:
             times ([double]): array of times for each sample
             inputs ([dict]): array of input dictionaries where input[x] corresponds to time[x]
             outputs ([dict]): array of output dictionaries where output[x] corresponds to time[x]
+            kwargs: Configuration parameters, such as:\n
+             | dt [double] : time step
 
         Returns:
             double: Total error
         """
+        params = {
+            'dt': 1e99
+        }
+        params.update(kwargs)
         x = self.initialize(inputs[0], outputs[0])
         t_last = times[0]
         err_total = 0
 
         for t, u, z in zip(times, inputs, outputs):
-            x = self.next_state(x, u, t-t_last)
-            t_last = t
+            while t_last < t:
+                t_new = min(t_last + params['dt'], t)
+                x = self.next_state(x, u, t_new-t_last)
+                t_last = t_new
             z_obs = self.output(x)
             err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
 
         return err_total
     
-    def estimate_params(self, runs, keys):
+    def estimate_params(self, runs, keys, **kwargs):
         """Estimate the model parameters given data. Overrides model parameters
 
         Args:
             runs (array[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
             keys ([string]): Parameter keys to optimize
+            kwargs: Configuration parameters. Supported parameters include: \n
+             | method: Optimization method- see scikit.optimize.minimize 
+             | options: Options passed to optimizer
+
         """
         from scipy.optimize import minimize
+
+        config = {
+            'method': 'nelder-mead',  # Optimization method
+            'options': {'xatol': 1e-8}  # Options passed to optimizer
+        }
+        config.update(kwargs)
 
         # Set noise to 0
         m_noise, self.parameters['measurement_noise'] = self.parameters['measurement_noise'], 0
@@ -897,7 +915,7 @@ class PrognosticsModel(ABC):
             err = 0
             for run in runs:
                 try:
-                    err += self.calc_error(run[0], run[1], run[2])
+                    err += self.calc_error(run[0], run[1], run[2], **kwargs)
                 except:
                     return 1e99 
                     # If it doesn't work (i.e., throws an error), dont use it
@@ -905,7 +923,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method='nelder-mead', options={'xatol': 1e-8})
+        res = minimize(optimization_fcn, params, method=config['method'], options=config['options'])
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
 
