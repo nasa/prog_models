@@ -54,6 +54,10 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.future_loading <../examples/future_loading.py>`
     .. automodule:: examples.future_loading
     |
+* :download:`examples.param_est <../examples/param_est.py>`
+    .. automodule:: examples.param_est
+    |
+
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
