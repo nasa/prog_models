@@ -855,7 +855,7 @@ class PrognosticsModel(ABC):
 
         return m
     
-    def estimate_params(self, runs):
+    def estimate_params(self, runs, keys):
         # Set noise to 0
         m_noise, self.parameters['measurement_noise'] = self.parameters['measurement_noise'], 0
         p_noise, self.parameters['process_noise'] = self.parameters['process_noise'], 0
@@ -876,13 +876,16 @@ class PrognosticsModel(ABC):
         best_p = self.parameters
         best_error = 1e99
         for i in range(20):  # TODO(CT): Steps configurable
-            self.parameters['qMobile'] = self.parameters['qMobile'] + 3 * (i-4)
+            for key in keys:
+                self.parameters[key] = self.parameters[key] + 3 * (i-4)
             err = 0
             for run in runs:
-                err += estimate_error(self, run[0], run[1], run[2])
-            print(self.parameters['qMobile'], err)
+                try:
+                    err += estimate_error(self, run[0], run[1], run[2])
+                except:
+                    err = 1e99 
+                    # If it doesn't work (i.e., throws an error), dont use it
             if err < best_error:
-                print("New best error {}, {}".format(err,self.parameters['qMobile']))
                 best_error = err 
                 best_p = deepcopy(self.parameters)
         self.parameters = best_p 
