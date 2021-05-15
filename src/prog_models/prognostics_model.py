@@ -856,6 +856,16 @@ class PrognosticsModel(ABC):
         return m
 
     def calc_error(self, times, inputs, outputs):
+        """Calculate error between simulated and observed
+
+        Args:
+            times ([double]): array of times for each sample
+            inputs ([dict]): array of input dictionaries where input[x] corresponds to time[x]
+            outputs ([dict]): array of output dictionaries where output[x] corresponds to time[x]
+
+        Returns:
+            double: Total error
+        """
         x = self.initialize(inputs[0], outputs[0])
         t_last = times[0]
         err_total = 0
@@ -869,6 +879,12 @@ class PrognosticsModel(ABC):
         return err_total
     
     def estimate_params(self, runs, keys):
+        """Estimate the model parameters given data. Overrides model parameters
+
+        Args:
+            runs (array[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
+            keys ([string]): Parameter keys to optimize
+        """
         from scipy.optimize import minimize
 
         # Set noise to 0
