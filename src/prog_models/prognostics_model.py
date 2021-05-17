@@ -916,7 +916,7 @@ class PrognosticsModel(ABC):
             for run in runs:
                 try:
                     err += self.calc_error(run[0], run[1], run[2], **kwargs)
-                except:
+                except Exception:
                     return 1e99 
                     # If it doesn't work (i.e., throws an error), dont use it
             return err
