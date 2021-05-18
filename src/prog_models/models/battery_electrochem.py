@@ -4,6 +4,7 @@
 from .. import PrognosticsModel
 
 from math import asinh, log
+from copy import deepcopy
 
 # Constants of nature
 R = 8.3144621;  # universal gas constant, J/K/mol
@@ -434,10 +435,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     states = BatteryElectroChemEOD.states + BatteryElectroChemEOL.states
     events = BatteryElectroChemEOD.events + BatteryElectroChemEOL.events
 
-    default_parameters = { # Set to defaults
-    }
-    merge_dicts(default_parameters,
-        BatteryElectroChemEOD.default_parameters)
+    default_parameters = deepcopy(BatteryElectroChemEOD.default_parameters)
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)
 
