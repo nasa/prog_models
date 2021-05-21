@@ -2,7 +2,7 @@
 
 import unittest
 from prog_models.models.battery_circuit import BatteryCircuit
-from prog_models.models.battery_electrochem import BatteryElectroChem, BatteryElectroChemEOL, BatteryElectroChemEOD
+from prog_models.models.battery_electrochem import BatteryElectroChem, BatteryElectroChemEOL, BatteryElectroChemEOD, BatteryElectroChemEODEOL
 
 def future_loading(t, x=None):
     # Variable (piece-wise) future loading scheme 
