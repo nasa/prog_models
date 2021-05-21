@@ -1,8 +1,7 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from prog_models.models.battery_circuit import BatteryCircuit
-from prog_models.models.battery_electrochem import BatteryElectroChem
+from prog_models.models import BatteryCircuit, BatteryElectroChem
 
 def future_loading(t, x=None):
     # Variable (piece-wise) future loading scheme 
