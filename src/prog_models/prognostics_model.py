@@ -284,7 +284,7 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return {key: z[key] + random.normal(0, self.parameters['measurement_noise'][key]) for key in self.outputs}
+        return {key: z[key] + random.normal(0, self.parameters['measurement_noise'][key]) for key in z.keys()}
 
         
     def apply_process_noise(self, x, dt=1) -> dict:
@@ -317,7 +317,7 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in self.states}
+        return {key: x[key] + dt*random.normal(0, self.parameters['process_noise'][key]) for key in x.keys()}
 
     def dx(self, x, u):
         """
@@ -399,7 +399,7 @@ class PrognosticsModel(ABC):
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        return {key: x[key] + dx[key]*dt for key in x.keys()}
+        return {key: x[key] + dx[key]*dt for key in dx.keys()}
 
     def observables(self, x) -> dict:
         """
@@ -686,8 +686,8 @@ class PrognosticsModel(ABC):
         # Setup
         t = 0
         u = future_loading_eqn(t)
-        if 'x' in config:
-            x = config['x']
+        if 'x0' in config:
+            x = config['x0']
         else:
             x = self.initialize(u, first_output)
         
