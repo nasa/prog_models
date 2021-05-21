@@ -895,7 +895,6 @@ class PrognosticsModel(ABC):
             kwargs: Configuration parameters. Supported parameters include: \n
              | method: Optimization method- see scikit.optimize.minimize 
              | options: Options passed to optimizer
-
         """
         from scipy.optimize import minimize
 
