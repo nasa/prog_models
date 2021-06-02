@@ -272,8 +272,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
         })
         
     def event_state(self, x):
+        z = self.output(x)
+        charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
+        voltage_EOD = (z['v'] - self.parameters['VEOD'])/0.1 # TODO(CT): Make configurable
         return {
-            'EOD': (x['qnS'] + x['qnB'])/self.parameters['qnMax']
+            'EOD': min(charge_EOD, voltage_EOD)
         }
 
     def output(self, x):
