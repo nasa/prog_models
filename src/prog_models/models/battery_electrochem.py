@@ -208,7 +208,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'process_noise': 1e-3,
 
         # End of discharge voltage threshold
-        'VEOD': 3.0
+        'VEOD': 3.0, 
+        'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
     }
 
     def get_derived_callbacks(self):
@@ -272,9 +273,14 @@ class BatteryElectroChemEOD(PrognosticsModel):
         })
         
     def event_state(self, x):
+        # The most "correct" indication of SOC is based on charge (charge_EOD), 
+        # since voltage decreases non-linearally. 
+        # However, as voltage approaches VEOD, the charge-based approach no 
+        # longer accurately captures this behavior, so voltage_EOD takes over as 
+        # the driving factor. 
         z = self.output(x)
         charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
-        voltage_EOD = (z['v'] - self.parameters['VEOD'])/0.1 # TODO(CT): Make configurable
+        voltage_EOD = (z['v'] - self.parameters['VEOD'])/self.parameters['VDropoff'] 
         return {
             'EOD': min(charge_EOD, voltage_EOD)
         }
