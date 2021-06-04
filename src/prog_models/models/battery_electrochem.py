@@ -384,7 +384,8 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'wq': -1e-2,
         'wr': 1e-6,
         'wd': 1e-2,
-        'qMaxThreshold': 3800
+        'qMaxThreshold': 5320 # Threshold for qMax after which the InsufficientCapacity event has occured
+        # Note: Battery manufacturers specify a threshold of 70-80% of qMax
     }
 
     def initialize(self, u = {}, z = {}):
