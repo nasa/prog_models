@@ -57,6 +57,12 @@ See the below examples for examples of use. Run these examples using the command
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
+Model Specific examples
+----------
+* :download:`examples.sim_battery_eol <../examples/sim_battery_eol.py>`
+    .. automodule:: examples.sim_battery_eol
+    |
+
 Extending
 ----------
 There are two methods for creating new models: 1. Implementing a new subclass of the base model class (:class:`prog_models.prognostics_model.PrognosticsModel`) or 2. use the model generator method (:py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`). These methods are described more below.
