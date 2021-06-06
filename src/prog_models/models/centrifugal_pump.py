@@ -199,9 +199,9 @@ class CentrifugalPump(prognostics_model.PrognosticsModel):
     def event_state(self, x):
         return {
             'ImpellerWearFailure': (x['A'] - self.parameters['lim']['A'])/(self.parameters['x0']['A'] - self.parameters['lim']['A']),
-            'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['x0']['Tt'] - self.parameters['lim']['Tt']),
-            'RadialBearingOverheat': (self.parameters['lim']['Tr'] - x['Tr'])/(self.parameters['x0']['Tr'] - self.parameters['lim']['Tr']),
-            'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['x0']['To'] - self.parameters['lim']['To'])
+            'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['lim']['Tt']- self.parameters['x0']['Tt']),
+            'RadialBearingOverheat': (self.parameters['lim']['Tr'] - x['Tr'])/(self.parameters['lim']['Tr']- self.parameters['x0']['Tr']),
+            'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['lim']['To'] - self.parameters['x0']['To'])
         }
 
     def threshold_met(self, x):
