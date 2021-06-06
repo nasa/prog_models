@@ -28,7 +28,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)
 
     States: (12)
-        A, Q, To, Tr, Tt, rRadial, rThrust, w, wA, wRadial, wThrust, QLeak
+        A, Q, To, Tr, Tt, rRadial, rThrust, w, QLeak
 
     Outputs/Measurements: (5)
         | Qout: Discharge Flow (m^3/s)
@@ -66,6 +66,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | HRadial1, HRadial2 :
         | mcOil :
         | HOil1, HOil2, HOil3 :
+        | wA, wRadial, wThrust : Wear rates. See also CentrifugalPumpWithWear
         | lim : Parameter limits (dict)
         | x0 : Initial state
     """
@@ -215,6 +216,27 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
 
 class CentrifugalPumpWithWear(CentrifugalPumpBase):
+    """
+    Prognostics model for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states
+
+    This class implements a Centrifugal Pump model as described in the following paper:
+    `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
+
+    Events (4) 
+        See CentrifugalPumpBase
+
+    Inputs/Loading: (5)
+        See CentrifugalPumpBase
+    
+    States: (12)
+        States from CentrifugalPumpBase +  wA, wRadial, wThrust
+
+    Outputs/Measurements: (5)
+        See CentrifugalPumpBase
+
+    Model Configuration Parameters:
+        See CentrifugalPumpBase
+    """
     inputs = CentrifugalPumpBase.inputs
     outputs = CentrifugalPumpBase.outputs
     states = CentrifugalPumpBase.states + ['wA', 'wRadial', 'wThrust']
