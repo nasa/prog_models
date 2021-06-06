@@ -25,12 +25,27 @@ def run_example():
             'wsync': V * 0.8
         }
 
-    (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
-    pump.parameters['x0']['wA'] = 1e-2
-    pump.parameters['x0']['wThrust'] = 1e-10
+    from prog_models.visualize import plot_timeseries
 
-    for i in range(len(times)): # Print Results
-            print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
+    first_output = pump.output(pump.initialize(future_loading(0),{}))
+    config = {
+        'horizon': 1e5,
+        'save_freq': 1e3
+    }
+    (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, first_output, **config)
+    plot_timeseries(times, inputs, options={'compact': False, 'title': 'Inputs',
+                                                    'xlabel': 'time', 'ylabel':{lbl: lbl for lbl in pump.inputs}})
+    plot_timeseries(times, states, options={'compact': False, 'title': 'States', 'xlabel': 'time', 'ylabel':{lbl: lbl for lbl in pump.states}})
+    plot_timeseries(times, outputs, options={'compact': False, 'title': 'Outputs', 'xlabel': 'time', 'ylabel':{lbl:lbl for lbl in pump.outputs}})
+    plot_timeseries(times, event_states, options={'compact': False, 'title': 'Events', 'xlabel': 'time', 'ylabel':{lbl:lbl for lbl in pump.events}})
+    thresholds_met = [pump.threshold_met(x) for x in states]
+    plot_timeseries(times, thresholds_met, options={'compact': False, 'title': 'Events', 'xlabel': 'time', 'ylabel':{lbl:lbl for lbl in pump.events}})
+
+    import matplotlib.pyplot as plt    
+    plt.show()
+
+    # for i in range(len(times)): # Print Results
+    #     print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
