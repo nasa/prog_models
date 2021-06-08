@@ -98,3 +98,5 @@ cython_debug/
 .pypirc
 
 ex.pickle
+
+.vscode/
