@@ -17,6 +17,17 @@ class TestExamples(unittest.TestCase):
         # Reset stdout 
         sys.stdout = _stdout
 
+    def test_sim_battery_eol_example(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        sim_battery_eol.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
     def test_benchmark_example(self):
         # set stdout (so it wont print)
         _stdout = sys.stdout
