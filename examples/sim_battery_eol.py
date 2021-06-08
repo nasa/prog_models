@@ -4,43 +4,39 @@
 An example where a battery is simulated first for a set period of time and then till threshold is met. Run using the command `python -m examples.sim_example`
 """
 
-from prog_models.models import BatteryCircuit as Battery
-# VVV Uncomment this to use Electro Chemistry Model VVV
-# from prog_models.models import BatteryElectroChem as Battery
-
-
+import numpy as np
+from prog_models.models import BatteryElectroChem as Battery
 
 def run_example(): 
     # Step 1: Create a model object
     batt = Battery()
 
     # Step 2: Define future loading function 
-    def future_loading(t, x=None):
-        # Variable (piece-wise) future loading scheme 
-        if (t < 600):
-            i = 2
-        elif (t < 900):
-            i = 1
-        elif (t < 1800):
-            i = 4
-        elif (t < 3000):
-            i = 2     
-        else:
-            i = 3
-        return {'i': i}
-    # simulate for 200 seconds
-    print('\n\n------------------------------------------------')
-    print('Simulating for 200 seconds\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-    for i in range(len(times)): # Print Results
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
+    # Here we're using a function designed to charge until 0.95, 
+    # then discharge until 0.05
+    load = 1
 
-    # Simulate to threshold
+    def future_loading(t, x=None):
+        nonlocal load 
+
+        # Rule for loading after initialization
+        if x is not None:
+            # Current event state in the form {'EOD': <(0, 1)>, 'InsufficientCapacity': <(0, 1)>}
+            event_state = batt.event_state(x)
+            if event_state["EOD"] > 0.95:
+                load = 1  # Discharge
+            elif event_state["EOD"] < 0.05:
+                load = -1  # Charge
+        # Rule for loading at initialization
+        return {'i': load}
+
+    # Simulate to EOL Threshold
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
     options = {
-        'save_freq': 100, # Frequency at which results are saved
-        'dt': 2 # Timestep
+        'save_freq': 1000,  # Frequency at which results are saved
+        'dt': 2,  # Timestep
+        'threshold_keys': ['InsufficientCapacity']  # Simulate to InsufficientCapacity
     }
     (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
