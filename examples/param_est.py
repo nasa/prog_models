@@ -42,7 +42,7 @@ def run_example():
         print("-", key, m.parameters[key])
     print(' Error: ', m.calc_error(times, inputs, outputs, dt=1e-4))
     
-    # Sure enough- parameter oestimation determined that the thrower's height wasn't 20 m, instead was closer to 1.9m, a much more reasonable height!
+    # Sure enough- parameter estimation determined that the thrower's height wasn't 20 m, instead was closer to 1.9m, a much more reasonable height!
 
 if __name__=='__main__':
     run_example()
