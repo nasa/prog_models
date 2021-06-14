@@ -16,7 +16,7 @@ def run_example():
     # Ex1: No noise
     process_noise = 0
     m = ThrownObject(process_noise = process_noise)
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('Example without noise')
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
@@ -25,7 +25,7 @@ def run_example():
     process_noise = 0.5
     m = ThrownObject(process_noise = process_noise)  # Noise with a std of 0.5 to every state
     print('\nExample without same noise for every state')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
@@ -33,7 +33,7 @@ def run_example():
     process_noise = {'x': 0.25, 'v': 0.75}
     m = ThrownObject(process_noise = process_noise) 
     print('\nExample with more noise on position than velocity')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
@@ -43,7 +43,7 @@ def run_example():
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(**model_config) 
     print('\nExample with more uniform noise')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
@@ -53,7 +53,7 @@ def run_example():
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(**model_config) 
     print('\nExample with triangular process noise')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 
@@ -65,7 +65,7 @@ def run_example():
     model_config = {'measurement_noise_dist': measurement_noise_dist, 'measurement_noise': measurement_noise}
     m = ThrownObject(**model_config) 
     print('\nExample with measurement noise')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- outputs: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, outputs)])) 
     print('\t- impact time: {}s'.format(times[-1]))
@@ -81,7 +81,7 @@ def run_example():
     model_config = {'process_noise': apply_proportional_process_noise}
     m = ThrownObject(**model_config)
     print('\nExample with proportional noise on velocity')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
     print('\t- impact time: {}s'.format(times[-1]))
 

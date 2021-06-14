@@ -118,12 +118,12 @@ def run_example():
     future_loading.t = 0
 
     # Lets define another function to handle the moving average logic
-    window = 10 # Number of elements in window
+    window = 10  # Number of elements in window
     def moving_avg(i):
         for key in m.inputs:
             moving_avg.loads[key].append(i[key])
             if len(moving_avg.loads[key]) > window:
-                del moving_avg.loads[key][0] # Remove first item
+                del moving_avg.loads[key][0]  # Remove first item
 
         # Update future loading eqn
         future_loading.load = {key : mean(moving_avg.loads[key]) for key in m.inputs} 

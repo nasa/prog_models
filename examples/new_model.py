@@ -79,7 +79,7 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
     
     # Print results
     for i in range(len(times)):

@@ -314,7 +314,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         xpS2 = xpS + xpS
         VepParts = [
             Ap[0] *(xpS2-1)/F,  #Vep0
-            Ap[1] *((xpS2-1)**2  - ((xpS + xpS)*(1-xpS)))/F,  #Vep1 
+            Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
             Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
             Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
             Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4

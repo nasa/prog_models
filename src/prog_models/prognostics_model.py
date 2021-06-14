@@ -4,7 +4,7 @@
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException
 from abc import abstractmethod, ABC
 from numbers import Number
-from numpy import random
+import numpy as np
 from copy import deepcopy
 from collections import UserDict
 import types
@@ -67,13 +67,13 @@ class PrognosticsModelParameters(UserDict):
                     if self['process_noise_dist'].lower() == "uniform":
                         def uniform_process_noise(self, x, dt=1):
                             return {key: x[key] + \
-                                dt*random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) \
+                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) \
                                     for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                     elif self['process_noise_dist'].lower() == "triangular":
                         def triangular_process_noise(self, x, dt=1):
                             return {key: x[key] + \
-                                dt*random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) \
+                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) \
                                     for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                     else:
@@ -96,13 +96,13 @@ class PrognosticsModelParameters(UserDict):
                     if self['measurement_noise_dist'].lower() == "uniform":
                         def uniform_noise(self, x):
                             return {key: x[key] + \
-                                random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) \
+                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) \
                                     for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                     elif self['measurement_noise_dist'].lower() == "triangular":
                         def triangular_noise(self, x):
                             return {key: x[key] + \
-                                random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) \
+                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) \
                                     for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                     else:
@@ -285,7 +285,7 @@ class PrognosticsModel(ABC):
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
         return {key: z[key] \
-            + random.normal(0, self.parameters['measurement_noise'][key]) \
+            + np.random.normal(0, self.parameters['measurement_noise'][key]) \
                 for key in z.keys()}
         
     def apply_process_noise(self, x, dt=1) -> dict:
@@ -319,7 +319,7 @@ class PrognosticsModel(ABC):
         Configured using parameters `process_noise` and `process_noise_dist`
         """
         return {key: x[key] + \
-            dt*random.normal(0, self.parameters['process_noise'][key]) \
+            dt*np.random.normal(0, self.parameters['process_noise'][key]) \
                 for key in x.keys()}
 
     def dx(self, x, u):
@@ -853,3 +853,78 @@ class PrognosticsModel(ABC):
             m.threshold_met = threshold_eqn
 
         return m
+
+    def calc_error(self, times, inputs, outputs, **kwargs):
+        """Calculate error between simulated and observed
+
+        Args:
+            times ([double]): array of times for each sample
+            inputs ([dict]): array of input dictionaries where input[x] corresponds to time[x]
+            outputs ([dict]): array of output dictionaries where output[x] corresponds to time[x]
+            kwargs: Configuration parameters, such as:\n
+             | dt [double] : time step
+
+        Returns:
+            double: Total error
+        """
+        params = {
+            'dt': 1e99
+        }
+        params.update(kwargs)
+        x = self.initialize(inputs[0], outputs[0])
+        t_last = times[0]
+        err_total = 0
+
+        for t, u, z in zip(times, inputs, outputs):
+            while t_last < t:
+                t_new = min(t_last + params['dt'], t)
+                x = self.next_state(x, u, t_new-t_last)
+                t_last = t_new
+            z_obs = self.output(x)
+            err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
+
+        return err_total
+    
+    def estimate_params(self, runs, keys, **kwargs):
+        """Estimate the model parameters given data. Overrides model parameters
+
+        Args:
+            runs (array[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
+            keys ([string]): Parameter keys to optimize
+            kwargs: Configuration parameters. Supported parameters include: \n
+             | method: Optimization method- see scikit.optimize.minimize 
+             | options: Options passed to optimizer
+        """
+        from scipy.optimize import minimize
+
+        config = {
+            'method': 'nelder-mead',  # Optimization method
+            'options': {'xatol': 1e-8}  # Options passed to optimizer
+        }
+        config.update(kwargs)
+
+        # Set noise to 0
+        m_noise, self.parameters['measurement_noise'] = self.parameters['measurement_noise'], 0
+        p_noise, self.parameters['process_noise'] = self.parameters['process_noise'], 0
+
+        def optimization_fcn(params):
+            for key, param in zip(keys, params):
+                self.parameters[key] = param
+            err = 0
+            for run in runs:
+                try:
+                    err += self.calc_error(run[0], run[1], run[2], **kwargs)
+                except Exception:
+                    return 1e99 
+                    # If it doesn't work (i.e., throws an error), dont use it
+            return err
+        
+        params = np.array([self.parameters[key] for key in keys])
+
+        res = minimize(optimization_fcn, params, method=config['method'], options=config['options'])
+        for x, key in zip(res.x, keys):
+            self.parameters[key] = x
+
+        # Reset noise
+        self.parameters['measurement_noise'] = m_noise
+        self.parameters['process_noise'] = p_noise                

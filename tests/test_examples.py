@@ -89,7 +89,18 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        future_loading.run_example()
+        # future_loading.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
+    def test_param_est(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        param_est.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
