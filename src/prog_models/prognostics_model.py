@@ -25,6 +25,7 @@ class PrognosticsModelParameters(UserDict):
         self.__m = model
         self.callbacks = {}
         for (key, value) in dict_in.items():
+            # Deepcopy is needed here to force copying when value is an object (e.g., dict)
             self[key] = deepcopy(value)
 
         # Add and run callbacks
