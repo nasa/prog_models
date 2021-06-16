@@ -9,9 +9,9 @@ The NASA Prognostic Model Package is a python modeling framework focused on defi
 See documentation [here](https://nasa.github.io/prog_models/)
  
 ## Repository Directory Structure 
-Here is the directory structure for the github repository https://github.com/nasa/
+Here is the directory structure for the github repository 
  
-`prog_models/` - The prognostics model python package<br />
+`src/prog_models/` - The prognostics model python package<br />
 &nbsp;&nbsp; |-`models/` - Example models<br /> 
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
 &nbsp;&nbsp; |-`visualize.py` - Visualization tools<br />
