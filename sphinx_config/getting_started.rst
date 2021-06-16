@@ -33,6 +33,9 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.sim <../examples/sim.py>`
     .. automodule:: examples.sim
     |
+* :download:`examples.sim_valve <../examples/sim_valve.py>`
+    .. automodule:: examples.sim_valve
+    |
 * :download:`examples.model_gen <../examples/model_gen.py>`
     .. automodule:: examples.model_gen
     |
