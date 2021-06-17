@@ -1,6 +1,6 @@
 # Prognostics Model Python Package
 
-The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
+The NASA Prognostic Model Package is a Python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
 
 ## Installation 
 `pip3 install prog_models`
@@ -9,18 +9,18 @@ The NASA Prognostic Model Package is a python modeling framework focused on defi
 See documentation [here](https://nasa.github.io/prog_models/)
  
 ## Repository Directory Structure 
-Here is the directory structure for the github repository https://github.com/nasa/
+Here is the directory structure for the github repository 
  
-`prog_models/` - The prognostics model python package<br />
+`src/prog_models/` - The prognostics model python package<br />
 &nbsp;&nbsp; |-`models/` - Example models<br /> 
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
 &nbsp;&nbsp; |-`visualize.py` - Visualization tools<br />
 `docs/` - Project documentation<br />
 `sphinx_config/` - Configuration for automatic documentation generation<br />
-`examples/` - Example python scripts using prog_models<br />
+`examples/` - Example Python scripts using prog_models<br />
 `tests/` - Tests for prog_models<br />
 `README.md` - The readme (this file)<br />
-`requirements.txt` - python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`<br />
+`requirements.txt` - Python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`<br />
 `prog_model_template.py` - Template for Prognsotics Model<br />
 `tutorial.ipynb` - Tutorial (Juypter Notebook)
 
