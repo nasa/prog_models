@@ -42,16 +42,10 @@ class ThrownObject(PrognosticsModel):
             }
     
     def dx(self, x, u):
-        # apply_process_noise is used to add process noise to each step
-        return self.apply_process_noise({
-            'x': x['v'],
-            'v': self.parameters['g'] # Acceleration of gravity
-        })
+        return x
 
     def output(self, x):
-        return self.apply_measurement_noise({
-            'x': x['x']
-        })
+        return x
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it

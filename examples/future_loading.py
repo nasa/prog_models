@@ -74,8 +74,7 @@ def run_example():
     plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
     plot_timeseries(times, event_states, options={'ylabel': 'Moving Average Event State'})
 
-    # In this case, this estimate is wrong because loading will not be steady, but at least it would give you an approximation. 
-    # Users should adjust noise accordingly
+    # In this case, this estimate is wrong because loading will not be steady, but at least it would give you an approximation.
 
     # If more measurements are received, the user could estimate the moving average here and then run a new simulation. 
 
