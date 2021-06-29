@@ -405,6 +405,51 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in dx.keys()}
 
+    def __next_state(self, x, u, dt) -> dict:
+        """
+        State transition equation: Calculate next state and add noise
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+        dt : number
+            Timestep size in seconds (≥ 0) \n
+            e.g., dt = 0.1
+
+        Returns
+        -------
+        x : dict
+            Next state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.__next_state(x, u, 0.1) # Returns state, with noise, at 3.1 seconds given input u
+        
+        See Also
+        --------
+        next_state
+
+        Note
+        ----
+        A model should not overwrite '__next_state'
+        """
+        
+        # Calculate next state
+        self.next_state(x, u, dt)
+
+        # Add process noise
+        return self.apply_process_noise(x)
+
     def observables(self, x) -> dict:
         """
         Calculate observables where
@@ -457,6 +502,37 @@ class PrognosticsModel(ABC):
         | z = m.output(3.0, x) # Returns {'o1': 1.2}
         """
         return {}
+
+    def __output(self, x) -> dict:
+        """
+        Calculate next state, forward one timestep, and add nose
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        z : dict
+            Outputs, with keys defined by model.outputs. \n
+            e.g., z = {'t':12.4, 'v':3.3} given outputs = ['t', 'v']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | z = m.__output(3.0, x) # Returns {'o1': 1.2} with noise added
+        """
+
+        # Calculate next state, forward one timestep
+        self.output(x)
+
+        # Add measurement noise
+        return self.apply_measurement_noise(self.output(x))
 
     def event_state(self, x) -> dict:
         """
@@ -693,7 +769,7 @@ class PrognosticsModel(ABC):
         times = [t]
         inputs = [u]
         states = [deepcopy(x)]  # Avoid optimization where x is not copied
-        outputs = [self.output(x)]
+        outputs = [self.__output(x)]
         event_states = [self.event_state(x)]
         dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
@@ -722,14 +798,14 @@ class PrognosticsModel(ABC):
             times.append(t)
             inputs.append(u)
             states.append(deepcopy(x))
-            outputs.append(output(x))
+            outputs.append(self.__output(x))
             event_states.append(event_state(x))
         
         # Simulate
         while t < horizon:
             t += dt
             u = future_loading_eqn(t, x)
-            x = next_state(x, u, dt)
+            x = self.__next_state(x, u, dt)
             if (t >= next_save):
                 next_save += save_freq
                 update_all()
