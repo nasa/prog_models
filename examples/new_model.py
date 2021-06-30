@@ -42,10 +42,10 @@ class ThrownObject(PrognosticsModel):
             }
     
     def dx(self, x, u):
-        return x
+        return {'x': x['v'], 'v': self.parameters['g']} # g is the acceleration of gravity
 
     def output(self, x):
-        return x
+        return {'x': x['x']}
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it

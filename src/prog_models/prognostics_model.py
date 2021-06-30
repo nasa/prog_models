@@ -407,7 +407,7 @@ class PrognosticsModel(ABC):
 
     def __next_state(self, x, u, dt) -> dict:
         """
-        State transition equation: Calculate next state and add noise
+        State transition equation: Calls next_state(), calculating the next state, and then adds noise
 
         Parameters
         ----------
@@ -442,6 +442,7 @@ class PrognosticsModel(ABC):
         Note
         ----
         A model should not overwrite '__next_state'
+        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
         """
         
         # Calculate next state
@@ -505,7 +506,7 @@ class PrognosticsModel(ABC):
 
     def __output(self, x) -> dict:
         """
-        Calculate next state, forward one timestep, and add nose
+        Calls output, which calculates next state forward one timestep, and then adds noise
 
         Parameters
         ----------
@@ -529,10 +530,10 @@ class PrognosticsModel(ABC):
         """
 
         # Calculate next state, forward one timestep
-        self.output(x)
+        z = self.output(x)
 
         # Add measurement noise
-        return self.apply_measurement_noise(self.output(x))
+        return self.apply_measurement_noise(z)
 
     def event_state(self, x) -> dict:
         """
@@ -766,22 +767,9 @@ class PrognosticsModel(ABC):
         u = future_loading_eqn(t)
         x = self.initialize(u, first_output)
         
-        times = [t]
-        inputs = [u]
-        states = [deepcopy(x)]  # Avoid optimization where x is not copied
-        outputs = [self.__output(x)]
-        event_states = [self.event_state(x)]
-        dt = config['dt']  # saving to optimize access in while loop
-        save_freq = config['save_freq']
-        horizon = config['horizon']
-        next_save = save_freq
-        save_pt_index = 0
-        save_pts = config['save_pts']
-        save_pts.append(1e99)  # Add last endpoint
-
         # Optimization
-        next_state = self.next_state
-        output = self.output
+        next_state = self.__next_state
+        output = self.__output
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
         if 'thresholds_met_eqn' in config:
@@ -794,18 +782,32 @@ class PrognosticsModel(ABC):
             def check_thresholds(thresholds_met):
                 return any([thresholds_met[key] for key in threshold_keys])
 
+        # Initialization of save arrays
+        times = [t]
+        inputs = [u]
+        states = [deepcopy(x)]  # Avoid optimization where x is not copied
+        outputs = [output(x)]
+        event_states = [event_state(x)]
+        dt = config['dt']  # saving to optimize access in while loop
+        save_freq = config['save_freq']
+        horizon = config['horizon']
+        next_save = save_freq
+        save_pt_index = 0
+        save_pts = config['save_pts']
+        save_pts.append(1e99)  # Add last endpoint
+
         def update_all():
             times.append(t)
             inputs.append(u)
             states.append(deepcopy(x))
-            outputs.append(self.__output(x))
+            outputs.append(output(x))
             event_states.append(event_state(x))
         
         # Simulate
         while t < horizon:
             t += dt
             u = future_loading_eqn(t, x)
-            x = self.__next_state(x, u, dt)
+            x = next_state(x, u, dt)
             if (t >= next_save):
                 next_save += save_freq
                 update_all()
