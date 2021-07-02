@@ -786,8 +786,8 @@ class PrognosticsModel(ABC):
         times = [t]
         inputs = [u]
         states = [deepcopy(x)]  # Avoid optimization where x is not copied
-        outputs = [output(x)]
-        event_states = [event_state(x)]
+        saved_outputs = [output(x)]
+        saved_event_states = [event_state(x)]
         dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
@@ -800,8 +800,8 @@ class PrognosticsModel(ABC):
             times.append(t)
             inputs.append(u)
             states.append(deepcopy(x))
-            outputs.append(output(x))
-            event_states.append(event_state(x))
+            saved_outputs.append(output(x))
+            saved_event_states.append(event_state(x))
         
         # Simulate
         while t < horizon:
@@ -822,7 +822,7 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
-        return (times, inputs, states, outputs, event_states)
+        return (times, inputs, states, saved_outputs, saved_event_states)
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):

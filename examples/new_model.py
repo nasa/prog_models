@@ -42,7 +42,8 @@ class ThrownObject(PrognosticsModel):
             }
     
     def dx(self, x, u):
-        return {'x': x['v'], 'v': self.parameters['g']} # g is the acceleration of gravity
+        return {'x': x['v'],
+                'v': self.parameters['g']} # Acceleration of gravity
 
     def output(self, x):
         return {'x': x['x']}
