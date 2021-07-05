@@ -4,9 +4,10 @@
 from .. import prognostics_model
 from ..exceptions import ProgModelException
 from math import sqrt, copysign
+from copy import deepcopy
 
 
-class PneumaticValve(prognostics_model.PrognosticsModel):
+class PneumaticValveBase(prognostics_model.PrognosticsModel):
     """
     Prognostics model for a pneumatic valve.
 
@@ -36,12 +37,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | r: Friction Coefficient
         | v: Velocity of the piston (m/s)
         | x: Poisition of the piston (m)
-        | pDiff: Difference in pressure between the left and the right 
-        | wb: Wear parameter for bottom leak
-        | wi: Wear parameter for internal leak
-        | wt: Wear parameter for top leak
-        | wk: Wear parameter for spring
-        | wr: Wear parameter for friction
+        | pDiff: Difference in pressure between the left and the right
 
     Outputs/Measurements:
         | Q: Flowrate 
@@ -88,6 +84,11 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | kMin : Min limit for state k
         | rMax : Max limit for state r
         | x0 : Initial state
+        | wb: Wear parameter for bottom leak
+        | wi: Wear parameter for internal leak
+        | wt: Wear parameter for top leak
+        | wk: Wear parameter for spring
+        | wr: Wear parameter for friction
     """
     events = ["Bottom Leak", "Top Leak", "Internal Leak", "Spring Failure", "Friction Failure"]
     inputs = ["pL", "pR", "uBot", "uTop"]
@@ -102,11 +103,6 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "v",
         "x",
         "pDiff",  # pL-pR
-        'wb',
-        'wi',
-        'wk',
-        'wr',
-        'wt'
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
     default_parameters = {  # Set to defaults
@@ -161,12 +157,14 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'Aet': 1e-5,
             'k': 48000,
             'r': 6000,
-            'wb': 0,
-            'wi': 0,
-            'wk': 0,
-            'wr': 0,
-            'wt': 0
         },
+
+        # Wear Rates
+        'wb': 0,
+        'wi': 0,
+        'wk': 0,
+        'wr': 0,
+        'wt': 0
     }
 
     def initialize(self, u, z = None):
@@ -286,3 +284,56 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             "Spring Failure": x['k'] < self.parameters['kMin'],
             "Friction Failure": x['r'] > self.parameters['rMax']
         }
+
+class PneumaticValveWithWear(PneumaticValveBase):
+    """
+    Prognostics model for a pneumatic valve with wear parameters as part of the model state. This is identical to PneumaticValveBase, only PneumaticValveBase has the wear params as parameters instead of states
+
+    This class implements a Pneumatic Valve model as described in the following paper:
+    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602`
+
+    Events (4) 
+        See PneumaticValveBase
+
+    Inputs/Loading: (5)
+        See PneumaticValveBase
+    
+    States: (12)
+        States from PneumaticValveBase +  wb, wi, wk, wr, wt
+
+    Outputs/Measurements: (5)
+        See PneumaticValveBase
+
+    Model Configuration Parameters:
+        See PneumaticValveBase
+    """
+    inputs = PneumaticValveBase.inputs
+    outputs = PneumaticValveBase.outputs
+    states = PneumaticValveBase.states + ['wb', 'wi', 'wk', 'wr', 'wt']
+    events = PneumaticValveBase.events
+
+    default_parameters = deepcopy(PneumaticValveBase.default_parameters)
+    default_parameters['x0'].update(
+        {'wb': 0,
+        'wi': 0,
+        'wk': 0,
+        'wr': 0,
+        'wt': 0})    
+
+    def next_state(self, x, u, dt):
+        self.parameters['wb'] = x['wb']
+        self.parameters['wi'] = x['wi']
+        self.parameters['wk'] = x['wk']
+        self.parameters['wr'] = x['wr']
+        self.parameters['wt'] = x['wt']
+        next_x = PneumaticValveBase.next_state(self, x, u, dt)
+        next_x.update({
+            'wb': x['wb'],
+            'wi': x['wi'],
+            'wk': x['wk'],
+            'wr': x['wr'],
+            'wt': x['wt'],
+        })
+        return next_x
+
+PneumaticValve = PneumaticValveWithWear
