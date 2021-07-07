@@ -1,7 +1,11 @@
-from .new_model import ThrownObject
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
-"""An example using the model parameter estimation feature
 """
+Example of the model parameter estimation feature. Run using the command `python -m examples.param_est_example
+"""
+
+from .new_model import ThrownObject
 
 def run_example():
     # Step 1: Build the model with your best guess in parameters

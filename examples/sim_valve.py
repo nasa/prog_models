@@ -1,6 +1,8 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
-An example where a pneumatic valve is simulated until threshold is met. Run using the command `python -m examples.valve_example`
+Example of a pneumatic valve being simulated until threshold is met. Run using the command `python -m examples.sim_valve_example`
 """
 
 from prog_models.models.pneumatic_valve import PneumaticValve

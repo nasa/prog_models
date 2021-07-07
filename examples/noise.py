@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
+Example defining and testing a new model. Run using the command `python -m examples.noise_example`
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt

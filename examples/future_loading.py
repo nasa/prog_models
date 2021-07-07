@@ -1,7 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
-An example demonstrating ways to use future loading. Run using the command `python -m examples.future_loading`
+Example demonstrating ways to use future loading. Run using the command `python -m examples.future_loading_example`
 """
 
 from prog_models.models import BatteryCircuit
