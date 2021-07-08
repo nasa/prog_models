@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim_example`
+Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim`
 """
 
 from prog_models.models import BatteryCircuit as Battery

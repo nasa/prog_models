@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a pneumatic valve being simulated until threshold is met. Run using the command `python -m examples.sim_valve_example`
+Example of a pneumatic valve being simulated until threshold is met. Run using the command `python -m examples.sim_valve`
 """
 
 from prog_models.models.pneumatic_valve import PneumaticValve

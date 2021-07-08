@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of Visualization Module. Run using the command `python -m examples.visualize_example`
+Example of Visualization Module. Run using the command `python -m examples.visualize`
 """
 
 import matplotlib.pyplot as plt
