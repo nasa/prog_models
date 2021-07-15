@@ -102,7 +102,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         "r",
         "v",
         "x",
-        "pDiff",  # pL-pR
+        "pDiff"  # pL-pR
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
     default_parameters = {  # Set to defaults
@@ -156,7 +156,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             'Ai': 0,
             'Aet': 1e-5,
             'k': 48000,
-            'r': 6000,
+            'r': 6000
         },
 
         # Wear Rates
@@ -200,9 +200,9 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
         plugWeight = params['m']*params['g']
-        kdot = -x['wk']*abs(x['v']*springForce)
-        rdot = x['wr']*abs(x['v']*friction)
-        Aidot = x['wi']*abs(x['v']*friction)
+        kdot = -params['wk']*abs(x['v']*springForce)
+        rdot = params['wr']*abs(x['v']*friction)
+        Aidot = params['wi']*abs(x['v']*friction)
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
         mBotDotn = self.gas_flow(pInBot,pressureBot,params['Cb'],params['Ab'])
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
@@ -230,8 +230,8 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             pos = new_x
 
         return self.apply_process_noise({
-            'Aeb': x['Aeb'] + x['wb'] * dt,
-            'Aet': x['Aet'] + x['wt'] * dt,
+            'Aeb': x['Aeb'] + params['wb'] * dt,
+            'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
             'k': x['k'] + kdot * dt,
             'mBot': x['mBot'] + mBotdot * dt,
@@ -239,24 +239,19 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             'r': x['r'] + rdot * dt,
             'v': vel,
             'x': pos,
-            'pDiff': u['pL']-u['pR'],
-            'wb': x['wb'],
-            'wi': x['wi'],
-            'wk': x['wk'],
-            'wr': x['wr'],
-            'wt': x['wt']
+            'pDiff': u['pL']-u['pR']
         }, dt)
     
     def output(self, x):
-        parameters = self.parameters  # Optimization
-        indicatorTopm = (x['x'] >= parameters['Ls']-parameters['indicatorTol'])
-        indicatorBotm = (x['x'] <= parameters['indicatorTol'])
-        maxFlow = parameters['Cv']*parameters['Av']*copysign(sqrt(2/parameters['rhoL']*abs(x['pDiff'])),x['pDiff'])
-        volumeBot = parameters['Vbot0'] + parameters['Ap']*x['x']
-        volumeTop = parameters['Vtop0'] + parameters['Ap']*(parameters['Ls']-x['x'])
-        trueFlow = maxFlow * max(0,x['x'])/parameters['Ls']
-        pressureTop = x['mTop']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeTop
-        pressureBot = x['mBot']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeBot
+        params = self.parameters  # Optimization
+        indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
+        indicatorBotm = (x['x'] <= params['indicatorTol'])
+        maxFlow = params['Cv']*params['Av']*copysign(sqrt(2/params['rhoL']*abs(x['pDiff'])),x['pDiff'])
+        volumeBot = params['Vbot0'] + params['Ap']*x['x']
+        volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
+        trueFlow = maxFlow * max(0,x['x'])/params['Ls']
+        pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
+        pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 
         return self.apply_measurement_noise({
             'Q': trueFlow,
@@ -268,21 +263,23 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         })
 
     def event_state(self, x):
+        params = self.parameters
         return {
-            "Bottom Leak": (self.parameters['AbMax'] - x['Aeb'])/(self.parameters['AbMax'] - self.parameters['x0']['Aeb']), 
-            "Top Leak": (self.parameters['AtMax'] - x['Aet'])/(self.parameters['AtMax'] - self.parameters['x0']['Aet']), 
-            "Internal Leak": (self.parameters['AiMax'] - x['Ai'])/(self.parameters['AiMax'] - self.parameters['x0']['Ai']),
-            "Spring Failure": (x['k'] - self.parameters['kMin'])/(self.parameters['x0']['k'] - self.parameters['kMin']),
-            "Friction Failure": (self.parameters['rMax'] - x['r'])/(self.parameters['rMax'] - self.parameters['x0']['r'])
+            "Bottom Leak": (params['AbMax'] - x['Aeb'])/(params['AbMax'] - params['x0']['Aeb']), 
+            "Top Leak": (params['AtMax'] - x['Aet'])/(params['AtMax'] - params['x0']['Aet']), 
+            "Internal Leak": (params['AiMax'] - x['Ai'])/(params['AiMax'] - params['x0']['Ai']),
+            "Spring Failure": (x['k'] - params['kMin'])/(params['x0']['k'] - params['kMin']),
+            "Friction Failure": (params['rMax'] - x['r'])/(params['rMax'] - params['x0']['r'])
         }
 
     def threshold_met(self, x):
+        params = self.parameters
         return {
-            "Bottom Leak": x['Aeb'] > self.parameters['AbMax'], 
-            "Top Leak": x['Aet'] > self.parameters['AtMax'], 
-            "Internal Leak": x['Ai'] > self.parameters['AiMax'],
-            "Spring Failure": x['k'] < self.parameters['kMin'],
-            "Friction Failure": x['r'] > self.parameters['rMax']
+            "Bottom Leak": x['Aeb'] > params['AbMax'], 
+            "Top Leak": x['Aet'] > params['AtMax'], 
+            "Internal Leak": x['Ai'] > params['AiMax'],
+            "Spring Failure": x['k'] < params['kMin'],
+            "Friction Failure": x['r'] > params['rMax']
         }
 
 class PneumaticValveWithWear(PneumaticValveBase):
@@ -332,7 +329,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
             'wi': x['wi'],
             'wk': x['wk'],
             'wr': x['wr'],
-            'wt': x['wt'],
+            'wt': x['wt']
         })
         return next_x
 
