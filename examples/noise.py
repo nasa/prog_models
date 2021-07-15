@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
+Example defining and testing a new model. Run using the command `python -m examples.noise`
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
@@ -76,7 +76,7 @@ def run_example():
     def apply_proportional_process_noise(self, x, dt = 1):
         return {
             'x': x['x'], # No noise on state
-            'v': x['v'] + dt*0.5*x['v']
+            'v': x['v'] - dt*0.5*x['v']
         }
     model_config = {'process_noise': apply_proportional_process_noise}
     m = ThrownObject(**model_config)

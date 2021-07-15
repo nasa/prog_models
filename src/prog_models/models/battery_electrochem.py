@@ -413,7 +413,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
     def output(self, x):
-        return []
+        return {}
 
 def merge_dicts(a : dict, b : dict):
     """Merge dict b into a"""

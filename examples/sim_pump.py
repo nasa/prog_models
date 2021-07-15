@@ -1,4 +1,9 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
+"""
+Example of a centrifugal pump being simulated until threshold is met. Run using the command `python -m examples.sim_pump`
+"""
 
 from prog_models.models import CentrifugalPump
 

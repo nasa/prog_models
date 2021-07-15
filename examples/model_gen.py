@@ -1,7 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
-Example of generating a models from constituant parts. Can be run using the following command `python -m examples.model_gen_example`
+Example of generating a models from constituant parts. Run using the command `python -m examples.model_gen_example`
 
 Model for this example is that of an object thrown into the air, predicting impact event
 """

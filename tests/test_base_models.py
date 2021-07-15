@@ -11,7 +11,7 @@ class MockModel():
     outputs = ['o1']
     default_parameters = {
         'p1': 1.2,
-        'x0': {'a': 1, 'b': [3, 2], 'c': -3.2, 't': 0}
+        'x0': {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
     }
 
     def initialize(self, u = {}, z = {}):
@@ -24,7 +24,7 @@ class MockModel():
         return x
 
     def output(self, x):
-        return {'o1': x['a'] + sum(x['b']) + x['c']}
+        return {'o1': x['a'] + x['b'] + x['c']}
 
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
@@ -270,7 +270,7 @@ class TestModels(unittest.TestCase):
         x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], [3, 2])
+        self.assertEqual(x['b'], 5)
         z = m.output(x)
         self.assertAlmostEqual(z['o1'], 0.8, 5)
         e = m.event_state({'t': 0})
@@ -374,7 +374,7 @@ class TestModels(unittest.TestCase):
         }
 
         def initialize(u, z):
-            return {'a': 1, 'b': [3, 2], 'c': -3.2, 't': 0}
+            return {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
 
         def next_state(x, u, dt):
             x['a']+= u['i1']*dt
@@ -383,7 +383,7 @@ class TestModels(unittest.TestCase):
             return x
 
         def output(x):
-            return {'o1': x['a'] + sum(x['b']) + x['c']}
+            return {'o1': x['a'] + x['b'] + x['c']}
 
         def event_state(x):
             t = x['t']
@@ -618,7 +618,7 @@ class TestModels(unittest.TestCase):
         c = [-3.2, -7.4, -11.6, -15.8, -17.9]
         for (ai, ci, x) in zip(a, c, states):
             self.assertAlmostEqual(x['a'], ai, 5)
-            self.assertEqual(x['b'], [3, 2])
+            self.assertEqual(x['b'], 5)
             self.assertAlmostEqual(x['c'], ci, 5)
 
         # Check outputs
