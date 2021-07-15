@@ -100,7 +100,7 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        # future_loading.run_example()
+        future_loading.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
