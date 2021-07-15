@@ -405,6 +405,52 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in dx.keys()}
 
+    def __next_state(self, x, u, dt) -> dict:
+        """
+        State transition equation: Calls next_state(), calculating the next state, and then adds noise
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+        dt : number
+            Timestep size in seconds (≥ 0) \n
+            e.g., dt = 0.1
+
+        Returns
+        -------
+        x : dict
+            Next state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.__next_state(x, u, 0.1) # Returns state, with noise, at 3.1 seconds given input u
+        
+        See Also
+        --------
+        next_state
+
+        Note
+        ----
+        A model should not overwrite '__next_state'
+        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
+        """
+        
+        # Calculate next state
+        x = self.next_state(x, u, dt)
+
+        # Add process noise
+        return self.apply_process_noise(x)
+
     def observables(self, x) -> dict:
         """
         Calculate observables where
@@ -457,6 +503,37 @@ class PrognosticsModel(ABC):
         | z = m.output(3.0, x) # Returns {'o1': 1.2}
         """
         return {}
+
+    def __output(self, x) -> dict:
+        """
+        Calls output, which calculates next state forward one timestep, and then adds noise
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        z : dict
+            Outputs, with keys defined by model.outputs. \n
+            e.g., z = {'t':12.4, 'v':3.3} given outputs = ['t', 'v']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | z = m.__output(3.0, x) # Returns {'o1': 1.2} with noise added
+        """
+
+        # Calculate next state, forward one timestep
+        z = self.output(x)
+
+        # Add measurement noise
+        return self.apply_measurement_noise(z)
 
     def event_state(self, x) -> dict:
         """
@@ -690,22 +767,9 @@ class PrognosticsModel(ABC):
         u = future_loading_eqn(t)
         x = self.initialize(u, first_output)
         
-        times = [t]
-        inputs = [u]
-        states = [deepcopy(x)]  # Avoid optimization where x is not copied
-        outputs = [self.output(x)]
-        event_states = [self.event_state(x)]
-        dt = config['dt']  # saving to optimize access in while loop
-        save_freq = config['save_freq']
-        horizon = config['horizon']
-        next_save = save_freq
-        save_pt_index = 0
-        save_pts = config['save_pts']
-        save_pts.append(1e99)  # Add last endpoint
-
         # Optimization
-        next_state = self.next_state
-        output = self.output
+        next_state = self.__next_state
+        output = self.__output
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
         if 'thresholds_met_eqn' in config:
@@ -718,12 +782,26 @@ class PrognosticsModel(ABC):
             def check_thresholds(thresholds_met):
                 return any([thresholds_met[key] for key in threshold_keys])
 
+        # Initialization of save arrays
+        times = [t]
+        inputs = [u]
+        states = [deepcopy(x)]  # Avoid optimization where x is not copied
+        saved_outputs = [output(x)]
+        saved_event_states = [event_state(x)]
+        dt = config['dt']  # saving to optimize access in while loop
+        save_freq = config['save_freq']
+        horizon = config['horizon']
+        next_save = save_freq
+        save_pt_index = 0
+        save_pts = config['save_pts']
+        save_pts.append(1e99)  # Add last endpoint
+
         def update_all():
             times.append(t)
             inputs.append(u)
             states.append(deepcopy(x))
-            outputs.append(output(x))
-            event_states.append(event_state(x))
+            saved_outputs.append(output(x))
+            saved_event_states.append(event_state(x))
         
         # Simulate
         while t < horizon:
@@ -744,7 +822,7 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
-        return (times, inputs, states, outputs, event_states)
+        return (times, inputs, states, saved_outputs, saved_event_states)
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
