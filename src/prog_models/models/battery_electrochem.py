@@ -261,7 +261,16 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
-        return self
+        return {
+            'tb': Tbdot,
+            'Vo': Vodot,
+            'Vsn': Vsndot,
+            'Vsp': Vspdot,
+            'qnB': -qdotDiffusionBSn,
+            'qnS': qdotDiffusionBSn - u['i'],
+            'qpB': qpBdot,
+            'qpS': qpSdot
+        }
         
     def event_state(self, x):
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
@@ -320,7 +329,10 @@ class BatteryElectroChemEOD(PrognosticsModel):
         ]
         Vep = params['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
 
-        return self
+        return {
+            't': x['tb'] - 273.15,
+            'v': Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
+        }
 
     def threshold_met(self, x):
         z = self.output(x)
