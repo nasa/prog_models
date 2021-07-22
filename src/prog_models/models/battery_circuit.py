@@ -118,12 +118,12 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         icp = ib - Vcp/Rcp
         ics = ib - Vcs/Rs
 
-        return self.apply_process_noise({
-            'tb':  Tbdot,
-            'qb':  -ib,
+        return {
+            'tb': Tbdot,
+            'qb': -ib,
             'qcp': icp,
-            'qcs': ics,
-        })
+            'qcs': ics
+        }
     
     def event_state(self, x):
         parameters = self.parameters
@@ -139,10 +139,10 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
-        return self.apply_measurement_noise({
+        return {
             't': x['tb'],
             'v': Vb - Vcp - Vcs
-        })
+        }
 
     def threshold_met(self, x):
         parameters = self.parameters

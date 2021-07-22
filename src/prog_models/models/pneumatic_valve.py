@@ -229,7 +229,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             vel = x['v'] + vdot*dt
             pos = new_x
 
-        return self.apply_process_noise({
+        return {
             'Aeb': x['Aeb'] + params['wb'] * dt,
             'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
@@ -239,8 +239,8 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             'r': x['r'] + rdot * dt,
             'v': vel,
             'x': pos,
-            'pDiff': u['pL']-u['pR']
-        }, dt)
+            'pDiff': u['pL'] - u['pR']
+        }
     
     def output(self, x):
         params = self.parameters  # Optimization
@@ -253,14 +253,14 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 
-        return self.apply_measurement_noise({
+        return {
             'Q': trueFlow,
-            "iB": indicatorBotm, 
-            "iT": indicatorTopm,
-            "pB": 1e-6*pressureBot,
-            "pT": 1e-6*pressureTop,
-            "x": x['x']
-        })
+            'iB': indicatorBotm,
+            'iT': indicatorTopm,
+            'pB': 1e-6 * pressureBot,
+            'pT': 1e-6 * pressureTop,
+            'x': x['x']
+        }
 
     def event_state(self, x):
         params = self.parameters
