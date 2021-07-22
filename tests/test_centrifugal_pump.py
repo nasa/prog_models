@@ -78,3 +78,16 @@ class TestCentrifugalPump(unittest.TestCase):
         pump.parameters['x0']['wThrust'] = 1e-10
         (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
         self.assertAlmostEqual(times[-1], 23891)
+
+# This allows the module to be executed directly
+def run_tests():
+    unittest.main()
+    
+if __name__ == '__main__':
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Centrifugal Pump Model")
+    result = runner.run(l.loadTestsFromTestCase(TestCentrifugalPump)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")

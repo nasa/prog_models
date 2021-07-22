@@ -1,4 +1,5 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+
 import unittest
 from prog_models import *
 from prog_models.models import *
@@ -726,6 +727,20 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
+# This allows the module to be executed directly
 def run_tests():
     unittest.main()
     
+if __name__ == '__main__':
+    # This makes sure that you are in the correct directory
+    import sys
+    from os.path import dirname, join
+    sys.path.append(join(dirname(__file__), ".."))
+
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Base Models")
+    result = runner.run(l.loadTestsFromTestCase(TestModels)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")
