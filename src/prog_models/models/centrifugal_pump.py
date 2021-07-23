@@ -175,28 +175,29 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
         QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
             u['psuc']-u['pdisch'])
-        return self.apply_process_noise({
-            'A': x['A'] + Adot*dt,
-            'Q': x['Q'] + Qdot*dt, 
-            'To': x['To'] + Todot*dt,
-            'Tr': x['Tr'] + Trdot*dt,
-            'Tt': x['Tt'] + Ttdot*dt,
-            'rRadial': x['rRadial'] + rRadialdot*dt,
-            'rThrust': x['rThrust'] + rThrustdot*dt,
-            'w': x['w']+wdot*dt,
+
+        return {
+            'A': x['A'] + Adot * dt,
+            'Q': x['Q'] + Qdot * dt,
+            'To': x['To'] + Todot * dt,
+            'Tr': x['Tr'] + Trdot * dt,
+            'Tt': x['Tt'] + Ttdot * dt,
+            'rRadial': x['rRadial'] + rRadialdot * dt,
+            'rThrust': x['rThrust'] + rThrustdot * dt,
+            'w': x['w'] + wdot * dt,
             'QLeak': QLeak
-        }, dt)
+        }
 
     def output(self, x):
         Qout = max(0,x['Q']-x['QLeak'])
 
-        return self.apply_measurement_noise({
+        return {
             'Qout': Qout,
             'To': x['To'],
             'Tr': x['Tr'],
             'Tt': x['Tt'],
             'w': x['w']
-        })
+        }
 
     def event_state(self, x):
         return {

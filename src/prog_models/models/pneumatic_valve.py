@@ -4,9 +4,10 @@
 from .. import prognostics_model
 from ..exceptions import ProgModelException
 from math import sqrt, copysign
+from copy import deepcopy
 
 
-class PneumaticValve(prognostics_model.PrognosticsModel):
+class PneumaticValveBase(prognostics_model.PrognosticsModel):
     """
     Prognostics model for a pneumatic valve.
 
@@ -36,12 +37,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | r: Friction Coefficient
         | v: Velocity of the piston (m/s)
         | x: Poisition of the piston (m)
-        | pDiff: Difference in pressure between the left and the right 
-        | wb: Wear parameter for bottom leak
-        | wi: Wear parameter for internal leak
-        | wt: Wear parameter for top leak
-        | wk: Wear parameter for spring
-        | wr: Wear parameter for friction
+        | pDiff: Difference in pressure between the left and the right
 
     Outputs/Measurements:
         | Q: Flowrate 
@@ -88,6 +84,11 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         | kMin : Min limit for state k
         | rMax : Max limit for state r
         | x0 : Initial state
+        | wb: Wear parameter for bottom leak
+        | wi: Wear parameter for internal leak
+        | wt: Wear parameter for top leak
+        | wk: Wear parameter for spring
+        | wr: Wear parameter for friction
     """
     events = ["Bottom Leak", "Top Leak", "Internal Leak", "Spring Failure", "Friction Failure"]
     inputs = ["pL", "pR", "uBot", "uTop"]
@@ -101,12 +102,7 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         "r",
         "v",
         "x",
-        "pDiff",  # pL-pR
-        'wb',
-        'wi',
-        'wk',
-        'wr',
-        'wt'
+        "pDiff"  # pL-pR
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
     default_parameters = {  # Set to defaults
@@ -160,13 +156,15 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'Ai': 0,
             'Aet': 1e-5,
             'k': 48000,
-            'r': 6000,
-            'wb': 0,
-            'wi': 0,
-            'wk': 0,
-            'wr': 0,
-            'wt': 0
+            'r': 6000
         },
+
+        # Wear Rates
+        'wb': 0,
+        'wi': 0,
+        'wk': 0,
+        'wr': 0,
+        'wt': 0
     }
 
     def initialize(self, u, z = None):
@@ -202,9 +200,9 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
         plugWeight = params['m']*params['g']
-        kdot = -x['wk']*abs(x['v']*springForce)
-        rdot = x['wr']*abs(x['v']*friction)
-        Aidot = x['wi']*abs(x['v']*friction)
+        kdot = -params['wk']*abs(x['v']*springForce)
+        rdot = params['wr']*abs(x['v']*friction)
+        Aidot = params['wi']*abs(x['v']*friction)
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
         mBotDotn = self.gas_flow(pInBot,pressureBot,params['Cb'],params['Ab'])
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
@@ -231,9 +229,9 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             vel = x['v'] + vdot*dt
             pos = new_x
 
-        return self.apply_process_noise({
-            'Aeb': x['Aeb'] + x['wb'] * dt,
-            'Aet': x['Aet'] + x['wt'] * dt,
+        return {
+            'Aeb': x['Aeb'] + params['wb'] * dt,
+            'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
             'k': x['k'] + kdot * dt,
             'mBot': x['mBot'] + mBotdot * dt,
@@ -241,48 +239,98 @@ class PneumaticValve(prognostics_model.PrognosticsModel):
             'r': x['r'] + rdot * dt,
             'v': vel,
             'x': pos,
-            'pDiff': u['pL']-u['pR'],
+            'pDiff': u['pL'] - u['pR']
+        }
+    
+    def output(self, x):
+        params = self.parameters  # Optimization
+        indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
+        indicatorBotm = (x['x'] <= params['indicatorTol'])
+        maxFlow = params['Cv']*params['Av']*copysign(sqrt(2/params['rhoL']*abs(x['pDiff'])),x['pDiff'])
+        volumeBot = params['Vbot0'] + params['Ap']*x['x']
+        volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
+        trueFlow = maxFlow * max(0,x['x'])/params['Ls']
+        pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
+        pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
+
+        return {
+            'Q': trueFlow,
+            'iB': indicatorBotm,
+            'iT': indicatorTopm,
+            'pB': 1e-6 * pressureBot,
+            'pT': 1e-6 * pressureTop,
+            'x': x['x']
+        }
+
+    def event_state(self, x):
+        params = self.parameters
+        return {
+            "Bottom Leak": (params['AbMax'] - x['Aeb'])/(params['AbMax'] - params['x0']['Aeb']), 
+            "Top Leak": (params['AtMax'] - x['Aet'])/(params['AtMax'] - params['x0']['Aet']), 
+            "Internal Leak": (params['AiMax'] - x['Ai'])/(params['AiMax'] - params['x0']['Ai']),
+            "Spring Failure": (x['k'] - params['kMin'])/(params['x0']['k'] - params['kMin']),
+            "Friction Failure": (params['rMax'] - x['r'])/(params['rMax'] - params['x0']['r'])
+        }
+
+    def threshold_met(self, x):
+        params = self.parameters
+        return {
+            "Bottom Leak": x['Aeb'] > params['AbMax'], 
+            "Top Leak": x['Aet'] > params['AtMax'], 
+            "Internal Leak": x['Ai'] > params['AiMax'],
+            "Spring Failure": x['k'] < params['kMin'],
+            "Friction Failure": x['r'] > params['rMax']
+        }
+
+class PneumaticValveWithWear(PneumaticValveBase):
+    """
+    Prognostics model for a pneumatic valve with wear parameters as part of the model state. This is identical to PneumaticValveBase, only PneumaticValveBase has the wear params as parameters instead of states
+
+    This class implements a Pneumatic Valve model as described in the following paper:
+    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602`
+
+    Events (4) 
+        See PneumaticValveBase
+
+    Inputs/Loading: (5)
+        See PneumaticValveBase
+    
+    States: (12)
+        States from PneumaticValveBase +  wb, wi, wk, wr, wt
+
+    Outputs/Measurements: (5)
+        See PneumaticValveBase
+
+    Model Configuration Parameters:
+        See PneumaticValveBase
+    """
+    inputs = PneumaticValveBase.inputs
+    outputs = PneumaticValveBase.outputs
+    states = PneumaticValveBase.states + ['wb', 'wi', 'wk', 'wr', 'wt']
+    events = PneumaticValveBase.events
+
+    default_parameters = deepcopy(PneumaticValveBase.default_parameters)
+    default_parameters['x0'].update(
+        {'wb': 0,
+        'wi': 0,
+        'wk': 0,
+        'wr': 0,
+        'wt': 0})    
+
+    def next_state(self, x, u, dt):
+        self.parameters['wb'] = x['wb']
+        self.parameters['wi'] = x['wi']
+        self.parameters['wk'] = x['wk']
+        self.parameters['wr'] = x['wr']
+        self.parameters['wt'] = x['wt']
+        next_x = PneumaticValveBase.next_state(self, x, u, dt)
+        next_x.update({
             'wb': x['wb'],
             'wi': x['wi'],
             'wk': x['wk'],
             'wr': x['wr'],
             'wt': x['wt']
-        }, dt)
-    
-    def output(self, x):
-        parameters = self.parameters  # Optimization
-        indicatorTopm = (x['x'] >= parameters['Ls']-parameters['indicatorTol'])
-        indicatorBotm = (x['x'] <= parameters['indicatorTol'])
-        maxFlow = parameters['Cv']*parameters['Av']*copysign(sqrt(2/parameters['rhoL']*abs(x['pDiff'])),x['pDiff'])
-        volumeBot = parameters['Vbot0'] + parameters['Ap']*x['x']
-        volumeTop = parameters['Vtop0'] + parameters['Ap']*(parameters['Ls']-x['x'])
-        trueFlow = maxFlow * max(0,x['x'])/parameters['Ls']
-        pressureTop = x['mTop']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeTop
-        pressureBot = x['mBot']*parameters['R']*parameters['gas_temp']/parameters['gas_mass']/volumeBot
-
-        return self.apply_measurement_noise({
-            'Q': trueFlow,
-            "iB": indicatorBotm, 
-            "iT": indicatorTopm,
-            "pB": 1e-6*pressureBot,
-            "pT": 1e-6*pressureTop,
-            "x": x['x']
         })
+        return next_x
 
-    def event_state(self, x):
-        return {
-            "Bottom Leak": (self.parameters['AbMax'] - x['Aeb'])/(self.parameters['AbMax'] - self.parameters['x0']['Aeb']), 
-            "Top Leak": (self.parameters['AtMax'] - x['Aet'])/(self.parameters['AtMax'] - self.parameters['x0']['Aet']), 
-            "Internal Leak": (self.parameters['AiMax'] - x['Ai'])/(self.parameters['AiMax'] - self.parameters['x0']['Ai']),
-            "Spring Failure": (x['k'] - self.parameters['kMin'])/(self.parameters['x0']['k'] - self.parameters['kMin']),
-            "Friction Failure": (self.parameters['rMax'] - x['r'])/(self.parameters['rMax'] - self.parameters['x0']['r'])
-        }
-
-    def threshold_met(self, x):
-        return {
-            "Bottom Leak": x['Aeb'] > self.parameters['AbMax'], 
-            "Top Leak": x['Aet'] > self.parameters['AtMax'], 
-            "Internal Leak": x['Ai'] > self.parameters['AiMax'],
-            "Spring Failure": x['k'] < self.parameters['kMin'],
-            "Friction Failure": x['r'] > self.parameters['rMax']
-        }
+PneumaticValve = PneumaticValveWithWear
