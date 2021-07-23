@@ -1,8 +1,12 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+# This ensures that the directory containing examples is in the python search directories 
+import sys
+from os.path import dirname, join
+sys.path.append(join(dirname(__file__), ".."))
+
 import unittest
 from io import StringIO 
-import sys
 from examples import *
 
 class TestExamples(unittest.TestCase):
@@ -115,3 +119,16 @@ class TestExamples(unittest.TestCase):
 
         # Reset stdout 
         sys.stdout = _stdout
+
+# This allows the module to be executed directly
+def run_tests():
+    unittest.main()
+    
+if __name__ == '__main__':
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Examples")
+    result = runner.run(l.loadTestsFromTestCase(TestExamples)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")

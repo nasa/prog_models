@@ -268,3 +268,16 @@ class TestPneumaticValve(unittest.TestCase):
         config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
         self.assertAlmostEqual(times[-1], 782.53, 0)
+
+# This allows the module to be executed directly
+def run_tests():
+    unittest.main()
+    
+if __name__ == '__main__':
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Pneumatic Valve model")
+    result = runner.run(l.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")

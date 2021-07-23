@@ -37,3 +37,16 @@ class TestBattery(unittest.TestCase):
         batt = BatteryElectroChemEOL()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         # TODO(CT): More
+
+# This allows the module to be executed directly
+def run_tests():
+    unittest.main()
+    
+if __name__ == '__main__':
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Battery models")
+    result = runner.run(l.loadTestsFromTestCase(TestBattery)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")
