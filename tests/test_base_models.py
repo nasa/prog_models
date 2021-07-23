@@ -732,7 +732,7 @@ def run_tests():
     unittest.main()
     
 if __name__ == '__main__':
-    # This makes sure that you are in the correct directory
+    # This ensures that the directory containing ProgModelTemplate is in the python search directory
     import sys
     from os.path import dirname, join
     sys.path.append(join(dirname(__file__), ".."))
