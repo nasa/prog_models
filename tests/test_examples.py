@@ -1,6 +1,6 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-# This makes sure that you are in the correct directory
+# This ensures that the directory containing examples is in the python search directories 
 import sys
 from os.path import dirname, join
 sys.path.append(join(dirname(__file__), ".."))
