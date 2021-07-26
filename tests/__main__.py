@@ -1,12 +1,14 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from cffi.recompiler import GlobalExpr
+from setuptools.sandbox import _execfile
 from .test_base_models import TestModels
 from .test_examples import TestExamples
 from .test_centrifugal_pump import TestCentrifugalPump
 from .test_pneumatic_valve import TestPneumaticValve
 from .test_battery import TestBattery
 
-from io import StringIO 
+from io import StringIO
 import sys
 import unittest
 from examples import sim as sim_example
@@ -42,6 +44,13 @@ if __name__ == '__main__':
 
     print("\n\nTesting Battery models")
     result = runner.run(l.loadTestsFromTestCase(TestBattery)).wasSuccessful() and result
+
+    print("\n\nTesting individual exectution of test files")
+    exec(open("tests/test_base_models.py").read())
+    exec(open("tests/test_examples.py").read())
+    exec(open("tests/test_battery.py").read())
+    exec(open("tests/test_centrifugal_pump.py").read())
+    exec(open("tests/test_pneumatic_valve.py").read())
 
     if not result:
         raise Exception("Failed test")
