@@ -172,7 +172,7 @@ class PrognosticsModel(ABC):
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
-    observables = []  # Identifies for each observable
+    observables_keys = []  # Identifies for each observable
     events = []       # Identifiers for each event
 
     def __init__(self, **kwargs):
