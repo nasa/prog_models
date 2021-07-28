@@ -1,7 +1,5 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from cffi.recompiler import GlobalExpr
-from setuptools.sandbox import _execfile
 from .test_base_models import TestModels
 from .test_examples import TestExamples
 from .test_centrifugal_pump import TestCentrifugalPump
