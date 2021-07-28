@@ -28,29 +28,33 @@ if __name__ == '__main__':
     from timeit import timeit
     print("\nExample Runtime: ", timeit(_test_ex, number=10))
 
-    l = unittest.TestLoader()
-    runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
-    result = runner.run(l.loadTestsFromTestCase(TestModels)).wasSuccessful()
-
-    print("\n\nTesting Examples")
-    result = runner.run(l.loadTestsFromTestCase(TestExamples)).wasSuccessful() and result
-
-    print("\n\nTesting Centrifugal Pump model")
-    result = runner.run(l.loadTestsFromTestCase(TestCentrifugalPump)).wasSuccessful() and result
-
-    print("\n\nTesting Pneumatic Valve model")
-    result = runner.run(l.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful() and result
-
-    print("\n\nTesting Battery models")
-    result = runner.run(l.loadTestsFromTestCase(TestBattery)).wasSuccessful() and result
-
     print("\n\nTesting individual exectution of test files")
-    exec(open("tests/test_base_models.py").read())
-    exec(open("tests/test_examples.py").read())
-    exec(open("tests/test_battery.py").read())
-    exec(open("tests/test_centrifugal_pump.py").read())
-    exec(open("tests/test_pneumatic_valve.py").read())
 
-    if not result:
+    # Run tests individually to test them and make sure they can be executed individually
+    try:
+        exec(open("tests/test_base_models.py").read())
+    except Exception:
+        was_successful = False
+
+    try:
+        exec(open("tests/test_examples.py").read())
+    except Exception:
+        was_successful = False
+        
+    try:
+        exec(open("tests/test_battery.py").read())
+    except Exception:
+        was_successful = False
+
+    try:
+        exec(open("tests/test_centrifugal_pump.py").read())
+    except Exception:
+        was_successful = False
+
+    try:
+        exec(open("tests/test_pneumatic_valve.py").read())
+    except Exception:
+        was_successful = False
+
+    if not was_successful:
         raise Exception("Failed test")
