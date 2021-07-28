@@ -37,12 +37,10 @@ def run_example():
     options = {
         'save_freq': 1000,  # Frequency at which results are saved
         'dt': 2,  # Timestep
-        'threshold_keys': ['InsufficientCapacity']  # Simulate to InsufficientCapacity
+        'threshold_keys': ['InsufficientCapacity'],  # Simulate to InsufficientCapacity
+        'print_inter': True
     }
     (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
-
-    for i in range(len(times)): # Print Results
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

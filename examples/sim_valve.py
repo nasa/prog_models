@@ -36,7 +36,11 @@ def run_example():
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
     # Configure options
-    config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
+    config = {
+        'dt': 0.01,
+        'horizon': 800,
+        'save_freq': 60,
+        'print_inter': True}
     # Set wear parameter for spring to 1
     valv.parameters['x0']['wk'] = 1
 
@@ -45,15 +49,15 @@ def run_example():
     # Simulate
     (times, inputs, states, outputs, event_states) = valv.simulate_to_threshold(future_loading, first_output, **config)
 
-    # Print Results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
-
     # Simulate to threshold again but with a different wear mode
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
     # Configure options
-    config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
+    config = {
+        'dt': 0.01,
+        'horizon': 800,
+        'save_freq': 60,
+        'print_inter': True}
     # Reset wear parameter for spring to 0, set wear parameter for friction to 1
     valv.parameters['x0']['wk'] = 0
     valv.parameters['x0']['wr'] = 1
@@ -62,11 +66,6 @@ def run_example():
     first_output = valv.output(valv.initialize(future_loading(0)))
     # Simulate
     (times, inputs, states, outputs, event_states) = valv.simulate_to_threshold(future_loading, first_output, **config)
-
-    # Print Results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[i], inputs[i], states[i], outputs[i], event_states[i]))
-    print()
 
 # This allows the module to be executed directly
 if __name__ == '__main__':
