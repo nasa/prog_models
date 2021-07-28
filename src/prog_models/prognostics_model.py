@@ -689,6 +689,7 @@ class PrognosticsModel(ABC):
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
+             * print_inter (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns
@@ -738,7 +739,8 @@ class PrognosticsModel(ABC):
             'dt': 1.0,
             'save_pts': [],
             'save_freq': 10.0,
-            'horizon': 1e100 # Default horizon (in s), essentially inf
+            'horizon': 1e100, # Default horizon (in s), essentially inf
+            'print_inter': False
         }
         config.update(kwargs)
         
@@ -761,6 +763,8 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
         if 'thresholds_met_eqn' in config and config['thresholds_met_eqn'].__code__.co_argcount != 1:
             raise ProgModelInputException("'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
+        if not isinstance(config['print_inter'], bool):
+            raise ProgModelInputException("'print_inter' must be a bool, was a {}".format(type(config['print_inter'])))
 
         # Setup
         t = 0
@@ -796,12 +800,21 @@ class PrognosticsModel(ABC):
         save_pts = config['save_pts']
         save_pts.append(1e99)  # Add last endpoint
 
+        # confgure optional intermediate printing
+        if config['print_inter']:
+            def print_inter():
+                print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(times[len(times) - 1], inputs[len(inputs) - 1], states[len(states) - 1], saved_outputs[len(saved_outputs) - 1], saved_event_states[len(saved_event_states) - 1]))
+        else:
+            def print_inter():
+                pass
+
         def update_all():
             times.append(t)
             inputs.append(u)
             states.append(deepcopy(x))
             saved_outputs.append(output(x))
             saved_event_states.append(event_state(x))
+            print_inter()
         
         # Simulate
         while t < horizon:

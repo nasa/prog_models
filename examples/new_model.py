@@ -74,11 +74,9 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1, print_inter = True)
     
-    # Print results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
+    # Print flight time
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
 
     # OK, now lets compare performance on different heavenly bodies. 
