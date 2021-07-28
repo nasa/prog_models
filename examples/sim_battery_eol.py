@@ -38,7 +38,7 @@ def run_example():
         'save_freq': 1000,  # Frequency at which results are saved
         'dt': 2,  # Timestep
         'threshold_keys': ['InsufficientCapacity'],  # Simulate to InsufficientCapacity
-        'print_inter': True
+        'print': True
     }
     (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
