@@ -78,6 +78,7 @@ class BatteryCircuit(PrognosticsModel):
     states = ['tb', 'qb', 'qcp', 'qcs']
     outputs = ['t',  'v']
     is_vectorized = True
+    observables_keys = ['currentMin', 'currentMax']
 
     default_parameters = {  # Set to defaults
         'V0': 4.183,
@@ -186,4 +187,14 @@ class BatteryCircuit(PrognosticsModel):
         # Return true if voltage is less than the voltage threshold
         return {
              'EOD': V < parameters['VEOD']
+        }
+
+    def observables(self, x) -> dict:
+        params = self.parameters
+        nomCapacity = params['nomCapacity']
+        CRateMin = params['CRateMin']
+        CRateMax = params['CRateMax']
+        return {
+            'currentMin': nomCapacity * CRateMin,
+            'currentMax': nomCapacity * CRateMax,
         }
