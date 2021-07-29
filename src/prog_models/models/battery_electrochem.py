@@ -190,6 +190,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
+    observables_keys = ['currentMin', 'currentMax']
     outputs = ['t', 'v']
     is_vectorized = True
 
@@ -236,6 +237,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # End of discharge voltage threshold
         'VEOD': 3.0, 
         'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
+        # current ratings
+        'nomCapacity': 2.2,  # nominal capacity, Ah
+        'CRateMin': 0.7,  # current necessary for cruise,
+        'CRateMax': 2.5   # current necessary for hover
+        # CRateMin, CRateMax based on values determined in `C. Silva and W. Johnson, "VTOL Urban Air Mobility Concept Vehicles for Technology Development" Aviation and Aeronautics Forum (Aviation 2018),June 2018. https://arc.aiaa.org/doi/abs/10.2514/6.2018-3847`
     }
 
     state_limits = {
@@ -327,6 +333,15 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'EOD': min(charge_EOD, voltage_EOD)
         }
 
+    def observables(self, x) -> dict:
+        params = self.parameters
+        nomCapacity = params['nomCapacity']
+        CRateMin = params['CRateMin']
+        CRateMax = params['CRateMax']
+        return {
+            'currentMin': nomCapacity * CRateMin,
+            'currentMax': nomCapacity * CRateMax,
+        }
     def output(self, x):
         params = self.parameters
         An = params['An']
