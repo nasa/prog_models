@@ -29,6 +29,7 @@ if __name__ == '__main__':
     print("\n\nTesting individual exectution of test files")
 
     # Run tests individually to test them and make sure they can be executed individually
+    was_successful = True
     try:
         exec(open("tests/test_base_models.py").read())
     except Exception:
