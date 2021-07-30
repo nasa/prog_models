@@ -213,7 +213,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         # End of discharge voltage threshold
         'VEOD': 3.0, 
-        'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
+        'VDropoff': 0.1, # Voltage above EOD after which voltage will be considered in SOC calculation
         # current ratings
         'nomCapacity': 2.2,  # nominal capacity, Ah
         'CRateMin': 0.7,  # current necessary for cruise,
