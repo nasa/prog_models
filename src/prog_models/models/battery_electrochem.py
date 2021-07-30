@@ -333,6 +333,103 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'EOD': min(charge_EOD, voltage_EOD)
         }
 
+    # for use with current_limit_est below
+    def get_OCV(self, x):
+        params = self.parameters
+        An = params['An']
+        # Negative Surface
+        xnS = x['qnS']/params['qSMax']
+        xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+        VenParts = [
+            An[0] * (xnS2-1)/F,  # Ven0
+            An[1] * ((xnS2-1)**2 - ((xnS + xnS)*(1-xnS)))/F,  # Ven1
+            An[2] * ((xnS2-1)**3 - (4 * xnS*(1-xnS))*(xnS2-1))/F,  # Ven2
+            An[3] * ((xnS2-1)**4 - (6 * xnS*(1-xnS))*(xnS2-1)**2) / F,  # Ven3
+            An[4] * ((xnS2-1)**5 - (8 * xnS*(1-xnS))*(xnS2-1)**3) / F,  # Ven4
+            An[5] * ((xnS2-1)**6 - (10*xnS*(1-xnS))*(xnS2-1)**4) / F,  # Ven5
+            An[6] * ((xnS2-1)**7 - (12*xnS*(1-xnS))*(xnS2-1)**5) / F,  # Ven6
+            An[7] * ((xnS2-1)**8 - (14*xnS*(1-xnS))*(xnS2-1)**6) / F,  # Ven7
+            An[8] * ((xnS2-1)**9 - (16*xnS*(1-xnS))*(xnS2-1)**7) / F,  # Ven8
+            An[9] * ((xnS2-1)**10 - (18*xnS*(1-xnS))*(xnS2-1)**8) / F,  # Ven9
+            An[10]*((xnS2-1)**11 - (20*xnS*(1-xnS))*(xnS2-1)**9) / F,  # Ven10
+            An[11]*((xnS2-1)**12 - (22*xnS*(1-xnS))*(xnS2-1)**10)/F,  # Ven11
+            An[12]*((xnS2-1)**13 - (24*xnS*(1-xnS))*(xnS2-1)**11)/F  # Ven12
+        ]
+
+        Ven = params['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
+
+        # Positive Surface
+        Ap = params['Ap']
+        xpS = x['qpS']/params['qSMax']
+        xpS2 = xpS + xpS
+        VepParts = [
+            Ap[0] * (xpS2-1)/F,  # Vep0
+            Ap[1] * ((xpS2-1)**2 - (xpS2*(1-xpS)))/F,  # Vep1
+            Ap[2] * ((xpS2-1)**3 - (4 * xpS*(1-xpS)) / \
+                     (xpS2-1)**(-1)) / F,  # Vep2
+            Ap[3] * ((xpS2-1)**4 - (6 * xpS*(1-xpS)) / \
+                     (xpS2-1)**(-2)) / F,  # Vep3
+            Ap[4] * ((xpS2-1)**5 - (8 * xpS*(1-xpS)) / \
+                     (xpS2-1)**(-3)) / F,  # Vep4
+            Ap[5] * ((xpS2-1)**6 - (10*xpS*(1-xpS)) / \
+                     (xpS2-1)**(-4)) / F,  # Vep5
+            Ap[6] * ((xpS2-1)**7 - (12*xpS*(1-xpS)) / \
+                     (xpS2-1)**(-5)) / F,  # Vep6
+            Ap[7] * ((xpS2-1)**8 - (14*xpS*(1-xpS)) / \
+                     (xpS2-1)**(-6)) / F,  # Vep7
+            Ap[8] * ((xpS2-1)**9 - (16*xpS*(1-xpS)) / \
+                     (xpS2-1)**(-7)) / F,  # Vep8
+            Ap[9] * ((xpS2-1)**10 - (18*xpS*(1-xpS)) / \
+                     (xpS2-1)**(-8)) / F,  # Vep9
+            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS)) / \
+                    (xpS2-1)**(-9)) / F,  # Vep10
+            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS)) / \
+                    (xpS2-1)**(-10))/F,  # Vep11
+            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F  # Vep12
+        ]
+        Vep = params['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
+
+        return {
+            'OCV': Vep - Ven
+        }
+
+    # This method implements a current limit estimate algorithm as described in the following paper:
+    # S. Bharathraj et al., "Accessing Current Limits in Lithium Ion Batteries: Analysis of Propensity for Unexpected Power Loss
+    # as a Function of Depth of Discharge, Temperature, and Pulse Duration," Journal of Power Sources, 494, 2021
+    def current_limit_est(self, x, u, delta_t, VCutoff):
+        params = self.parameters
+        z = self.output(x)  # provides present voltage and temp
+        w = self.get_OCV(x)  # provides present open current voltage
+        VCell = z['v']
+        VOpen = w['OCV']
+        # lumped value for total resistance used in paper; tests done with ROhm
+        RLump = (VOpen - VCell)/u['i']
+        ROhm = params['Ro']
+        iMaxEst = u['i']  # initialize iMaxEst
+        relChange = 1   # initialize relative change
+        last_state = x  # initialize last state
+        # save original initialization parameters to restore later
+        original_state = params['x0']
+        params['x0'] = last_state  # start model simulation at present state
+        first_output = z  # first output based on present state
+        time_to_simulate_to = delta_t  # time cutoff
+        sim_config = {'save_freq': delta_t, 'dt': 0.1}
+        while relChange > 0.001:  # convergence criteria in Bharathraj et al.
+            def future_loading(t, x=None):  # load for simulation is iMaxEst
+                return {'i': iMaxEst}
+            (times, inputs, states, outputs, event_states) = self.simulate_to(time_to_simulate_to,
+                                                                              future_loading, first_output, **sim_config)
+            last_state = states[1]
+            V_Open_Cutoff = self.get_OCV(last_state)
+            VOpenCutoff = V_Open_Cutoff['OCV']
+            iMaxEstPrev = iMaxEst
+            iMaxEst = (VOpenCutoff - VCutoff)/ROhm
+            relChange = abs((iMaxEst - iMaxEstPrev)/iMaxEstPrev)
+        params['x0'] = original_state
+        return {
+            'CLE': iMaxEst
+        }
+
     def observables(self, x) -> dict:
         params = self.parameters
         nomCapacity = params['nomCapacity']
