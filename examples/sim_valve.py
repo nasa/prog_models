@@ -40,7 +40,7 @@ def run_example():
         'dt': 0.01,
         'horizon': 800,
         'save_freq': 60,
-        'print_inter': True}
+        'print': True}
     # Set wear parameter for spring to 1
     valv.parameters['x0']['wk'] = 1
 
@@ -57,7 +57,7 @@ def run_example():
         'dt': 0.01,
         'horizon': 800,
         'save_freq': 60,
-        'print_inter': True}
+        'print': True}
     # Reset wear parameter for spring to 0, set wear parameter for friction to 1
     valv.parameters['x0']['wk'] = 0
     valv.parameters['x0']['wr'] = 1
