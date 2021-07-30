@@ -71,6 +71,8 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'qMax': 7856.3254,
         'CMax': 7777,
         'VEOD': 3.0,
+        # Voltage above EOD after which voltage will be considered in SOC calculation
+        'VDropoff': 0.1,
         # Capacitance 
         'Cb0': 1878.155726,
         'Cbp0': -230,
@@ -91,27 +93,36 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'hcp': 19,
         'hcs': 1,
         'x0': {
-            'tb': 18.95,   
+            'tb': 18.95,
             'qb': 7856.3254,
             'qcp': 0,
             'qcs': 0
-        }
+        },
+        # current ratings
+        'nomCapacity': 2.2,  # nominal capacity, Ah
+        'CRateMin': 0.7,  # current necessary for cruise,
+        'CRateMax': 2.5   # current necessary for hover
+        # CRateMin, CRateMax based on values determined in `C. Silva and W. Johnson, "VTOL Urban Air Mobility Concept Vehicles for Technology Development" Aviation and Aeronautics Forum (Aviation 2018),June 2018. https://arc.aiaa.org/doi/abs/10.2514/6.2018-3847`
     }
 
     def initialize(self, u={}, z={}):
         return self.parameters['x0']
 
-    def dx(self, x, u): 
-        parameters = self.parameters  # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+    def dx(self, x, u):
+        # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+        parameters = self.parameters
         Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
-        SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
-        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
-        Rcp = parameters['Rcp0'] + parameters['Rcp1']*exp(parameters['Rcp2']*(-SOC + 1))
+        SOC = (parameters['CMax'] - parameters['qMax'] +
+               x['qb'])/parameters['CMax']
+        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1'] * \
+            SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
+        Rcp = parameters['Rcp0'] + parameters['Rcp1'] * \
+            exp(parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
         Tbdot = (Rcp*Rs*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + Rs*Vcp**2*parameters['hcp']) \
-                /(parameters['Jt']*Rcp*Rs)
+            / (parameters['Jt']*Rcp*Rs)
         Vp = Vb - Vcp - Vcs
         ip = Vp/parameters['Rp']
         ib = u['i'] + ip
@@ -127,8 +138,13 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     
     def event_state(self, x):
         parameters = self.parameters
+        z = self.output(x)
+        charge_EOD = (parameters['CMax'] -
+                      parameters['qMax'] + x['qb'])/parameters['CMax']
+        voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
+            self.parameters['VDropoff']
         return {
-            'EOD': (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
+            'EOD': min(charge_EOD, voltage_EOD)
         }
 
     def output(self, x):
