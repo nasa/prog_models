@@ -403,7 +403,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         VCell = z['v']
         VOpen = w['OCV']
         # lumped value for total resistance used in paper; tests done with ROhm
-        RLump = (VOpen - VCell)/u['i']
+        # RLump = (VOpen - VCell)/u['i']
         ROhm = params['Ro']
         iMaxEst = u['i']  # initialize iMaxEst
         relChange = 1   # initialize relative change
@@ -415,10 +415,10 @@ class BatteryElectroChemEOD(PrognosticsModel):
         time_to_simulate_to = delta_t  # time cutoff
         sim_config = {'save_freq': delta_t, 'dt': 0.1}
         while relChange > 0.001:  # convergence criteria in Bharathraj et al.
-            def future_loading(t, x=None):  # load for simulation is iMaxEst
+            def cle_loading(t, x=None):  # load for simulation is iMaxEst
                 return {'i': iMaxEst}
             (times, inputs, states, outputs, event_states) = self.simulate_to(time_to_simulate_to,
-                                                                              future_loading, first_output, **sim_config)
+                                                                              cle_loading, first_output, **sim_config)
             last_state = states[1]
             V_Open_Cutoff = self.get_OCV(last_state)
             VOpenCutoff = V_Open_Cutoff['OCV']
