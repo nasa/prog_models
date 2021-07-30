@@ -32,7 +32,7 @@ def run_example():
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183}, print_inter = True)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183}, print = True)
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -40,7 +40,7 @@ def run_example():
     options = {
         'save_freq': 100, # Frequency at which results are saved
         'dt': 2, # Timestep
-        'print_inter': True
+        'print': True
     }
     (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
