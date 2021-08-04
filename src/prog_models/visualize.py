@@ -108,7 +108,7 @@ def set_plot_options(opt):
     # Get list of options (if provided)
     try:
         opt_list = list(opt.keys())
-    except:
+    except Exception:
         opt, opt_list = {}, []
     
     # Fill out all options if not provided
@@ -198,7 +198,7 @@ def set_legend_options(leg_opt, s_names):
     """
     try:
         leg_list = list(leg_opt.keys())  # Check whether a dictionary has been provided. If not, initialize the dictionary leg_opt as empty
-    except:
+    except Exception:
         leg_opt, leg_list = {}, []
 
     if 'display' not in leg_list:
@@ -261,7 +261,7 @@ def set_savefig_options(sfo):
     """
     try:
         sfo_list = list(sfo.keys())
-    except:
+    except Exception:
         sfo, sfo_list = {}, []
     if 'save' not in sfo_list:
         sfo['save'] = False
