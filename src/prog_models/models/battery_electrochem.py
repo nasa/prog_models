@@ -7,8 +7,8 @@ from math import asinh, log
 from copy import deepcopy
 
 # Constants of nature
-R = 8.3144621;  # universal gas constant, J/K/mol
-F = 96487;      # Faraday's constant, C/mol
+R = 8.3144621  # universal gas constant, J/K/mol
+F = 96487      # Faraday's constant, C/mol
 
 def update_qmax(params):
     # note qMax = qn+qp
