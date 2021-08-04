@@ -112,26 +112,19 @@ def set_plot_options(opt):
         opt, opt_list = {}, []
     
     # Fill out all options if not provided
-    if 'figsize' not in opt_list:
-        opt['figsize'] = (10, 9)
-    if 'compact' not in opt_list:
-        opt['compact'] = True
-    if 'xlabel' not in opt_list:
-        opt['xlabel'] = 'time'
-    if 'ylabel' not in opt_list:
-        opt['ylabel'] = 'state'
-    if 'title' not in opt_list:
-        opt['title'] = []
-    if 'title_fontsize' not in opt_list:
-        opt['title_fontsize'] = 'x-large'
-    if 'suptitle' not in opt_list:
-        opt['suptitle'] = []
-    if 'ticklabel_fontsize' not in opt_list:
-        opt['ticklabel_fontsize'] = 'small'
-    if 'tight_layout' not in opt_list:
-        opt['tight_layout'] = False
-    if 'display_labels' not in opt_list:
-        opt['display_labels'] = 'all'
+    config = {  # default configuration 
+   'figsize': (10, 9),
+   'compact': True,
+   'xlabel': 'time',
+   'ylabel':'state',
+   'title': [],
+   'title_fontsize': 'x-large',
+   'suptitle': [],
+   'ticklabel_fontsize': 'small',
+   'tight_layout': False,
+   'display_labels': 'all'
+    }
+    config.update(opt_list)
     
     # if title should be displayed but title fontsize is not specified, add it to the dictionary
     if opt['title'] and ('title_fontsize' not in opt_list or not opt['title_fontsize']):
@@ -201,34 +194,23 @@ def set_legend_options(leg_opt, s_names):
     except Exception:
         leg_opt, leg_list = {}, []
 
-    if 'display' not in leg_list:
-        leg_opt['display'] = False
-    if 'display_at_subplot' not in leg_list:
-        leg_opt['display_at_subplot'] = len(s_names)
-    if 'labels' not in leg_list:
-        leg_opt['labels'] = s_names
-    if 'loc' not in leg_list:
-        leg_opt['loc'] = 'best'
-    if 'bbox_to_anchor' not in leg_list:
-        leg_opt['bbox_to_anchor'] = None
-    if 'ncol' not in leg_list:
-        leg_opt['ncol'] = 1
-    if 'fontsize' not in leg_list:
-        leg_opt['fontsize'] = 'x-large'
-    if 'shadow' not in leg_list:
-        leg_opt['shadow'] = False
-    if 'fancybox' not in leg_list:
-        leg_opt['fancybox'] = False
-    if 'framealpha' not in leg_list:
-        leg_opt['framealpha'] = 1.0
-    if 'facecolor' not in leg_list:
-        leg_opt['facecolor'] = 'w'
-    if 'edgecolor' not in leg_list:
-        leg_opt['edgecolor'] = 'w'
-    if 'title' not in leg_list:
-        leg_opt['title'] = None
-    if 'title' in leg_list and 'title_fontsize' not in leg_list:                 
-        leg_opt['title_fontsize'] = 'medium'
+    config = {  # default configuration 
+        'display': False,
+        'display_at_subplot': len(s_names),
+        'labels': s_names,
+        'loc': 'best',
+        'bbox_to_anchor': None,
+        'ncol': 1,
+        'fontsize': 'x-large',
+        'shadow': False,
+        'fancybox': False,
+        'framealpha': 1.0,
+        'facecolor': 'w',
+        'edgecolor': 'w',
+        'title': None,
+        'title_fontsize': 'medium'
+    }
+    config.update(leg_opt)
 
     return leg_opt
 

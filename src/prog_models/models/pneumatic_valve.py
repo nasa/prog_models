@@ -181,11 +181,11 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
         if pIn/pOut>=threshold:
             return C*A*pIn*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
-        if pIn/pOut<threshold and pIn>=pOut:
+        elif pIn>=pOut:
             return C*A*pIn*sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
         if pOut/pIn>=threshold:
             return -C*A*pOut*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
-        if pOut/pIn<threshold and pOut>pIn:
+        elif pOut>pIn:
             return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
         raise ProgModelException('Unknown Condition')
     
