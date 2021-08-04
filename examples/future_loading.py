@@ -153,8 +153,7 @@ def run_example():
         if x is not None:
             event_state = future_loading.event_state(x)
             return {'i': future_loading.start + (1-event_state['EOD']) * future_loading.slope} # default
-        else:
-            return {'i': future_loading.start}
+        return {'i': future_loading.start}
     future_loading.t = 0
     future_loading.event_state = m.event_state
     future_loading.slope = 2 # difference between input with EOD = 1 and 0. 

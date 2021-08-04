@@ -23,14 +23,13 @@ def run_example():
                     'uTop': False,
                     'uBot': True
                 }
-            else:
-                return {
-                    'pL': 3.5e5,
-                    'pR': 2.0e5,
-                    # Close Valve
-                    'uTop': True,
-                    'uBot': False
-                }
+            return {
+                'pL': 3.5e5,
+                'pR': 2.0e5,
+                # Close Valve
+                'uTop': True,
+                'uBot': False
+            }
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
