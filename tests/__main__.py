@@ -36,6 +36,11 @@ if __name__ == '__main__':
         was_successful = False
 
     try:
+        exec(open("tests/test_sim_result.py").read())
+    except Exception:
+        was_successful = False
+
+    try:
         exec(open("tests/test_examples.py").read())
     except Exception:
         was_successful = False
