@@ -26,7 +26,7 @@ class SimResult(UserList):
         return self.times[index]
 
 
-class CachedSimResult(UserList):
+class CachedSimResult(SimResult):
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
@@ -41,17 +41,6 @@ class CachedSimResult(UserList):
         self.times = times
         self.states = states
         self.__data = None
-
-    def time(self, index):
-        """Get time for data point at index `index`
-
-        Args:
-            index (int)
-
-        Returns:
-            float: Time for which the data point at index `index` corresponds
-        """
-        return self.times[index]
 
     @property
     def data(self):
