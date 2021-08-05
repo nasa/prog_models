@@ -45,6 +45,9 @@ class CachedSimResult(SimResult):
         self.states = states
         self.__data = None
 
+    def is_cached(self):
+        return self.__data is not None
+
     @property
     def data(self):
         """
