@@ -1,4 +1,5 @@
 from collections import UserList
+from .visualize import plot_timeseries
 
 
 class SimResult(UserList):
@@ -25,6 +26,8 @@ class SimResult(UserList):
         """
         return self.times[index]
 
+    def plot(self, **kwargs):
+        plot_timeseries(self.times, self.data, options=kwargs)
 
 class CachedSimResult(SimResult):
     """
