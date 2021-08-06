@@ -1,6 +1,6 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 # This ensures that the directory containing examples is in the python search directories 
+
 import sys
 from os.path import dirname, join
 sys.path.append(join(dirname(__file__), ".."))
@@ -8,6 +8,7 @@ sys.path.append(join(dirname(__file__), ".."))
 import unittest
 from io import StringIO 
 from examples import *
+
 
 class TestExamples(unittest.TestCase):
     def test_sim_example(self):
@@ -17,6 +18,17 @@ class TestExamples(unittest.TestCase):
 
         # Run example
         sim.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+    
+    def test_deriv_paramexample(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        derived_params.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
