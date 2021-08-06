@@ -46,6 +46,12 @@ class ProgModelTemplate(PrognosticsModel):
         'process_noise': 0.1, # Process noise
     }
 
+    # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
+    # See examples.derived_params
+    param_callbacks = {
+    }
+
+
     def __init__(self, **kwargs):
         """
         Constructor for model
