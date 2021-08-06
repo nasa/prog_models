@@ -60,7 +60,9 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.param_est <../examples/param_est.py>`
     .. automodule:: examples.param_est
     |
-
+* :download:`examples.derived_params <../examples/derived_params.py>`
+    .. automodule:: examples.derived_params
+    |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
@@ -68,6 +70,12 @@ Model Specific examples
 ----------
 * :download:`examples.sim_battery_eol <../examples/sim_battery_eol.py>`
     .. automodule:: examples.sim_battery_eol
+    |
+* :download:`examples.sim_pump <../examples/sim_pump.py>`
+    .. automodule:: examples.sim_pump
+    |
+* :download:`examples.sim_valve <../examples/sim_valve.py>`
+    .. automodule:: examples.sim_valve
     |
 
 Extending
