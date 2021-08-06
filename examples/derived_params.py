@@ -11,7 +11,7 @@ def run_example():
     # For this example we will use the ThrownObject model from the new_model example.
     # We will extend that model to include a derived parameter
     # Let's assume that the throwing_speed was actually a function of thrower_height 
-    # (i.e., a taller thrower would) throw the ball faster.
+    # (i.e., a taller thrower would throw the ball faster).
     # Here's how we would implement that
 
     # Step 1: Define a function for the relationship between thrower_height and throwing_speed.
@@ -19,6 +19,7 @@ def run_example():
         return {
             'throwing_speed': params['thrower_height'] * 21.85
         }  # Assumes thrown_speed is linear function of height
+    # Note: one or more parameters can be changed in these functions, whatever parameters are changed are returned in the dictionary
 
     # Step 2: Define the param callbacks
     ThrownObject.param_callbacks = {
@@ -26,6 +27,8 @@ def run_example():
         }  # Tell the derived callbacks feature to call this function when thrower_height changes.
     # Note: Usually we would define this menthod within the class
     #  for this example, we're doing it separately to improve readability
+    # Note2: You caan also have more than one function be called when a single parameter is changed.
+    #  Do this by adding the additional callbacks to the list (e.g., 'thrower_height': [update_thrown_speed, other_fcn])
 
     # Step 3: Use!
     obj = ThrownObject()
