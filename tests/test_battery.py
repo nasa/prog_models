@@ -21,22 +21,18 @@ class TestBattery(unittest.TestCase):
     def test_battery_circuit(self):
         batt = BatteryCircuit()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-        # TODO(CT): More
 
     def test_battery_electrochem(self):
         batt = BatteryElectroChem()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-        # TODO(CT): More
 
     def test_battery_electrochem_EOD(self):
         batt = BatteryElectroChemEOD()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-        # TODO(CT): More
 
     def test_battery_electrochem_EOL(self):
         batt = BatteryElectroChemEOL()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
-        # TODO(CT): More
 
 # This allows the module to be executed directly
 def run_tests():
