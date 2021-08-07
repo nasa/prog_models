@@ -8,6 +8,7 @@ import numpy as np
 from copy import deepcopy
 from collections import UserDict
 import types
+from array import array
 
 
 class PrognosticsModelParameters(UserDict):
@@ -208,16 +209,14 @@ class PrognosticsModel(ABC):
             if 'process_noise' not in self.parameters:
                 self.parameters['process_noise'] = 0.1
             else:
-                self.parameters['process_noise'] = self.parameters['process_noise'] # To force  __setitem__
+                self.parameters['process_noise'] = self.parameters['process_noise']         # To force  __setitem__
 
             if 'measurement_noise' not in self.parameters:
                 self.parameters['measurement_noise'] = 0.0
             else:
-                self.parameters['measurement_noise'] = self.parameters['measurement_noise']
+                self.parameters['measurement_noise'] = self.parameters['measurement_noise'] # To force  __setitem__
         except Exception:
             raise ProgModelTypeError('Model noise poorly configured')
-
-        # TODO(CT): SOMEHOW CHECK IF DX OR STATE_EQN HAS BEEN OVERRIDDEN - ONE MUST
 
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
@@ -787,7 +786,7 @@ class PrognosticsModel(ABC):
                 return any([thresholds_met[key] for key in threshold_keys])
 
         # Initialization of save arrays
-        times = [t]
+        times = array('d', [0])
         inputs = [u]
         states = [deepcopy(x)]  # Avoid optimization where x is not copied
         saved_outputs = [output(x)]

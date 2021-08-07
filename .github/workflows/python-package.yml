@@ -61,3 +61,59 @@ jobs:
         python -m pip install -e .
     - name: Run tests
       run: python -m tests
+  test_prog_algs_released:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e .
+    - name: Clone prog_algs
+      uses: actions/checkout@v2
+      with:
+        repository: nasa/prog_algs 
+        ref: refs/heads/master
+        path: prog_algs
+    - name: Install prog_algs
+      run: | 
+        python -m pip install -e ./prog_algs
+    - name: Run tests
+      run: |
+        cd prog_algs 
+        python -m tests
+  test_prog_algs_dev:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e .
+    - name: Clone prog_algs
+      uses: actions/checkout@v2
+      with:
+        repository: nasa/prog_algs 
+        ref: refs/heads/dev
+        path: prog_algs
+    - name: Install prog_algs
+      run: | 
+        python -m pip install -e ./prog_algs
+    - name: Run tests
+      run: |
+        cd prog_algs 
+        python -m tests

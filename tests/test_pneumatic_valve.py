@@ -19,14 +19,13 @@ class TestPneumaticValve(unittest.TestCase):
                     'uTop': False,
                     'uBot': True
                 }
-            else:
-                return {
-                    'pL': 3.5e5,
-                    'pR': 2.0e5,
-                    # Close Valve
-                    'uTop': True,
-                    'uBot': False
-                }
+            return {
+                'pL': 3.5e5,
+                'pR': 2.0e5,
+                # Close Valve
+                'uTop': True,
+                'uBot': False
+            }
 
         u0 = future_loading(0)
         x0 = m.initialize(u0)
@@ -151,14 +150,13 @@ class TestPneumaticValve(unittest.TestCase):
                     'uTop': False,
                     'uBot': True
                 }
-            else:
-                return {
-                    'pL': 3.5e5,
-                    'pR': 2.0e5,
-                    # Close Valve
-                    'uTop': True,
-                    'uBot': False
-                }
+            return {
+                'pL': 3.5e5,
+                'pR': 2.0e5,
+                # Close Valve
+                'uTop': True,
+                'uBot': False
+            }
 
         u0 = future_loading(0)
         x0 = m.initialize(u0)

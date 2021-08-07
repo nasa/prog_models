@@ -69,7 +69,6 @@ class TestModels(unittest.TestCase):
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
-        # TODO(CT): More
 
     def test_derived(self):
         m = MockModelWithDerived()
