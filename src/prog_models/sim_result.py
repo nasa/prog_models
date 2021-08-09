@@ -15,6 +15,17 @@ class SimResult(UserList):
         self.times = times
         self.data = data
 
+    def __eq__(self, other):
+        """Compare 2 SimResults
+
+        Args:
+            other (SimResult)
+
+        Returns:
+            bool: If the two SimResults are equal
+        """
+        return self.times == other.times and self.data == other.data
+
     def time(self, index):
         """Get time for data point at index `index`
 
