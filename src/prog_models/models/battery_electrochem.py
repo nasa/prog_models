@@ -95,18 +95,6 @@ def update_qSBmax(params):
         'qBMax': params['qMax']*(1.0-params['VolSFraction']),
     }
 
-derived_callbacks = {
-    'qMobile': [update_qmax],
-    'VolSFraction': [update_vols, update_qpSBmin, update_qpSBmax, update_qSBmax],
-    'Vol': [update_vols],
-    'qMax': [update_qpmin, update_qpmax, update_qpSBmin, update_qpSBmax, update_qnmin, update_qnmax, update_qpSBmin, update_qpSBmax, update_qSBmax],
-    'xpMin': [update_qpmin, update_qpSBmin],
-    'xpMax': [update_qpmax, update_qpSBmax],
-    'xnMin': [update_qmax, update_qnmin, update_qnSBmin],
-    'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
-}
-
-
 class BatteryElectroChemEOD(PrognosticsModel):
     """
     Prognostics model for a battery, represented by an electrochemical equations.
@@ -212,8 +200,16 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
     }
 
-    def get_derived_callbacks(self):
-        return derived_callbacks
+    param_callbacks = {  # Callbacks for derived parameters
+        'qMobile': [update_qmax],
+        'VolSFraction': [update_vols, update_qpSBmin, update_qpSBmax, update_qSBmax],
+        'Vol': [update_vols],
+        'qMax': [update_qpmin, update_qpmax, update_qpSBmin, update_qpSBmax, update_qnmin, update_qnmax, update_qpSBmin, update_qpSBmax, update_qSBmax],
+        'xpMin': [update_qpmin, update_qpSBmin],
+        'xpMax': [update_qpmax, update_qpSBmax],
+        'xnMin': [update_qmax, update_qnmin, update_qnSBmin],
+        'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
+    }
 
     def initialize(self, u = {}, z = {}):
         return self.parameters['x0']

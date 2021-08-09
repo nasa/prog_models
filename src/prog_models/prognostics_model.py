@@ -175,6 +175,7 @@ class PrognosticsModel(ABC):
     # outputs = []    # Identifiers for each output
     observables_keys = []  # Identifies for each observable
     events = []       # Identifiers for each event
+    param_callbacks = {}  # Callbacks for derived parameters
 
     def __init__(self, **kwargs):
         try:
@@ -199,7 +200,7 @@ class PrognosticsModel(ABC):
         except Exception:
             raise ProgModelTypeError('Could not check model configuration')
 
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.get_derived_callbacks())
+        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
         try:
             self.parameters.update(kwargs)
         except TypeError:
@@ -220,14 +221,6 @@ class PrognosticsModel(ABC):
 
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
-
-    def get_derived_callbacks(self):
-        """Returns all the callbacks for derived parameters. Default is no callbacks
-
-        Returns:
-            dict(key[string] : callback_fcn): Dictionary of callbacks
-        """
-        return {}
     
     @abstractmethod
     def initialize(self, u, z) -> dict:

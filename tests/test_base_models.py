@@ -58,8 +58,7 @@ def derived_callback3(config):
 
 
 class MockModelWithDerived(MockProgModel):
-    def get_derived_callbacks(self):
-        return {
+    param_callbacks = {
             'p1': [derived_callback],
             'p2': [derived_callback2, derived_callback3]
         }
