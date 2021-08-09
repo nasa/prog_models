@@ -160,7 +160,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         rRadialdot = params['wRadial']*params['rRadial']*x['w']*x['w']
         rThrustdot = params['wThrust']*params['wThrust']*x['w']*x['w']
         friction = (params['r']+x['rThrust']+x['rRadial'])*x['w']
-        QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
+        QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
+            u['psuc']-u['pdisch'])
         Trdot = 1/params['mcRadial'] * (x['rRadial']*x['w']*x['w'] - params['HRadial1']*(x['Tr']-u['Tamb']) - params['HRadial2']*(x['Tr']-x['To']))
         slipn = (u['wsync']-x['w'])/(u['wsync'])
         ppump = x['A']*x['w']*x['w'] + params['b']*x['w']*x['Q']
@@ -173,8 +174,6 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qo = math.copysign(params['c']*math.sqrt(abs(deltaP)), deltaP)
         wdot = (Te-friction-backTorque)/params['I']
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
-        QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
-            u['psuc']-u['pdisch'])
 
         return {
             'A': x['A'] + Adot * dt,
