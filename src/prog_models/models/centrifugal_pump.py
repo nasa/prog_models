@@ -59,7 +59,6 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | cLeak : Internal leak flow coefficient
         | ALeak : Internal leak area
         | mcThrust :
-        | rThrust :
         | HThrust1, HThrust2 :
         | mcRadial :
         | rRadial :
@@ -101,7 +100,6 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
         # Thrust bearing temperature
         'mcThrust': 7.3,
-        'rThrust': 1.4e-6,
         'HThrust1': 0.0034,
         'HThrust2': 0.0026,
 
