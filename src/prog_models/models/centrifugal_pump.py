@@ -176,14 +176,14 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
         return {
-            'A': x['A'] + Adot * dt,
+            'w': x['w'] + wdot * dt,
             'Q': x['Q'] + Qdot * dt,
-            'To': x['To'] + Todot * dt,
-            'Tr': x['Tr'] + Trdot * dt,
             'Tt': x['Tt'] + Ttdot * dt,
+            'Tr': x['Tr'] + Trdot * dt,
+            'To': x['To'] + Todot * dt,
+            'A': x['A'] + Adot * dt,
             'rRadial': x['rRadial'] + rRadialdot * dt,
             'rThrust': x['rThrust'] + rThrustdot * dt,
-            'w': x['w'] + wdot * dt,
             'QLeak': QLeak
         }
 

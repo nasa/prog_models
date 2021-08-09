@@ -229,15 +229,15 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             pos = new_x
 
         return {
+            'x': pos,
+            'v': vel,
+            'mTop': x['mTop'] + mTopdot * dt,
+            'mBot': x['mBot'] + mBotdot * dt,
             'Aeb': x['Aeb'] + params['wb'] * dt,
             'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
             'k': x['k'] + kdot * dt,
-            'mBot': x['mBot'] + mBotdot * dt,
-            'mTop': x['mTop'] + mTopdot * dt,
             'r': x['r'] + rdot * dt,
-            'v': vel,
-            'x': pos,
             'pDiff': u['pL'] - u['pR']
         }
     
