@@ -156,7 +156,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             - params['HThrust2']*(x['Tt']-x['To']))
         Adot = -params['wA']*x['Q']*x['Q']
         rRadialdot = params['wRadial']*params['rRadial']*x['w']*x['w']
-        rThrustdot = params['wThrust']*params['wThrust']*x['w']*x['w']
+        rThrustdot = params['wThrust']*x['rThrust']*x['w']*x['w']
         friction = (params['r']+x['rThrust']+x['rRadial'])*x['w']
         QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
             u['psuc']-u['pdisch'])
