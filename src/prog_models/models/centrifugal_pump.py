@@ -61,7 +61,6 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | mcThrust :
         | HThrust1, HThrust2 :
         | mcRadial :
-        | rRadial :
         | HRadial1, HRadial2 :
         | mcOil :
         | HOil1, HOil2, HOil3 :
@@ -105,7 +104,6 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
         # Radial bearing temperature
         'mcRadial': 2.4,
-        'rRadial': 1.8e-6,
         'HRadial1': 0.0018,
         'HRadial2': 0.020,
 
@@ -155,7 +153,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Ttdot = 1/params['mcThrust'] * (x['rThrust']*x['w']*x['w'] - params['HThrust1']*(x['Tt']-u['Tamb'])\
             - params['HThrust2']*(x['Tt']-x['To']))
         Adot = -params['wA']*x['Q']*x['Q']
-        rRadialdot = params['wRadial']*params['rRadial']*x['w']*x['w']
+        rRadialdot = params['wRadial']*x['rRadial']*x['w']*x['w']
         rThrustdot = params['wThrust']*x['rThrust']*x['w']*x['w']
         friction = (params['r']+x['rThrust']+x['rRadial'])*x['w']
         QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
