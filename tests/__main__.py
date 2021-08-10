@@ -1,10 +1,10 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .test_base_models import TestModels, main as base_models_main
-from .test_examples import TestExamples, main as examples_main
-from .test_centrifugal_pump import TestCentrifugalPump, main as centrifugal_pump_main
-from .test_pneumatic_valve import TestPneumaticValve, main as pneumatic_valve_main
-from .test_battery import TestBattery, main as battery_main
+from .test_base_models import main as base_models_main
+from .test_examples import main as examples_main
+from .test_centrifugal_pump import main as centrifugal_pump_main
+from .test_pneumatic_valve import main as pneumatic_valve_main
+from .test_battery import main as battery_main
 
 from io import StringIO
 import sys
