@@ -9,6 +9,7 @@ from copy import deepcopy
 from collections import UserDict
 import types
 from array import array
+from .sim_result import SimResult, CachedSimResult
 
 
 class PrognosticsModelParameters(UserDict):
@@ -782,11 +783,11 @@ class PrognosticsModel(ABC):
                 return any([thresholds_met[key] for key in threshold_keys])
 
         # Initialization of save arrays
-        times = array('d', [0])
-        inputs = [u]
-        states = [deepcopy(x)]  # Avoid optimization where x is not copied
-        saved_outputs = [output(x)]
-        saved_event_states = [event_state(x)]
+        times = array('d')
+        inputs = []
+        states = []  
+        saved_outputs = []
+        saved_event_states = []
         dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
@@ -800,7 +801,7 @@ class PrognosticsModel(ABC):
             def update_all():
                 times.append(t)
                 inputs.append(u)
-                states.append(deepcopy(x))
+                states.append(deepcopy(x))  # Avoid optimization where x is not copied
                 saved_outputs.append(output(x))
                 saved_event_states.append(event_state(x))
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
@@ -814,11 +815,10 @@ class PrognosticsModel(ABC):
             def update_all():
                 times.append(t)
                 inputs.append(u)
-                states.append(deepcopy(x))
-                saved_outputs.append(output(x))
-                saved_event_states.append(event_state(x))
+                states.append(deepcopy(x))  # Avoid optimization where x is not copied
         
         # Simulate
+        update_all()
         while t < horizon:
             t += dt
             u = future_loading_eqn(t, x)
@@ -837,7 +837,21 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
-        return (times, inputs, states, saved_outputs, saved_event_states)
+        if not saved_outputs:
+            # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
+            saved_outputs = CachedSimResult(self.output, times, states) 
+            saved_event_states = CachedSimResult(self.event_state, times, states)
+        else:
+            saved_outputs = SimResult(times, saved_outputs)
+            saved_event_states = SimResult(times, saved_event_states)
+        
+        return (
+            times, 
+            SimResult(times, inputs), 
+            SimResult(times, states), 
+            saved_outputs, 
+            saved_event_states
+        )
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
