@@ -1,10 +1,11 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .test_base_models import TestModels
-from .test_examples import TestExamples
-from .test_centrifugal_pump import TestCentrifugalPump
-from .test_pneumatic_valve import TestPneumaticValve
-from .test_battery import TestBattery
+from .test_base_models import main as base_models_main
+from .test_sim_result import main as sim_result_main
+from .test_examples import main as examples_main
+from .test_centrifugal_pump import main as centrifugal_pump_main
+from .test_pneumatic_valve import main as pneumatic_valve_main
+from .test_battery import main as battery_main
 
 from io import StringIO
 import sys
@@ -31,32 +32,32 @@ if __name__ == '__main__':
     # Run tests individually to test them and make sure they can be executed individually
     was_successful = True
     try:
-        exec(open("tests/test_base_models.py").read())
+        base_models_main()
     except Exception:
         was_successful = False
 
     try:
-        exec(open("tests/test_sim_result.py").read())
+        sim_result_main()
     except Exception:
         was_successful = False
 
     try:
-        exec(open("tests/test_examples.py").read())
+        examples_main()
     except Exception:
         was_successful = False
         
     try:
-        exec(open("tests/test_battery.py").read())
+        battery_main()
     except Exception:
         was_successful = False
 
     try:
-        exec(open("tests/test_centrifugal_pump.py").read())
+        centrifugal_pump_main()
     except Exception:
         was_successful = False
 
     try:
-        exec(open("tests/test_pneumatic_valve.py").read())
+        pneumatic_valve_main()
     except Exception:
         was_successful = False
 
