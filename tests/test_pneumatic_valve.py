@@ -1,7 +1,7 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from prog_models.models.pneumatic_valve import PneumaticValveWithWear, PneumaticValveBase, PneumaticValve
+from prog_models.models.pneumatic_valve import PneumaticValve, PneumaticValveWithWear, PneumaticValveBase
 
 class TestPneumaticValve(unittest.TestCase):
     def test_pneumatic_valve_with_wear(self):
