@@ -731,6 +731,86 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
+    # when range specified when state doesnt exist or entered incorrectly
+    def test_state_bounds(self):
+        m = MockProgModel()
+        m.state_limits = {
+            't': [-100, 100]
+        }
+        x0 = m.initialize()
+
+        # inside bounds
+        x0['t'] = 0
+        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        if not (-100 <= x['t'] <= 100):
+            self.fail()
+
+        # outside low boundary
+        x0['t'] = -200
+        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        if x['t'] != -100:
+            self.fail()
+
+        # outside high boundary
+        x0['t'] = 200
+        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        if x['t'] != 100:
+            self.fail()
+
+        # at low boundary
+        x0['t'] = -100
+        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        if not (-100 <= x['t'] <= 100):
+            self.fail()
+
+        # at high boundary
+        x0['t'] = 100
+        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+        if not (-100 <= x['t'] <= 100):
+            self.fail()
+
+        # when state doesn't exist
+        try:
+            x0['n'] = 0
+            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            self.fail()
+        except Exception:
+            pass
+
+        # when state entered incorrectly
+        try:
+            x0['n'] = 'f'
+            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            self.fail()
+        except Exception:
+            pass
+
+        # when boundary entered incorrectly
+        try:
+            m.state_limits = { 't': ['f', 100] }
+            x0['t'] = 0
+            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            self.fail()
+        except Exception:
+            pass
+
+        try:
+            m.state_limits = { 't': [-100, 'f'] }
+            x0['t'] = 0
+            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            self.fail()
+        except Exception:
+            pass
+
+        try:
+            m.state_limits = { 't': [100] }
+            x0['t'] = 0
+            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            self.fail()
+        except Exception:
+            pass
+
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
