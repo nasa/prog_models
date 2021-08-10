@@ -170,6 +170,11 @@ class PrognosticsModel(ABC):
         'measurement_noise': 0.0
     }
 
+    # Configurable state range limit
+    state_limits = {
+        # 'state': [lower_limit, upper_limit]
+    }
+
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
@@ -438,10 +443,17 @@ class PrognosticsModel(ABC):
         """
         
         # Calculate next state
-        x = self.next_state(x, u, dt)
+        next_state = self.next_state(x, u, dt)
+
+        # Check if state is within bounds
+        for (key, limit) in self.state_limits.items():
+            if next_state[key] < limit[0]:
+                next_state[key] = limit[0]
+            elif next_state[key] > limit[1]:
+                next_state[key] = limit[1]
 
         # Add process noise
-        return self.apply_process_noise(x)
+        return self.apply_process_noise(next_state)
 
     def observables(self, x) -> dict:
         """

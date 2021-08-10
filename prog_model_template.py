@@ -46,6 +46,13 @@ class ProgModelTemplate(PrognosticsModel):
         'process_noise': 0.1, # Process noise
     }
 
+    # REPLACE THE FOLLOWING WITH STATE BOUNDS IF NEEDED
+    state_limits = {
+        # 'state': [lower_limit, upper_limit]
+        'Examples State 1': [0, 55],
+        'Examples State 4': [-2, 3]
+    }
+
     # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
     # See examples.derived_params
     param_callbacks = {
