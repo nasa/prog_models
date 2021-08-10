@@ -258,10 +258,10 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
         return {
-            'tb': Tbdot,
             'Vo': Vodot,
             'Vsn': Vsndot,
             'Vsp': Vspdot,
+            'tb': Tbdot,
             'qnB': -qdotDiffusionBSn,
             'qnS': qdotDiffusionBSn - u['i'],
             'qpB': qpBdot,
