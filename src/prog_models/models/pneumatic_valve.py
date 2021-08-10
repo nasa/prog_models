@@ -12,7 +12,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
     Prognostics model for a pneumatic valve.
 
     This class implements a Pneumatic Valve model as described in the following paper:
-    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602`
+    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
     
     Events: (5)
         | Bottom Leak: Failure due to a leak at the bottom pneumatic port
@@ -229,15 +229,15 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             pos = new_x
 
         return {
+            'x': pos,
+            'v': vel,
+            'mTop': x['mTop'] + mTopdot * dt,
+            'mBot': x['mBot'] + mBotdot * dt,
             'Aeb': x['Aeb'] + params['wb'] * dt,
             'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
             'k': x['k'] + kdot * dt,
-            'mBot': x['mBot'] + mBotdot * dt,
-            'mTop': x['mTop'] + mTopdot * dt,
             'r': x['r'] + rdot * dt,
-            'v': vel,
-            'x': pos,
             'pDiff': u['pL'] - u['pR']
         }
     
