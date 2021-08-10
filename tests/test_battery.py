@@ -39,7 +39,7 @@ class TestBattery(unittest.TestCase):
 def run_tests():
     unittest.main()
     
-if __name__ == '__main__':
+def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Battery models")
@@ -47,3 +47,6 @@ if __name__ == '__main__':
 
     if not result:
         raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()
