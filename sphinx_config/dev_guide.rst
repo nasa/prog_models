@@ -6,6 +6,12 @@ This document includes some details relevant for developers.
 ..  contents:: 
     :backlinks: top
 
+Installing from a branch 
+------------------------
+To install the prog_models package from a specific branch. First clone the repository and checkout the branch. Then navigate into the repository directory and use the following command:
+   `pip install -e .`
+
+This command installs the prog_models package using the checked-out version.
 
 Contributing 
 ---------------
@@ -65,9 +71,12 @@ Release Checklist
 * Code review - all software must be checked by someone other than the author
 * Check that each new feature has a corresponding tests
 * Run unit tests `python -m tests`
+* Review the template
+* Test the tutorial
 * Check documents- see if any updates are required
 * Rebuild sphinx documents: `sphinx-build sphinx-config/ docs/`
 * Write release notes
+* Update version number in src/prog_models/__init__.py and setup.py
 * For releases adding new features- ensure that NASA release process has been followed
 
 Updating Documentation 

@@ -57,7 +57,7 @@ class TestSimResult(unittest.TestCase):
 def run_tests():
     unittest.main()
     
-if __name__ == '__main__':
+def main():
     # This ensures that the directory containing ProgModelTemplate is in the python search directory
     import sys
     from os.path import dirname, join
@@ -70,3 +70,6 @@ if __name__ == '__main__':
 
     if not result:
         raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()
