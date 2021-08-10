@@ -1,6 +1,7 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .test_base_models import main as base_models_main
+from .test_sim_result import main as sim_result_main
 from .test_examples import main as examples_main
 from .test_centrifugal_pump import main as centrifugal_pump_main
 from .test_pneumatic_valve import main as pneumatic_valve_main
@@ -32,6 +33,11 @@ if __name__ == '__main__':
     was_successful = True
     try:
         base_models_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        sim_result_main()
     except Exception:
         was_successful = False
 
