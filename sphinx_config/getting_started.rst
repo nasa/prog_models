@@ -28,7 +28,7 @@ You can install the package using pip:
 
 Use 
 ----
-See the below examples for examples of use. Run these examples using the command `python -m examples.[Example name]` (e.g., `python -m examples.sim_example`). The examples are summarized below:
+See the below examples for examples of use. Run these examples using the command `python -m examples.[Example name]` (e.g., `python -m examples.sim_example`). Note: some windows users would use `py -m examples.[Example name]` instead of python. The examples are summarized below:
 
 * :download:`examples.sim <../examples/sim.py>`
     .. automodule:: examples.sim
