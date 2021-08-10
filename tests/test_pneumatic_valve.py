@@ -1,7 +1,7 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from prog_models.models.pneumatic_valve import PneumaticValveWithWear, PneumaticValveBase
+from prog_models.models.pneumatic_valve import PneumaticValve, PneumaticValveWithWear, PneumaticValveBase
 
 class TestPneumaticValve(unittest.TestCase):
     def test_pneumatic_valve_with_wear(self):
@@ -266,6 +266,8 @@ class TestPneumaticValve(unittest.TestCase):
         config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
         self.assertAlmostEqual(times[-1], 782.53, 0)
+    def test_pneumatic_valve(self):
+        self.assertEqual(PneumaticValve, PneumaticValveWithWear)
 
 # This allows the module to be executed directly
 def run_tests():
