@@ -188,7 +188,7 @@ class PrognosticsModel(ABC):
             if len(self.states) <= 0:
                 raise ProgModelTypeError('`states` attribute must have at least one state key')
             try:
-                a = iter(self.states)
+                iter(self.states)
             except TypeError:
                 raise ProgModelTypeError('model.states must be iterable')
 
