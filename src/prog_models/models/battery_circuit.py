@@ -3,8 +3,7 @@
 
 from .. import prognostics_model
 
-import math
-from math import exp
+from math import exp, inf
 
 
 class BatteryCircuit(prognostics_model.PrognosticsModel):
@@ -107,7 +106,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, math.inf)
+        'tb': (-273.15, inf)
     }
 
     def initialize(self, u={}, z={}):

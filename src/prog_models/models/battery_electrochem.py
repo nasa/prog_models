@@ -3,8 +3,7 @@
 
 from .. import PrognosticsModel
 
-import math
-from math import asinh, log
+from math import asinh, log, inf
 from copy import deepcopy
 
 # Constants of nature
@@ -202,7 +201,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, math.inf)
+        'tb': (-273.15, inf)
     }
 
     param_callbacks = {  # Callbacks for derived parameters

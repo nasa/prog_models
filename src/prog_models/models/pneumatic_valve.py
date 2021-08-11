@@ -3,8 +3,7 @@
 
 from .. import prognostics_model
 from ..exceptions import ProgModelException
-import math
-from math import sqrt, copysign
+from math import sqrt, copysign, inf
 from copy import deepcopy
 
 
@@ -169,13 +168,13 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'Aeb': (0, math.inf),
-        'Art': (0, math.inf),
-        'Ai': (0, math.inf),
-        'k': (0, math.inf),
-        'mBot': (0, math.inf),
-        'mTop': (0, math.inf),
-        'r': (0, math.inf)
+        'Aeb': (0, inf),
+        'Art': (0, inf),
+        'Ai': (0, inf),
+        'k': (0, inf),
+        'mBot': (0, inf),
+        'mTop': (0, inf),
+        'r': (0, inf)
     }
 
     def initialize(self, u, z = None):

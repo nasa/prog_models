@@ -140,10 +140,10 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'To': (-273.15, math.inf),
-        'Tr': (-273.15, math.inf),
-        'Tt': (-273.15, math.inf),
-        'A': (0, math.inf)
+        'To': (-273.15, inf),
+        'Tr': (-273.15, inf),
+        'Tt': (-273.15, inf),
+        'A': (0, inf)
     }
 
     def initialize(self, u, z = None):
