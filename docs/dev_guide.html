@@ -7,9 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Developers Guide &#8212; Prognostics Models Python Package 1.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -38,44 +38,153 @@
 <div class="contents topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#developers-guide" id="id1">Developers Guide</a></p>
+<li><p><a class="reference internal" href="#developers-guide" id="id3">Developers Guide</a></p>
 <ul>
-<li><p><a class="reference internal" href="#branching-strategy" id="id2">Branching Strategy</a></p>
+<li><p><a class="reference internal" href="#installing-from-a-branch" id="id4">Installing from a branch</a></p></li>
+<li><p><a class="reference internal" href="#contributing" id="id5">Contributing</a></p></li>
+<li><p><a class="reference internal" href="#notes-for-developers" id="id6">Notes for developers</a></p></li>
+<li><p><a class="reference internal" href="#branching-strategy" id="id7">Branching Strategy</a></p>
 <ul>
-<li><p><a class="reference internal" href="#release-checklist" id="id3">Release Checklist</a></p></li>
+<li><p><a class="reference internal" href="#pr-checklist" id="id8">PR Checklist</a></p></li>
+<li><p><a class="reference internal" href="#release-checklist" id="id9">Release Checklist</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#npr-7150" id="id4">NPR 7150</a></p>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#updating-documentation" id="id10">Updating Documentation</a></p></li>
+<li><p><a class="reference internal" href="#uploading-new-version-to-pypi" id="id11">Uploading new version to PyPI</a></p>
 <ul>
-<li><p><a class="reference internal" href="#compliance-notation-legend" id="id5">Compliance Notation Legend</a></p></li>
-<li><p><a class="reference internal" href="#compliance-matrix" id="id6">Compliance Matrix</a></p></li>
-<li><p><a class="reference internal" href="#aquisition-options" id="id7">Aquisition Options</a></p></li>
-<li><p><a class="reference internal" href="#cybersecurity-assessment" id="id8">Cybersecurity Assessment</a></p></li>
+<li><p><a class="reference internal" href="#npr-7150" id="id12">NPR 7150</a></p>
+<ul>
+<li><p><a class="reference internal" href="#compliance-notation-legend" id="id13">Compliance Notation Legend</a></p></li>
+<li><p><a class="reference internal" href="#compliance-matrix" id="id14">Compliance Matrix</a></p></li>
+<li><p><a class="reference internal" href="#aquisition-options" id="id15">Aquisition Options</a></p></li>
+<li><p><a class="reference internal" href="#cybersecurity-assessment" id="id16">Cybersecurity Assessment</a></p></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </div>
+<section id="installing-from-a-branch">
+<h2><a class="toc-backref" href="#contents">Installing from a branch</a><a class="headerlink" href="#installing-from-a-branch" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>To install the prog_models package from a specific branch. First clone the repository and checkout the branch. Then navigate into the repository directory and use the following command:</dt><dd><p><cite>pip install -e .</cite></p>
+</dd>
+</dl>
+<p>This command installs the prog_models package using the checked-out version.</p>
+</section>
+<section id="contributing">
+<h2><a class="toc-backref" href="#contents">Contributing</a><a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h2>
+<p>New external (non-NASA or NASA contractor) developers must complete either the <a class="reference external" href="https://github.com/nasa/prog_models/tree/master/forms">organizational or individual Contributor License Agreement (CLA)</a>.</p>
+<p>Curious about what needs to be done? Have an idea for a new feature? Find a bug? Check out <a class="reference external" href="https://github.com/nasa/prog_models/issues">open issues</a>.</p>
+</section>
+<section id="notes-for-developers">
+<h2><a class="toc-backref" href="#contents">Notes for developers</a><a class="headerlink" href="#notes-for-developers" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The package itself is stored in the src directory</p></li>
+<li><dl class="simple">
+<dt>Examples are included in the examples/ directory.</dt><dd><ul>
+<li><p>Examples should cover the major use cases and features. If a major new feature is added, make sure there’s an examples</p></li>
+<li><p>For new examples- add to examples __all__ and example tests (tests/test_examples)</p></li>
+<li><p>Also for new examples- add to getting started page in sphinx_config</p></li>
+<li><p>Examples should include comments explicitly describing each step</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Tests are included in the tests/ directory</dt><dd><ul>
+<li><p>Each new feature should have a test. Make sure in PR review</p></li>
+<li><p>Check test coverage to improve completeness</p></li>
+<li><p>For tests- make sure test are quality. They should cover expected input ranges, error handling.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Documentation</dt><dd><ul>
+<li><p>Documentation is autogenerated using sphinx.</p></li>
+<li><p>Configuration is in sphinx_config</p></li>
+<li><p>Documentation is rebuilt on each release</p></li>
+<li><p>On each release, documentation can be seen <a class="reference external" href="https://nasa.github.io/prog_models/">here</a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>GitHub Actions</dt><dd><ul>
+<li><p>Automated tests are defined in .github</p></li>
+<li><p>Adding tests to required must be done by administrator</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Template</dt><dd><ul>
+<li><p>An empty template of a prognostics model is maintained at prog_model_template.py</p></li>
+<li><p>Any changes to the basic model setup should be documented there</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Dependencies are listed in requirements.txt. In general avoid adding a new dependency</p></li>
+<li><p>A tutorial is included in tutorial.ipynb. This required Juypter Notebooks. All major features should be illustrated here.</p></li>
+<li><p>Legal stuff: All pages should have the following notice on them:</p></li>
+</ul>
+<p>“Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved.”</p>
+</section>
 <section id="branching-strategy">
 <h2><a class="toc-backref" href="#contents">Branching Strategy</a><a class="headerlink" href="#branching-strategy" title="Permalink to this headline">¶</a></h2>
 <p>Our project is following the git strategy described <a class="reference external" href="https://nvie.com/posts/a-successful-git-branching-model/">here</a>. Release branches are not required. Details specific to each branch are described below.</p>
 <p><cite>master</cite>: Every merge into the master branch is done using a pull request (never commiting directly), is assigned a release number, and must comply with the release checklist. The release checklist is a software assurance tool.</p>
 <p><cite>dev</cite>: Every commit on the dev branch should be functional. All unit tests must function before commiting to dev or merging another branch.</p>
-<p><cite>Feature Branches</cite>: These branches include changes specific to a new feature. Before merging into dev unit tests should all run, tests should be added for the feature, and documentation should be updated, as appropriate.</p>
+<p><cite>Feature Branches</cite>: These branches include changes specific to a new feature. Before merging into dev unit tests should all run, tests should be added for the feature, and documentation should be updated as appropriate.</p>
+<section id="pr-checklist">
+<h3><a class="toc-backref" href="#contents">PR Checklist</a><a class="headerlink" href="#pr-checklist" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Each PR into dev or master must be checked by someone on the team other than the author.</dt><dd><ul>
+<li><p>Reviewer should look for bugs, efficiency, readability, testing, and coverage in examples (if relevant)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>All tests must be passing</p></li>
+<li><p>All errors from static analysis must be resolved</p></li>
+<li><p>All warnings from static analysis must be reviewed and resolved - if deemed appropirate</p></li>
+<li><p>For merge into master - see Release Checklist below</p></li>
+</ul>
+</section>
 <section id="release-checklist">
 <h3><a class="toc-backref" href="#contents">Release Checklist</a><a class="headerlink" href="#release-checklist" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Code review - all software must be checked by someone other than the author</p></li>
 <li><p>Check that each new feature has a corresponding tests</p></li>
 <li><p>Run unit tests <cite>python -m tests</cite></p></li>
+<li><p>Review the template</p></li>
+<li><p>Test the tutorial</p></li>
 <li><p>Check documents- see if any updates are required</p></li>
 <li><p>Rebuild sphinx documents: <cite>sphinx-build sphinx-config/ docs/</cite></p></li>
 <li><p>Write release notes</p></li>
+<li><p>Update version number in src/prog_models/__init__.py and setup.py</p></li>
 <li><p>For releases adding new features- ensure that NASA release process has been followed</p></li>
 </ul>
 </section>
 </section>
+</section>
+<section id="updating-documentation">
+<h1><a class="toc-backref" href="#contents">Updating Documentation</a><a class="headerlink" href="#updating-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Use the following command to update documentation (requires sphinx):
+.. code-block: bash</p>
+<blockquote>
+<div><p>sphinx-build sphinx_config docs`</p>
+</div></blockquote>
+</section>
+<section id="uploading-new-version-to-pypi">
+<h1><a class="toc-backref" href="#contents">Uploading new version to PyPI</a><a class="headerlink" href="#uploading-new-version-to-pypi" title="Permalink to this headline">¶</a></h1>
+<p>New versions are uploaded upon release (i.e., merge into master). The Release Checklist must be complete prior to release</p>
+<p>See <a class="reference external" href="https://packaging.python.org/guides/distributing-packages-using-setuptools/#packaging-your-project">here</a></p>
 <section id="npr-7150">
 <h2><a class="toc-backref" href="#contents">NPR 7150</a><a class="headerlink" href="#npr-7150" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -110,7 +219,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>033</p></td>
-<td><p>Assess aquisiton Options</p></td>
+<td><p>Assess Aquisiton Options</p></td>
 <td><p>FC</p></td>
 <td><p>See section below</p></td>
 </tr>
@@ -179,7 +288,7 @@
 </section>
 <section id="aquisition-options">
 <h3><a class="toc-backref" href="#contents">Aquisition Options</a><a class="headerlink" href="#aquisition-options" title="Permalink to this headline">¶</a></h3>
-<p>Assessed, there are some existing prognostics tools, but no general python package that can support model-based prognostics like we need.</p>
+<p>Assessed, there are some existing prognostics tools but no general python package that can support model-based prognostics like we need.</p>
 </section>
 <section id="cybersecurity-assessment">
 <h3><a class="toc-backref" href="#contents">Cybersecurity Assessment</a><a class="headerlink" href="#cybersecurity-assessment" title="Permalink to this headline">¶</a></h3>
@@ -207,12 +316,22 @@
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#electrochemistry-model-updates">ElectroChemistry Model Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#centrifugalpump-model-updates">CentrifugalPump Model Updates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pneumaticvalve-model-updates">PneumaticValve Model Updates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developers Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installing-from-a-branch">Installing from a branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributing">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notes-for-developers">Notes for developers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#branching-strategy">Branching Strategy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#updating-documentation">Updating Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#uploading-new-version-to-pypi">Uploading new version to PyPI</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#npr-7150">NPR 7150</a></li>
 </ul>
 </li>
@@ -230,7 +349,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>

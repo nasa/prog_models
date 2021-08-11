@@ -67,7 +67,7 @@ See the below examples for examples of use. Run these examples using the command
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
 Model Specific examples
-----------
+------------------------
 * :download:`examples.sim_battery_eol <../examples/sim_battery_eol.py>`
     .. automodule:: examples.sim_battery_eol
     |
