@@ -169,7 +169,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
     state_limits = {
         'Aeb': (0, inf),
-        'Art': (0, inf),
+        'Aet': (0, inf),
         'Ai': (0, inf),
         'k': (0, inf),
         'mBot': (0, inf),
