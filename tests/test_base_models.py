@@ -735,77 +735,78 @@ class TestModels(unittest.TestCase):
     def test_state_bounds(self):
         m = MockProgModel()
         m.state_limits = {
-            't': [-100, 100]
+            't': (-100, 100)
         }
         x0 = m.initialize()
 
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
         # inside bounds
         x0['t'] = 0
-        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        if not (-100 <= x['t'] <= 100):
-            self.fail()
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
 
         # outside low boundary
         x0['t'] = -200
-        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        if x['t'] != -100:
-            self.fail()
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertAlmostEqual(states[1]['t'], -100)
 
         # outside high boundary
         x0['t'] = 200
-        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        if x['t'] != 100:
-            self.fail()
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertAlmostEqual(states[1]['t'], 100)
 
         # at low boundary
         x0['t'] = -100
-        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        if not (-100 <= x['t'] <= 100):
-            self.fail()
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
 
         # at high boundary
         x0['t'] = 100
-        x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        if not (-100 <= x['t'] <= 100):
-            self.fail()
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
 
         # when state doesn't exist
         try:
             x0['n'] = 0
-            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
             self.fail()
         except Exception:
             pass
 
         # when state entered incorrectly
         try:
-            x0['n'] = 'f'
-            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            x0['t'] = 'f'
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
             self.fail()
         except Exception:
             pass
 
         # when boundary entered incorrectly
         try:
-            m.state_limits = { 't': ['f', 100] }
+            m.state_limits = { 't': ('f', 100) }
             x0['t'] = 0
-            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
             self.fail()
         except Exception:
             pass
 
         try:
-            m.state_limits = { 't': [-100, 'f'] }
+            m.state_limits = { 't': (-100, 'f') }
             x0['t'] = 0
-            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
             self.fail()
         except Exception:
             pass
 
         try:
-            m.state_limits = { 't': [100] }
+            m.state_limits = { 't': (100) }
             x0['t'] = 0
-            x = m.__next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
             self.fail()
         except Exception:
             pass

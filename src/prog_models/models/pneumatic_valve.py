@@ -3,7 +3,7 @@
 
 from .. import prognostics_model
 from ..exceptions import ProgModelException
-from math import sqrt, copysign
+import math
 from copy import deepcopy
 
 
@@ -167,6 +167,16 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         'wt': 0
     }
 
+    state_limits = {
+        'Aeb': (0, math.inf),
+        'Art': (0, math.inf),
+        'Ai': (0, math.inf),
+        'k': (0, math.inf),
+        'mBot': (0, math.inf),
+        'mTop': (0, math.inf),
+        'r': (0, math.inf)
+    }
+
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
@@ -314,7 +324,9 @@ class PneumaticValveWithWear(PneumaticValveBase):
         'wi': 0,
         'wk': 0,
         'wr': 0,
-        'wt': 0})    
+        'wt': 0})
+
+    state_limits = deepcopy(PneumaticValveBase.state_limits)
 
     def next_state(self, x, u, dt):
         self.parameters['wb'] = x['wb']

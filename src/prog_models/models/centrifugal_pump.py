@@ -143,6 +143,13 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         }
     }
 
+    state_limits = {
+        'To': (-273.15, math.inf),
+        'Tr': (-273.15, math.inf),
+        'Tt': (-273.15, math.inf),
+        'A': (0, math.inf)
+    }
+
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
         x0['QLeak'] = math.copysign(\
@@ -247,7 +254,9 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     default_parameters['x0'].update(
         {'wA': 0.0,
         'wThrust': 0,
-        'wRadial': 0})    
+        'wRadial': 0})
+
+    state_limits = deepcopy(CentrifugalPumpBase.state_limits)
 
     def next_state(self, x, u, dt):
         self.parameters['wA'] = x['wA']
