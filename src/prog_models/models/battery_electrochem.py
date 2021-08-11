@@ -3,7 +3,7 @@
 
 from .. import PrognosticsModel
 
-from math import asinh, log
+from math import asinh, log, inf
 from copy import deepcopy
 
 # Constants of nature
@@ -198,6 +198,10 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # End of discharge voltage threshold
         'VEOD': 3.0, 
         'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
+    }
+
+    state_limits = {
+        'tb': (-273.15, inf)
     }
 
     param_callbacks = {  # Callbacks for derived parameters
@@ -456,6 +460,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     default_parameters = deepcopy(BatteryElectroChemEOD.default_parameters)
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)
+
+    state_limits = deepcopy(BatteryElectroChemEOD.state_limits)
 
     def initialize(self, u = {}, z = {}):
         return self.parameters['x0']
