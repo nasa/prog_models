@@ -4,6 +4,7 @@
 from .. import PrognosticsModel
 
 import math
+from math import asinh, log
 from copy import deepcopy
 
 # Constants of nature

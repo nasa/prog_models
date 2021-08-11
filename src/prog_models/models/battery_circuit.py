@@ -4,6 +4,7 @@
 from .. import prognostics_model
 
 import math
+from math import exp
 
 
 class BatteryCircuit(prognostics_model.PrognosticsModel):
