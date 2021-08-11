@@ -195,9 +195,8 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             return C*A*pIn*sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
         if pOut/pIn>=threshold:
             return -C*A*pOut*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
-        if pOut>pIn:
-            return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
-        raise ProgModelException('Unknown Condition')
+        # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
+        return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
     def next_state(self, x, u, dt):
         params = self.parameters # optimization
