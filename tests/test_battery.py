@@ -25,6 +25,7 @@ class TestBattery(unittest.TestCase):
     def test_battery_electrochem(self):
         batt = BatteryElectroChem()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        self.assertEqual(BatteryElectroChem, BatteryElectroChemEODEOL)
 
     def test_battery_electrochem_EOD(self):
         batt = BatteryElectroChemEOD()
@@ -38,7 +39,7 @@ class TestBattery(unittest.TestCase):
 def run_tests():
     unittest.main()
     
-if __name__ == '__main__':
+def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Battery models")
@@ -46,3 +47,6 @@ if __name__ == '__main__':
 
     if not result:
         raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()
