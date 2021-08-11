@@ -38,7 +38,8 @@ class SimResult(UserList):
         return self.times[index]
 
     def plot(self, **kwargs):
-        plot_timeseries(self.times, self.data, options=kwargs)
+        plot_timeseries(self.times, self.data, options=kwargs)  
+    # lgtm [py/missing-equals]
 
 class CachedSimResult(SimResult):
     """
