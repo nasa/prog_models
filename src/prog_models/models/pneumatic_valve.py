@@ -2,7 +2,6 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
-from ..exceptions import ProgModelException
 from math import sqrt, copysign, inf
 from copy import deepcopy
 
