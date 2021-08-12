@@ -18,7 +18,6 @@ mpl.rcParams['figure.figsize']   = [10.0, 9.0]
 mpl.rcParams['figure.dpi']       = 100
 mpl.rcParams['savefig.dpi']      = 300
 
-
 # VISUALIZE FUNCTIONS
 # ==========================
 def get_subplot_dim(num_subplots, rowfirst=True):
@@ -70,7 +69,6 @@ def get_subplot_dim(num_subplots, rowfirst=True):
             if nrows * ncols < num_subplots:        
                 nrows += 1
     return nrows, ncols
-
 
 def set_plot_options(opt):
     """
@@ -168,7 +166,6 @@ def set_plot_options(opt):
 
     return opt
 
-
 def set_legend_options(leg_opt, s_names):
     """
     Set all remaining legend options given the legend options already specified by the users "leg_opt", 
@@ -232,7 +229,6 @@ def set_legend_options(leg_opt, s_names):
 
     return leg_opt
 
-
 def set_savefig_options(sfo):
     """
     Set all remaining save figure options given the options already specified by the user "sfo".
@@ -270,7 +266,6 @@ def set_savefig_options(sfo):
     if 'save' in sfo_list and 'filename' not in sfo_list:
         sfo_list['filename'] = 'timeseries_plot.pdf'
     return sfo
-
 
 def set_legend(ax, item, s_names, leg_opt):
     """
@@ -328,7 +323,6 @@ def set_legend(ax, item, s_names, leg_opt):
                      framealpha=leg_opt['framealpha'], facecolor=leg_opt['facecolor'],
                      edgecolor=leg_opt['edgecolor'], title=leg_opt['title'])
 
-
 def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
     """
     Display label option for time series plot
@@ -370,7 +364,6 @@ def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
             ax.set_xticks([], minor=[])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
     elif 'all' in opt['display_labels']:    
         set_labels(ax, opt, series_names)
-
 
 def extract_option(opt, idx, series_names):
     """
@@ -422,7 +415,6 @@ def extract_option(opt, idx, series_names):
         return opt[idx]
     return opt
 
-
 def set_ax_options(ax, opts):
     """
     Set label options for plot axis.
@@ -458,7 +450,6 @@ def set_ax_options(ax, opts):
         ax.set_xticklabels(opts['xticks'], rotation=opts['xtick_rotation'], fontsize=opts['xtick_fontsize'])
     if opts['yticks']:
         ax.set_yticklabels(opts['yticks'], rotation=opts['ytick_rotation'], fontsize=opts['ytick_fontsize'])
-    
 
 def set_labels(ax, opt, series_names, axis='all'):
     """
@@ -504,7 +495,6 @@ def set_labels(ax, opt, series_names, axis='all'):
             ytick_rot = extract_option(opt['ytick_rotation'], idx, series_names)
             ytick_fs  = extract_option(opt['ytick_fontsize'], idx, series_names)
             ax.set_yticklabels(ytick, rotation=ytick_rot, fontsize=ytick_fs)
-
 
 def plot_timeseries(t, s, legend=None, options=None):
     """

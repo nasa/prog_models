@@ -95,6 +95,7 @@ def update_qSBmax(params):
         'qBMax': params['qMax']*(1.0-params['VolSFraction']),
     }
 
+
 class BatteryElectroChemEOD(PrognosticsModel):
     """
     Prognostics model for a battery, represented by an electrochemical equations.
@@ -342,6 +343,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
              'EOD': z['v'] < self.parameters['VEOD']
         }
 
+
 class BatteryElectroChemEOL(PrognosticsModel):
     """
     Prognostics model for a battery degredation, represented by an electrochemical equations.
@@ -422,6 +424,7 @@ def merge_dicts(a : dict, b : dict):
             merge_dicts(a[key], b[key])
         else:
             a[key] = b[key]
+
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """

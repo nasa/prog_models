@@ -132,6 +132,7 @@ class PrognosticsModelParameters(UserDict):
             updates = callback(self[key])
             self.update(updates)
 
+
 class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
