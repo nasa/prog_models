@@ -443,7 +443,7 @@ class PrognosticsModel(ABC):
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
         """
         
-        # Calculate next state
+        # Calculate next state and add process noise
         next_state = self.apply_process_noise(self.next_state(x, u, dt))
 
         # Check if state is within bounds
@@ -453,7 +453,6 @@ class PrognosticsModel(ABC):
             elif next_state[key] > limit[1]:
                 next_state[key] = limit[1]
 
-        # Add process noise
         return next_state
 
     def observables(self, x) -> dict:
