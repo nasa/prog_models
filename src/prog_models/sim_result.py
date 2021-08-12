@@ -58,6 +58,10 @@ class LazySimResult(SimResult):
         self.__data = None
 
     def is_cached(self):
+        """
+        Returns:
+            bool: If the value has been calculated
+        """
         return self.__data is not None
 
     @property
