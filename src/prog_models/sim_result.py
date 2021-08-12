@@ -3,6 +3,8 @@ from .visualize import plot_timeseries
 
 
 class SimResult(UserList):
+    __slots__ = ['times', 'data']  # Optimization 
+
     """
     Used to store the result of a simulation, with time 
     """
