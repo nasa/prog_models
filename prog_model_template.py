@@ -11,6 +11,17 @@
 from prog_models import PrognosticsModel
 import math
 
+# REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
+# See examples.derived_params
+# 
+# Each function defines one or more derived parameters as a function of the other parameters.
+def example_callback(params):
+    # Return format: dict of key: new value pair for at least one derived parameter
+    return {
+        "Example Parameter 1": params["Example Parameter 2"]-3
+    }
+
+
 class ProgModelTemplate(PrognosticsModel):
     """
     Template for Prognostics Model
@@ -56,17 +67,8 @@ class ProgModelTemplate(PrognosticsModel):
         'Examples State 4': (-2, 3)
     }
 
-    # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
+    # Identify callbacks used by this model
     # See examples.derived_params
-    # 
-    # Each function defines one or more derived parameters as a function of the other parameters.
-    def example_callback(params):
-      # Return format: dict of key: new value pair for at least one derived parameter
-      return {
-          "Example Parameter 1": params["Example Parameter 2"]-3
-      }
-    # 
-    # Parameter callbacks
     # Format: "trigger": [callbacks]
     # Where trigger is the parameter that the derived parameters are derived from.
     # And callbacks are one or more callback functions that define parameters that are 
