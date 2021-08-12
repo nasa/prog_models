@@ -127,13 +127,13 @@ Updates in V1.1
 * Various bug fixes
 
 ElectroChemistry Model Updates
-==============================
+************************************
 * New Feature: Thermal effects to model - how the temperature changes with use. Previous implementation only included effects of temperature on performance.
 * New Feature: Added `degraded_capacity` (i.e., EOL) event to model. There are now three different models: BatteryElectroChemEOL (degraded_capacity only), BatteryElectroChemEOD (discharge only), and BatteryElectroChemEODEOL (combined). BatteryElectroChem is an alias for BatteryElectroChemEODEOL. 
 * New Feature: Updated SOC (EOD Event State) calculation to include voltage when near V_EOD. This prevents a situation where the voltage is below lower bound but SOC > 0. 
 
 CentrifugalPump Model Updates
-=============================
+************************************
 * New Feature: Added CentrifugalPumpBase class where wear rates are parameters instead of part of the state vector. 
     * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
 * Bugfix: Fixed bug where some event states were returned as negative
@@ -142,7 +142,7 @@ CentrifugalPump Model Updates
 * Performance improvements
 
 PneumaticValve Model Updates
-============================
+************************************
 * New Feature: Added PneumaticValveBase class where wear rates are parameters instead of part of the state vector. 
     * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
 * Added example on use of PneumaticValve Model (see `examples.sim_valve`)

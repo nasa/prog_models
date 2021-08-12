@@ -292,10 +292,8 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 <li><p>Added support for python 3.9</p></li>
 <li><p>Various bug fixes</p></li>
 </ul>
-</section>
-</section>
 <section id="electrochemistry-model-updates">
-<h1>ElectroChemistry Model Updates<a class="headerlink" href="#electrochemistry-model-updates" title="Permalink to this headline">¶</a></h1>
+<h3>ElectroChemistry Model Updates<a class="headerlink" href="#electrochemistry-model-updates" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>New Feature: Thermal effects to model - how the temperature changes with use. Previous implementation only included effects of temperature on performance.</p></li>
 <li><p>New Feature: Added <cite>degraded_capacity</cite> (i.e., EOL) event to model. There are now three different models: BatteryElectroChemEOL (degraded_capacity only), BatteryElectroChemEOD (discharge only), and BatteryElectroChemEODEOL (combined). BatteryElectroChem is an alias for BatteryElectroChemEODEOL.</p></li>
@@ -303,7 +301,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 </ul>
 </section>
 <section id="centrifugalpump-model-updates">
-<h1>CentrifugalPump Model Updates<a class="headerlink" href="#centrifugalpump-model-updates" title="Permalink to this headline">¶</a></h1>
+<h3>CentrifugalPump Model Updates<a class="headerlink" href="#centrifugalpump-model-updates" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><dl class="simple">
 <dt>New Feature: Added CentrifugalPumpBase class where wear rates are parameters instead of part of the state vector.</dt><dd><ul>
@@ -319,7 +317,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 </ul>
 </section>
 <section id="pneumaticvalve-model-updates">
-<h1>PneumaticValve Model Updates<a class="headerlink" href="#pneumaticvalve-model-updates" title="Permalink to this headline">¶</a></h1>
+<h3>PneumaticValve Model Updates<a class="headerlink" href="#pneumaticvalve-model-updates" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><dl class="simple">
 <dt>New Feature: Added PneumaticValveBase class where wear rates are parameters instead of part of the state vector.</dt><dd><ul>
@@ -330,6 +328,8 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 </li>
 <li><p>Added example on use of PneumaticValve Model (see <cite>examples.sim_valve</cite>)</p></li>
 </ul>
+</section>
+</section>
 <section id="tips">
 <h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -365,11 +365,6 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 <li class="toctree-l2"><a class="reference internal" href="#model-specific-examples">Model Specific examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-1">Updates in V1.1</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#electrochemistry-model-updates">ElectroChemistry Model Updates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#centrifugalpump-model-updates">CentrifugalPump Model Updates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#pneumaticvalve-model-updates">PneumaticValve Model Updates</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#tips">Tips</a></li>
 </ul>
 </li>
