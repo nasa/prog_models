@@ -43,7 +43,7 @@ class SimResult(UserList):
         plot_timeseries(self.times, self.data, options=kwargs)  
     # lgtm [py/missing-equals]
 
-class LazySimResult(SimResult):
+class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
