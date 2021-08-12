@@ -9,7 +9,7 @@ from copy import deepcopy
 from collections import UserDict
 import types
 from array import array
-from .sim_result import SimResult, CachedSimResult
+from .sim_result import SimResult, LazySimResult
 
 
 class PrognosticsModelParameters(UserDict):
@@ -851,8 +851,8 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = CachedSimResult(self.output, times, states) 
-            saved_event_states = CachedSimResult(self.event_state, times, states)
+            saved_outputs = LazySimResult(self.output, times, states) 
+            saved_event_states = LazySimResult(self.event_state, times, states)
         else:
             saved_outputs = SimResult(times, saved_outputs)
             saved_event_states = SimResult(times, saved_event_states)
