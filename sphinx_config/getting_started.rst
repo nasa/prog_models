@@ -128,7 +128,7 @@ Updates in V1.1
 
 ElectroChemistry Model Updates
 ************************************
-* New Feature: Thermal effects to model - how the temperature changes with use. Previous implementation only included effects of temperature on performance.
+* New Feature: Added thermal effects. Now the model include how the temperature is effected by use. Previous implementation only included effects of temperature on performance.
 * New Feature: Added `degraded_capacity` (i.e., EOL) event to model. There are now three different models: BatteryElectroChemEOL (degraded_capacity only), BatteryElectroChemEOD (discharge only), and BatteryElectroChemEODEOL (combined). BatteryElectroChem is an alias for BatteryElectroChemEODEOL. 
 * New Feature: Updated SOC (EOD Event State) calculation to include voltage when near V_EOD. This prevents a situation where the voltage is below lower bound but SOC > 0. 
 
