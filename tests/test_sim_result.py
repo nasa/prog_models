@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from prog_models.sim_result import SimResult, CachedSimResult
+from prog_models.sim_result import SimResult, LazySimResult
 
 class TestSimResult(unittest.TestCase):
     def test_sim_result(self):
@@ -33,7 +33,7 @@ class TestSimResult(unittest.TestCase):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
-        result = CachedSimResult(f, time, state)
+        result = LazySimResult(f, time, state)
         self.assertFalse(result.is_cached())
         self.assertListEqual(result.times, time)
         for i in range(5):

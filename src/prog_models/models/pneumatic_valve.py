@@ -289,6 +289,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             "Friction Failure": x['r'] > params['rMax']
         }
 
+
 class PneumaticValveWithWear(PneumaticValveBase):
     """
     Prognostics model for a pneumatic valve with wear parameters as part of the model state. This is identical to PneumaticValveBase, only PneumaticValveBase has the wear params as parameters instead of states

@@ -9,7 +9,7 @@ from copy import deepcopy
 from collections import UserDict
 import types
 from array import array
-from .sim_result import SimResult, CachedSimResult
+from .sim_result import SimResult, LazySimResult
 
 
 class PrognosticsModelParameters(UserDict):
@@ -131,6 +131,7 @@ class PrognosticsModelParameters(UserDict):
         if key in self:
             updates = callback(self[key])
             self.update(updates)
+
 
 class PrognosticsModel(ABC):
     """
@@ -443,7 +444,7 @@ class PrognosticsModel(ABC):
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
         """
         
-        # Calculate next state
+        # Calculate next state and add process noise
         next_state = self.apply_process_noise(self.next_state(x, u, dt))
 
         # Check if state is within bounds
@@ -453,7 +454,6 @@ class PrognosticsModel(ABC):
             elif next_state[key] > limit[1]:
                 next_state[key] = limit[1]
 
-        # Add process noise
         return next_state
 
     def observables(self, x) -> dict:
@@ -851,8 +851,8 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = CachedSimResult(self.output, times, states) 
-            saved_event_states = CachedSimResult(self.event_state, times, states)
+            saved_outputs = LazySimResult(self.output, times, states) 
+            saved_event_states = LazySimResult(self.event_state, times, states)
         else:
             saved_outputs = SimResult(times, saved_outputs)
             saved_event_states = SimResult(times, saved_event_states)
@@ -1014,6 +1014,8 @@ class PrognosticsModel(ABC):
             kwargs: Configuration parameters. Supported parameters include: \n
              | method: Optimization method- see scikit.optimize.minimize 
              | options: Options passed to optimizer
+
+        See: examples.param_est
         """
         from scipy.optimize import minimize
 

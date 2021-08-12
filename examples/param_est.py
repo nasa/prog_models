@@ -28,7 +28,7 @@ def run_example():
         {'x': 7.91},
     ]
 
-    # Step 3: Identify the parameters to be optimized
+    # Step 3: Identify the parameters to be estimated
     keys = ['thrower_height', 'throwing_speed']
 
     # Printing state before
