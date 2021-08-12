@@ -3,14 +3,14 @@
 [![GitHub License](https://img.shields.io/badge/License-NOSA-green)](https://github.com/nasa/prog_models/blob/master/license.pdf)
 [![GitHub Releases](https://img.shields.io/github/release/nasa/prog_models.svg)](https://github.com/nasa/prog_models/releases)
 
-The NASA Prognostic Model Package is a Python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
+The NASA Prognostic Model Package is a Python framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
 
 This is designed to be used with the [Prognostics Algorithms Package](https://github.com/nasa/prog_algs).
 
 ## Installation 
 `pip3 install prog_models`
 
-## Documentation
+## [Documentation](https://nasa.github.io/prog_models/)
 See documentation [here](https://nasa.github.io/prog_models/)
  
 ## Repository Directory Structure 
@@ -19,33 +19,34 @@ Here is the directory structure for the github repository
 `src/prog_models/` - The prognostics model python package<br />
 &nbsp;&nbsp; |-`models/` - Example models<br /> 
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
+&nbsp;&nbsp; |-`sim_result.py` - Class for storing the result of a simulation (used by `prognostics_model`)<br />
 &nbsp;&nbsp; |-`visualize.py` - Visualization tools<br />
 `docs/` - Project documentation<br />
 `sphinx_config/` - Configuration for automatic documentation generation<br />
 `examples/` - Example Python scripts using prog_models<br />
 `tests/` - Tests for prog_models<br />
 `README.md` - The readme (this file)<br />
-`requirements.txt` - Python library dependiencies required to be met to use this package. Install using `pip install -r requirements.txt`<br />
-`prog_model_template.py` - Template for Prognsotics Model<br />
+`requirements.txt` - Python library dependiencies required to be met to use this package<br />
+`prog_model_template.py` - Template for Prognsostics Model<br />
 `tutorial.ipynb` - Tutorial (Juypter Notebook)
 
 ## Citing this repository
 Use the following to cite this repository:
 
 ```
-@misc{2020_nasa_prog_models,
+@misc{2021_nasa_prog_models,
     author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Matthew Daigle},
     title     = {Prognostics Models Python Package},
-    month     = Apr,
+    month     = Aug,
     year      = 2021,
-    version   = {1.0},
+    version   = {1.1},
     url       = {https://github.com/nasa/prog_models}
     }
 ```
 
 The corresponding reference should look like this:
 
-C. Teubert, M. Corbetta, C. Kulkarni, and M. Daigle, Prognostics Models Python Package, v1.0, Apr. 2021. URL https://github.com/nasa/prog_models.
+C. Teubert, M. Corbetta, C. Kulkarni, and M. Daigle, Prognostics Models Python Package, v1.1, Aug. 2021. URL https://github.com/nasa/prog_models.
 
 ## Acknowledgements
 The structure and algorithms of this package are strongly inspired by the [MATLAB Prognostics Model Library](https://github.com/nasa/PrognosticsModelLibrary). We would like to recognize Matthew Daigle and the rest of the team that contributed to the Prognostics Model Library for the contributions their work on the MATLAB library made to the design of prog_models
