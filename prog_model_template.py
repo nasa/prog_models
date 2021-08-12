@@ -44,6 +44,7 @@ class ProgModelTemplate(PrognosticsModel):
     # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
     default_parameters = { # Set default parameters
         'Example Parameter 1': 0,
+        'Example Parameter 2': 3,
         'process_noise': 0.1, # Process noise
     }
 
@@ -57,7 +58,22 @@ class ProgModelTemplate(PrognosticsModel):
 
     # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
     # See examples.derived_params
+    # 
+    # Each function defines one or more derived parameters as a function of the other parameters.
+    def example_callback(params):
+      # Return format: dict of key: new value pair for at least one derived parameter
+      return {
+          "Example Parameter 1": params["Example Parameter 2"]-3
+      }
+    # 
+    # Parameter callbacks
+    # Format: "trigger": [callbacks]
+    # Where trigger is the parameter that the derived parameters are derived from.
+    # And callbacks are one or more callback functions that define parameters that are 
+    # derived from that parameter
+    # REPLACE THIS WITH ACTUAL DERIVED PARAMETER CALLBACKS
     param_callbacks = {
+        "Example Parameter 2": [example_callback]
     }
 
 
