@@ -146,9 +146,9 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'To': (-273.15, inf),
-        'Tr': (-273.15, inf),
-        'Tt': (-273.15, inf),
+        'To': (0, inf),  # Limited by absolute zero (0 K)
+        'Tr': (0, inf),  # Limited by absolute zero (0 K)
+        'Tt': (0, inf),  # Limited by absolute zero (0 K)
         'A': (0, inf)
     }
 
