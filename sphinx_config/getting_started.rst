@@ -54,6 +54,9 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.future_loading <../examples/future_loading.py>`
     .. automodule:: examples.future_loading
     |
+* :download:`examples.state_limits <../examples/state_limits.py>`
+    .. automodule:: examples.state_limits
+    |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
