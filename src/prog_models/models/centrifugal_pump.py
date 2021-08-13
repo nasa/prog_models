@@ -157,7 +157,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'To': (0, inf),  # Limited by absolute zero (0 K)
         'Tr': (0, inf),  # Limited by absolute zero (0 K)
         'Tt': (0, inf),  # Limited by absolute zero (0 K)
-        'A': (0, inf)
+        'A': (0, inf),
         'rThrust': (0, inf),
         'rRadial': (0, inf)
     }
