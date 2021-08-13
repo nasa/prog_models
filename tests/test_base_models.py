@@ -732,7 +732,7 @@ class TestModels(unittest.TestCase):
             pass
 
     # when range specified when state doesnt exist or entered incorrectly
-    def test_state_bounds(self):
+    def test_state_limits(self):
         m = MockProgModel()
         m.state_limits = {
             't': (-100, 100)
