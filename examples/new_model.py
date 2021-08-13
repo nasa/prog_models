@@ -38,7 +38,7 @@ class ThrownObject(PrognosticsModel):
         self.max_x = 0.0
         return {
             'x': self.parameters['thrower_height'], # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is an professional baseball pitcher
+            'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
             }
     
     def dx(self, x, u):

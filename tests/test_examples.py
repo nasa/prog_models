@@ -132,6 +132,17 @@ class TestExamples(unittest.TestCase):
         # Reset stdout 
         sys.stdout = _stdout
 
+    def test_state_bounds(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        state_limits.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
