@@ -109,7 +109,8 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, inf)
+        'tb': (-273.15, inf),
+        'qb': (0, inf)
     }
 
     def initialize(self, u={}, z={}):

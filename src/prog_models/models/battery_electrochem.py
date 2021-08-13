@@ -209,7 +209,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (0, inf)  # Limited by Absolute Zero (0 K)
+        'tb': (0, inf),  # Limited by Absolute Zero (0 K)
+        'qnB': (0, inf),
+        'qnS': (0, inf),
+        'qpB': (0, inf),
+        'qpS': (0, inf)
     }
 
     param_callbacks = {  # Callbacks for derived parameters
@@ -404,6 +408,10 @@ class BatteryElectroChemEOL(PrognosticsModel):
         # Note: Battery manufacturers specify a threshold of 70-80% of qMax
     }
 
+    state_limits = {
+        'qMax': (0, inf)
+    }
+
     def initialize(self, u = {}, z = {}):
         return self.parameters['x0']
 
@@ -474,6 +482,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         BatteryElectroChemEOL.default_parameters)
 
     state_limits = deepcopy(BatteryElectroChemEOD.state_limits)
+    state_limits.update(BatteryElectroChemEOL.state_limits)
 
     def initialize(self, u = {}, z = {}):
         return self.parameters['x0']

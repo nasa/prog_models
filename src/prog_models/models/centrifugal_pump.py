@@ -149,7 +149,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'To': 290,
             'A': 12.7084,
             'rThrust': 1.4e-6,
-            'rRadial': 1.8e-6,
+            'rRadial': 1.8e-6
         }
     }
 
@@ -158,6 +158,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'Tr': (0, inf),  # Limited by absolute zero (0 K)
         'Tt': (0, inf),  # Limited by absolute zero (0 K)
         'A': (0, inf)
+        'rThrust': (0, inf),
+        'rRadial': (0, inf)
     }
 
     def initialize(self, u, z = None):
