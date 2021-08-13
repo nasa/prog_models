@@ -26,6 +26,7 @@ class PrognosticsModelParameters(UserDict):
         super().__init__()
         self.__m = model
         self.callbacks = {}
+        # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
         for (key, value) in dict_in.items():
             # Deepcopy is needed here to force copying when value is an object (e.g., dict)
             self[key] = deepcopy(value)
