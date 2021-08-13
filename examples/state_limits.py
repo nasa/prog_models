@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use state limits. Run using the command `python -m examples.state_limits_example`
+Example demonstrating ways to use state limits. Run using the command `python -m examples.state_limits`
 """
 
 from .new_model import ThrownObject
