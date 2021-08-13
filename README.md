@@ -27,7 +27,7 @@ Here is the directory structure for the github repository
 `tests/` - Tests for prog_models<br />
 `README.md` - The readme (this file)<br />
 `requirements.txt` - Python library dependiencies required to be met to use this package<br />
-`prog_model_template.py` - Template for Prognsostics Model<br />
+`prog_model_template.py` - Template for Prognostics Model<br />
 `tutorial.ipynb` - Tutorial (Juypter Notebook)
 
 ## Citing this repository
