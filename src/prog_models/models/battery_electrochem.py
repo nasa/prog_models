@@ -9,6 +9,9 @@ from copy import deepcopy
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
 F = 96487      # Faraday's constant, C/mol
+R_F = R / F    # Optimization - R / F
+mC = 37.04 # kg/m2/(K-s^2)
+tau = 100
 
 def update_qmax(params):
     # note qMax = qn+qp
@@ -231,7 +234,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Jn = u['i']/params['Sn']
         Jn0 = params['kn']*((1-xnS)*xnS)**params['alpha']
 
-        v_part = R*x['tb']/F/params['alpha']
+        v_part = R_F*x['tb']/params['alpha']
 
         VsnNominal = v_part*asinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
@@ -257,8 +260,6 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         # Thermal Effects
         voltage_eta = x['Vo'] + x['Vsn'] + x['Vsp'] # (Vep - Ven) - V;
-        mC = 37.04 # kg/m2/(K-s^2)
-        tau = 100
 
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
