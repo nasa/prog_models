@@ -28,15 +28,23 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | psuc: Suction Pressure (Pa)
         | wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)
 
-    States: (12)
-        A, Q, To, Tr, Tt, rRadial, rThrust, w, QLeak
+    States: (9)
+        | A: Impeller Area (m^2)
+        | Q: Flow Rate into Pump (m^3/s)
+        | To: Oil Temperature (K)
+        | Tr: Radial Bearing Temperature (K)
+        | Tt: Thrust Bearing Temperature (K)
+        | rRadial: Radial (thrust) Friction Coefficient
+        | rThrust: Rolling Friction Coefficient
+        | w: Rotational Velocity of Pump (rad/sec)
+        | QLeak: Leak Flow Rate (m^3/s)
 
     Outputs/Measurements: (5)
         | Qout: Discharge Flow (m^3/s)
         | To: Oil Temperature (K)
         | Tr: Radial Bearing Temperature (K)
         | Tt: Thrust Bearing Temperature (K)
-        | w: Mechanical Rotation (rad/sec)
+        | w: Rotational Velocity of Pump (rad/sec)
 
     Model Configuration Parameters:
         | process_noise : Process noise (applied at dx/next_state).
@@ -238,7 +246,10 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
         See CentrifugalPumpBase
     
     States: (12)
-        States from CentrifugalPumpBase +  wA, wRadial, wThrust
+        | States from CentrifugalPumpBase +
+        | wA: Wear Rate for Impeller Area
+        | wRadial: Wear Rate for Radial (thrust) Friction Coefficient
+        | wRadial: Wear Rate for Rolling Friction Coefficient
 
     Outputs/Measurements: (5)
         See CentrifugalPumpBase

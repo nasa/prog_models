@@ -20,7 +20,10 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         i: Current draw on the battery
 
     States: (4)
-        tb, qb, qcp, qcs
+        | tb : Battery Temperature (°C)
+        | qb : Battery Charge
+        | qcp : 
+        | qcs : 
 
     Outputs: (2)
         | t: Temperature of battery (°C)

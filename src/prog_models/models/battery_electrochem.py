@@ -112,11 +112,18 @@ class BatteryElectroChemEOD(PrognosticsModel):
         i: Current draw on the battery
 
     States: (8)
-        tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS
+        | tb: Battery temperature (K)
+        | Vo: Voltage Drops due to Solid-Phase Ohmic Resistances
+        | Vsn: Negative Surface Voltage (V)
+        | Vsp: Positive Surface Voltage (V)
+        | qnB: Amount of Negative Ions at the Battery Bulk
+        | qnS: Amount of Negative Ions at the Battery Surface
+        | qpB: Amount of Positive Ions at the Battery Bulk
+        | qpS: Amount of Positive Ions at the Battery Surface
 
     Outputs/Measurements: (2)
         | t: Temperature of battery (°C) 
-        | v: Voltage supplied by battery`
+        | v: Voltage supplied by battery
 
     Model Configuration Parameters:
         | process_noise : Process noise (applied at dx/next_state). 
@@ -360,9 +367,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
         i: Current draw on the battery
 
     States: (3)
-        qMax, Ro, D
+        | qMax: Maximum battery capacity
+        | Ro : for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)
+        | D : diffusion time constant (increasing this causes decrease in diffusion rate)
 
-    Outputs/Measurements: (2)
+    Outputs/Measurements: (0)
 
     Model Configuration Parameters:
         | process_noise : Process noise (applied at dx/next_state). 
@@ -446,11 +455,11 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         i: Current draw on the battery
 
     States: (11)
-        tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS, qMax, Ro, D
+        See BatteryElectroChemEOD, BatteryElectroChemEOL
 
     Outputs/Measurements: (2)
         | t: Temperature of battery (°C) 
-        | v: Voltage supplied by battery`
+        | v: Voltage supplied by battery
 
     Model Configuration Parameters:
         | see: BatteryElectroChemEOD, BatteryElectroChemEOL
