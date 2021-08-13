@@ -51,6 +51,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | a0, a1, a2 : empirical coefficients for flow torque eqn
         | A : impeller blade area
         | b :
+        | n : Pole Phases 
+        | p : Pole Pairs
         | I : impeller/shaft/motor lumped inertia
         | r : lumped friction parameter (minus bearing friction)
         | R1, R2 :
@@ -84,6 +86,9 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'a2': 9179.4,		# empirical coefficient for flow torque eqn
         'A': 12.7084,		# impeller blade area
         'b': 17984.6,
+
+        'n': 3,             # Pole Phases
+        'p': 1,             # Pole Pairs
 
         # Pump/motor dynamics
         'I': 50,            # impeller/shaft/motor lumped inertia
@@ -172,7 +177,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qout = max(0,x['Q']-QLeak)
         slip = max(-1,(min(1,slipn)))
         deltaP = ppump+u['psuc']-u['pdisch']
-        Te = 3*params['R2']/slip/(u['wsync']+0.00001)*u['V']**2 \
+        Te = params['n']*params['p']*params['R2']/(slip*(u['wsync']+0.00001)) * u['V']**2 \
             /((params['R1']+params['R2']/slip)**2+(u['wsync']*params['L1'])**2)
         backTorque = -params['a2']*Qout**2 + params['a1']*x['w']*Qout + params['a0']*x['w']**2
         Qo = math.copysign(params['c']*math.sqrt(abs(deltaP)), deltaP)
