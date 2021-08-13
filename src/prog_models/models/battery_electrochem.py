@@ -202,7 +202,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, inf)
+        'tb': (0, inf)  # Limited by Absolute Zero (0 K)
     }
 
     param_callbacks = {  # Callbacks for derived parameters
