@@ -87,7 +87,7 @@ There are two methods for creating new models: 1. Implementing a new subclass of
 
 1. Subclass Method
 ********************
-The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:
+The first method for creating a new prog_model is by creating a new subclass of :class:`prog_models.PrognosticsModel`. :class:`prog_models.PrognosticsModel` is described below:
 
 .. autoclass:: prog_models.PrognosticsModel
 
@@ -99,7 +99,7 @@ See :download:`examples.new_model <../examples/new_model.py>` for an example of 
 
 2. Model Generator Method
 *************************
-The second way to generate a new model is using the model generator method :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model` for more detail.
+The second way to generate a new model is using the model generator method, :py:meth:`prog_models.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.PrognosticsModel.generate_model` for more detail.
 
 See :download:`examples.model_gen <../examples/model_gen.py>` for an example of this approach.
 

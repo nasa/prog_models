@@ -80,13 +80,13 @@ Release Checklist
 * For releases adding new features- ensure that NASA release process has been followed
 
 Updating Documentation 
-==================
+------------------------
 Use the following command to update documentation (requires sphinx):
 .. code-block: bash
     sphinx-build sphinx_config docs`\
 
 Uploading new version to PyPI
-==================
+------------------------
 New versions are uploaded upon release (i.e., merge into master). The Release Checklist must be complete prior to release
 
 .. code-block: bash
