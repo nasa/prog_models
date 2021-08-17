@@ -9,6 +9,9 @@ from copy import deepcopy
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
 F = 96487      # Faraday's constant, C/mol
+R_F = R / F    # Optimization - R / F
+mC = 37.04 # kg/m2/(K-s^2)
+tau = 100
 
 def update_qmax(params):
     # note qMax = qn+qp
@@ -242,7 +245,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Jn = u['i']/params['Sn']
         Jn0 = params['kn']*((1-xnS)*xnS)**params['alpha']
 
-        v_part = R*x['tb']/F/params['alpha']
+        v_part = R_F*x['tb']/params['alpha']
 
         VsnNominal = v_part*asinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
@@ -268,8 +271,6 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         # Thermal Effects
         voltage_eta = x['Vo'] + x['Vsn'] + x['Vsp'] # (Vep - Ven) - V;
-        mC = 37.04 # kg/m2/(K-s^2)
-        tau = 100
 
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
@@ -303,22 +304,24 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # Negative Surface
         xnS = x['qnS']/params['qSMax']
         xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+        one_minus_xnS = 1 - xnS
+        xnS2_minus_1 = xnS2 - 1
         VenParts = [
-            An[0] *(xnS2-1)/F,  # Ven0
-            An[1] *((xnS2-1)**2  - ((xnS + xnS)*(1-xnS)))/F,  # Ven1
-            An[2] *((xnS2-1)**3  - (4 *xnS*(1-xnS))*(xnS2-1))/F,  #Ven2
-            An[3] *((xnS2-1)**4  - (6 *xnS*(1-xnS))*(xnS2-1)**2) /F,  #Ven3
-            An[4] *((xnS2-1)**5  - (8 *xnS*(1-xnS))*(xnS2-1)**3) /F,  #Ven4
-            An[5] *((xnS2-1)**6  - (10*xnS*(1-xnS))*(xnS2-1)**4) /F,  #Ven5
-            An[6] *((xnS2-1)**7  - (12*xnS*(1-xnS))*(xnS2-1)**5) /F,  #Ven6
-            An[7] *((xnS2-1)**8  - (14*xnS*(1-xnS))*(xnS2-1)**6) /F,  #Ven7
-            An[8] *((xnS2-1)**9  - (16*xnS*(1-xnS))*(xnS2-1)**7) /F,  #Ven8
-            An[9] *((xnS2-1)**10 - (18*xnS*(1-xnS))*(xnS2-1)**8) /F,  #Ven9
-            An[10]*((xnS2-1)**11 - (20*xnS*(1-xnS))*(xnS2-1)**9) /F,  #Ven10
-            An[11]*((xnS2-1)**12 - (22*xnS*(1-xnS))*(xnS2-1)**10)/F,  #Ven11
-            An[12]*((xnS2-1)**13 - (24*xnS*(1-xnS))*(xnS2-1)**11)/F   #Ven12
+            An[0] *xnS2_minus_1/F,  # Ven0
+            An[1] *(xnS2_minus_1**2  - (xnS2*one_minus_xnS))/F,  # Ven1
+            An[2] *(xnS2_minus_1**3  - (4 *xnS*one_minus_xnS)*xnS2_minus_1)/F,  #Ven2
+            An[3] *(xnS2_minus_1**4  - (6 *xnS*one_minus_xnS)*xnS2_minus_1**2) /F,  #Ven3
+            An[4] *(xnS2_minus_1**5  - (8 *xnS*one_minus_xnS)*xnS2_minus_1**3) /F,  #Ven4
+            An[5] *(xnS2_minus_1**6  - (10*xnS*one_minus_xnS)*xnS2_minus_1**4) /F,  #Ven5
+            An[6] *(xnS2_minus_1**7  - (12*xnS*one_minus_xnS)*xnS2_minus_1**5) /F,  #Ven6
+            An[7] *(xnS2_minus_1**8  - (14*xnS*one_minus_xnS)*xnS2_minus_1**6) /F,  #Ven7
+            An[8] *(xnS2_minus_1**9  - (16*xnS*one_minus_xnS)*xnS2_minus_1**7) /F,  #Ven8
+            An[9] *(xnS2_minus_1**10 - (18*xnS*one_minus_xnS)*xnS2_minus_1**8) /F,  #Ven9
+            An[10]*(xnS2_minus_1**11 - (20*xnS*one_minus_xnS)*xnS2_minus_1**9) /F,  #Ven10
+            An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
+            An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
         ]
-        Ven = params['U0n'] + R*x['tb']/F*log((1-xnS)/xnS) + sum(VenParts)
+        Ven = params['U0n'] + R*x['tb']/F*log(one_minus_xnS/xnS) + sum(VenParts)
 
         # Positive Surface
         Ap = params['Ap']
