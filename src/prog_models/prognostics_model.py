@@ -186,27 +186,24 @@ class PrognosticsModel(ABC):
     param_callbacks = {}  # Callbacks for derived parameters
 
     def __init__(self, **kwargs):
+        if not hasattr(self, 'inputs'):
+            raise ProgModelTypeError('Must have `inputs` attribute')
+        
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
         try:
-            if not hasattr(self, 'inputs'):
-                raise ProgModelTypeError('Must have `inputs` attribute')
-            
-            if not hasattr(self, 'states'):
-                raise ProgModelTypeError('Must have `states` attribute')
-            if len(self.states) <= 0:
-                raise ProgModelTypeError('`states` attribute must have at least one state key')
-            try:
-                iter(self.states)
-            except TypeError:
-                raise ProgModelTypeError('model.states must be iterable')
+            iter(self.states)
+        except TypeError:
+            raise ProgModelTypeError('model.states must be iterable')
 
-            if not hasattr(self, 'outputs'):
-                raise ProgModelTypeError('Must have `outputs` attribute')
-            try:
-                iter(self.outputs)
-            except TypeError:
-                raise ProgModelTypeError('model.outputs must be iterable')
-        except Exception:
-            raise ProgModelTypeError('Could not check model configuration')
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        try:
+            iter(self.outputs)
+        except TypeError:
+            raise ProgModelTypeError('model.outputs must be iterable')
 
         self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
         try:
