@@ -165,13 +165,18 @@ Circuit model</p></td>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">prog_models.models.</span></span><span class="sig-name descname"><span class="pre">BatteryCircuit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.BatteryCircuit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prognostics model for a battery, represented by an electric circuit</p>
 <p>This class implements an equivilant circuit model as described in the following paper:
-<cite>M. Daigle and S. Sankararaman, “Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1055/</cite></p>
+<cite>M. Daigle and S. Sankararaman, “Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253</cite></p>
 <dl>
 <dt>Events: (1)</dt><dd><p>EOD: End of Discharge</p>
 </dd>
 <dt>Inputs/Loading: (1)</dt><dd><p>i: Current draw on the battery</p>
 </dd>
-<dt>States: (4)</dt><dd><p>tb, qb, qcp, qcs</p>
+<dt>States: (4)</dt><dd><div class="line-block">
+<div class="line">tb : Battery Temperature (°C)</div>
+<div class="line">qb : Charge stored in Capacitor Cb of the equivalent circuit model</div>
+<div class="line">qcp : Charge stored in Capacitor Ccp of the equivalent circuit model</div>
+<div class="line">qcs : Charge stored in Capacitor Ccs of the equivalent circuit model</div>
+</div>
 </dd>
 <dt>Outputs: (2)</dt><dd><div class="line-block">
 <div class="line">t: Temperature of battery (°C)</div>
@@ -431,7 +436,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -762,18 +767,27 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">prog_models.models.</span></span><span class="sig-name descname"><span class="pre">BatteryElectroChemEOD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.BatteryElectroChemEOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prognostics model for a battery, represented by an electrochemical equations.</p>
 <p>This class implements an Electro chemistry model as described in the following paper:
-<cite>M. Daigle and C. Kulkarni, “Electrochemistry-based Battery Modeling for Prognostics,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/</cite></p>
+<cite>M. Daigle and C. Kulkarni, “Electrochemistry-based Battery Modeling for Prognostics,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252</cite></p>
 <p>The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the <cite>Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/</cite>.</p>
 <dl>
 <dt>Events: (1)</dt><dd><p>EOD: End of Discharge</p>
 </dd>
 <dt>Inputs/Loading: (1)</dt><dd><p>i: Current draw on the battery</p>
 </dd>
-<dt>States: (8)</dt><dd><p>tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS</p>
+<dt>States: (8)</dt><dd><div class="line-block">
+<div class="line">tb: Battery temperature (K)</div>
+<div class="line">Vo: Voltage Drops due to Solid-Phase Ohmic Resistances</div>
+<div class="line">Vsn: Negative Surface Voltage (V)</div>
+<div class="line">Vsp: Positive Surface Voltage (V)</div>
+<div class="line">qnB: Amount of Negative Ions at the Battery Bulk</div>
+<div class="line">qnS: Amount of Negative Ions at the Battery Surface</div>
+<div class="line">qpB: Amount of Positive Ions at the Battery Bulk</div>
+<div class="line">qpS: Amount of Positive Ions at the Battery Surface</div>
+</div>
 </dd>
 <dt>Outputs/Measurements: (2)</dt><dd><div class="line-block">
 <div class="line">t: Temperature of battery (°C)</div>
-<div class="line">v: Voltage supplied by battery`</div>
+<div class="line">v: Voltage supplied by battery</div>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
@@ -1029,7 +1043,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -1354,15 +1368,19 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <p>This class implements an Electro chemistry model as described in the following paper:
 <cite>M. Daigle and C. Kulkarni, “End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models,” AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132</cite></p>
 <p>The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the <cite>Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/</cite>.</p>
-<dl class="simple">
+<dl>
 <dt>Events: (1)</dt><dd><p>InsufficientCapacity: Insufficient battery capacity</p>
 </dd>
 <dt>Inputs/Loading: (1)</dt><dd><p>i: Current draw on the battery</p>
 </dd>
-<dt>States: (3)</dt><dd><p>qMax, Ro, D</p>
+<dt>States: (3)</dt><dd><div class="line-block">
+<div class="line">qMax: Maximum battery capacity</div>
+<div class="line">Ro : for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)</div>
+<div class="line">D : diffusion time constant (increasing this causes decrease in diffusion rate)</div>
+</div>
 </dd>
 </dl>
-<p>Outputs/Measurements: (2)</p>
+<p>Outputs/Measurements: (0)</p>
 <dl>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
 <div class="line">process_noise : Process noise (applied at dx/next_state).
@@ -1597,7 +1615,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -1922,7 +1940,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <p>This class implements an Electro chemistry model as described in the following papers:</p>
 <ol class="arabic simple">
 <li><p><cite>M. Daigle and C. Kulkarni, “End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models,” AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132</cite></p></li>
-<li><p><cite>M. Daigle and C. Kulkarni, “Electrochemistry-based Battery Modeling for Prognostics,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/</cite></p></li>
+<li><p><cite>M. Daigle and C. Kulkarni, “Electrochemistry-based Battery Modeling for Prognostics,” Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252</cite></p></li>
 </ol>
 <p>The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the <cite>Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/</cite>.</p>
 <dl>
@@ -1933,11 +1951,11 @@ If blank, simulation will occur if any event will be met ()</p></li>
 </dd>
 <dt>Inputs/Loading: (1)</dt><dd><p>i: Current draw on the battery</p>
 </dd>
-<dt>States: (11)</dt><dd><p>tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS, qMax, Ro, D</p>
+<dt>States: (11)</dt><dd><p>See BatteryElectroChemEOD, BatteryElectroChemEOL</p>
 </dd>
 <dt>Outputs/Measurements: (2)</dt><dd><div class="line-block">
 <div class="line">t: Temperature of battery (°C)</div>
-<div class="line">v: Voltage supplied by battery`</div>
+<div class="line">v: Voltage supplied by battery</div>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
@@ -2163,7 +2181,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -2494,12 +2512,17 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <dd><p>Prognostics model for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states</p>
 <p>This class implements a Centrifugal Pump model as described in the following paper:
 <cite>M. Daigle and K. Goebel, “Model-based Prognostics with Concurrent Damage Progression Processes,” IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes</cite></p>
-<dl class="simple">
+<dl>
 <dt>Events (4)</dt><dd><p>See CentrifugalPumpBase</p>
 </dd>
 <dt>Inputs/Loading: (5)</dt><dd><p>See CentrifugalPumpBase</p>
 </dd>
-<dt>States: (12)</dt><dd><p>States from CentrifugalPumpBase +  wA, wRadial, wThrust</p>
+<dt>States: (12)</dt><dd><div class="line-block">
+<div class="line">States from CentrifugalPumpBase +</div>
+<div class="line">wA: Wear Rate for Impeller Area</div>
+<div class="line">wRadial: Wear Rate for Radial (thrust) Friction Coefficient</div>
+<div class="line">wRadial: Wear Rate for Rolling Friction Coefficient</div>
+</div>
 </dd>
 <dt>Outputs/Measurements: (5)</dt><dd><p>See CentrifugalPumpBase</p>
 </dd>
@@ -2724,7 +2747,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -3063,14 +3086,24 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <div class="line">wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)</div>
 </div>
 </dd>
-<dt>States: (12)</dt><dd><p>A, Q, To, Tr, Tt, rRadial, rThrust, w, QLeak</p>
+<dt>States: (9)</dt><dd><div class="line-block">
+<div class="line">A: Impeller Area (m^2)</div>
+<div class="line">Q: Flow Rate into Pump (m^3/s)</div>
+<div class="line">To: Oil Temperature (K)</div>
+<div class="line">Tr: Radial Bearing Temperature (K)</div>
+<div class="line">Tt: Thrust Bearing Temperature (K)</div>
+<div class="line">rRadial: Radial (thrust) Friction Coefficient</div>
+<div class="line">rThrust: Rolling Friction Coefficient</div>
+<div class="line">w: Rotational Velocity of Pump (rad/sec)</div>
+<div class="line">QLeak: Leak Flow Rate (m^3/s)</div>
+</div>
 </dd>
 <dt>Outputs/Measurements: (5)</dt><dd><div class="line-block">
 <div class="line">Qout: Discharge Flow (m^3/s)</div>
 <div class="line">To: Oil Temperature (K)</div>
 <div class="line">Tr: Radial Bearing Temperature (K)</div>
 <div class="line">Tt: Thrust Bearing Temperature (K)</div>
-<div class="line">w: Mechanical Rotation (rad/sec)</div>
+<div class="line">w: Rotational Velocity of Pump (rad/sec)</div>
 </div>
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
@@ -3326,7 +3359,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -3887,7 +3920,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
@@ -4511,7 +4544,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd class="field-even"><p><strong>model</strong> – A callable PrognosticsModel</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="getting_started.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel">PrognosticsModel</a></p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a> – </p>
