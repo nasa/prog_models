@@ -13,8 +13,9 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     This class implements an equivilant circuit model as described in the following paper:
     `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1055/`
     
-    Events: (1)
+    Events: (2)
         EOD: End of Discharge
+        ThermalRunaway: Thermal runaway has begun
     
     Inputs/Loading: (1)
         i: Current draw on the battery
@@ -60,7 +61,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     
     Note: This is much quicker but also less accurate as the electrochemistry model
     """
-    events = ['EOD']
+    events = ['EOD', 'ThermalRunaway']
     inputs = ['i']
     states = ['tb', 'qb', 'qcp', 'qcs']
     outputs = ['t',  'v']
@@ -101,8 +102,12 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         # current ratings
         'nomCapacity': 2.2,  # nominal capacity, Ah
         'CRateMin': 0.7,  # current necessary for cruise,
-        'CRateMax': 2.5   # current necessary for hover
+        'CRateMax': 2.5,   # current necessary for hover
         # CRateMin, CRateMax based on values determined in `C. Silva and W. Johnson, "VTOL Urban Air Mobility Concept Vehicles for Technology Development" Aviation and Aeronautics Forum (Aviation 2018),June 2018. https://arc.aiaa.org/doi/abs/10.2514/6.2018-3847`
+
+        # ThermalRunaway
+        'ApproachingRunaway': 30,  # Temperature (C) before RunawayTemp at which the battery is said to be approaching runaway
+        'RunawayTemp': 130  # Temperature (C) at which thermal runaway is said to begin
     }
 
     state_limits = {
@@ -148,6 +153,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
             self.parameters['VDropoff']
         return {
+            'ThermalRunaway': min((self.parameters['RunawayTemp'] - x['tb'])/self.parameters['ApproachingRunaway'], 1), 
             'EOD': min(charge_EOD, voltage_EOD)
         }
 
@@ -175,5 +181,6 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
 
         # Return true if voltage is less than the voltage threshold
         return {
+             'ThermalRunaway': x['tb'] >= parameters['RunawayTemp'],
              'EOD': V < parameters['VEOD']
         }
