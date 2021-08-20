@@ -5,7 +5,6 @@
 Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim_battery_eol`
 """
 
-import numpy as np
 from prog_models.models import BatteryElectroChem as Battery
 
 def run_example(): 
