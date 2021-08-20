@@ -21,9 +21,9 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
 
     States: (4)
         | tb : Battery Temperature (°C)
-        | qb : Battery Charge
-        | qcp : 
-        | qcs : 
+        | qb : Charge stored in Capacitor Cb of the equivalent circuit model
+        | qcp : Charge stored in Capacitor Ccp of the equivalent circuit model
+        | qcs : Charge stored in Capacitor Ccs of the equivalent circuit model
 
     Outputs: (2)
         | t: Temperature of battery (°C)
@@ -109,7 +109,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, inf),
+        'tb': (-273.15, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
         'qb': (0, inf)
     }
 
