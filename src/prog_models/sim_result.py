@@ -3,6 +3,8 @@ from .visualize import plot_timeseries
 
 
 class SimResult(UserList):
+    __slots__ = ['times', 'data']  # Optimization 
+
     """
     Used to store the result of a simulation, with time 
     """
@@ -38,9 +40,10 @@ class SimResult(UserList):
         return self.times[index]
 
     def plot(self, **kwargs):
-        plot_timeseries(self.times, self.data, options=kwargs)
+        plot_timeseries(self.times, self.data, options=kwargs)  
+    # lgtm [py/missing-equals]
 
-class CachedSimResult(SimResult):
+class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
@@ -57,6 +60,10 @@ class CachedSimResult(SimResult):
         self.__data = None
 
     def is_cached(self):
+        """
+        Returns:
+            bool: If the value has been calculated
+        """
         return self.__data is not None
 
     @property
