@@ -104,7 +104,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     Prognostics model for a battery, represented by an electrochemical equations.
 
     This class implements an Electro chemistry model as described in the following paper:
-    `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/`
+    `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`
 
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
 
@@ -115,11 +115,18 @@ class BatteryElectroChemEOD(PrognosticsModel):
         i: Current draw on the battery
 
     States: (8)
-        tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS
+        | tb: Battery temperature (K)
+        | Vo: Voltage Drops due to Solid-Phase Ohmic Resistances
+        | Vsn: Negative Surface Voltage (V)
+        | Vsp: Positive Surface Voltage (V)
+        | qnB: Amount of Negative Ions at the Battery Bulk
+        | qnS: Amount of Negative Ions at the Battery Surface
+        | qpB: Amount of Positive Ions at the Battery Bulk
+        | qpS: Amount of Positive Ions at the Battery Surface
 
     Outputs/Measurements: (2)
         | t: Temperature of battery (°C) 
-        | v: Voltage supplied by battery`
+        | v: Voltage supplied by battery
 
     Model Configuration Parameters:
         | process_noise : Process noise (applied at dx/next_state). 
@@ -205,7 +212,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (0, inf)  # Limited by Absolute Zero (0 K)
+        'tb': (0, inf),  # Limited by Absolute Zero (0 K)
+        'qnB': (0, inf),
+        'qnS': (0, inf),
+        'qpB': (0, inf),
+        'qpS': (0, inf)
     }
 
     param_callbacks = {  # Callbacks for derived parameters
@@ -363,9 +374,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
         i: Current draw on the battery
 
     States: (3)
-        qMax, Ro, D
+        | qMax: Maximum battery capacity
+        | Ro : for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)
+        | D : diffusion time constant (increasing this causes decrease in diffusion rate)
 
-    Outputs/Measurements: (2)
+    Outputs/Measurements: (0)
 
     Model Configuration Parameters:
         | process_noise : Process noise (applied at dx/next_state). 
@@ -396,6 +409,10 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'wd': 1e-2,
         'qMaxThreshold': 5320 # Threshold for qMax after which the InsufficientCapacity event has occured
         # Note: Battery manufacturers specify a threshold of 70-80% of qMax
+    }
+
+    state_limits = {
+        'qMax': (0, inf)
     }
 
     def initialize(self, u = {}, z = {}):
@@ -437,7 +454,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
 
     1. `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
 
-    2. `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1054/`
+    2. `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`
 
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
 
@@ -449,11 +466,11 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         i: Current draw on the battery
 
     States: (11)
-        tb, Vo, Vsn, Vsp, qnB, qnS, qpB, qpS, qMax, Ro, D
+        See BatteryElectroChemEOD, BatteryElectroChemEOL
 
     Outputs/Measurements: (2)
         | t: Temperature of battery (°C) 
-        | v: Voltage supplied by battery`
+        | v: Voltage supplied by battery
 
     Model Configuration Parameters:
         | see: BatteryElectroChemEOD, BatteryElectroChemEOL
@@ -468,6 +485,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         BatteryElectroChemEOL.default_parameters)
 
     state_limits = deepcopy(BatteryElectroChemEOD.state_limits)
+    state_limits.update(BatteryElectroChemEOL.state_limits)
 
     def initialize(self, u = {}, z = {}):
         return self.parameters['x0']
