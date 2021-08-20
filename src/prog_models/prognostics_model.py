@@ -149,12 +149,14 @@ class PrognosticsModel(ABC):
     kwargs : keyword arguments, optional
         Configuration parameters for model. Parameters supported by every model include:\n
             * process_noise : Process noise (applied at dx/next_state).
-                Can be number (e.g., .2) applied to every state, a dictionary of values for each
+                Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
                 state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x\n
+                See: examples.noise for more details\n
             * process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)\n
             * measurement_noise : Measurement noise (applied in output eqn)
-                Can be number (e.g., .2) applied to every output, a dictionary of values for each
+                Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
+                See: examples.noise for more details\n
             * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
         E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {'z1': 0.1, 'z2': 0.3})
     

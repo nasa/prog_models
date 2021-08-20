@@ -47,17 +47,19 @@ various model parameters.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>kwargs</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration parameters for model. Parameters supported by every model include:</p>
 <blockquote>
-<div><ul class="simple">
-<li><dl class="simple">
-<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be number (e.g., .2) applied to every state, a dictionary of values for each
+<div><ul>
+<li><dl>
+<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
 state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p>
+<p>See: examples.noise for more details</p>
 </dd>
 </dl>
 </li>
 <li><p>process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</p></li>
-<li><dl class="simple">
-<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) applied to every output, a dictionary of values for each
+<li><dl>
+<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
 output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
+<p>See: examples.noise for more details</p>
 </dd>
 </dl>
 </li>
