@@ -496,7 +496,7 @@ class TestModels(unittest.TestCase):
                 return {'a': u['i1'], 'b': 0, 'c': u['i2']}
             m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
             self.fail("Should have failed- non iterable states")
-        except ProgModelTypeError:
+        except TypeError:
             pass
 
         try:
