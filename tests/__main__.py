@@ -1,11 +1,13 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-from .test_base_models import TestModels
-from .test_examples import TestExamples
-from .test_centrifugal_pump import TestCentrifugalPump
-from .test_pneumatic_valve import TestPneumaticValve
-from .test_battery import TestBattery
 
-from io import StringIO 
+from .test_base_models import main as base_models_main
+from .test_sim_result import main as sim_result_main
+from .test_examples import main as examples_main
+from .test_centrifugal_pump import main as centrifugal_pump_main
+from .test_pneumatic_valve import main as pneumatic_valve_main
+from .test_battery import main as battery_main
+
+from io import StringIO
 import sys
 import unittest
 from examples import sim as sim_example
@@ -25,22 +27,39 @@ if __name__ == '__main__':
     from timeit import timeit
     print("\nExample Runtime: ", timeit(_test_ex, number=10))
 
-    l = unittest.TestLoader()
-    runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
-    result = runner.run(l.loadTestsFromTestCase(TestModels)).wasSuccessful()
+    print("\n\nTesting individual exectution of test files")
 
-    print("\n\nTesting Examples")
-    result = runner.run(l.loadTestsFromTestCase(TestExamples)).wasSuccessful() and result
+    # Run tests individually to test them and make sure they can be executed individually
+    was_successful = True
+    try:
+        base_models_main()
+    except Exception:
+        was_successful = False
 
-    print("\n\nTesting Centrifugal Pump model")
-    result = runner.run(l.loadTestsFromTestCase(TestCentrifugalPump)).wasSuccessful() and result
+    try:
+        sim_result_main()
+    except Exception:
+        was_successful = False
 
-    print("\n\nTesting Pneumatic Valve model")
-    result = runner.run(l.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful() and result
+    try:
+        examples_main()
+    except Exception:
+        was_successful = False
+        
+    try:
+        battery_main()
+    except Exception:
+        was_successful = False
 
-    print("\n\nTesting Battery models")
-    result = runner.run(l.loadTestsFromTestCase(TestBattery)).wasSuccessful() and result
+    try:
+        centrifugal_pump_main()
+    except Exception:
+        was_successful = False
 
-    if not result:
+    try:
+        pneumatic_valve_main()
+    except Exception:
+        was_successful = False
+
+    if not was_successful:
         raise Exception("Failed test")

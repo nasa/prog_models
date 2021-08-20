@@ -1,7 +1,7 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .prognostics_model import PrognosticsModel
-from . import models
 from .exceptions import ProgModelException, ProgModelInputException, ProgModelTypeError
 
-__version__ = '1.0.2'
+__version__ = '1.1.0'

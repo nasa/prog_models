@@ -1,8 +1,10 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+
 import unittest
 from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
+
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -10,7 +12,7 @@ class MockModel():
     outputs = ['o1']
     default_parameters = {
         'p1': 1.2,
-        'x0': {'a': 1, 'b': [3, 2], 'c': -3.2, 't': 0}
+        'x0': {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
     }
 
     def initialize(self, u = {}, z = {}):
@@ -23,7 +25,8 @@ class MockModel():
         return x
 
     def output(self, x):
-        return {'o1': x['a'] + sum(x['b']) + x['c']}
+        return {'o1': x['a'] + x['b'] + x['c']}
+
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     events = ['e1', 'e2']
@@ -38,13 +41,55 @@ class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
     def threshold_met(self, x):
         return {key : value < 1e-6 for (key, value) in self.event_state(x).items()}
 
+def derived_callback(config):
+    return {
+        'p2': config['p1']  # New config
+    }
+
+def derived_callback2(config):
+    return {  # Testing chained update
+        'p3': config['p2'], 
+    }
+
+def derived_callback3(config):
+    return {  # Testing 2nd chained update 
+        'p4': -2 * config['p2'], 
+    }
+
+
+class MockModelWithDerived(MockProgModel):
+    param_callbacks = {
+            'p1': [derived_callback],
+            'p2': [derived_callback2, derived_callback3]
+        }
+
+
 class TestModels(unittest.TestCase):
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
-        # TODO(CT): More
+
+    def test_derived(self):
+        m = MockModelWithDerived()
+        self.assertAlmostEqual(m.parameters['p1'], 1.2, 5)
+        self.assertAlmostEqual(m.parameters['p2'], 1.2, 5)
+        self.assertAlmostEqual(m.parameters['p3'], 1.2, 5)
+        self.assertAlmostEqual(m.parameters['p4'], -2.4, 5)
+
+        m.parameters['p1'] = 2.4
+        self.assertAlmostEqual(m.parameters['p1'], 2.4, 5)
+        self.assertAlmostEqual(m.parameters['p2'], 2.4, 5)
+        self.assertAlmostEqual(m.parameters['p3'], 2.4, 5)
+        self.assertAlmostEqual(m.parameters['p4'], -4.8, 5)
+
+        m.parameters['p2'] = 5
+        self.assertAlmostEqual(m.parameters['p1'], 2.4, 5)  # No change
+        self.assertAlmostEqual(m.parameters['p2'], 5, 5)
+        self.assertAlmostEqual(m.parameters['p3'], 5, 5)
+        self.assertAlmostEqual(m.parameters['p4'], -10, 5)
 
     def test_broken_models(self):
+
         class missing_states(prognostics_model.PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
@@ -55,6 +100,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class empty_states(prognostics_model.PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
@@ -66,6 +112,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_inputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -76,6 +123,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
@@ -86,6 +134,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_initiialize(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -95,6 +144,7 @@ class TestModels(unittest.TestCase):
                 pass
             def output(self, x):
                 pass
+        
         class missing_output(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -219,7 +269,7 @@ class TestModels(unittest.TestCase):
         x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], [3, 2])
+        self.assertEqual(x['b'], 5)
         z = m.output(x)
         self.assertAlmostEqual(z['o1'], 0.8, 5)
         e = m.event_state({'t': 0})
@@ -323,7 +373,7 @@ class TestModels(unittest.TestCase):
         }
 
         def initialize(u, z):
-            return {'a': 1, 'b': [3, 2], 'c': -3.2, 't': 0}
+            return {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
 
         def next_state(x, u, dt):
             x['a']+= u['i1']*dt
@@ -332,7 +382,7 @@ class TestModels(unittest.TestCase):
             return x
 
         def output(x):
-            return {'o1': x['a'] + sum(x['b']) + x['c']}
+            return {'o1': x['a'] + x['b'] + x['c']}
 
         def event_state(x):
             t = x['t']
@@ -446,7 +496,7 @@ class TestModels(unittest.TestCase):
                 return {'a': u['i1'], 'b': 0, 'c': u['i2']}
             m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
             self.fail("Should have failed- non iterable states")
-        except ProgModelTypeError:
+        except TypeError:
             pass
 
         try:
@@ -469,9 +519,15 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
-        # Any event, default8
+        # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
+
+        # Any event, initial state 
+        x0 = {'a': 1, 'b': 5, 'c': -3.2, 't': -1}
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'x': x0})
+        self.assertAlmostEqual(times[-1], 6.0, 5)
+        self.assertAlmostEqual(states[0]['t'], -1.0, 5)
 
         # Any event, manual
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
@@ -567,7 +623,7 @@ class TestModels(unittest.TestCase):
         c = [-3.2, -7.4, -11.6, -15.8, -17.9]
         for (ai, ci, x) in zip(a, c, states):
             self.assertAlmostEqual(x['a'], ai, 5)
-            self.assertEqual(x['b'], [3, 2])
+            self.assertEqual(x['b'], 5)
             self.assertAlmostEqual(x['c'], ci, 5)
 
         # Check outputs
@@ -675,6 +731,104 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
+    # when range specified when state doesnt exist or entered incorrectly
+    def test_state_limits(self):
+        m = MockProgModel()
+        m.state_limits = {
+            't': (-100, 100)
+        }
+        x0 = m.initialize()
+
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # inside bounds
+        x0['t'] = 0
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
+
+        # outside low boundary
+        x0['t'] = -200
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertAlmostEqual(states[1]['t'], -100)
+
+        # outside high boundary
+        x0['t'] = 200
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertAlmostEqual(states[1]['t'], 100)
+
+        # at low boundary
+        x0['t'] = -100
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
+
+        # at high boundary
+        x0['t'] = 100
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
+
+        # when state doesn't exist
+        try:
+            x0['n'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        # when state entered incorrectly
+        try:
+            x0['t'] = 'f'
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        # when boundary entered incorrectly
+        try:
+            m.state_limits = { 't': ('f', 100) }
+            x0['t'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        try:
+            m.state_limits = { 't': (-100, 'f') }
+            x0['t'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        try:
+            m.state_limits = { 't': (100) }
+            x0['t'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+
+# This allows the module to be executed directly
 def run_tests():
     unittest.main()
     
+def main():
+    # This ensures that the directory containing ProgModelTemplate is in the python search directory
+    import sys
+    from os.path import dirname, join
+    sys.path.append(join(dirname(__file__), ".."))
+
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Base Models")
+    result = runner.run(l.loadTestsFromTestCase(TestModels)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,10 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
-Example of benchmarking models. Can be run using the following command `python -m examples.benchmarking_example`
+Example of benchmarking models. Run using the command `python -m examples.benchmarking_example`
 """
+
 from timeit import timeit
 from prog_models.models import BatteryCircuit
 

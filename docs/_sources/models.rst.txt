@@ -11,8 +11,8 @@ Models Summary
 +----------------------+----------------------------+-----------------------------------+---------------------------------+---------------------------------+
 |                      | Battery Model - Circuit    | Battery Model - Electro Chemistry | Centrifugal Pump                | Pneumatic Valve                 |
 +======================+============================+===================================+=================================+=================================+
-| Events               | End of Discharge (EOD)     | End of Discharge (EOD)            | * Impeller Wear Failure         | * Leak-Bottom                   |
-|                      |                            |                                   | * Pump Oil Overheating          | * Leak-Top                      |
+| Events               | End of Discharge (EOD)     | * End of Discharge (EOD)          | * Impeller Wear Failure         | * Leak-Bottom                   |
+|                      |                            | * InsufficientCapacity            | * Pump Oil Overheating          | * Leak-Top                      |
 |                      |                            |                                   | * Radial Bering Overheat        | * Leak-Internal                 |
 |                      |                            |                                   | * Thrust Beiring Overheat       | * Spring Failure                |
 |                      |                            |                                   |                                 | * Friction Failure              |
@@ -38,28 +38,68 @@ Models Summary
 Battery Model - Circuit
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.battery_circuit.BatteryCircuit
+.. autoclass:: prog_models.models.BatteryCircuit
    :members:
    :inherited-members:
 
 Battery Model - Electro Chemistry
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.battery_electrochem.BatteryElectroChem
+.. autoclass:: prog_models.models.BatteryElectroChem
    :members:
    :inherited-members:
+
+End of Discharge
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.BatteryElectroChemEOD
+   :members:
+   :inherited-members:
+
+End of Life (i.e., InsufficientCapacity)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.BatteryElectroChemEOL
+   :members:
+   :inherited-members:
+
+End of Discharge, End of Life (i.e., InsufficientCapacity)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.BatteryElectroChemEODEOL
+   :members:
+   :inherited-members:
+
+
 
 Pump Model
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.centrifugal_pump.CentrifugalPump
+.. autoclass:: prog_models.models.CentrifugalPump
+
+.. autoclass:: prog_models.models.CentrifugalPumpWithWear
+   :members:
+   :inherited-members:
+
+Pump Model (Base)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.CentrifugalPumpBase
    :members:
    :inherited-members:
 
 Pneumatic Valve
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.pneumatic_valve.PneumaticValve
+.. autoclass:: prog_models.models.PneumaticValve
+
+.. autoclass:: prog_models.models.PneumaticValveWithWear
    :members:
    :inherited-members:
 
+Pneumatic Valve (Base)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.PneumaticValveBase
+   :members:
+   :inherited-members:

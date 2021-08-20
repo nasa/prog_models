@@ -1,10 +1,11 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
-Example performing a sensitivity analysis on a new model. Can be run using the following command `python -m examples.sensitivity_example`
+Example of a sensitivity analysis on a new model. Run using the command `python -m examples.sensitivity`
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
-from prog_models import PrognosticsModel
 from .new_model import ThrownObject
 import numpy as np
 

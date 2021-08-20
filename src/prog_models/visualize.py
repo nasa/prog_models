@@ -1,4 +1,5 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 # Import packages
 # ============
@@ -17,13 +18,12 @@ mpl.rcParams['figure.figsize']   = [10.0, 9.0]
 mpl.rcParams['figure.dpi']       = 100
 mpl.rcParams['savefig.dpi']      = 300
 
-
 # VISUALIZE FUNCTIONS
 # ==========================
 def get_subplot_dim(num_subplots, rowfirst=True):
     """
     Compute the number of rows and columns (nrows, ncols) for a figure with multiple subplots.
-    The function returns number of rows and columns given num_subplots. 
+    The function returns number of rows and columns given num_subplots.
     Those numbers are computed sequentially until nrows * ncols >= num_subplots.
     By default, the function adds a new row first if the number of subplots has not been reached, then adds a new column.
     By passing rowfirst=False, the function will add a new column first if the number of subplot has not been reached, then a new row.
@@ -52,12 +52,12 @@ def get_subplot_dim(num_subplots, rowfirst=True):
     | n_states = states.shape[-1]     # get the number of states (5)
     | print(get_subplot_dim(n_states)) # 3, 2
     | print(get_subplot_dim(n_states, rowfirst=False)) # 2, 3
-    | 
+    |
     | fig = plt.figure()
     | ax = fig.add_subplot(nrows, ncols, 0)
     | # ...
     """
-    nrows, ncols = 1, 1 # initialize number of rows and cols to 1.
+    nrows, ncols = 1, 1  # initialize number of rows and cols to 1.
     if rowfirst:
         while nrows * ncols < num_subplots:         
             nrows += 1
@@ -70,7 +70,6 @@ def get_subplot_dim(num_subplots, rowfirst=True):
                 nrows += 1
     return nrows, ncols
 
-
 def set_plot_options(opt):
     """
     Set default plot options by integrating the options specified by the user in 'opt'
@@ -81,9 +80,9 @@ def set_plot_options(opt):
     ----------
     opt : dictionary of plot options. Acceptable entries are:\n
           * 'figsize' : tuple of 2 floats, width and height of the figure
-          * 'compact' : Boolean, whether to plot a "compact" figure. If compact, all time series are displayd in one plot (multiple colored lines)
+          * 'compact' : Boolean, whether to plot a "compact" figure. If compact, all time series are displayed in one plot (multiple colored lines)
           * 'xlabel'  : string, label for the x-axis. Default is 'time'
-          * 'ylabel'  : string, label for the y-axis. Default is 'state' 
+          * 'ylabel'  : string, label for the y-axis. Default is 'state'
           * 'title'   : string or empty list or None, plot title. Default is empty list (no title)
           * 'title_fontsize' : string or float, plot title fontsixe. Default is 'x-large'
           * 'suptitle'       : string or empty list or None, plot suptitle. Default is empty list (no suptitle)
@@ -105,52 +104,72 @@ def set_plot_options(opt):
     # Set up plot options
     # =======================
     # Get list of options (if provided)
-    try:        opt_list = list(opt.keys())
-    except:     opt, opt_list = {}, []
+    try:
+        opt_list = list(opt.keys())
+    except Exception:
+        opt, opt_list = {}, []
     
     # Fill out all options if not provided
-    if 'figsize' not in opt_list:               opt['figsize'] = (10, 9)
-    if 'compact' not in opt_list:               opt['compact'] = True
-    if 'xlabel' not in opt_list:                opt['xlabel'] = 'time'
-    if 'ylabel' not in opt_list:                opt['ylabel'] = 'state'
-    if 'title' not in opt_list:                 opt['title'] = []
-    if 'title_fontsize' not in opt_list:        opt['title_fontsize'] = 'x-large'
-    if 'suptitle' not in opt_list:              opt['suptitle'] = []
-    if 'ticklabel_fontsize' not in opt_list:    opt['ticklabel_fontsize'] = 'small'
-    if 'tight_layout' not in opt_list:          opt['tight_layout'] = False
-    if 'display_labels' not in opt_list:        opt['display_labels'] = 'all'
+    if 'figsize' not in opt_list:
+        opt['figsize'] = (10, 9)
+    if 'compact' not in opt_list:
+        opt['compact'] = True
+    if 'xlabel' not in opt_list:
+        opt['xlabel'] = 'time'
+    if 'ylabel' not in opt_list:
+        opt['ylabel'] = 'state'
+    if 'title' not in opt_list:
+        opt['title'] = []
+    if 'title_fontsize' not in opt_list:
+        opt['title_fontsize'] = 'x-large'
+    if 'suptitle' not in opt_list:
+        opt['suptitle'] = []
+    if 'ticklabel_fontsize' not in opt_list:
+        opt['ticklabel_fontsize'] = 'small'
+    if 'tight_layout' not in opt_list:
+        opt['tight_layout'] = False
+    if 'display_labels' not in opt_list:
+        opt['display_labels'] = 'all'
     
     # if title should be displayed but title fontsize is not specified, add it to the dictionary
     if opt['title'] and ('title_fontsize' not in opt_list or not opt['title_fontsize']):
-        if 'fontsize' in opt_list:      opt['title_fontsize'] = opt['fontsize']
-        else:                           opt['title_fontsize'] = 'x-large'
+        if 'fontsize' in opt_list:
+            opt['title_fontsize'] = opt['fontsize']
+        else:
+            opt['title_fontsize'] = 'x-large'
     # if xlabel or ylabel should be displayed but their fontsize is not specified, add it to the dictionary
-    if opt['xlabel'] or opt['ylabel']:
-        if 'label_fontsize' not in opt_list or not opt['label_fontsize']:
-            if 'fontsize' in opt_list:       opt['label_fontsize'] = opt['fontsize']
-            else:                            opt['label_fontsize'] = 'x-large'
+    if (opt['xlabel'] or opt['ylabel']) and ('label_fontsize' not in opt_list or not opt['label_fontsize']):
+        if 'fontsize' in opt_list:
+            opt['label_fontsize'] = opt['fontsize']
+        else:
+            opt['label_fontsize'] = 'x-large'
     # if xticks are not default but rotation and fontsize are not specified, add them to the dictionary
-    if 'xticks' in opt_list:         
-        if 'xtick_rotation' not in opt_list:        opt['xtick_rotation'] = 0
-        if 'tick_fontsize' not in opt_list:         opt['xtick_fontsize'] = 'large'
-        else:                                       opt['xtick_fontsize'] = opt['tick_fontsize']
+    if 'xticks' in opt_list:
+        if 'xtick_rotation' not in opt_list:
+            opt['xtick_rotation'] = 0
+        if 'tick_fontsize' not in opt_list:
+            opt['xtick_fontsize'] = 'large'
+        else:
+            opt['xtick_fontsize'] = opt['tick_fontsize']
     else:
         opt['xticks'] = []
     # if yticks are not default but rotation and fontsize are not specified, add them to the dictionary
-    if 'yticks' in opt_list:         
-        if 'ytick_rotation' not in opt_list:        opt['ytick_rotation'] = 0
-        if 'tick_fontsize' not in opt_list:         opt['ytick_fontsize'] = 'large'
-        else:                                       opt['ytick_fontsize'] = opt['tick_fontsize']
+    if 'yticks' in opt_list:
+        if 'ytick_rotation' not in opt_list:
+            opt['ytick_rotation'] = 0
+        if 'tick_fontsize' not in opt_list:
+            opt['ytick_fontsize'] = 'large'
+        else:
+            opt['ytick_fontsize'] = opt['tick_fontsize']
     else:
         opt['yticks'] = []
 
     return opt
 
-
 def set_legend_options(leg_opt, s_names):
     """
-    Set all remaining legend options given the legend options already specified by the users "leg_opt", and the names
-    of the time series in the plot "s_names."
+    Set all remaining legend options given the legend options already specified by the users "leg_opt", 
+    and the names of the time series in the plot "s_names."
     
     The visualize library works with specific values for some legend options.
     if those are not specified by the users, this function assign them their default values.
@@ -174,26 +193,41 @@ def set_legend_options(leg_opt, s_names):
     | print(leg_opt['fancybox']) # False
     | print(leg_opt['facecolor']) # 'w'
     """
-    try:        leg_list = list(leg_opt.keys())     # Check whether a dictionary has been provided. If not, initialize the dictionary leg_opt as empty
-    except:     leg_opt, leg_list = {}, []
-    if 'display' not in leg_list:               leg_opt['display'] = False
-    if 'display_at_subplot' not in leg_list:    leg_opt['display_at_subplot'] = len(s_names)
-    if 'labels' not in leg_list:                leg_opt['labels'] = s_names
-    if 'loc' not in leg_list:                   leg_opt['loc'] = 'best'
-    if 'bbox_to_anchor' not in leg_list:        leg_opt['bbox_to_anchor'] = None
-    if 'ncol' not in leg_list:                  leg_opt['ncol'] = 1
-    if 'fontsize' not in leg_list:              leg_opt['fontsize'] = 'x-large'
-    if 'shadow' not in leg_list:                leg_opt['shadow'] = False
-    if 'fancybox' not in leg_list:              leg_opt['fancybox'] = False
-    if 'framealpha' not in leg_list:            leg_opt['framealpha'] = 1.0
-    if 'facecolor' not in leg_list:             leg_opt['facecolor'] = 'w'
-    if 'edgecolor' not in leg_list:             leg_opt['edgecolor'] = 'w'
-    if 'title' not in leg_list:                 leg_opt['title'] = None
-    if 'title' in leg_list:                 
-        if 'title_fontsize' not in leg_list:    leg_opt['title_fontsize'] = 'medium'
+    try:
+        leg_list = list(leg_opt.keys())  # Check whether a dictionary has been provided. If not, initialize the dictionary leg_opt as empty
+    except Exception:
+        leg_opt, leg_list = {}, []
+
+    if 'display' not in leg_list:
+        leg_opt['display'] = False
+    if 'display_at_subplot' not in leg_list:
+        leg_opt['display_at_subplot'] = len(s_names)
+    if 'labels' not in leg_list:
+        leg_opt['labels'] = s_names
+    if 'loc' not in leg_list:
+        leg_opt['loc'] = 'best'
+    if 'bbox_to_anchor' not in leg_list:
+        leg_opt['bbox_to_anchor'] = None
+    if 'ncol' not in leg_list:
+        leg_opt['ncol'] = 1
+    if 'fontsize' not in leg_list:
+        leg_opt['fontsize'] = 'x-large'
+    if 'shadow' not in leg_list:
+        leg_opt['shadow'] = False
+    if 'fancybox' not in leg_list:
+        leg_opt['fancybox'] = False
+    if 'framealpha' not in leg_list:
+        leg_opt['framealpha'] = 1.0
+    if 'facecolor' not in leg_list:
+        leg_opt['facecolor'] = 'w'
+    if 'edgecolor' not in leg_list:
+        leg_opt['edgecolor'] = 'w'
+    if 'title' not in leg_list:
+        leg_opt['title'] = None
+    if 'title' in leg_list and 'title_fontsize' not in leg_list:                 
+        leg_opt['title_fontsize'] = 'medium'
 
     return leg_opt
-
 
 def set_savefig_options(sfo):
     """
@@ -203,7 +237,7 @@ def set_savefig_options(sfo):
     ----------
     sfo : dictionary of options to save the current figure
           if not provided, a figure will not be saved by default. Otherwise, sfo should provide the following dictionary entries:\n
-           * 'save' (Boolean, whether to save the figure or not, True or False) 
+           * 'save' (Boolean, whether to save the figure or not, True or False)
            * 'dpi' (int, resolution of the figure in dots per inch)
            * 'filename' (string, figure filename, including file type, e.g., .pdf or .png. Default is 'timeseries_plot.pdf')
     
@@ -221,13 +255,17 @@ def set_savefig_options(sfo):
     | sfo = set_savefig_options(sfo)
     | print(sfo)  # sfo = {'save': True, 'dpi': 300, 'filename': 'timeseries_plot.pdf'}
     """
-    try:        sfo_list = list(sfo.keys())
-    except:     sfo, sfo_list = {}, []
-    if 'save' not in sfo_list:                                  sfo['save'] = False
-    if 'dpi' not in sfo_list:                                   sfo['dpi'] = 300
-    if 'save' in sfo_list and 'filename' not in sfo_list:       sfo_list['filename'] = 'timeseries_plot.pdf'
+    try:
+        sfo_list = list(sfo.keys())
+    except Exception:
+        sfo, sfo_list = {}, []
+    if 'save' not in sfo_list:
+        sfo['save'] = False
+    if 'dpi' not in sfo_list:
+        sfo['dpi'] = 300
+    if 'save' in sfo_list and 'filename' not in sfo_list:
+        sfo_list['filename'] = 'timeseries_plot.pdf'
     return sfo
-
 
 def set_legend(ax, item, s_names, leg_opt):
     """
@@ -240,7 +278,7 @@ def set_legend(ax, item, s_names, leg_opt):
     item    : int, index of the time series to be displayed in the legend
     s_names : list of strings, names of all time series in the plot or subplot
     leg_opt : dictionary containing all legend options necessary to place and modify the legend. Dictionary entries can be:\n
-               * 'bbox_to_anchor' (tuple, coordinates of the legend location), 
+               * 'bbox_to_anchor' (tuple, coordinates of the legend location),
                * 'ncol' (int, number of columns of the legend),
                * 'fontsize' (int, legend font size),
                * 'fancybox' (Boolean, Use a fancybox for the legend, True or False),
@@ -259,7 +297,7 @@ def set_legend(ax, item, s_names, leg_opt):
     | s_names = list(s.keys())
     | ax = fig.add_subplot()
     | ax.plot(t, [list(s_i.values()) for s_i in s])
-    | 
+    |
     | leg_opt = {}
     | leg_opt['labels'] = s_names
     | leg_opt['loc'] = 'best'
@@ -272,7 +310,7 @@ def set_legend(ax, item, s_names, leg_opt):
     | leg_opt['facecolor'] = 'w'
     | leg_opt['edgecolor'] = 'w'
     | leg_opt['title'] = None
-    | 
+    |
     | ax.legend(series_names, bbox_to_anchor=legend_options['bbox_to_anchor'], 
     |           ncol=legend_options['ncol'], fontsize=legend_options['fontsize'],
     |           fancybox=legend_options['fancybox'], shadow=legend_options['shadow'],
@@ -284,7 +322,6 @@ def set_legend(ax, item, s_names, leg_opt):
                      fancybox=leg_opt['fancybox'], shadow=leg_opt['shadow'],
                      framealpha=leg_opt['framealpha'], facecolor=leg_opt['facecolor'],
                      edgecolor=leg_opt['edgecolor'], title=leg_opt['title'])
-
 
 def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
     """
@@ -319,13 +356,14 @@ def display_labels(nrows, ncols, subplot_num, ax, opt, series_names):
     | display_labels(nrows, ncols, subplot_num, ax, opt, series_names)
     """
     if 'minimal' in opt['display_labels']:
-        if subplot_num+1 == nrows*ncols and opt['xlabel']:         set_labels(ax, opt, series_names, axis='x')
-        if (subplot_num+1 == 1 or ncols==1) and opt['ylabel']:     set_labels(ax, opt, series_names, axis='y')
-        if subplot_num+1 == 1:                                     ax.set_xticks([], minor=[])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
+        if subplot_num+1 == nrows*ncols and opt['xlabel']:
+            set_labels(ax, opt, series_names, axis='x')
+        if (subplot_num+1 == 1 or ncols==1) and opt['ylabel']:
+            set_labels(ax, opt, series_names, axis='y')
+        if subplot_num+1 == 1:
+            ax.set_xticks([], minor=[])    # If 'display_labels' is minimal, kill xticks that are not needed according to subplots
     elif 'all' in opt['display_labels']:    
         set_labels(ax, opt, series_names)
-    return
-
 
 def extract_option(opt, idx, series_names):
     """
@@ -336,7 +374,7 @@ def extract_option(opt, idx, series_names):
 
     Parameters
     ----------
-    opt             :   dictionary of strings 
+    opt             :   dictionary of strings
         dictionary of label name) corresponding to entries in series_names, list of strings corresponding to the series names (in order), or a simple string
     idx             :   int
         index of the option to extract in label options if opt is a string, or index of the corresponding series_names to extract if opt is a dictionary
@@ -371,10 +409,11 @@ def extract_option(opt, idx, series_names):
     | print(extract_option(opt['ylabel'], 1, {})) # 'state output', please note that idx and series_names are ignored
     | print(extract_option(opt['ylabel'], np.inf, [])) # 'state output', please note that idx and series_names are ignored
     """
-    if type(opt) == dict:                        return opt[series_names[idx]]
-    if type(opt) == list and (len(opt)>0):       return opt[idx]
-    else:                                        return opt
-
+    if isinstance(opt, dict):
+        return opt[series_names[idx]]
+    if isinstance(opt, list) and (len(opt)>0):
+        return opt[idx]
+    return opt
 
 def set_ax_options(ax, opts):
     """
@@ -394,20 +433,23 @@ def set_ax_options(ax, opts):
 
     Example
     -------
-    | opts = {'title': 'this is a test title', 
+    | opts = {'title': 'this is a test title',
     |         'title_fontsize': 16, 'xlabel': 'time', 'ylabel': 'state value',
     |         'xtick_rotation': 45, 'xtick_fontsize': 14, 'ytick_rotation': 0, 'ytick_fontsize': 14}
     | fig = plt.figure()
     | ax = fig.add_subplot(111)
     | set_ax_options(ax, opts)
     """
-    if opts['title']:   ax.set_title(opts['title'], fontsize=opts['title_fontsize'])
-    if opts['xlabel']:  ax.set_xlabel(opts['xlabel'])
-    if opts['ylabel']:  ax.set_ylabel(opts['ylabel'])
-    if opts['xticks']:  ax.set_xticklabels(opts['xticks'], rotation=opts['xtick_rotation'], fontsize=opts['xtick_fontsize'])
-    if opts['yticks']:  ax.set_yticklabels(opts['yticks'], rotation=opts['ytick_rotation'], fontsize=opts['ytick_fontsize'])
-    return 
-
+    if opts['title']:
+        ax.set_title(opts['title'], fontsize=opts['title_fontsize'])
+    if opts['xlabel']:
+        ax.set_xlabel(opts['xlabel'])
+    if opts['ylabel']:
+        ax.set_ylabel(opts['ylabel'])
+    if opts['xticks']:
+        ax.set_xticklabels(opts['xticks'], rotation=opts['xtick_rotation'], fontsize=opts['xtick_fontsize'])
+    if opts['yticks']:
+        ax.set_yticklabels(opts['yticks'], rotation=opts['ytick_rotation'], fontsize=opts['ytick_fontsize'])
 
 def set_labels(ax, opt, series_names, axis='all'):
     """
@@ -441,7 +483,7 @@ def set_labels(ax, opt, series_names, axis='all'):
         xlabel    = extract_option(opt['xlabel'], idx, series_names)
         xtick     = extract_option(opt['xticks'], idx, series_names)
         ax.set_xlabel(xlabel)
-        if xtick:       # if xtick options are passed, add them to the axis
+        if xtick:                   # if xtick options are passed, add them to the axis
             xtick_rot = extract_option(opt['xtick_rotation'], idx, series_names)
             xtick_fs  = extract_option(opt['xtick_fontsize'], idx, series_names)
             ax.set_xticklabels(xtick, rotation=xtick_rot, fontsize=xtick_fs)
@@ -449,20 +491,17 @@ def set_labels(ax, opt, series_names, axis='all'):
         ylabel    = extract_option(opt['ylabel'], idx, series_names)
         ytick     = extract_option(opt['yticks'], idx, series_names)
         ax.set_ylabel(ylabel)
-        if ytick:      # if ytick options are passed, add them to the axis
+        if ytick:                   # if ytick options are passed, add them to the axis
             ytick_rot = extract_option(opt['ytick_rotation'], idx, series_names)
             ytick_fs  = extract_option(opt['ytick_fontsize'], idx, series_names)
             ax.set_yticklabels(ytick, rotation=ytick_rot, fontsize=ytick_fs)
-    return 
-
-
 
 def plot_timeseries(t, s, legend=None, options=None):
     """
     Plot time series 's' parametrized by time 't'.
     The function plot time series (in a single plot or subplots) contained in the array of dictionary s, produced by a prognostic model.
 
-    Input legend, and options are optional (default is None). If provided, they must be dictionaries with options for legend, and 
+    Input legend, and options are optional (default is None). If provided, they must be dictionaries with options for legend, and
     plot options, respectively. 
     
     The function is capable of plotting time series in a single plot (options['compact']=True), or in multiple subplots in the same figure (options['compact']=False).
@@ -485,30 +524,12 @@ def plot_timeseries(t, s, legend=None, options=None):
 
     Returns
     -------
-    fig : matplotlib figure object 
+    fig : matplotlib figure object
         object corresponding to the generated figure.
      
     Example
     -------
-    | # New Model Example
-    | # ===============
-    | m = ThrownObject()
-    | 
-    | # Step 2: Setup for simulation 
-    | def future_load(t, x=None):
-    |     return {}
-    | 
-    | # Step 3: Simulate to impact
-    | event = 'impact'
-    | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
-    | 
-    | fig = plot_timeseries(times, states,
-    |                       options = {'compact': False, 'suptitle': 'state evolution', 'title': False,
-    |                                  'xlabel': 'time', 'ylabel': {'x': 'position', 'v': 'velocity'}, 'display_labels': 'minimal'},
-    |                       legend  = {'display': True, 'display_at_subplot': 'all'} )
-    | fig.savefig('example1.png', dpi=300)
-    | fig = plot_timeseries(times, states)
-    | fig.savefig('example2.pdf', dpi=150)
+    See new model example
     """
     series_names = list(s[0].keys())
     m = len(series_names)
@@ -521,8 +542,10 @@ def plot_timeseries(t, s, legend=None, options=None):
     
     # Generate figure
     # =============
-    if fig_options['figsize'] is not None: fig = plt.figure(figsize=fig_options['figsize'])
-    else:                                  fig = plt.figure()
+    if fig_options['figsize'] is not None:
+        fig = plt.figure(figsize=fig_options['figsize'])
+    else:
+        fig = plt.figure()
 
     if fig_options['compact']:  # Compact option: all time series in one plot
         # Add plot
@@ -565,12 +588,16 @@ def plot_timeseries(t, s, legend=None, options=None):
                 ax.set_title(series_names[item], fontsize=fig_options['title_fontsize'])
             
             if legend_options['display']:
-                if legend_options['display_at_subplot'] == 'all':               set_legend(ax, item, series_names, legend_options)
-                elif legend_options['display_at_subplot'] == item+1:            set_legend(ax, item, series_names, legend_options)
+                if legend_options['display_at_subplot'] == 'all':
+                    set_legend(ax, item, series_names, legend_options)
+                elif legend_options['display_at_subplot'] == item+1:
+                    set_legend(ax, item, series_names, legend_options)
             
     # Other options
     # ==============
-    if fig_options['suptitle']:     fig.suptitle(fig_options['suptitle'], fontsize=fig_options['title_fontsize']) # Add subtitle
-    if fig_options['tight_layout']: plt.tight_layout()  # If tight-layout
+    if fig_options['suptitle']:
+        fig.suptitle(fig_options['suptitle'], fontsize=fig_options['title_fontsize'])  # Add subtitle
+    if fig_options['tight_layout']:
+        plt.tight_layout()  # If tight-layout
         
     return fig

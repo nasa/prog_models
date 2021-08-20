@@ -1,6 +1,7 @@
-# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .battery_circuit import BatteryCircuit
-from .battery_electrochem import BatteryElectroChem
-from .centrifugal_pump import CentrifugalPump
-from .pneumatic_valve import PneumaticValve
+from .battery_electrochem import BatteryElectroChem, BatteryElectroChemEOD, BatteryElectroChemEOL, BatteryElectroChemEODEOL
+from .centrifugal_pump import CentrifugalPump, CentrifugalPumpBase, CentrifugalPumpWithWear
+from .pneumatic_valve import PneumaticValve, PneumaticValveBase, PneumaticValveWithWear

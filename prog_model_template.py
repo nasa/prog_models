@@ -1,4 +1,5 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
 # INSTRUCTIONS:
 # 1. Copy this file- renaming to the name of your model
@@ -8,6 +9,18 @@
 # 5. Implement logic of model in each method
 
 from prog_models import PrognosticsModel
+import math
+
+# REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
+# See examples.derived_params
+# 
+# Each function defines one or more derived parameters as a function of the other parameters.
+def example_callback(params):
+    # Return format: dict of key: new value pair for at least one derived parameter
+    return {
+        "Example Parameter 1": params["Example Parameter 2"]-3
+    }
+
 
 class ProgModelTemplate(PrognosticsModel):
     """
@@ -42,8 +55,29 @@ class ProgModelTemplate(PrognosticsModel):
     # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
     default_parameters = { # Set default parameters
         'Example Parameter 1': 0,
+        'Example Parameter 2': 3,
         'process_noise': 0.1, # Process noise
     }
+
+    # REPLACE THE FOLLOWING WITH STATE BOUNDS IF NEEDED
+    state_limits = {
+        # 'state': (lower_limit, upper_limit)
+        # only specify for states with limits
+        'Examples State 1': (0, math.inf),
+        'Examples State 4': (-2, 3)
+    }
+
+    # Identify callbacks used by this model
+    # See examples.derived_params
+    # Format: "trigger": [callbacks]
+    # Where trigger is the parameter that the derived parameters are derived from.
+    # And callbacks are one or more callback functions that define parameters that are 
+    # derived from that parameter
+    # REPLACE THIS WITH ACTUAL DERIVED PARAMETER CALLBACKS
+    param_callbacks = {
+        "Example Parameter 2": [example_callback]
+    }
+
 
     def __init__(self, **kwargs):
         """
@@ -131,7 +165,7 @@ class ProgModelTemplate(PrognosticsModel):
     #         'Examples State 3': 4.7,
     #         'Examples State 4': 220
     #     }
-    #     return self.apply_process_noise(dxdt)
+    #     return dxdt
 
     # UNCOMMENT THIS FUNCTION FOR DISCRETE MODELS
     # def next_state(self, t, x, u, dt):
@@ -164,8 +198,7 @@ class ProgModelTemplate(PrognosticsModel):
     #     next_x = x
     #     # ADD LOGIC TO CALCULATE next_x from x
 
-    #     # Apply Process Noise and return
-    #     return self.apply_process_noise(next_x) 
+    #     return next_x 
 
     def output(self, t, x):
         """
@@ -194,7 +227,7 @@ class ProgModelTemplate(PrognosticsModel):
             'Example Output 2': 0.0  
         }
 
-        return self.apply_measurement_noise(z)
+        return z
 
     def event_state(self, t, x):
         """
