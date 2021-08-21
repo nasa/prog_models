@@ -38,35 +38,35 @@ Models Summary
 Battery Model - Circuit
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.battery_circuit.BatteryCircuit
+.. autoclass:: prog_models.models.BatteryCircuit
    :members:
    :inherited-members:
 
 Battery Model - Electro Chemistry
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.battery_electrochem.BatteryElectroChem
+.. autoclass:: prog_models.models.BatteryElectroChem
    :members:
    :inherited-members:
 
 End of Discharge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: prog_models.models.battery_electrochem.BatteryElectroChemEOD
+.. autoclass:: prog_models.models.BatteryElectroChemEOD
    :members:
    :inherited-members:
 
 End of Life (i.e., InsufficientCapacity)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: prog_models.models.battery_electrochem.BatteryElectroChemEOL
+.. autoclass:: prog_models.models.BatteryElectroChemEOL
    :members:
    :inherited-members:
 
 End of Discharge, End of Life (i.e., InsufficientCapacity)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: prog_models.models.battery_electrochem.BatteryElectroChemEODEOL
+.. autoclass:: prog_models.models.BatteryElectroChemEODEOL
    :members:
    :inherited-members:
 
@@ -75,14 +75,31 @@ End of Discharge, End of Life (i.e., InsufficientCapacity)
 Pump Model
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.centrifugal_pump.CentrifugalPump
+.. autoclass:: prog_models.models.CentrifugalPump
+
+.. autoclass:: prog_models.models.CentrifugalPumpWithWear
+   :members:
+   :inherited-members:
+
+Pump Model (Base)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.CentrifugalPumpBase
    :members:
    :inherited-members:
 
 Pneumatic Valve
 -------------------------------------------------------------
 
-.. autoclass:: prog_models.models.pneumatic_valve.PneumaticValve
+.. autoclass:: prog_models.models.PneumaticValve
+
+.. autoclass:: prog_models.models.PneumaticValveWithWear
    :members:
    :inherited-members:
 
+Pneumatic Valve (Base)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.PneumaticValveBase
+   :members:
+   :inherited-members:

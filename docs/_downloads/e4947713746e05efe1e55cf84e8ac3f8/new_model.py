@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example defining and testing a new model. Can be run using the following command `python -m examples.new_model_example`
+Example defining and testing a new model. Run using the command `python -m examples.new_model`
 """
 
 from prog_models import PrognosticsModel
@@ -38,20 +38,15 @@ class ThrownObject(PrognosticsModel):
         self.max_x = 0.0
         return {
             'x': self.parameters['thrower_height'], # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is an professional baseball pitcher
+            'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
             }
     
     def dx(self, x, u):
-        # apply_process_noise is used to add process noise to each step
-        return self.apply_process_noise({
-            'x': x['v'],
-            'v': self.parameters['g'] # Acceleration of gravity
-        })
+        return {'x': x['v'],
+                'v': self.parameters['g']} # Acceleration of gravity
 
     def output(self, x):
-        return self.apply_measurement_noise({
-            'x': x['x']
-        })
+        return {'x': x['x']}
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
@@ -79,11 +74,9 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1, print = True)
     
-    # Print results
-    for i in range(len(times)):
-        print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n".format(round(times[i],2), inputs[i], states[i], outputs[i], event_states[i]))
+    # Print flight time
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
 
     # OK, now lets compare performance on different heavenly bodies. 

@@ -63,11 +63,14 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.derived_params <../examples/derived_params.py>`
     .. automodule:: examples.derived_params
     |
+* :download:`examples.state_limits <../examples/state_limits.py>`
+    .. automodule:: examples.state_limits
+    |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
 Model Specific examples
-----------
+------------------------
 * :download:`examples.sim_battery_eol <../examples/sim_battery_eol.py>`
     .. automodule:: examples.sim_battery_eol
     |
@@ -84,7 +87,7 @@ There are two methods for creating new models: 1. Implementing a new subclass of
 
 1. Subclass Method
 ********************
-The first method for creating a new prog_model is by creating a new subclass of one of the base model classes. The base model classes are described below:
+The first method for creating a new prog_model is by creating a new subclass of :class:`prog_models.PrognosticsModel`. :class:`prog_models.PrognosticsModel` is described below:
 
 .. autoclass:: prog_models.PrognosticsModel
 
@@ -96,7 +99,7 @@ See :download:`examples.new_model <../examples/new_model.py>` for an example of 
 
 2. Model Generator Method
 *************************
-The second way to generate a new model is using the model generator method :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.prognostics_model.PrognosticsModel.generate_model` for more detail.
+The second way to generate a new model is using the model generator method, :py:meth:`prog_models.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.PrognosticsModel.generate_model` for more detail.
 
 See :download:`examples.model_gen <../examples/model_gen.py>` for an example of this approach.
 
@@ -127,13 +130,13 @@ Updates in V1.1
 * Various bug fixes
 
 ElectroChemistry Model Updates
-==============================
-* New Feature: Thermal effects to model - how the temperature changes with use. Previous implementation only included effects of temperature on performance.
+************************************
+* New Feature: Added thermal effects. Now the model include how the temperature is effected by use. Previous implementation only included effects of temperature on performance.
 * New Feature: Added `degraded_capacity` (i.e., EOL) event to model. There are now three different models: BatteryElectroChemEOL (degraded_capacity only), BatteryElectroChemEOD (discharge only), and BatteryElectroChemEODEOL (combined). BatteryElectroChem is an alias for BatteryElectroChemEODEOL. 
 * New Feature: Updated SOC (EOD Event State) calculation to include voltage when near V_EOD. This prevents a situation where the voltage is below lower bound but SOC > 0. 
 
 CentrifugalPump Model Updates
-=============================
+************************************
 * New Feature: Added CentrifugalPumpBase class where wear rates are parameters instead of part of the state vector. 
     * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
 * Bugfix: Fixed bug where some event states were returned as negative
@@ -142,7 +145,7 @@ CentrifugalPump Model Updates
 * Performance improvements
 
 PneumaticValve Model Updates
-============================
+************************************
 * New Feature: Added PneumaticValveBase class where wear rates are parameters instead of part of the state vector. 
     * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
 * Added example on use of PneumaticValve Model (see `examples.sim_valve`)

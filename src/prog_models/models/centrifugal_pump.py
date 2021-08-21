@@ -28,15 +28,23 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | psuc: Suction Pressure (Pa)
         | wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)
 
-    States: (12)
-        A, Q, To, Tr, Tt, rRadial, rThrust, w, QLeak
+    States: (9)
+        | A: Impeller Area (m^2)
+        | Q: Flow Rate into Pump (m^3/s)
+        | To: Oil Temperature (K)
+        | Tr: Radial Bearing Temperature (K)
+        | Tt: Thrust Bearing Temperature (K)
+        | rRadial: Radial (thrust) Friction Coefficient
+        | rThrust: Rolling Friction Coefficient
+        | w: Rotational Velocity of Pump (rad/sec)
+        | QLeak: Leak Flow Rate (m^3/s)
 
     Outputs/Measurements: (5)
         | Qout: Discharge Flow (m^3/s)
         | To: Oil Temperature (K)
         | Tr: Radial Bearing Temperature (K)
         | Tt: Thrust Bearing Temperature (K)
-        | w: Mechanical Rotation (rad/sec)
+        | w: Rotational Velocity of Pump (rad/sec)
 
     Model Configuration Parameters:
         | process_noise : Process noise (applied at dx/next_state).
@@ -51,6 +59,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | a0, a1, a2 : empirical coefficients for flow torque eqn
         | A : impeller blade area
         | b :
+        | n : Pole Phases 
+        | p : Pole Pairs
         | I : impeller/shaft/motor lumped inertia
         | r : lumped friction parameter (minus bearing friction)
         | R1, R2 :
@@ -84,6 +94,9 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'a2': 9179.4,		# empirical coefficient for flow torque eqn
         'A': 12.7084,		# impeller blade area
         'b': 17984.6,
+
+        'n': 3,             # Pole Phases
+        'p': 1,             # Pole Pairs
 
         # Pump/motor dynamics
         'I': 50,            # impeller/shaft/motor lumped inertia
@@ -136,15 +149,17 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'To': 290,
             'A': 12.7084,
             'rThrust': 1.4e-6,
-            'rRadial': 1.8e-6,
+            'rRadial': 1.8e-6
         }
     }
 
     state_limits = {
-        'To': (-273.15, inf),
-        'Tr': (-273.15, inf),
-        'Tt': (-273.15, inf),
-        'A': (0, inf)
+        'To': (0, inf),  # Limited by absolute zero (0 K)
+        'Tr': (0, inf),  # Limited by absolute zero (0 K)
+        'Tt': (0, inf),  # Limited by absolute zero (0 K)
+        'A': (0, inf),
+        'rThrust': (0, inf),
+        'rRadial': (0, inf)
     }
 
     def initialize(self, u, z = None):
@@ -172,7 +187,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qout = max(0,x['Q']-QLeak)
         slip = max(-1,(min(1,slipn)))
         deltaP = ppump+u['psuc']-u['pdisch']
-        Te = 3*params['R2']/slip/(u['wsync']+0.00001)*u['V']**2 \
+        Te = params['n']*params['p']*params['R2']/(slip*(u['wsync']+0.00001)) * u['V']**2 \
             /((params['R1']+params['R2']/slip)**2+(u['wsync']*params['L1'])**2)
         backTorque = -params['a2']*Qout**2 + params['a1']*x['w']*Qout + params['a0']*x['w']**2
         Qo = math.copysign(params['c']*math.sqrt(abs(deltaP)), deltaP)
@@ -233,7 +248,10 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
         See CentrifugalPumpBase
     
     States: (12)
-        States from CentrifugalPumpBase +  wA, wRadial, wThrust
+        | States from CentrifugalPumpBase +
+        | wA: Wear Rate for Impeller Area
+        | wRadial: Wear Rate for Radial (thrust) Friction Coefficient
+        | wRadial: Wear Rate for Rolling Friction Coefficient
 
     Outputs/Measurements: (5)
         See CentrifugalPumpBase

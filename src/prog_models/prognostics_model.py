@@ -9,7 +9,7 @@ from copy import deepcopy
 from collections import UserDict
 import types
 from array import array
-from .sim_result import SimResult, CachedSimResult
+from .sim_result import SimResult, LazySimResult
 
 
 class PrognosticsModelParameters(UserDict):
@@ -26,6 +26,7 @@ class PrognosticsModelParameters(UserDict):
         super().__init__()
         self.__m = model
         self.callbacks = {}
+        # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
         for (key, value) in dict_in.items():
             # Deepcopy is needed here to force copying when value is an object (e.g., dict)
             self[key] = deepcopy(value)
@@ -132,6 +133,7 @@ class PrognosticsModelParameters(UserDict):
             updates = callback(self[key])
             self.update(updates)
 
+
 class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
@@ -147,12 +149,14 @@ class PrognosticsModel(ABC):
     kwargs : keyword arguments, optional
         Configuration parameters for model. Parameters supported by every model include:\n
             * process_noise : Process noise (applied at dx/next_state).
-                Can be number (e.g., .2) applied to every state, a dictionary of values for each
+                Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
                 state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x\n
+                See: examples.noise for more details\n
             * process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)\n
             * measurement_noise : Measurement noise (applied in output eqn)
-                Can be number (e.g., .2) applied to every output, a dictionary of values for each
+                Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
+                See: examples.noise for more details\n
             * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
         E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {'z1': 0.1, 'z2': 0.3})
     
@@ -184,27 +188,24 @@ class PrognosticsModel(ABC):
     param_callbacks = {}  # Callbacks for derived parameters
 
     def __init__(self, **kwargs):
+        if not hasattr(self, 'inputs'):
+            raise ProgModelTypeError('Must have `inputs` attribute')
+        
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
         try:
-            if not hasattr(self, 'inputs'):
-                raise ProgModelTypeError('Must have `inputs` attribute')
-            
-            if not hasattr(self, 'states'):
-                raise ProgModelTypeError('Must have `states` attribute')
-            if len(self.states) <= 0:
-                raise ProgModelTypeError('`states` attribute must have at least one state key')
-            try:
-                iter(self.states)
-            except TypeError:
-                raise ProgModelTypeError('model.states must be iterable')
+            iter(self.states)
+        except TypeError:
+            raise ProgModelTypeError('model.states must be iterable')
 
-            if not hasattr(self, 'outputs'):
-                raise ProgModelTypeError('Must have `outputs` attribute')
-            try:
-                iter(self.outputs)
-            except TypeError:
-                raise ProgModelTypeError('model.outputs must be iterable')
-        except Exception:
-            raise ProgModelTypeError('Could not check model configuration')
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        try:
+            iter(self.outputs)
+        except TypeError:
+            raise ProgModelTypeError('model.outputs must be iterable')
 
         self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
         try:
@@ -443,7 +444,7 @@ class PrognosticsModel(ABC):
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
         """
         
-        # Calculate next state
+        # Calculate next state and add process noise
         next_state = self.apply_process_noise(self.next_state(x, u, dt))
 
         # Check if state is within bounds
@@ -453,7 +454,6 @@ class PrognosticsModel(ABC):
             elif next_state[key] > limit[1]:
                 next_state[key] = limit[1]
 
-        # Add process noise
         return next_state
 
     def observables(self, x) -> dict:
@@ -851,8 +851,8 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = CachedSimResult(self.output, times, states) 
-            saved_event_states = CachedSimResult(self.event_state, times, states)
+            saved_outputs = LazySimResult(self.output, times, states) 
+            saved_event_states = LazySimResult(self.event_state, times, states)
         else:
             saved_outputs = SimResult(times, saved_outputs)
             saved_event_states = SimResult(times, saved_event_states)
@@ -1014,6 +1014,8 @@ class PrognosticsModel(ABC):
             kwargs: Configuration parameters. Supported parameters include: \n
              | method: Optimization method- see scikit.optimize.minimize 
              | options: Options passed to optimizer
+
+        See: examples.param_est
         """
         from scipy.optimize import minimize
 

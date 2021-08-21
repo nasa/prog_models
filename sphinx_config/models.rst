@@ -76,6 +76,15 @@ Pump Model
 -------------------------------------------------------------
 
 .. autoclass:: prog_models.models.CentrifugalPump
+
+.. autoclass:: prog_models.models.CentrifugalPumpWithWear
+   :members:
+   :inherited-members:
+
+Pump Model (Base)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.CentrifugalPumpBase
    :members:
    :inherited-members:
 
@@ -83,6 +92,14 @@ Pneumatic Valve
 -------------------------------------------------------------
 
 .. autoclass:: prog_models.models.PneumaticValve
+
+.. autoclass:: prog_models.models.PneumaticValveWithWear
    :members:
    :inherited-members:
 
+Pneumatic Valve (Base)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: prog_models.models.PneumaticValveBase
+   :members:
+   :inherited-members:
