@@ -11,9 +11,9 @@ Models Summary
 +----------------------+----------------------------+-----------------------------------+---------------------------------+---------------------------------+
 |                      | Battery Model - Circuit    | Battery Model - Electro Chemistry | Centrifugal Pump                | Pneumatic Valve                 |
 +======================+============================+===================================+=================================+=================================+
-| Events               | End of Discharge (EOD)     | * End of Discharge (EOD)          | * Impeller Wear Failure         | * Leak-Bottom                   |
-|                      |                            | * InsufficientCapacity            | * Pump Oil Overheating          | * Leak-Top                      |
-|                      |                            |                                   | * Radial Bering Overheat        | * Leak-Internal                 |
+| Events               | * End of Discharge (EOD)   | * End of Discharge (EOD)          | * Impeller Wear Failure         | * Leak-Bottom                   |
+|                      | * ThermalRunaway           | * InsufficientCapacity            | * Pump Oil Overheating          | * Leak-Top                      |
+|                      |                            | * ThermalRunaway                  | * Radial Bering Overheat        | * Leak-Internal                 |
 |                      |                            |                                   | * Thrust Beiring Overheat       | * Spring Failure                |
 |                      |                            |                                   |                                 | * Friction Failure              |
 +----------------------+----------------------------+-----------------------------------+---------------------------------+---------------------------------+

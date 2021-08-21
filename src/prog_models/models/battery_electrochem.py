@@ -108,8 +108,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
 
-    Events: (1)
+    Events: (2)
         EOD: End of Discharge
+        ThermalRunaway: Thermal runaway has begun
 
     Inputs/Loading: (1)
         i: Current draw on the battery
@@ -161,7 +162,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         | VEOD : End of Discharge Voltage Threshold
         | x0 : Initial state
     """
-    events = ['EOD']
+    events = ['EOD', 'ThermalRunaway']
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
@@ -208,7 +209,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         # End of discharge voltage threshold
         'VEOD': 3.0, 
-        'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
+        'VDropoff': 0.1, # Voltage above EOD after which voltage will be considered in SOC calculation
+
+        # ThermalRunaway
+        'ApproachingRunaway': 30,  # Temperature (K) before runaway temp at which the battery is said to be approaching runaway
+        'RunawayTemp': 400.15  # Temperature (K) at which thermal runaway is said to begin
     }
 
     state_limits = {
@@ -295,6 +300,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
         voltage_EOD = (z['v'] - self.parameters['VEOD'])/self.parameters['VDropoff'] 
         return {
+            'ThermalRunaway': min((self.parameters['RunawayTemp'] - x['tb'])/self.parameters['ApproachingRunaway'], 1), 
             'EOD': min(charge_EOD, voltage_EOD)
         }
 
@@ -354,6 +360,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         # Return true if voltage is less than the voltage threshold
         return {
+            'ThermalRunaway': x['tb'] >= self.parameters['RunawayTemp'],
              'EOD': z['v'] < self.parameters['VEOD']
         }
 
