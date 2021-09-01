@@ -688,13 +688,14 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
-             * dt (Number0: time step (s), e.g. {'dt': 0.1} \n
+             * dt (Number): time step (s), e.g. {'dt': 0.1} (note: not used if next_time_fcn is defined)\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
              * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-             * print_inter (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
+             * print (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
+             * next_time_fcn (function): option, function to define next time step (t, x) -> (t, dt). Default iterates dt
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns
@@ -828,11 +829,19 @@ class PrognosticsModel(ABC):
                 times.append(t)
                 inputs.append(u)
                 states.append(deepcopy(x))  # Avoid optimization where x is not copied
+
+        if 'next_time_fcn' in config:
+            if not callable(config['next_time_fcn']):
+                raise ProgModelInputException("'next_time_fcn' must be callable (e.g., function or lambda)")
+            next_time = config['next_time_fcn']
+        else:
+            def next_time(t, x):
+                return (t + dt, dt)
         
         # Simulate
         update_all()
         while t < horizon:
-            t += dt
+            (t, dt) = next_time(t, x)
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
             if (t >= next_save):
