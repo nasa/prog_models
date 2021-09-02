@@ -581,7 +581,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 6)
 
         def next_time(t, x):
-            return t+0.5
+            return 0.5
 
         # With next_time
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'save_freq': 1e-99, 'dt': next_time})
