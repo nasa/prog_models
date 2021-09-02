@@ -5,3 +5,4 @@ from .battery_circuit import BatteryCircuit
 from .battery_electrochem import BatteryElectroChem, BatteryElectroChemEOD, BatteryElectroChemEOL, BatteryElectroChemEODEOL
 from .centrifugal_pump import CentrifugalPump, CentrifugalPumpBase, CentrifugalPumpWithWear
 from .pneumatic_valve import PneumaticValve, PneumaticValveBase, PneumaticValveWithWear
+from .dcmotor import DCMotor
