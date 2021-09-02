@@ -164,7 +164,7 @@ class DCMotor(PrognosticsModel):
         Cc = np.array([[1, 1, 1, 1, 1]])
         Dc = np.array([0,0,0,0])
         
-        # contineous to discrete
+        # continuous to discrete
         dsys = signal.cont2discrete([Ac,Bc,Cc,Dc],dt)
         Ad = dsys[0]
         Bd = dsys[1]
