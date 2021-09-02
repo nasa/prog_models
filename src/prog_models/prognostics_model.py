@@ -688,7 +688,7 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
-             * dt (Number): time step (s), e.g. {'dt': 0.1} (note: not used if next_time_fcn is defined)\n
+             * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> t'\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
              * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
@@ -751,9 +751,9 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
         
         # Configuration validation
-        if not isinstance(config['dt'], Number):
-            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
-        if config['dt'] <= 0:
+        if not isinstance(config['dt'], Number) and not callable(config['dt']):
+            raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+        if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
@@ -801,7 +801,6 @@ class PrognosticsModel(ABC):
         states = []  
         saved_outputs = []
         saved_event_states = []
-        dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
         next_save = save_freq
@@ -830,18 +829,19 @@ class PrognosticsModel(ABC):
                 inputs.append(u)
                 states.append(deepcopy(x))  # Avoid optimization where x is not copied
 
-        if 'next_time_fcn' in config:
-            if not callable(config['next_time_fcn']):
-                raise ProgModelInputException("'next_time_fcn' must be callable (e.g., function or lambda)")
-            next_time = config['next_time_fcn']
+        if callable(config['dt']):
+            next_time = config['dt']
         else:
+            dt = config['dt']  # saving to optimize access in while loop
             def next_time(t, x):
-                return (t + dt, dt)
+                return t + dt
         
         # Simulate
         update_all()
         while t < horizon:
-            (t, dt) = next_time(t, x)
+            t_old = t
+            t = next_time(t, x)
+            dt = t - t_old
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
             if (t >= next_save):
