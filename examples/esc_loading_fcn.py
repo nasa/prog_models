@@ -15,7 +15,7 @@ def commutation(theta):
     return CL[floor(theta/60)%6]
 
 # Consts
-DC_volt= 10,  # in Volts
+DC_volt= 10  # in Volts
 sawtooth_freq= 600  # Hz, sawtooth frequency
 duty = 1
         
