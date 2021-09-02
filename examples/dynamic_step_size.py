@@ -33,7 +33,6 @@ def run_example():
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, save_freq=1e-99, print=True, dt=next_time, threshold_keys=['impact'])
 
     # Example 2
-    input("Press Enter to continue to example 2...") 
     print("EXAMPLE 2: dt of 1 until impact event state 0.5, then 0.25 \n\nSetting up...\n")
 
     # Step 3: Define dynamic step size function
