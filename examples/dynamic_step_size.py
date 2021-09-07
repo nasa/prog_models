@@ -9,7 +9,7 @@ import prog_models
 from .new_model import ThrownObject
 
 def run_example():
-    print("EXAMPLE 1: dt of 1 until 3 sec, then 0.5\n\nSetting up...\n")
+    print("EXAMPLE 1: dt of 1 until 8 sec, then 0.5\n\nSetting up...\n")
     # Step 1: Create instance of model
     m = ThrownObject()
 
