@@ -828,6 +828,7 @@ class PrognosticsModel(ABC):
                 inputs.append(u)
                 states.append(deepcopy(x))  # Avoid optimization where x is not copied
 
+        # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
             next_time = config['dt']
         else:
