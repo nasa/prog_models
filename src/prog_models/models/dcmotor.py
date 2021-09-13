@@ -2,6 +2,7 @@ from prog_models import PrognosticsModel
 from math import pi
 import numpy as np
 import scipy.signal as signal
+from copy import deepcopy
 
 # Support Functions
 def backemf(theta):
@@ -50,6 +51,35 @@ def update_R_L1(params):
         'negR_L1': -params['R']/params['L1']
     }
 
+def update_BC(params):
+    L1 = params['L1']
+    J = params['J']
+    return {
+        'Bc': np.array([[(1/L1), 0, 0, 0],
+                [0, (1/L1), 0, 0],
+                [0, 0, (1/L1), 0],
+                [0, 0, 0, -(1/J)],
+                [0, 0, 0, 0]
+                ])
+    }
+
+def update_AC(params):
+    R = params['R']
+    L1 = params['L1']
+    Flx = params['K']
+    J = params['J']
+    B = params['B']
+    Po = params['Po']
+    C_q = params['c_q'] * params['rho'] * pow(params['D'], 5)
+    negR_L1 = params['negR_L1']
+    return {'Ac': np.array([[negR_L1, 0, 0, -(Flx/L1), 0],
+            [0, negR_L1, 0, -(Flx/L1), 0],
+            [0, 0, negR_L1, -(Flx/L1), 0],
+            [((Flx)/J), ((Flx)/J), ((Flx)/J), -(B/J), 0],
+            [0, 0, 0, (Po/2), 0]
+            ])
+    }
+
 
 class DCMotor(PrognosticsModel):
     """
@@ -94,12 +124,16 @@ class DCMotor(PrognosticsModel):
     outputs = ['v_rot', 'theta']
     param_callbacks = {
         'L': [update_L1],
-        'L1': [update_R_L1],
+        'L1': [update_R_L1, update_BC, update_AC],
         'M': [update_L1],
-        'c_q': [update_Cq],
-        'rho': [update_Cq],
-        'D': [update_Cq],
-        'R': [update_R_L1]
+        'c_q': [update_Cq, update_AC],
+        'rho': [update_Cq, update_AC],
+        'D': [update_Cq, update_AC],
+        'R': [update_R_L1, update_AC],
+        'J': [update_BC, update_AC],
+        'K': [update_AC],
+        'B': [update_AC],
+        'Po': [update_AC],
     }
 
     default_parameters = {
@@ -119,6 +153,10 @@ class DCMotor(PrognosticsModel):
         'rho': 1.225, # (Kg/m^3)
         'D': 0.381, # (m)
 
+        # Matricies
+        'Cc': np.array([[1, 1, 1, 1, 1]]),
+        'Dc': np.array([0,0,0,0]),
+
         # Initial State
         'x0': {
             'i_a': 0,
@@ -137,35 +175,21 @@ class DCMotor(PrognosticsModel):
 
         # Convert to new context
         (F_a, F_b, F_c) = backemf(x['theta'])
-        R = params['R']
-        L1 = params['L1']
-        Flx = params['K']
-        J = params['J']
-        B = params['B']
-        Po = params['Po']
-        C_q = params['C_q']
-        negR_L1 = params['negR_L1']
         X = np.array([x[key] for key in self.states])
-        U = np.array([u[key] for key in self.inputs])
+        U = np.array([u[key] for key in self.inputs])  
 
-        # Raj's code
-        Ac = np.array([[negR_L1, 0, 0, -((Flx*F_a)/L1), 0],
-            [0, negR_L1, 0, -((Flx*F_b)/L1), 0],
-            [0, 0, negR_L1, -((Flx*F_c)/L1), 0],
-            [((Flx*F_a)/J), ((Flx*F_b)/J), ((Flx*F_c)/J), -((B/J)+(C_q*X[3]/J)), 0],
-            [0, 0, 0, (Po/2), 0]
-            ])
-        Bc = np.array([[(1/L1), 0, 0, 0],
-                    [0, (1/L1), 0, 0],
-                    [0, 0, (1/L1), 0],
-                    [0, 0, 0, -(1/J)],
-                    [0, 0, 0, 0]
-                    ])
-        Cc = np.array([[1, 1, 1, 1, 1]])
-        Dc = np.array([0,0,0,0])
+        Ac = deepcopy(params['Ac'])
+        Ac[0][3] *= F_a
+        Ac[1][3] *= F_b
+        Ac[2][3] *= F_c
+        Ac[3][0] *= F_a
+        Ac[3][1] *= F_b
+        Ac[3][2] *= F_c
+        # TODO(CT): Move F_* to U_vector
+        Ac[3][3] -= params['C_q']*X[3]/params['J']
         
         # continuous to discrete
-        dsys = signal.cont2discrete([Ac,Bc,Cc,Dc],dt)
+        dsys = signal.cont2discrete([Ac,params['Bc'],params['Cc'],params['Dc']],dt)
         Ad = dsys[0]
         Bd = dsys[1]
         Cd = dsys[2]

@@ -23,7 +23,7 @@ def esc_loading(t, x = {'theta': 0}):
     pw = max(signal.square(2 * pi * sawtooth_freq * t, duty=1), 0)
     V = pw*DC_volt
     SP = commutation(x['theta'])
-    VP = [V[0] * SP[i] for i in range(3)]
+    VP = [V * SP[i] for i in range(3)]
 
     return {
         'v_a': VP[0],
