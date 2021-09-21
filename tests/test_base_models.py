@@ -748,15 +748,28 @@ class TestModels(unittest.TestCase):
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
+        # now using the fcn
+        x0['t'] = 0
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 0, 9)
+
         # outside low boundary
         x0['t'] = -200
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertAlmostEqual(states[1]['t'], -100)
 
+        x0['t'] = -200
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], -100, 9)
+
         # outside high boundary
         x0['t'] = 200
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertAlmostEqual(states[1]['t'], 100)
+
+        x0['t'] = 200
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 100, 9)
 
         # at low boundary
         x0['t'] = -100
@@ -764,11 +777,19 @@ class TestModels(unittest.TestCase):
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
+        x0['t'] = -100
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], -100, 9)
+
         # at high boundary
         x0['t'] = 100
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
+
+        x0['t'] = 100
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 100, 9)
 
         # when state doesn't exist
         try:
