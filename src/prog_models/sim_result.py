@@ -1,13 +1,15 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
 from .visualize import plot_timeseries
 
 
 class SimResult(UserList):
-    __slots__ = ['times', 'data']  # Optimization 
-
     """
     Used to store the result of a simulation, with time 
     """
+
+    __slots__ = ['times', 'data']  # Optimization 
+    
     def __init__(self, times, data):
         """
         Args:
