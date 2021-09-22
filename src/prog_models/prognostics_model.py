@@ -706,13 +706,13 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
-             * dt (Number0: time step (s), e.g. {'dt': 0.1} \n
+             * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> dt\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
              * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-             * print_inter (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
+             * print (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns
@@ -768,9 +768,9 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
         
         # Configuration validation
-        if not isinstance(config['dt'], Number):
-            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
-        if config['dt'] <= 0:
+        if not isinstance(config['dt'], Number) and not callable(config['dt']):
+            raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+        if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
@@ -818,7 +818,6 @@ class PrognosticsModel(ABC):
         states = []  
         saved_outputs = []
         saved_event_states = []
-        dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
         horizon = config['horizon']
         next_save = save_freq
@@ -846,11 +845,20 @@ class PrognosticsModel(ABC):
                 times.append(t)
                 inputs.append(u)
                 states.append(deepcopy(x))  # Avoid optimization where x is not copied
+
+        # configuring next_time function to define prediction time step, default is constant dt
+        if callable(config['dt']):
+            next_time = config['dt']
+        else:
+            dt = config['dt']  # saving to optimize access in while loop
+            def next_time(t, x):
+                return dt
         
         # Simulate
         update_all()
         while t < horizon:
-            t += dt
+            dt = next_time(t, x)
+            t = t + dt
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
             if (t >= next_save):

@@ -110,6 +110,17 @@ class TestExamples(unittest.TestCase):
         # Reset stdout 
         sys.stdout = _stdout
 
+    def test_dynamic_step(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        dynamic_step_size.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
     def test_future_loading(self):
         # set stdout (so it wont print)
         _stdout = sys.stdout

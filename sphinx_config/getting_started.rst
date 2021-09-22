@@ -66,6 +66,9 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.state_limits <../examples/state_limits.py>`
     .. automodule:: examples.state_limits
     |
+* :download:`examples.dynamic_step_size <../examples/dynamic_step_size.py>`
+    .. automodule:: examples.dynamic_step_size
+    |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
 
