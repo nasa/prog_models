@@ -85,7 +85,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['process_noise'] for key in self.__m.states]):
-                    raise ProgModelTypeError("Process noise must have ever key in model.states")
+                    raise ProgModelTypeError("Process noise must have every key in model.states")
         elif key == 'measurement_noise':
             if callable(self['measurement_noise']):
                 self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
