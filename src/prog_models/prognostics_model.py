@@ -404,6 +404,30 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in dx.keys()}
 
+    def apply_limits(self, x):
+        """
+        Apply state bound limits. Any state outside of limits will be set to the closest limit.
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Returns
+        -------
+        x : dict
+            Bounded state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        """
+        for (key, limit) in self.state_limits.items():
+            if x[key] < limit[0]:
+                x[key] = limit[0]
+            elif x[key] > limit[1]:
+                x[key] = limit[1]
+        return x
+
+    
     def __next_state(self, x, u, dt) -> dict:
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
@@ -447,14 +471,8 @@ class PrognosticsModel(ABC):
         # Calculate next state and add process noise
         next_state = self.apply_process_noise(self.next_state(x, u, dt))
 
-        # Check if state is within bounds
-        for (key, limit) in self.state_limits.items():
-            if next_state[key] < limit[0]:
-                next_state[key] = limit[0]
-            elif next_state[key] > limit[1]:
-                next_state[key] = limit[1]
-
-        return next_state
+        # Apply Limits
+        return self.apply_limits(next_state)
 
     def observables(self, x) -> dict:
         """
