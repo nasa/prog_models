@@ -8,7 +8,7 @@ Example of Visualization Module. Run using the command `python -m examples.visua
 import matplotlib.pyplot as plt
 from prog_models.visualize import plot_timeseries
 
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 
 def run_example():
     print('Visualize Module Example')

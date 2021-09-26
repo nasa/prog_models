@@ -5,7 +5,7 @@
 Example of the model parameter estimation feature. Run using the command `python -m examples.param_est'
 """
 
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 
 def run_example():
     # Step 1: Build the model with your best guess in parameters

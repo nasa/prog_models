@@ -5,7 +5,7 @@
 Example demonstrating ways to use state limits. Run using the command `python -m examples.state_limits`
 """
 
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 from math import inf
 
 def run_example():
