@@ -7,7 +7,7 @@ Example defining and testing a new model. Run using the command `python -m examp
 
 from prog_models import PrognosticsModel
 
-# Model used in example
+
 class ThrownObject(PrognosticsModel):
     """
     Model that similates an object thrown into the air without air resistance
@@ -28,22 +28,22 @@ class ThrownObject(PrognosticsModel):
 
     # The Default parameters. Overwritten by passing parameters dictionary into constructor
     default_parameters = {
-        'thrower_height': 1.83, # m
-        'throwing_speed': 40, # m/s
-        'g': -9.81, # Acceleration due to gravity in m/s^2
-        'process_noise': 0.0 # amount of noise in each step
+        'thrower_height': 1.83,  # m
+        'throwing_speed': 40,  # m/s
+        'g': -9.81,  # Acceleration due to gravity in m/s^2
+        'process_noise': 0.0  # amount of noise in each step
     }
 
     def initialize(self, u, z):
         self.max_x = 0.0
         return {
-            'x': self.parameters['thrower_height'], # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed'] # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
             }
     
     def dx(self, x, u):
         return {'x': x['v'],
-                'v': self.parameters['g']} # Acceleration of gravity
+                'v': self.parameters['g']}  # Acceleration of gravity
 
     def output(self, x):
         return {'x': x['x']}
@@ -57,10 +57,10 @@ class ThrownObject(PrognosticsModel):
         }
 
     def event_state(self, x): 
-        self.max_x = max(self.max_x, x['x']) # Maximum altitude
+        self.max_x = max(self.max_x, x['x'])  # Maximum altitude
         return {
-            'falling': max(x['v']/self.parameters['throwing_speed'],0), # Throwing speed is max speed
-            'impact': max(x['x']/self.max_x,0) # 1 until falling begins, then it's fraction of height
+            'falling': max(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+            'impact': max(x['x']/self.max_x,0)  # 1 until falling begins, then it's fraction of height
         }
 
 def run_example():
