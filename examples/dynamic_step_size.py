@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use the dynamic step size feature. This feature allows users to define a time-step that changes with time or state. Run using the command `python -m examples.dynamic_step_size`
+Example demonstrating ways to use the dynamic step size feature. This feature allows users to define a time-step that changes with time or state. 
 """
 
 import prog_models

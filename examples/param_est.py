@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of the model parameter estimation feature. Run using the command `python -m examples.param_est'
+Example of the model parameter estimation feature. 
 """
 
 from prog_models.models.thrown_object import ThrownObject

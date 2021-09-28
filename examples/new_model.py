@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example defining and testing a new model. Run using the command `python -m examples.new_model`
+Example defining and testing a new model. 
 """
 
 from prog_models import PrognosticsModel
