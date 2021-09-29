@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use future loading. Run using the command `python -m examples.future_loading_example`
+Example demonstrating ways to use future loading. 
 """
 
 from prog_models.models import BatteryCircuit

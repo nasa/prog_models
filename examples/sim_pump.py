@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a centrifugal pump being simulated until threshold is met. Run using the command `python -m examples.sim_pump`
+Example of a centrifugal pump being simulated until threshold is met. 
 """
 
 from prog_models.models import CentrifugalPump
