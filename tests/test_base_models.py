@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
 from prog_models import *
@@ -58,8 +58,7 @@ def derived_callback3(config):
 
 
 class MockModelWithDerived(MockProgModel):
-    def get_derived_callbacks(self):
-        return {
+    param_callbacks = {
             'p1': [derived_callback],
             'p2': [derived_callback2, derived_callback3]
         }
@@ -497,7 +496,7 @@ class TestModels(unittest.TestCase):
                 return {'a': u['i1'], 'b': 0, 'c': u['i2']}
             m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
             self.fail("Should have failed- non iterable states")
-        except ProgModelTypeError:
+        except TypeError:
             pass
 
         try:
@@ -520,9 +519,15 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
-        # Any event, default8
+        # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
+
+        # Any event, initial state 
+        x0 = {'a': 1, 'b': 5, 'c': -3.2, 't': -1}
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'x': x0})
+        self.assertAlmostEqual(times[-1], 6.0, 5)
+        self.assertAlmostEqual(states[0]['t'], -1.0, 5)
 
         # Any event, manual
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
@@ -565,6 +570,23 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 6.0, 5)
         
+    def test_next_time_fcn(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 1, 'save_freq': 1e-99})
+        self.assertEqual(len(times), 6)
+
+        def next_time(t, x):
+            return 0.5
+
+        # With next_time
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'save_freq': 1e-99, 'dt': next_time})
+        self.assertEqual(len(times), 11)
+    
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
@@ -726,11 +748,113 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
+    # when range specified when state doesnt exist or entered incorrectly
+    def test_state_limits(self):
+        m = MockProgModel()
+        m.state_limits = {
+            't': (-100, 100)
+        }
+        x0 = m.initialize()
+
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # inside bounds
+        x0['t'] = 0
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
+
+        # now using the fcn
+        x0['t'] = 0
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 0, 9)
+
+        # outside low boundary
+        x0['t'] = -200
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertAlmostEqual(states[1]['t'], -100)
+
+        x0['t'] = -200
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], -100, 9)
+
+        # outside high boundary
+        x0['t'] = 200
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertAlmostEqual(states[1]['t'], 100)
+
+        x0['t'] = 200
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 100, 9)
+
+        # at low boundary
+        x0['t'] = -100
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
+
+        x0['t'] = -100
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], -100, 9)
+
+        # at high boundary
+        x0['t'] = 100
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        self.assertGreaterEqual(states[1]['t'], -100)
+        self.assertLessEqual(states[1]['t'], 100)
+
+        x0['t'] = 100
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 100, 9)
+
+        # when state doesn't exist
+        try:
+            x0['n'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        # when state entered incorrectly
+        try:
+            x0['t'] = 'f'
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        # when boundary entered incorrectly
+        try:
+            m.state_limits = { 't': ('f', 100) }
+            x0['t'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        try:
+            m.state_limits = { 't': (-100, 'f') }
+            x0['t'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+        try:
+            m.state_limits = { 't': (100) }
+            x0['t'] = 0
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            self.fail()
+        except Exception:
+            pass
+
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
     
-if __name__ == '__main__':
+def main():
     # This ensures that the directory containing ProgModelTemplate is in the python search directory
     import sys
     from os.path import dirname, join
@@ -743,3 +867,6 @@ if __name__ == '__main__':
 
     if not result:
         raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()

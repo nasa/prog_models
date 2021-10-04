@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a centrifugal pump being simulated until threshold is met. Run using the command `python -m examples.sim_pump`
+Example of a centrifugal pump being simulated until threshold is met. 
 """
 
 from prog_models.models import CentrifugalPump
@@ -37,7 +37,8 @@ def run_example():
     first_output = pump.output(pump.initialize(future_loading(0),{}))
     config = {
         'horizon': 1e5,
-        'save_freq': 1e3
+        'save_freq': 1e3,
+        'print': True
     }
     (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, first_output, **config)
 

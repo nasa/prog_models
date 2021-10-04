@@ -1,11 +1,82 @@
 # Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from prog_models.models.centrifugal_pump import CentrifugalPump
+from prog_models.models.centrifugal_pump import CentrifugalPump, CentrifugalPumpWithWear, CentrifugalPumpBase
 
 class TestCentrifugalPump(unittest.TestCase):
-    def test_centrifugal_pump(self):
-        pump = CentrifugalPump(process_noise= 0)
+    def test_centrifugal_pump_base(self):
+        pump = CentrifugalPumpBase(process_noise= 0)
+
+        cycle_time = 3600
+        def future_loading(t, x=None):
+            t = t % cycle_time
+            if t < cycle_time/2.0:
+                V = 471.2389
+            elif t < cycle_time/2 + 100:
+                V = 471.2389 + (t-cycle_time/2)
+            elif t < cycle_time - 100:
+                V = 571.2389
+            else:
+                V = 471.2398 - (t-cycle_time)
+
+            return {
+                'Tamb': 290,
+                'V': V,
+                'pdisch': 928654, 
+                'psuc': 239179, 
+                'wsync': V * 0.8
+            }
+        x0 = pump.initialize(future_loading(0))
+        # Same as with wear except without wA, wRadial, wThrust
+        x0_test = {
+            'w': 376.991118431,
+            'rThrust': 1.4e-6,
+            'rRadial': 1.8e-6,
+            'Tt': 290,
+            'Tr': 290,
+            'To': 290,
+            'Q': 0.0,
+            'A': 12.7084,
+            'QLeak':  -8.303463132934355e-08
+        }
+        for key in pump.states:
+            self.assertAlmostEqual(x0[key], x0_test[key], 7)
+        
+        x = pump.next_state(x0, future_loading(0), 1)
+        x_test = {
+            'w': 372.68973081274,
+            'Q': 0.017417462,
+            'Tt': 290.027256332,
+            'Tr': 290.1065917275,
+            'To': 290,
+            'A': 12.7084,
+            'rThrust': 1.4e-6,
+            'rRadial': 1.8e-6,
+            'QLeak': -8.303463132934355e-08
+        }
+        for key in pump.states:
+            self.assertAlmostEqual(x[key], x_test[key], 7)
+
+        z = pump.output(x)
+        z_test = {
+            'Qout': 0.0174,
+            'To': 290,
+            'Tr': 290.1066,
+            'Tt': 290.0273,
+            'w': 372.6897
+        }
+
+        for key in pump.outputs:
+            self.assertAlmostEqual(z[key], z_test[key], 4)
+
+        # Wear rates are parameters instead of states
+        pump.parameters['wA'] = 1e-2
+        pump.parameters['wThrust'] = 1e-10
+        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
+        self.assertAlmostEqual(times[-1], 23891)
+
+    def test_centrifugal_pump_with_wear(self):
+        pump = CentrifugalPumpWithWear(process_noise= 0)
 
         cycle_time = 3600
         def future_loading(t, x=None):
@@ -79,11 +150,15 @@ class TestCentrifugalPump(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
         self.assertAlmostEqual(times[-1], 23891)
 
+    def test_centrifugal_pump(self):
+        self.assertEqual(CentrifugalPump,CentrifugalPumpWithWear)
+        # CentrifugalPump is alias for "with wear"
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
     
-if __name__ == '__main__':
+def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Centrifugal Pump Model")
@@ -91,3 +166,6 @@ if __name__ == '__main__':
 
     if not result:
         raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()

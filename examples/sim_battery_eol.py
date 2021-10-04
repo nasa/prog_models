@@ -2,10 +2,9 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim_battery_eol`
+Example of a battery being simulated for a set period of time and then till threshold is met. 
 """
 
-import numpy as np
 from prog_models.models import BatteryElectroChem as Battery
 
 def run_example(): 

@@ -2,11 +2,11 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a sensitivity analysis on a new model. Run using the command `python -m examples.sensitivity`
+Example of a sensitivity analysis on a new model. 
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 import numpy as np
 
 def run_example():

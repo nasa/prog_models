@@ -2,8 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
-from ..exceptions import ProgModelException
-from math import sqrt, copysign
+from math import sqrt, copysign, inf
 from copy import deepcopy
 
 
@@ -12,7 +11,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
     Prognostics model for a pneumatic valve.
 
     This class implements a Pneumatic Valve model as described in the following paper:
-    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602`
+    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
     
     Events: (5)
         | Bottom Leak: Failure due to a leak at the bottom pneumatic port
@@ -167,6 +166,16 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         'wt': 0
     }
 
+    state_limits = {
+        'Aeb': (0, inf),
+        'Aet': (0, inf),
+        'Ai': (0, inf),
+        'k': (0, inf),
+        'mBot': (0, inf),
+        'mTop': (0, inf),
+        'r': (0, inf)
+    }
+
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
@@ -185,9 +194,8 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             return C*A*pIn*sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
         if pOut/pIn>=threshold:
             return -C*A*pOut*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
-        if pOut>pIn:
-            return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
-        raise ProgModelException('Unknown Condition')
+        # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
+        return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
     def next_state(self, x, u, dt):
         params = self.parameters # optimization
@@ -229,15 +237,15 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             pos = new_x
 
         return {
+            'x': pos,
+            'v': vel,
+            'mTop': x['mTop'] + mTopdot * dt,
+            'mBot': x['mBot'] + mBotdot * dt,
             'Aeb': x['Aeb'] + params['wb'] * dt,
             'Aet': x['Aet'] + params['wt'] * dt,
             'Ai': x['Ai'] + Aidot * dt,
             'k': x['k'] + kdot * dt,
-            'mBot': x['mBot'] + mBotdot * dt,
-            'mTop': x['mTop'] + mTopdot * dt,
             'r': x['r'] + rdot * dt,
-            'v': vel,
-            'x': pos,
             'pDiff': u['pL'] - u['pR']
         }
     
@@ -281,6 +289,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             "Friction Failure": x['r'] > params['rMax']
         }
 
+
 class PneumaticValveWithWear(PneumaticValveBase):
     """
     Prognostics model for a pneumatic valve with wear parameters as part of the model state. This is identical to PneumaticValveBase, only PneumaticValveBase has the wear params as parameters instead of states
@@ -314,7 +323,9 @@ class PneumaticValveWithWear(PneumaticValveBase):
         'wi': 0,
         'wk': 0,
         'wr': 0,
-        'wt': 0})    
+        'wt': 0})
+
+    state_limits = deepcopy(PneumaticValveBase.state_limits)
 
     def next_state(self, x, u, dt):
         self.parameters['wb'] = x['wb']

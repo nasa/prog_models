@@ -3,7 +3,7 @@
 
 from .. import prognostics_model
 
-from math import exp
+from math import exp, inf
 
 
 class BatteryCircuit(prognostics_model.PrognosticsModel):
@@ -11,7 +11,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
     Prognostics model for a battery, represented by an electric circuit
     
     This class implements an equivilant circuit model as described in the following paper:
-    `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. http://www.phmsociety.org/node/1055/`
+    `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253`
     
     Events: (1)
         EOD: End of Discharge
@@ -20,7 +20,10 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         i: Current draw on the battery
 
     States: (4)
-        tb, qb, qcp, qcs
+        | tb : Battery Temperature (°C)
+        | qb : Charge stored in Capacitor Cb of the equivalent circuit model
+        | qcp : Charge stored in Capacitor Ccp of the equivalent circuit model
+        | qcs : Charge stored in Capacitor Ccs of the equivalent circuit model
 
     Outputs: (2)
         | t: Temperature of battery (°C)
@@ -104,6 +107,11 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'CRateMin': 0.7,  # current necessary for cruise,
         'CRateMax': 2.5   # current necessary for hover
         # CRateMin, CRateMax based on values determined in `C. Silva and W. Johnson, "VTOL Urban Air Mobility Concept Vehicles for Technology Development" Aviation and Aeronautics Forum (Aviation 2018),June 2018. https://arc.aiaa.org/doi/abs/10.2514/6.2018-3847`
+    }
+
+    state_limits = {
+        'tb': (-273.15, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
+        'qb': (0, inf)
     }
 
     def initialize(self, u={}, z={}):

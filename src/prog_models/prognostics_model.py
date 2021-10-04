@@ -9,6 +9,7 @@ from copy import deepcopy
 from collections import UserDict
 import types
 from array import array
+from .sim_result import SimResult, LazySimResult
 
 
 class PrognosticsModelParameters(UserDict):
@@ -25,6 +26,7 @@ class PrognosticsModelParameters(UserDict):
         super().__init__()
         self.__m = model
         self.callbacks = {}
+        # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
         for (key, value) in dict_in.items():
             # Deepcopy is needed here to force copying when value is an object (e.g., dict)
             self[key] = deepcopy(value)
@@ -83,7 +85,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['process_noise'] for key in self.__m.states]):
-                    raise ProgModelTypeError("Process noise must have ever key in model.states")
+                    raise ProgModelTypeError("Process noise must have every key in model.states")
         elif key == 'measurement_noise':
             if callable(self['measurement_noise']):
                 self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
@@ -131,6 +133,7 @@ class PrognosticsModelParameters(UserDict):
             updates = callback(self[key])
             self.update(updates)
 
+
 class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
@@ -146,12 +149,14 @@ class PrognosticsModel(ABC):
     kwargs : keyword arguments, optional
         Configuration parameters for model. Parameters supported by every model include:\n
             * process_noise : Process noise (applied at dx/next_state).
-                Can be number (e.g., .2) applied to every state, a dictionary of values for each
+                Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
                 state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x\n
+                See: examples.noise for more details\n
             * process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)\n
             * measurement_noise : Measurement noise (applied in output eqn)
-                Can be number (e.g., .2) applied to every output, a dictionary of values for each
+                Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
+                See: examples.noise for more details\n
             * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
         E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {'z1': 0.1, 'z2': 0.3})
     
@@ -170,36 +175,39 @@ class PrognosticsModel(ABC):
         'measurement_noise': 0.0
     }
 
+    # Configurable state range limit
+    state_limits = {
+        # 'state': (lower_limit, upper_limit)
+    }
+
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
     observables_keys = []  # Identifies for each observable
     events = []       # Identifiers for each event
+    param_callbacks = {}  # Callbacks for derived parameters
 
     def __init__(self, **kwargs):
+        if not hasattr(self, 'inputs'):
+            raise ProgModelTypeError('Must have `inputs` attribute')
+        
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
         try:
-            if not hasattr(self, 'inputs'):
-                raise ProgModelTypeError('Must have `inputs` attribute')
-            
-            if not hasattr(self, 'states'):
-                raise ProgModelTypeError('Must have `states` attribute')
-            if len(self.states) <= 0:
-                raise ProgModelTypeError('`states` attribute must have at least one state key')
-            try:
-                a = iter(self.states)
-            except TypeError:
-                raise ProgModelTypeError('model.states must be iterable')
+            iter(self.states)
+        except TypeError:
+            raise ProgModelTypeError('model.states must be iterable')
 
-            if not hasattr(self, 'outputs'):
-                raise ProgModelTypeError('Must have `outputs` attribute')
-            try:
-                iter(self.outputs)
-            except TypeError:
-                raise ProgModelTypeError('model.outputs must be iterable')
-        except Exception:
-            raise ProgModelTypeError('Could not check model configuration')
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        try:
+            iter(self.outputs)
+        except TypeError:
+            raise ProgModelTypeError('model.outputs must be iterable')
 
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.get_derived_callbacks())
+        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
         try:
             self.parameters.update(kwargs)
         except TypeError:
@@ -220,14 +228,6 @@ class PrognosticsModel(ABC):
 
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
-
-    def get_derived_callbacks(self):
-        """Returns all the callbacks for derived parameters. Default is no callbacks
-
-        Returns:
-            dict(key[string] : callback_fcn): Dictionary of callbacks
-        """
-        return {}
     
     @abstractmethod
     def initialize(self, u, z) -> dict:
@@ -404,6 +404,30 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in dx.keys()}
 
+    def apply_limits(self, x):
+        """
+        Apply state bound limits. Any state outside of limits will be set to the closest limit.
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Returns
+        -------
+        x : dict
+            Bounded state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        """
+        for (key, limit) in self.state_limits.items():
+            if x[key] < limit[0]:
+                x[key] = limit[0]
+            elif x[key] > limit[1]:
+                x[key] = limit[1]
+        return x
+
+    
     def __next_state(self, x, u, dt) -> dict:
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
@@ -444,11 +468,11 @@ class PrognosticsModel(ABC):
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
         """
         
-        # Calculate next state
-        x = self.next_state(x, u, dt)
+        # Calculate next state and add process noise
+        next_state = self.apply_process_noise(self.next_state(x, u, dt))
 
-        # Add process noise
-        return self.apply_process_noise(x)
+        # Apply Limits
+        return self.apply_limits(next_state)
 
     def observables(self, x) -> dict:
         """
@@ -682,13 +706,13 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
-             * dt (Number0: time step (s), e.g. {'dt': 0.1} \n
+             * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> dt\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
              * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-             * print_inter (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
+             * print (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns
@@ -744,9 +768,9 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
         
         # Configuration validation
-        if not isinstance(config['dt'], Number):
-            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
-        if config['dt'] <= 0:
+        if not isinstance(config['dt'], Number) and not callable(config['dt']):
+            raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+        if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
@@ -768,7 +792,10 @@ class PrognosticsModel(ABC):
         # Setup
         t = 0
         u = future_loading_eqn(t)
-        x = self.initialize(u, first_output)
+        if 'x' in config:
+            x = config['x']
+        else:
+            x = self.initialize(u, first_output)
         
         # Optimization
         next_state = self.__next_state
@@ -786,12 +813,11 @@ class PrognosticsModel(ABC):
                 return any([thresholds_met[key] for key in threshold_keys])
 
         # Initialization of save arrays
-        times = array('d', [0])
-        inputs = [u]
-        states = [deepcopy(x)]  # Avoid optimization where x is not copied
-        saved_outputs = [output(x)]
-        saved_event_states = [event_state(x)]
-        dt = config['dt']  # saving to optimize access in while loop
+        times = array('d')
+        inputs = []
+        states = []  
+        saved_outputs = []
+        saved_event_states = []
         save_freq = config['save_freq']
         horizon = config['horizon']
         next_save = save_freq
@@ -804,7 +830,7 @@ class PrognosticsModel(ABC):
             def update_all():
                 times.append(t)
                 inputs.append(u)
-                states.append(deepcopy(x))
+                states.append(deepcopy(x))  # Avoid optimization where x is not copied
                 saved_outputs.append(output(x))
                 saved_event_states.append(event_state(x))
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
@@ -818,13 +844,21 @@ class PrognosticsModel(ABC):
             def update_all():
                 times.append(t)
                 inputs.append(u)
-                states.append(deepcopy(x))
-                saved_outputs.append(output(x))
-                saved_event_states.append(event_state(x))
+                states.append(deepcopy(x))  # Avoid optimization where x is not copied
+
+        # configuring next_time function to define prediction time step, default is constant dt
+        if callable(config['dt']):
+            next_time = config['dt']
+        else:
+            dt = config['dt']  # saving to optimize access in while loop
+            def next_time(t, x):
+                return dt
         
         # Simulate
+        update_all()
         while t < horizon:
-            t += dt
+            dt = next_time(t, x)
+            t = t + dt
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
             if (t >= next_save):
@@ -841,7 +875,21 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
-        return (times, inputs, states, saved_outputs, saved_event_states)
+        if not saved_outputs:
+            # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
+            saved_outputs = LazySimResult(self.output, times, states) 
+            saved_event_states = LazySimResult(self.event_state, times, states)
+        else:
+            saved_outputs = SimResult(times, saved_outputs)
+            saved_event_states = SimResult(times, saved_event_states)
+        
+        return (
+            times, 
+            SimResult(times, inputs), 
+            SimResult(times, states), 
+            saved_outputs, 
+            saved_event_states
+        )
     
     @staticmethod
     def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
@@ -992,6 +1040,8 @@ class PrognosticsModel(ABC):
             kwargs: Configuration parameters. Supported parameters include: \n
              | method: Optimization method- see scikit.optimize.minimize 
              | options: Options passed to optimizer
+
+        See: examples.param_est
         """
         from scipy.optimize import minimize
 
