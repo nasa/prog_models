@@ -8,6 +8,7 @@ sys.path.append(join(dirname(__file__), ".."))
 import unittest
 from io import StringIO 
 from examples import *
+from unittest.mock import patch
 
 
 class TestExamples(unittest.TestCase):
@@ -127,7 +128,8 @@ class TestExamples(unittest.TestCase):
         sys.stdout = StringIO()
 
         # Run example
-        future_loading.run_example()
+        with patch('matplotlib.pyplot') as p:
+            future_loading.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout

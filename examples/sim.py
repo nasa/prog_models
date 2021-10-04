@@ -9,8 +9,6 @@ from prog_models.models import BatteryCircuit as Battery
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
 
-
-
 def run_example(): 
     # Step 1: Create a model object
     batt = Battery()
