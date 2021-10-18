@@ -48,6 +48,9 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.sensitivity <../examples/sensitivity.py>`
     .. automodule:: examples.sensitivity
     |
+* :download:`examples.events <../examples/events.py>`
+    .. automodule:: examples.events
+    |
 * :download:`examples.noise <../examples/noise.py>`
     .. automodule:: examples.noise
     |

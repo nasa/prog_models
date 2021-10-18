@@ -122,6 +122,18 @@ class TestExamples(unittest.TestCase):
         # Reset stdout 
         sys.stdout = _stdout
 
+    def test_events(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        with patch('matplotlib.pyplot') as p:
+            events.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
     def test_future_loading(self):
         # set stdout (so it wont print)
         _stdout = sys.stdout
