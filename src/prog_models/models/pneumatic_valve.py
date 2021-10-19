@@ -4,7 +4,7 @@
 from .. import prognostics_model
 from math import inf
 from copy import deepcopy
-from numpy import sqrt, sign, maximum
+from numpy import sqrt, sign, maximum, minimum, isscalar, array, any, shape
 
 
 class PneumaticValveBase(prognostics_model.PrognosticsModel):
@@ -183,6 +183,20 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         return x0
 
     def gas_flow(self, pIn, pOut, C, A):
+        # Step 1: If array- run for each element
+        # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
+        inputs = array([pIn, pOut, C, A])
+        if any([not isscalar(i) for i in inputs]):
+            # Handle case where one or more is array
+            size = [shape(i) for i in inputs]
+            size = max([i[0] if i else 0 for i in size])  # Size of array
+
+            # Create Iterable Elements for scalars
+            iter_inputs = [[i] * size if isscalar(i) else i for i in inputs]
+
+            # Run each element through function
+            return array([self.gas_flow(a, b, c, d) for a, b, c, d in zip(*iter_inputs)])
+
         k = self.parameters['gas_gamma']
         T = self.parameters['gas_temp']
         Z = self.parameters['gas_z']
