@@ -699,9 +699,7 @@ class TestModels(unittest.TestCase):
         x = m.next_state(x0, load(0), dt)
         for xa, xa0 in zip(x['a'], a):
             self.assertAlmostEqual(xa, xa0+dt)
-        
-        
-    
+
     def test_sim_prog_inproper_config(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
