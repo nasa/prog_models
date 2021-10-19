@@ -2,6 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import PrognosticsModel
+from numpy import maximum
 
 
 class ThrownObject(PrognosticsModel):
@@ -30,8 +31,11 @@ class ThrownObject(PrognosticsModel):
         'process_noise': 0.0  # amount of noise in each step
     }
 
-    def initialize(self, u, z):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.max_x = 0.0
+
+    def initialize(self, u, z):
         return {
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
             'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
@@ -53,8 +57,8 @@ class ThrownObject(PrognosticsModel):
         }
 
     def event_state(self, x): 
-        self.max_x = max(self.max_x, x['x'])  # Maximum altitude
+        self.max_x = maximum(self.max_x, x['x'])  # Maximum altitude
         return {
-            'falling': max(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': max(x['x']/self.max_x,0)  # 1 until falling begins, then it's fraction of height
+            'falling': maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+            'impact': maximum(x['x']/self.max_x,0)  # 1 until falling begins, then it's fraction of height
         }
