@@ -8,6 +8,8 @@
 # 4. Uncomment either dx or next_state function. dx for continuous models, and next_state for discrete
 # 5. Implement logic of model in each method
 
+# Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
+
 from prog_models import PrognosticsModel
 import math
 
