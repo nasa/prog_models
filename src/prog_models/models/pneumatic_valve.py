@@ -2,8 +2,9 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
-from math import sqrt, copysign, inf
+from math import inf
 from copy import deepcopy
+from numpy import sqrt, sign, maximum
 
 
 class PneumaticValveBase(prognostics_model.PrognosticsModel):
@@ -253,10 +254,10 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
-        maxFlow = params['Cv']*params['Av']*copysign(sqrt(2/params['rhoL']*abs(x['pDiff'])),x['pDiff'])
+        maxFlow = params['Cv']*params['Av']*sqrt(2/params['rhoL']*abs(x['pDiff'])) * sign(x['pDiff'])
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
-        trueFlow = maxFlow * max(0,x['x'])/params['Ls']
+        trueFlow = maxFlow * maximum(0,x['x'])/params['Ls']
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 
