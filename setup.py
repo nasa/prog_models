@@ -32,12 +32,13 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3 :: Only'
     ],
     keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management'],
     package_dir = {"":"src"},
     packages = find_packages(where = 'src'),
-    python_requires='>=3.6, <3.10',
+    python_requires='>=3.6, <3.11',
     install_requires = [
         'numpy',
         'scipy',
