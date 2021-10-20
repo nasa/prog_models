@@ -6,6 +6,22 @@ from math import inf
 from copy import deepcopy
 from numpy import sqrt, sign, maximum, minimum, isscalar, array, any, shape
 
+def calc_x(x, forces, Ls, new_x):
+    lower_wall = (x==0 and forces<0) or (new_x<0)
+    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+    if lower_wall:
+        return 0
+    if upper_wall:
+        return Ls
+    return new_x
+
+def calc_v(x, v, dv, forces, Ls, new_x):
+    lower_wall = (x==0 and forces<0) or (new_x<0)
+    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+    if lower_wall or upper_wall:
+        return 0
+    return v + dv
+
 
 class PneumaticValveBase(prognostics_model.PrognosticsModel):
     """
@@ -243,29 +259,13 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
         pos = minimum(maximum(new_x, 0.0), params['Ls'])
 
-        def calc_x(x, forces, Ls, new_x):
-            lower_wall = (x==0 and forces<0) or (new_x<0)
-            upper_wall = (x==Ls and forces>0) or (new_x>Ls)
-            if lower_wall:
-                return 0
-            if upper_wall:
-                return Ls
-            return new_x
-
-        def calc_v(x, v, dv, forces, Ls, new_x):
-            lower_wall = (x==0 and forces<0) or (new_x<0)
-            upper_wall = (x==Ls and forces>0) or (new_x>Ls)
-            if lower_wall or upper_wall:
-                return 0
-            return v + dv
-
         if isscalar(pistonForces):
             vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
             pos = calc_x(x['x'], pistonForces, params['Ls'], new_x)
         else:
             # If array- run for each element
             vel = [calc_v(xi, vi, vdot_i*dt, force, params['Ls'], new_x_i) for xi, vi, vdot_i, force, new_x_i in zip(x['x'], x['v'], vdot, pistonForces, new_x)]
-            vel = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
+            pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
 
         return {
             'x': pos,
