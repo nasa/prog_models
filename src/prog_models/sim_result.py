@@ -42,7 +42,16 @@ class SimResult(UserList):
         return self.times[index]
 
     def plot(self, **kwargs):
-        plot_timeseries(self.times, self.data, options=kwargs)  
+        """
+        Plot the simresult as a line plot
+
+        Args: 
+            kwargs: Configuration parameters for plot_timeseries
+
+        Returns:
+            Figure
+        """
+        return plot_timeseries(self.times, self.data, options=kwargs)  
     # lgtm [py/missing-equals]
 
 class LazySimResult(SimResult):  # lgtm [py/missing-equals]
