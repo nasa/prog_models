@@ -121,6 +121,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         "pDiff"  # pL-pR
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
+    is_vectorized = True
     default_parameters = {  # Set to defaults
         # Environmental Parameters
         'R': 8.314,  # Universal Gas Constant

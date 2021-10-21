@@ -22,6 +22,8 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
+    is_vectorized = False
+
     def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model

@@ -29,6 +29,9 @@ class ProgModelTemplate(PrognosticsModel):
     Template for Prognostics Model
     """
 
+    # V Uncomment Below if the class is vectorized (i.e., if it can accept input to all functions as arrays) V
+    # is_vectorized = True
+
     # REPLACE THE FOLLOWING LIST WITH EVENTS BEING PREDICTED
     events = [
         'Example Event' 

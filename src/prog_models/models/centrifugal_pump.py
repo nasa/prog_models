@@ -84,6 +84,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
     states = ['w', 'Q', 'Tt', 'Tr', 'To', 'A', 'rRadial', 'rThrust', 'QLeak']
     outputs = ['w', 'Qout', 'Tt', 'Tr', 'To']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         # Environmental parameters

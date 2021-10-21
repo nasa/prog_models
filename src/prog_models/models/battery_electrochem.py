@@ -166,6 +166,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         'qMobile': 7600,
