@@ -6,7 +6,7 @@ from .. import prognostics_model
 import math
 from math import inf
 from copy import deepcopy
-from numpy import maximum, minimum, sign, sqrt, array, ndarray, atleast_1d
+from numpy import array, maximum, minimum, ndarray, sqrt, sign
 
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
@@ -84,6 +84,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
     states = ['w', 'Q', 'Tt', 'Tr', 'To', 'A', 'rRadial', 'rThrust', 'QLeak']
     outputs = ['w', 'Qout', 'Tt', 'Tr', 'To']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         # Environmental parameters
@@ -143,14 +144,14 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
         # Initial state
         'x0': {
-            'w': atleast_1d(376.991118431),  # 3600 rpm (rad/sec)
-            'Q': atleast_1d(0),
-            'Tt': atleast_1d(290),
-            'Tr': atleast_1d(290),
-            'To': atleast_1d(290),
-            'A': atleast_1d(12.7084),
-            'rThrust': atleast_1d(1.4e-6),
-            'rRadial': atleast_1d(1.8e-6)
+            'w': 376.991118431,  # 3600 rpm (rad/sec)
+            'Q': 0,
+            'Tt': 290,
+            'Tr': 290,
+            'To': 290,
+            'A': 12.7084,
+            'rThrust': 1.4e-6,
+            'rRadial': 1.8e-6
         }
     }
 
@@ -165,9 +166,9 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
-        x0['QLeak'] = atleast_1d(math.copysign(\
+        x0['QLeak'] = math.copysign(\
             self.parameters['cLeak']*self.parameters['ALeak']*\
-                math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch']))
+                math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
         return x0
 
     def next_state(self, x, u, dt):
@@ -200,26 +201,26 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
         return {
-            'w': atleast_1d(x['w'] + wdot * dt),
-            'Q': atleast_1d(x['Q'] + Qdot * dt),
-            'Tt': atleast_1d(x['Tt'] + Ttdot * dt),
-            'Tr': atleast_1d(x['Tr'] + Trdot * dt),
-            'To': atleast_1d(x['To'] + Todot * dt),
-            'A': atleast_1d(x['A'] + Adot * dt),
-            'rRadial': atleast_1d(x['rRadial'] + rRadialdot * dt),
-            'rThrust': atleast_1d(x['rThrust'] + rThrustdot * dt),
-            'QLeak': atleast_1d(QLeak)
+            'w': x['w'] + wdot * dt,
+            'Q': x['Q'] + Qdot * dt,
+            'Tt': x['Tt'] + Ttdot * dt,
+            'Tr': x['Tr'] + Trdot * dt,
+            'To': x['To'] + Todot * dt,
+            'A': x['A'] + Adot * dt,
+            'rRadial': x['rRadial'] + rRadialdot * dt,
+            'rThrust': x['rThrust'] + rThrustdot * dt,
+            'QLeak': QLeak
         }
 
     def output(self, x):
         Qout = maximum(0,x['Q']-x['QLeak'])
 
         return {
-            'w':    atleast_1d(x['w']),
-            'Qout': atleast_1d(Qout),
-            'Tt':   atleast_1d(x['Tt']),
-            'Tr':   atleast_1d(x['Tr']),
-            'To':   atleast_1d(x['To'])
+            'w':    x['w'],
+            'Qout': Qout,
+            'Tt':   x['Tt'],
+            'Tr':   x['Tr'],
+            'To':   x['To']
         }
 
     def event_state(self, x):
