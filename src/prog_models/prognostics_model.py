@@ -22,6 +22,8 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
+    is_vectorized = False
+
     def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model
@@ -71,13 +73,13 @@ class PrognosticsModelParameters(UserDict):
                     if self['process_noise_dist'].lower() == "uniform":
                         def uniform_process_noise(self, x, dt=1):
                             return {key: x[key] + \
-                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) \
+                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                     elif self['process_noise_dist'].lower() == "triangular":
                         def triangular_process_noise(self, x, dt=1):
                             return {key: x[key] + \
-                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) \
+                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                     else:
@@ -100,13 +102,13 @@ class PrognosticsModelParameters(UserDict):
                     if self['measurement_noise_dist'].lower() == "uniform":
                         def uniform_noise(self, x):
                             return {key: x[key] + \
-                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) \
+                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                     elif self['measurement_noise_dist'].lower() == "triangular":
                         def triangular_noise(self, x):
                             return {key: x[key] + \
-                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) \
+                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                     else:
@@ -285,7 +287,9 @@ class PrognosticsModel(ABC):
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
         return {key: z[key] \
-            + np.random.normal(0, self.parameters['measurement_noise'][key]) \
+            + np.random.normal(
+                0, self.parameters['measurement_noise'][key],
+                size=None if np.isscalar(z[key]) else len(z[key]))
                 for key in z.keys()}
         
     def apply_process_noise(self, x, dt=1) -> dict:
@@ -318,9 +322,11 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] + \
-            dt*np.random.normal(0, self.parameters['process_noise'][key]) \
-                for key in x.keys()}
+        return {key: x[key] +
+                dt*np.random.normal(
+                    0, self.parameters['process_noise'][key],
+                    size=None if np.isscalar(x[key]) else len(x[key]))
+                    for key in x.keys()}
 
     def dx(self, x, u):
         """
@@ -807,10 +813,16 @@ class PrognosticsModel(ABC):
         elif threshold_keys is None: 
             # Note: Dont use implicit boolean in this check- it would then activate for an empty array
             def check_thresholds(thresholds_met):
-                return any(thresholds_met.values())
+                t_met = thresholds_met.values()
+                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                    return np.any(t_met)
+                return any(t_met)
         else:
             def check_thresholds(thresholds_met):
-                return any([thresholds_met[key] for key in threshold_keys])
+                t_met = [thresholds_met[key] for key in threshold_keys]
+                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                    return np.any(t_met)
+                return any(t_met)
 
         # Initialization of save arrays
         times = array('d')

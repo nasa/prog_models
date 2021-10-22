@@ -685,6 +685,21 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 3)
         # Last step is a savepoint        
 
+    def test_vectorization(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+        from numpy import array
+        a = array([1, 2, 3, 4, 4.5])
+        b = array([5]*5)
+        c = array([-3.2, -7.4, -11.6, -15.8, -17.9])
+        t = array([0, 0.5, 1, 1.5, 2])
+        dt = 0.5
+        x0 = {'a': deepcopy(a), 'b': deepcopy(b), 'c': deepcopy(c), 't': deepcopy(t)}
+        x = m.next_state(x0, load(0), dt)
+        for xa, xa0 in zip(x['a'], a):
+            self.assertAlmostEqual(xa, xa0+dt)
+
     def test_sim_prog_inproper_config(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
