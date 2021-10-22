@@ -10,7 +10,7 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times, data):
+    def __init__(self, times = [], data = []):
         """
         Args:
             times (array(float)): Times for each data point where times[n] corresponds to data[n]
@@ -29,6 +29,22 @@ class SimResult(UserList):
             bool: If the two SimResults are equal
         """
         return self.times == other.times and self.data == other.data
+
+    def extend(self, other):
+        self.times.extend(other.times)
+        self.data.extend(other.data)
+
+    def pop(self, index = -1):
+        """Remove an element
+
+        Args:
+            index (int, optional): Index of element to be removed. Defaults to -1.
+
+        Returns:
+            dict: Element Removed
+        """
+        self.times.pop(index)
+        return self.data.pop(index)
 
     def time(self, index):
         """Get time for data point at index `index`
@@ -58,7 +74,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn, times, states):
+    def __init__(self, fcn, times = [], states = []):
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -76,6 +92,26 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             bool: If the value has been calculated
         """
         return self.__data is not None
+
+    def extend(self, other):
+        self.times.extend(other.times)
+        self.__data = None
+        self.states.extend(other.states)
+
+    def pop(self, index = -1):
+        """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
+
+        Args:
+            index (int, optional): Index of element to be removed. Defaults to -1.
+
+        Returns:
+            dict: Element Removed
+        """
+        self.times.pop(index)
+        x = self.states.pop(index)
+        if self.__data is not None:
+            return self.__data.pop(index)
+        return self.fcn(x)
 
     @property
     def data(self):
