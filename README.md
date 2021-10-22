@@ -2,6 +2,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/nasa/prog_models/badge)](https://www.codefactor.io/repository/github/nasa/prog_models)
 [![GitHub License](https://img.shields.io/badge/License-NOSA-green)](https://github.com/nasa/prog_models/blob/master/license.pdf)
 [![GitHub Releases](https://img.shields.io/github/release/nasa/prog_models.svg)](https://github.com/nasa/prog_models/releases)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nasa/prog_models/HEAD)
 
 The NASA Prognostic Model Package is a Python framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
 
