@@ -30,12 +30,24 @@ class SimResult(UserList):
         """
         return self.times == other.times and self.data == other.data
 
+    def index(self, other, *args, **kwargs):
+        """
+        Get the index of the first sample where other occurs
+
+        Args: 
+            other (dict)
+    
+        Returns:
+            int: Index of first sample where other occurs
+        """
+        return self.data.index(other, *args, **kwargs)
+
     def extend(self, other):
         self.times.extend(other.times)
         self.data.extend(other.data)
 
     def pop(self, index = -1):
-        """Remove an element
+        """Remove and return an element
 
         Args:
             index (int, optional): Index of element to be removed. Defaults to -1.
@@ -43,8 +55,22 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        self.times.pop(index)
+        self.times.remove(index)
         return self.data.pop(index)
+    
+    def remove(self, index):
+        """Remove an element
+
+        Args:
+            index (int): Index of element to be removed.
+        """
+        self.times.remove(index)
+        self.data.remove(index)
+
+    def clear(self):
+        """Clear the SimResult"""
+        self.times = []
+        self.data = []
 
     def time(self, index):
         """Get time for data point at index `index`
@@ -68,7 +94,18 @@ class SimResult(UserList):
             Figure
         """
         return plot_timeseries(self.times, self.data, options=kwargs)  
+
+    def __not_implemented(self):
+        raise NotImplementedError("Not Implemented")
+
+    # Functions of list not implemented
+    # Specified here to stop users from accidentally trying to use them (due to this classes similarity to list)
+    append = __not_implemented 
+    count = __not_implemented 
+    insert = __not_implemented
+    reverse = __not_implemented 
     # lgtm [py/missing-equals]
+
 
 class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
@@ -92,6 +129,11 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             bool: If the value has been calculated
         """
         return self.__data is not None
+
+    def clear(self):
+        self.times = []
+        self.__data = None
+        self.states = []
 
     def extend(self, other):
         self.times.extend(other.times)
