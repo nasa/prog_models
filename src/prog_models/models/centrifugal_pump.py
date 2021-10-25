@@ -6,6 +6,7 @@ from .. import prognostics_model
 import math
 from math import inf
 from copy import deepcopy
+from numpy import array, maximum, minimum, ndarray, sqrt, sign
 
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
@@ -81,8 +82,9 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     """
     events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
-    states = ['A', 'Q', 'To', 'Tr', 'Tt', 'rRadial', 'rThrust', 'w',  'QLeak']
-    outputs = ['Qout', 'To', 'Tr', 'Tt', 'w']
+    states = ['w', 'Q', 'Tt', 'Tr', 'To', 'A', 'rRadial', 'rThrust', 'QLeak']
+    outputs = ['w', 'Qout', 'Tt', 'Tr', 'To']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         # Environmental parameters
@@ -179,18 +181,22 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         rRadialdot = params['wRadial']*x['rRadial']*x['w']*x['w']
         rThrustdot = params['wThrust']*x['rThrust']*x['w']*x['w']
         friction = (params['r']+x['rThrust']+x['rRadial'])*x['w']
-        QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
-            u['psuc']-u['pdisch'])
+        if type(x['A']) == ndarray:
+            QLeak = array([params['cLeak']*params['ALeak'] *
+                           sqrt(abs(u['psuc']-u['pdisch'])) * sign(u['psuc']-u['pdisch'])]*len(x['A']))
+        else:
+            QLeak = params['cLeak']*params['ALeak'] * \
+                sqrt(abs(u['psuc']-u['pdisch'])) * sign(u['psuc']-u['pdisch'])
         Trdot = 1/params['mcRadial'] * (x['rRadial']*x['w']*x['w'] - params['HRadial1']*(x['Tr']-u['Tamb']) - params['HRadial2']*(x['Tr']-x['To']))
         slipn = (u['wsync']-x['w'])/(u['wsync'])
         ppump = x['A']*x['w']*x['w'] + params['b']*x['w']*x['Q']
-        Qout = max(0,x['Q']-QLeak)
-        slip = max(-1,(min(1,slipn)))
+        Qout = maximum(0,x['Q']-x['QLeak'])
+        slip = maximum(-1,(minimum(1,slipn)))
         deltaP = ppump+u['psuc']-u['pdisch']
         Te = params['n']*params['p']*params['R2']/(slip*(u['wsync']+0.00001)) * u['V']**2 \
             /((params['R1']+params['R2']/slip)**2+(u['wsync']*params['L1'])**2)
         backTorque = -params['a2']*Qout**2 + params['a1']*x['w']*Qout + params['a0']*x['w']**2
-        Qo = math.copysign(params['c']*math.sqrt(abs(deltaP)), deltaP)
+        Qo = params['c']*sqrt(abs(deltaP)) * sign(deltaP)
         wdot = (Te-friction-backTorque)/params['I']
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
@@ -207,14 +213,14 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         }
 
     def output(self, x):
-        Qout = max(0,x['Q']-x['QLeak'])
+        Qout = maximum(0,x['Q']-x['QLeak'])
 
         return {
+            'w':    x['w'],
             'Qout': Qout,
-            'To': x['To'],
-            'Tr': x['Tr'],
-            'Tt': x['Tt'],
-            'w': x['w']
+            'Tt':   x['Tt'],
+            'Tr':   x['Tr'],
+            'To':   x['To']
         }
 
     def event_state(self, x):

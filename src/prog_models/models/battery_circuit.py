@@ -3,7 +3,8 @@
 
 from .. import prognostics_model
 
-from math import exp, inf
+from math import inf
+from numpy import exp, minimum
 
 
 class BatteryCircuit(prognostics_model.PrognosticsModel):
@@ -152,7 +153,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
             self.parameters['VDropoff']
         return {
-            'EOD': min(charge_EOD, voltage_EOD)
+            'EOD': minimum(charge_EOD, voltage_EOD)
         }
 
     def output(self, x):
