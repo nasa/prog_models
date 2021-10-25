@@ -55,7 +55,7 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        self.times.remove(index)
+        self.times.pop(index)
         return self.data.pop(index)
     
     def remove(self, index):
