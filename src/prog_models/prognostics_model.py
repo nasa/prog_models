@@ -765,6 +765,7 @@ class PrognosticsModel(ABC):
 
         # Configure
         config = { # Defaults
+            't': 0.0,
             'dt': 1.0,
             'save_pts': [],
             'save_freq': 10.0,
@@ -796,7 +797,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
-        t = 0
+        t = config['t']
         u = future_loading_eqn(t)
         if 'x' in config:
             x = config['x']
@@ -831,8 +832,8 @@ class PrognosticsModel(ABC):
         saved_outputs = []
         saved_event_states = []
         save_freq = config['save_freq']
-        horizon = config['horizon']
-        next_save = save_freq
+        horizon = t+config['horizon']
+        next_save = t+save_freq
         save_pt_index = 0
         save_pts = config['save_pts']
         save_pts.append(1e99)  # Add last endpoint
