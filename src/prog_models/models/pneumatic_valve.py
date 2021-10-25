@@ -2,8 +2,25 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
-from math import sqrt, copysign, inf
+from math import inf
 from copy import deepcopy
+from numpy import sqrt, sign, maximum, minimum, isscalar, array, any, shape
+
+def calc_x(x, forces, Ls, new_x):
+    lower_wall = (x==0 and forces<0) or (new_x<0)
+    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+    if lower_wall:
+        return 0
+    if upper_wall:
+        return Ls
+    return new_x
+
+def calc_v(x, v, dv, forces, Ls, new_x):
+    lower_wall = (x==0 and forces<0) or (new_x<0)
+    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+    if lower_wall or upper_wall:
+        return 0
+    return v + dv
 
 
 class PneumaticValveBase(prognostics_model.PrognosticsModel):
@@ -104,6 +121,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         "pDiff"  # pL-pR
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
+    is_vectorized = True
     default_parameters = {  # Set to defaults
         # Environmental Parameters
         'R': 8.314,  # Universal Gas Constant
@@ -182,6 +200,20 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         return x0
 
     def gas_flow(self, pIn, pOut, C, A):
+        # Step 1: If array- run for each element
+        # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
+        inputs = array([pIn, pOut, C, A])
+        if any([not isscalar(i) for i in inputs]):
+            # Handle case where one or more is array
+            size = [shape(i) for i in inputs]
+            size = max([i[0] if i else 0 for i in size])  # Size of array
+
+            # Create Iterable Elements for scalars
+            iter_inputs = [[i] * size if isscalar(i) else i for i in inputs]
+
+            # Run each element through function
+            return array([self.gas_flow(a, b, c, d) for a, b, c, d in zip(*iter_inputs)])
+
         k = self.parameters['gas_gamma']
         T = self.parameters['gas_temp']
         Z = self.parameters['gas_z']
@@ -225,16 +257,16 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         vdot = pistonForces/params['m']
 
         new_x = x['x']+x['v']*dt
-        if (x['x']==0 and pistonForces<0) or (new_x<0):
-            vel = 0
-            pos = 0
-        elif (x['x']==params['Ls'] and pistonForces>0) or (new_x>params['Ls']):
-            vel = 0
-            pos = params['Ls']
+
+        pos = minimum(maximum(new_x, 0.0), params['Ls'])
+
+        if isscalar(pistonForces):
+            vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
+            pos = calc_x(x['x'], pistonForces, params['Ls'], new_x)
         else:
-            # moving
-            vel = x['v'] + vdot*dt
-            pos = new_x
+            # If array- run for each element
+            vel = [calc_v(xi, vi, vdot_i*dt, force, params['Ls'], new_x_i) for xi, vi, vdot_i, force, new_x_i in zip(x['x'], x['v'], vdot, pistonForces, new_x)]
+            pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
 
         return {
             'x': pos,
@@ -253,10 +285,10 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
-        maxFlow = params['Cv']*params['Av']*copysign(sqrt(2/params['rhoL']*abs(x['pDiff'])),x['pDiff'])
+        maxFlow = params['Cv']*params['Av']*sqrt(2/params['rhoL']*abs(x['pDiff'])) * sign(x['pDiff'])
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
-        trueFlow = maxFlow * max(0,x['x'])/params['Ls']
+        trueFlow = maxFlow * maximum(0,x['x'])/params['Ls']
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 

@@ -2,8 +2,52 @@
 
 import unittest
 from prog_models.models.pneumatic_valve import PneumaticValve, PneumaticValveWithWear, PneumaticValveBase
+from numpy import array
 
 class TestPneumaticValve(unittest.TestCase):
+    def test_pneumatic_valve_vectorized(self):
+        m = PneumaticValveWithWear(process_noise= 0)    
+
+        cycle_time = 20
+        def future_loading(t, x=None):
+            t = t % cycle_time
+            if t < cycle_time/2:
+                return {
+                    'pL': 3.5e5,
+                    'pR': 2.0e5,
+                    # Open Valve
+                    'uTop': False,
+                    'uBot': True
+                }
+            return {
+                'pL': 3.5e5,
+                'pR': 2.0e5,
+                # Close Valve
+                'uTop': True,
+                'uBot': False
+            }
+
+        x0 = {
+            'x': array([0]*4),
+            'v': array([0]*4),
+            'Ai': array([0]*4),
+            'r': array([6000]*4),
+            'k': array([48000]*4),
+            'Aeb': array([1e-5]*4),
+            'Aet': array([1e-5]*4),
+            'condition': array([1]*4),
+            'mTop': array([0.069, 0.048, 0.027, 0.06]),
+            'mBot': array([9.45e-4, 0.008, 0.016, 0.024]),
+            'pDiff': array([1.5e5]*4),
+            'wb': array([0]*4),
+            'wi': array([0]*4),
+            'wk': array([0]*4),
+            'wr': array([0]*4),
+            'wt': array([0]*4)
+        }
+
+        x = m.next_state(x0, future_loading(0), 0.1)
+
     def test_pneumatic_valve_with_wear(self):
         # Test using PneumaticValveWithWear
         m = PneumaticValveWithWear(process_noise= 0)

@@ -8,6 +8,8 @@
 # 4. Uncomment either dx or next_state function. dx for continuous models, and next_state for discrete
 # 5. Implement logic of model in each method
 
+# Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
+
 from prog_models import PrognosticsModel
 import math
 
@@ -26,6 +28,9 @@ class ProgModelTemplate(PrognosticsModel):
     """
     Template for Prognostics Model
     """
+
+    # V Uncomment Below if the class is vectorized (i.e., if it can accept input to all functions as arrays) V
+    # is_vectorized = True
 
     # REPLACE THE FOLLOWING LIST WITH EVENTS BEING PREDICTED
     events = [
