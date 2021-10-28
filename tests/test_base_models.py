@@ -570,6 +570,23 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 6.0, 5)
         
+    def test_next_time_fcn(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 1, 'save_freq': 1e-99})
+        self.assertEqual(len(times), 6)
+
+        def next_time(t, x):
+            return 0.5
+
+        # With next_time
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'save_freq': 1e-99, 'dt': next_time})
+        self.assertEqual(len(times), 11)
+    
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
@@ -668,6 +685,21 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 3)
         # Last step is a savepoint        
 
+    def test_vectorization(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+        from numpy import array
+        a = array([1, 2, 3, 4, 4.5])
+        b = array([5]*5)
+        c = array([-3.2, -7.4, -11.6, -15.8, -17.9])
+        t = array([0, 0.5, 1, 1.5, 2])
+        dt = 0.5
+        x0 = {'a': deepcopy(a), 'b': deepcopy(b), 'c': deepcopy(c), 't': deepcopy(t)}
+        x = m.next_state(x0, load(0), dt)
+        for xa, xa0 in zip(x['a'], a):
+            self.assertAlmostEqual(xa, xa0+dt)
+
     def test_sim_prog_inproper_config(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
@@ -748,15 +780,28 @@ class TestModels(unittest.TestCase):
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
+        # now using the fcn
+        x0['t'] = 0
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 0, 9)
+
         # outside low boundary
         x0['t'] = -200
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertAlmostEqual(states[1]['t'], -100)
 
+        x0['t'] = -200
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], -100, 9)
+
         # outside high boundary
         x0['t'] = 200
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertAlmostEqual(states[1]['t'], 100)
+
+        x0['t'] = 200
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 100, 9)
 
         # at low boundary
         x0['t'] = -100
@@ -764,11 +809,19 @@ class TestModels(unittest.TestCase):
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
+        x0['t'] = -100
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], -100, 9)
+
         # at high boundary
         x0['t'] = 100
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
+
+        x0['t'] = 100
+        x = m.apply_limits(x0)
+        self.assertAlmostEqual(x['t'], 100, 9)
 
         # when state doesn't exist
         try:

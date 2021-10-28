@@ -3,8 +3,9 @@
 
 from .. import PrognosticsModel
 
-from math import asinh, log, inf
+from math import inf
 from copy import deepcopy
+from numpy import arcsinh, log
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -165,6 +166,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         'qMobile': 7600,
@@ -241,13 +243,15 @@ class BatteryElectroChemEOD(PrognosticsModel):
         xnS = x['qnS']/params['qSMax']
 
         qdotDiffusionBSn = (CnBulk-CnSurface)/params['tDiffusion']
+        qnBdot = -qdotDiffusionBSn
+        qnSdot = qdotDiffusionBSn - u["i"]
 
         Jn = u['i']/params['Sn']
         Jn0 = params['kn']*((1-xnS)*xnS)**params['alpha']
 
         v_part = R_F*x['tb']/params['alpha']
 
-        VsnNominal = v_part*asinh(Jn/(Jn0 + Jn0))
+        VsnNominal = v_part*arcsinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
 
         # Positive Surface
@@ -262,7 +266,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Jp = u['i']/params['Sp']
         Jp0 = params['kp']*((1-xpS)*xpS)**params['alpha']
 
-        VspNominal = v_part*asinh(Jp/(Jp0+Jp0))
+        VspNominal = v_part*arcsinh(Jp/(Jp0+Jp0))
         Vspdot = (VspNominal-x['Vsp'])/params['tsp']
 
         # Combined
@@ -279,8 +283,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'Vsn': Vsndot,
             'Vsp': Vspdot,
             'tb': Tbdot,
-            'qnB': -qdotDiffusionBSn,
-            'qnS': qdotDiffusionBSn - u['i'],
+            'qnB': qnBdot,
+            'qnS': qnSdot,
             'qpB': qpBdot,
             'qpS': qpSdot
         }

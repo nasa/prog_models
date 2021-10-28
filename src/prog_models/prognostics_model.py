@@ -22,6 +22,8 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
+    is_vectorized = False
+
     def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model
@@ -71,13 +73,13 @@ class PrognosticsModelParameters(UserDict):
                     if self['process_noise_dist'].lower() == "uniform":
                         def uniform_process_noise(self, x, dt=1):
                             return {key: x[key] + \
-                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key]) \
+                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                     elif self['process_noise_dist'].lower() == "triangular":
                         def triangular_process_noise(self, x, dt=1):
                             return {key: x[key] + \
-                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key]) \
+                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.states}
                         self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                     else:
@@ -85,7 +87,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['process_noise'] for key in self.__m.states]):
-                    raise ProgModelTypeError("Process noise must have ever key in model.states")
+                    raise ProgModelTypeError("Process noise must have every key in model.states")
         elif key == 'measurement_noise':
             if callable(self['measurement_noise']):
                 self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
@@ -100,13 +102,13 @@ class PrognosticsModelParameters(UserDict):
                     if self['measurement_noise_dist'].lower() == "uniform":
                         def uniform_noise(self, x):
                             return {key: x[key] + \
-                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key]) \
+                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                     elif self['measurement_noise_dist'].lower() == "triangular":
                         def triangular_noise(self, x):
                             return {key: x[key] + \
-                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key]) \
+                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
                                     for key in self.outputs}
                         self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                     else:
@@ -285,7 +287,9 @@ class PrognosticsModel(ABC):
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
         return {key: z[key] \
-            + np.random.normal(0, self.parameters['measurement_noise'][key]) \
+            + np.random.normal(
+                0, self.parameters['measurement_noise'][key],
+                size=None if np.isscalar(z[key]) else len(z[key]))
                 for key in z.keys()}
         
     def apply_process_noise(self, x, dt=1) -> dict:
@@ -318,9 +322,11 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] + \
-            dt*np.random.normal(0, self.parameters['process_noise'][key]) \
-                for key in x.keys()}
+        return {key: x[key] +
+                dt*np.random.normal(
+                    0, self.parameters['process_noise'][key],
+                    size=None if np.isscalar(x[key]) else len(x[key]))
+                    for key in x.keys()}
 
     def dx(self, x, u):
         """
@@ -404,6 +410,30 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return {key: x[key] + dx[key]*dt for key in dx.keys()}
 
+    def apply_limits(self, x):
+        """
+        Apply state bound limits. Any state outside of limits will be set to the closest limit.
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Returns
+        -------
+        x : dict
+            Bounded state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        """
+        for (key, limit) in self.state_limits.items():
+            if x[key] < limit[0]:
+                x[key] = limit[0]
+            elif x[key] > limit[1]:
+                x[key] = limit[1]
+        return x
+
+    
     def __next_state(self, x, u, dt) -> dict:
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
@@ -447,14 +477,8 @@ class PrognosticsModel(ABC):
         # Calculate next state and add process noise
         next_state = self.apply_process_noise(self.next_state(x, u, dt))
 
-        # Check if state is within bounds
-        for (key, limit) in self.state_limits.items():
-            if next_state[key] < limit[0]:
-                next_state[key] = limit[0]
-            elif next_state[key] > limit[1]:
-                next_state[key] = limit[1]
-
-        return next_state
+        # Apply Limits
+        return self.apply_limits(next_state)
 
     def observables(self, x) -> dict:
         """
@@ -688,13 +712,13 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
-             * dt (Number0: time step (s), e.g. {'dt': 0.1} \n
+             * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> dt\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
              * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-             * print_inter (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
+             * print (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns
@@ -741,6 +765,7 @@ class PrognosticsModel(ABC):
 
         # Configure
         config = { # Defaults
+            't': 0.0,
             'dt': 1.0,
             'save_pts': [],
             'save_freq': 10.0,
@@ -750,9 +775,9 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
         
         # Configuration validation
-        if not isinstance(config['dt'], Number):
-            raise ProgModelInputException("'dt' must be a number, was a {}".format(type(config['dt'])))
-        if config['dt'] <= 0:
+        if not isinstance(config['dt'], Number) and not callable(config['dt']):
+            raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+        if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
@@ -772,7 +797,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
-        t = 0
+        t = config['t']
         u = future_loading_eqn(t)
         if 'x' in config:
             x = config['x']
@@ -789,10 +814,16 @@ class PrognosticsModel(ABC):
         elif threshold_keys is None: 
             # Note: Dont use implicit boolean in this check- it would then activate for an empty array
             def check_thresholds(thresholds_met):
-                return any(thresholds_met.values())
+                t_met = thresholds_met.values()
+                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                    return np.any(t_met)
+                return any(t_met)
         else:
             def check_thresholds(thresholds_met):
-                return any([thresholds_met[key] for key in threshold_keys])
+                t_met = [thresholds_met[key] for key in threshold_keys]
+                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                    return np.any(t_met)
+                return any(t_met)
 
         # Initialization of save arrays
         times = array('d')
@@ -800,10 +831,9 @@ class PrognosticsModel(ABC):
         states = []  
         saved_outputs = []
         saved_event_states = []
-        dt = config['dt']  # saving to optimize access in while loop
         save_freq = config['save_freq']
-        horizon = config['horizon']
-        next_save = save_freq
+        horizon = t+config['horizon']
+        next_save = t+save_freq
         save_pt_index = 0
         save_pts = config['save_pts']
         save_pts.append(1e99)  # Add last endpoint
@@ -828,11 +858,20 @@ class PrognosticsModel(ABC):
                 times.append(t)
                 inputs.append(u)
                 states.append(deepcopy(x))  # Avoid optimization where x is not copied
+
+        # configuring next_time function to define prediction time step, default is constant dt
+        if callable(config['dt']):
+            next_time = config['dt']
+        else:
+            dt = config['dt']  # saving to optimize access in while loop
+            def next_time(t, x):
+                return dt
         
         # Simulate
         update_all()
         while t < horizon:
-            t += dt
+            dt = next_time(t, x)
+            t = t + dt
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
             if (t >= next_save):

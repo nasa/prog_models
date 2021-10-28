@@ -2,13 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of Visualization Module. Run using the command `python -m examples.visualize`
+Example of Visualization Module. 
 """
 
 import matplotlib.pyplot as plt
 from prog_models.visualize import plot_timeseries
-
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 
 def run_example():
     print('Visualize Module Example')

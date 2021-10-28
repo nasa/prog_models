@@ -2,10 +2,10 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use state limits. Run using the command `python -m examples.state_limits`
+Example demonstrating ways to use state limits. 
 """
 
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 from math import inf
 
 def run_example():
@@ -56,6 +56,13 @@ def run_example():
     
     print('Example 3')
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True)
+
+    # Note that the limits can also be applied manually using the apply_limits function
+    print('limiting states')
+    x = {'x': -5, 'v': 3e8}  # Too fast and below the ground
+    print('\t Pre-limit: {}'.format(x))
+    x = m.apply_limits(x)
+    print('\t Post-limit: {}'.format(x))
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

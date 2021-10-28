@@ -8,6 +8,7 @@ sys.path.append(join(dirname(__file__), ".."))
 import unittest
 from io import StringIO 
 from examples import *
+from unittest.mock import patch
 
 
 class TestExamples(unittest.TestCase):
@@ -110,13 +111,25 @@ class TestExamples(unittest.TestCase):
         # Reset stdout 
         sys.stdout = _stdout
 
+    def test_dynamic_step(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        dynamic_step_size.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
     def test_future_loading(self):
         # set stdout (so it wont print)
         _stdout = sys.stdout
         sys.stdout = StringIO()
 
         # Run example
-        future_loading.run_example()
+        with patch('matplotlib.pyplot') as p:
+            future_loading.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
@@ -139,6 +152,17 @@ class TestExamples(unittest.TestCase):
 
         # Run example
         state_limits.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
+    def test_state_bounds(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        vectorized.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
