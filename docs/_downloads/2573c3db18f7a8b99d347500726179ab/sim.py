@@ -2,14 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim`
+Example of a battery being simulated for a set period of time and then till threshold is met.
 """
 
 from prog_models.models import BatteryCircuit as Battery
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
-
-
 
 def run_example(): 
     # Step 1: Create a model object

@@ -13,6 +13,7 @@ If you are new to this package, see `<getting_started.html>`__.
 .. toctree::
    :maxdepth: 2
    
+   Tutorial <https://mybinder.org/v2/gh/nasa/prog_models/dev?labpath=tutorial.ipynb>
    getting_started
    models
    prognostics_model

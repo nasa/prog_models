@@ -1,5 +1,7 @@
 Getting Started
 ===============
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/nasa/prog_models/HEAD
 
 The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
 
@@ -65,6 +67,9 @@ See the below examples for examples of use. Run these examples using the command
     |
 * :download:`examples.state_limits <../examples/state_limits.py>`
     .. automodule:: examples.state_limits
+    |
+* :download:`examples.dynamic_step_size <../examples/dynamic_step_size.py>`
+    .. automodule:: examples.dynamic_step_size
     |
 
 There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
