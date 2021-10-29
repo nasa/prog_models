@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Prognostics Model &#8212; Prognostics Models Python Package 1.1.0 documentation</title>
+    <title>Prognostics Model &#8212; Prognostics Models Python Package 1.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -15,8 +15,6 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Visualization" href="visualize.html" />
-    <link rel="prev" title="Models" href="models.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -75,6 +73,26 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 </dl>
 <p class="rubric">Example</p>
 <p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.apply_limits">
+<span class="sig-name descname"><span class="pre">apply_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel.apply_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply state bound limits. Any state outside of limits will be set to the closest limit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>dict</em>) – <p>state, with keys defined by model.states</p>
+<p>e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Bounded state, with keys defined by model.states
+e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘def’]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.apply_measurement_noise">
 <span class="sig-name descname"><span class="pre">apply_measurement_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.apply_measurement_noise" title="Permalink to this definition">¶</a></dt>
@@ -519,13 +537,13 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
-<li><p>dt (Number0: time step (s), e.g. {‘dt’: 0.1}</p></li>
+<li><p>dt (Number or function): time step (s), e.g. {‘dt’: 0.1} or function (t, x) -&gt; dt</p></li>
 <li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
 <li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
 <li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
 <li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
-<li><p>print_inter (bool): optional, toggle intermediate printing, e.g., print_inter = True</p></li>
+<li><p>print (bool): optional, toggle intermediate printing, e.g., print_inter = True</p></li>
 </ul>
 </div></blockquote>
 <p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>
@@ -627,21 +645,14 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 
 <h3>Navigation</h3>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Prognostics Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="models.html" title="previous chapter">Models</a></li>
-      <li>Next: <a href="visualize.html" title="next chapter">Visualization</a></li>
   </ul></li>
 </ul>
 </div>

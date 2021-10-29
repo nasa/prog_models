@@ -2,13 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use future loading. Run using the command `python -m examples.future_loading_example`
+Example demonstrating ways to use future loading. 
 """
 
 from prog_models.models import BatteryCircuit
 from statistics import mean
 from prog_models.visualize import plot_timeseries
-import matplotlib.pyplot as plt
 from numpy.random import normal
 
 def run_example(): 
@@ -30,8 +29,8 @@ def run_example():
         return {'i': i}
     # Simulate to threshold
     options = {
-        'save_freq': 100, # Frequency at which results are saved
-        'dt': 2 # Timestep
+        'save_freq': 100,  # Frequency at which results are saved
+        'dt': 2  # Timestep
     }
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
 
@@ -53,7 +52,7 @@ def run_example():
         for key in m.inputs:
             moving_avg.loads[key].append(i[key])
             if len(moving_avg.loads[key]) > window:
-                del moving_avg.loads[key][0] # Remove first item
+                del moving_avg.loads[key][0]  # Remove first item
 
         # Update future loading eqn
         future_loading.load = {key : mean(moving_avg.loads[key]) for key in m.inputs} 
@@ -152,11 +151,11 @@ def run_example():
     def future_loading(t, x=None):
         if x is not None:
             event_state = future_loading.event_state(x)
-            return {'i': future_loading.start + (1-event_state['EOD']) * future_loading.slope} # default
+            return {'i': future_loading.start + (1-event_state['EOD']) * future_loading.slope}  # default
         return {'i': future_loading.start}
     future_loading.t = 0
     future_loading.event_state = m.event_state
-    future_loading.slope = 2 # difference between input with EOD = 1 and 0. 
+    future_loading.slope = 2  # difference between input with EOD = 1 and 0. 
     future_loading.start = 0.5
 
     # Simulate to threshold
@@ -169,6 +168,7 @@ def run_example():
     # In this example future_loading.t has to be updated with current time before each prediction.
 
     # Show plots
+    import matplotlib.pyplot as plt
     plt.show()
 
 # This allows the module to be executed directly 

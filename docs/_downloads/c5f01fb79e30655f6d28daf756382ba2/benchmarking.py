@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of benchmarking models. Run using the command `python -m examples.benchmarking_example`
+Example of benchmarking models. 
 """
 
 from timeit import timeit
