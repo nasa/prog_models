@@ -74,7 +74,7 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1, print = True)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, print = True)
     
     # Print flight time
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
@@ -85,16 +85,16 @@ def run_example():
 
     # The first way to change the configuration is to pass in your desired config into construction of the model
     m = ThrownObject(g = grav_moon)
-    (times_moon, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times_moon, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
 
     grav_mars = -3.711
     # You can also update the parameters after it's constructed
     m.parameters['g'] = grav_mars
-    (times_mars, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times_mars, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
 
     grav_venus = -8.87
     m.parameters['g'] = grav_venus
-    (times_venus, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    (times_venus, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
 
     print('Time to hit the ground: ')
     print('\tvenus: {}s'.format(round(times_venus[-1],2)))
@@ -103,7 +103,7 @@ def run_example():
     print('\tmoon: {}s'.format(round(times_moon[-1],2)))
 
     # We can also simulate until any event is met by neglecting the threshold_keys argument
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, options={'dt':0.005, 'save_freq':1})
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, options={'dt':0.005, 'save_freq':1})
     threshs_met = m.threshold_met(states[-1])
     for (key, met) in threshs_met.items():
         if met:

@@ -1,13 +1,13 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
+from .. import PrognosticsModel
 
 from math import inf
 from numpy import exp, minimum
 
 
-class BatteryCircuit(prognostics_model.PrognosticsModel):
+class BatteryCircuit(PrognosticsModel):
     """
     Prognostics model for a battery, represented by an electric circuit
     
@@ -114,7 +114,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'qb': (0, inf)
     }
 
-    def initialize(self, u={}, z={}):
+    def initialize(self, u=None, z=None):
         return self.parameters['x0']
 
     def dx(self, x, u):

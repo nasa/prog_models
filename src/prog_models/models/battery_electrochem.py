@@ -232,7 +232,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u=None, z=None):
         return self.parameters['x0']
 
     def dx(self, x, u):
@@ -419,7 +419,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'qMax': (0, inf)
     }
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u=None, z=None):
         return self.parameters['x0']
 
     def dx(self, x, u):

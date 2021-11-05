@@ -74,7 +74,7 @@ def run_example():
 
     # Step 8: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':thrower_height}, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
     
     # Print flight time
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))

@@ -39,7 +39,7 @@ def run_example():
         'threshold_keys': ['InsufficientCapacity'],  # Simulate to InsufficientCapacity
         'print': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

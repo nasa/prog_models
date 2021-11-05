@@ -36,7 +36,7 @@ class ThrownObject(PrognosticsModel):
         super().__init__(**kwargs)
         self.max_x = 0.0
 
-    def initialize(self, u, z):
+    def initialize(self, u=None, z=None):
         return {
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
             'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher

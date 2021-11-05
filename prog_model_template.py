@@ -99,7 +99,10 @@ class ProgModelTemplate(PrognosticsModel):
 
         super().__init__(**kwargs) # Run Parent constructor
 
-    def initialize(self, u, z):
+    # Sometimes initial input (u) and initial output (z) are needed to initialize the model
+    # In that case remove the '= None' for the appropriate argument
+    # Note: If they are needed, that requirement propogated through to the simulate_to* functions
+    def initialize(self, u=None, z=None):
         """
         Calculate initial state given inputs and outputs
 

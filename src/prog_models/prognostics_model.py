@@ -232,7 +232,7 @@ class PrognosticsModel(ABC):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
     
     @abstractmethod
-    def initialize(self, u, z) -> dict:
+    def initialize(self, u = None, z = None) -> dict:
         """
         Calculate initial state given inputs and outputs
 
@@ -633,7 +633,7 @@ class PrognosticsModel(ABC):
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
-    def simulate_to(self, time, future_loading_eqn, first_output, **kwargs) -> tuple:
+    def simulate_to(self, time, future_loading_eqn, first_output = None, **kwargs) -> tuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -644,6 +644,8 @@ class PrognosticsModel(ABC):
             e.g., time = 200
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
+        first_output : dict, optional
+            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
         options: kwargs, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters \n
@@ -695,7 +697,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output, threshold_keys = None, **kwargs) -> tuple:
+    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs) -> tuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -703,8 +705,8 @@ class PrognosticsModel(ABC):
         ----------
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
-        first_output : dict
-            First measured output, needed to initialize state
+        first_output : dict, optional
+            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
         threshold_keys: [str], optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
@@ -754,7 +756,7 @@ class PrognosticsModel(ABC):
         | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
         """
         # Input Validation
-        if not all(key in first_output for key in self.outputs):
+        if first_output and not all(key in first_output for key in self.outputs):
             raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
 
         if not (callable(future_loading_eqn)):

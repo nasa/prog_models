@@ -609,7 +609,7 @@ class TestModels(unittest.TestCase):
             pass
 
         try:
-            m.simulate_to(12, load, {})
+            m.simulate_to(12, load, {'o2': 0.9})
             self.fail("Should have failed- output must contain each field (e.g., o1)")
         except ProgModelInputException:
             pass
