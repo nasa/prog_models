@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
 from .visualize import plot_timeseries
+from copy import deepcopy
 
 
 class SimResult(UserList):
@@ -111,7 +112,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn, times = [], states = []):
+    def __init__(self, fcn, times = [], states = [], id = None):
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -119,8 +120,8 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
         self.fcn = fcn
-        self.times = times
-        self.states = states
+        self.times = deepcopy(times)
+        self.states = deepcopy(states)
         self.__data = None
 
     def is_cached(self):
@@ -136,9 +137,9 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.states = []
 
     def extend(self, other):
-        self.times.extend(other.times)
+        self.times.extend(deepcopy(other.times))
         self.__data = None
-        self.states.extend(other.states)
+        self.states.extend(deepcopy(other.states))
 
     def pop(self, index = -1):
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
