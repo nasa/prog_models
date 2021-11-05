@@ -645,7 +645,7 @@ class PrognosticsModel(ABC):
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : dict, optional
-            First measured output, needed to initialize state for some classes. Can be ommited for classes that dont use this
+            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
         options: kwargs, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters \n
@@ -706,7 +706,7 @@ class PrognosticsModel(ABC):
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : dict, optional
-            First measured output, needed to initialize state for some classes. Can be ommited for classes that dont use this
+            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
         threshold_keys: [str], optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
