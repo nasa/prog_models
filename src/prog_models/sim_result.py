@@ -112,7 +112,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn, times = [], states = [], id = None):
+    def __init__(self, fcn, times = [], states = []):
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
