@@ -22,8 +22,6 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    is_vectorized = False
-
     def __init__(self, model, dict_in = {}, callbacks = {}):
         super().__init__()
         self.__m = model
@@ -170,6 +168,7 @@ class PrognosticsModel(ABC):
     -------
     m = PrognosticsModel({'process_noise': 3.2})
     """
+    is_vectorized = False
 
     # Configuration Parameters for model
     default_parameters = {
