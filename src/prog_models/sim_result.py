@@ -17,8 +17,8 @@ class SimResult(UserList):
             times (array(float)): Times for each data point where times[n] corresponds to data[n]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
-        self.times = times
-        self.data = data
+        self.times = deepcopy(times)
+        self.data = deepcopy(data)
 
     def __eq__(self, other):
         """Compare 2 SimResults
