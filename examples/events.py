@@ -20,9 +20,9 @@ def run_example():
     # In this example we will use the battery model
     # We of course are interested in end of discharge, but for this example we
     # have a requirement that says the battery must not fall below 5% State of Charge (SOC)
-    # Event states, like SOC go between 0 and 1, where 1 is healthy and at 0 the event has occured. 
-    # So, 5% SOC corresponds to an event state of 0.05
     # Note: SOC is the event state for the End of Discharge (EOD) event
+    # Event states, like SOC go between 0 and 1, where 1 is healthy and at 0 the event has occured. 
+    # So, 5% SOC corresponds to an 'EOD' event state of 0.05
     # Additionally, we have two warning thresholds (yellow and red)
 
     YELLOW_THRESH = 0.15
