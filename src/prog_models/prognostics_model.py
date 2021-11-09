@@ -138,35 +138,56 @@ class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
 
-    The PrognosticsModel class is a wrapper around a mathematical model of a
-    system as represented by a state, output, input, event_state and threshold equations.
+    The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equations.
 
-    A Model also has a parameters structure, which contains fields for
-    various model parameters.
+    A Model also has a parameters structure, which contains fields for various model parameters.
 
-    Parameters
-    ----------
-    kwargs : keyword arguments, optional
-        Configuration parameters for model. Parameters supported by every model include:\n
-            * process_noise : Process noise (applied at dx/next_state).
-                Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
-                state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x\n
-                See: examples.noise for more details\n
-            * process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)\n
-            * measurement_noise : Measurement noise (applied in output eqn)
-                Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
-                output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z\n
-                See: examples.noise for more details\n
-            * measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)\n
-        E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {'z1': 0.1, 'z2': 0.3})
-    
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        Additional parameters specific to the model
+
     Raises
     ------
-    ProgModelTypeError
+        ProgModelTypeError, ProgModelInputException, ProgModelException
 
     Example
     -------
-    m = PrognosticsModel({'process_noise': 3.2})
+        m = PrognosticsModel({'process_noise': 3.2})
+
+    Attributes
+    ----------
+        is_vectorized : bool, optional
+            True if the model is vectorized, False otherwise. Default is False
+        default_parameters : dict[str, float], optional
+            Default parameters for the model class
+        parameters : dict[str, float]
+            Parameters for the specific model object. This is created automatically from the default_parameters and kwargs
+        state_limits: dict[str, tuple[float, float]], optional
+            Limits on the state variables format {'state_name': (lower_limit, upper_limit)}
+        param_callbacks : dict[str, list[function]], optional
+            Callbacks for derived parameters
+        inputs: List[str]
+            Identifiers for each input
+        states: List[str]
+            Identifiers for each state
+        outputs: List[str]
+            Identifiers for each output
+        observables_keys: List[str], optional
+            Identifiers for each observable
+        events: List[str], optional
+            Identifiers for each event predicted 
     """
     is_vectorized = False
 
