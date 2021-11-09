@@ -38,37 +38,46 @@
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/nasa/prog_models/HEAD"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" /></a>
 <p>The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
 <p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>)</p>
-<p>A few definitions:</p>
+<section id="installing">
+<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<section id="installing-from-pip-recommended">
+<h3>Installing from pip (recommended)<a class="headerlink" href="#installing-from-pip-recommended" title="Permalink to this headline">¶</a></h3>
+<p>The latest stable release of <cite>prog_models</cite> is hosted on PyPi. For most users (unless you want to contribute to the development of <cite>prog_models</cite>), the version on PyPi will be adequate. To install from the command line, use the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install prog_models
+</pre></div>
+</div>
+</section>
+<section id="installing-pre-release-versions-with-github">
+<h3>Installing pre-release versions with GitHub<a class="headerlink" href="#installing-pre-release-versions-with-github" title="Permalink to this headline">¶</a></h3>
+<p>For users who would like to contribute to <cite>prog_models</cite> or would like to use pre-release features can do so using the ‘dev’ branch (or a feature branch) on the <a class="reference external" href="https://github.com/nasa/prog_models">prog_models GitHub repo</a>. This isn’t recommended for most users as this version may be unstable. To use this version, use the following commands:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/nasa/prog_models
+<span class="gp">$ </span><span class="nb">cd</span> prog_algs
+<span class="gp">$ </span>git checkout dev
+<span class="gp">$ </span>pip install -e .
+</pre></div>
+</div>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>A few definitions to get started:</p>
 <ul class="simple">
-<li><p><strong>events</strong>: some state that can be predicted (e.g., system failure). An event has either occured or not.</p></li>
-<li><p><strong>event state</strong>: progress towards event occuring. Defined as a number where an event state of 0 indicates the event has occured and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occuring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called “State of Health”</p></li>
+<li><p><strong>events</strong>: something that can be predicted (e.g., system failure). An event has either occurred or not.</p></li>
+<li><p><strong>event state</strong>: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called “State of Health”</p></li>
 <li><p><strong>inputs</strong>: control applied to the system being modeled (e.g., current drawn from a battery)</p></li>
 <li><p><strong>outputs</strong>: measured sensor values from a system (e.g., voltage and temperature of a battery)</p></li>
+<li><p><strong>observables</strong>: performance characteristics of a system that are a function of system state, but are not directly measured.</p></li>
 <li><p><strong>states</strong>: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be.</p></li>
 <li><p><strong>process noise</strong>: stochastic process representing uncertainty in the model transition.</p></li>
 <li><p><strong>measurement noise</strong>: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects</p></li>
 </ul>
-<section id="installing">
-<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>You can install the package using pip:</dt><dd><p><cite>pip install prog_models</cite></p>
-</dd>
-</dl>
 </section>
 <section id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
-<p>See the below examples for examples of use. Run these examples using the command <cite>python -m examples.[Example name]</cite> (e.g., <cite>python -m examples.sim_example</cite>). Note: some windows users would use <cite>py -m examples.[Example name]</cite> instead of python. The examples are summarized below:</p>
+<p>The best way to learn how to use <cite>prog_models</cite> is through the <a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">tutorial</a>. There are also a number of examples which show different aspects of the package, summarized and linked below:</p>
 <ul>
 <li><dl>
 <dt><a class="reference download internal" download="" href="_downloads/2573c3db18f7a8b99d347500726179ab/sim.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim</span></code></a></dt><dd><span class="target" id="module-examples.sim"></span><p>Example of a battery being simulated for a set period of time and then till threshold is met.</p>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/5dbeef5ab444564601ee480dce541e45/sim_valve.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_valve</span></code></a></dt><dd><span class="target" id="module-examples.sim_valve"></span><p>Example of a pneumatic valve being simulated until threshold is met.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -165,7 +174,6 @@
 </dl>
 </li>
 </ul>
-<p>There is also an included tutorial (<a class="reference download internal" download="" href="_downloads/200bc74cf412da163fa7fd0ac3a7bb56/tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">tutorial</span></code></a>).</p>
 </section>
 <section id="model-specific-examples">
 <h2>Model Specific examples<a class="headerlink" href="#model-specific-examples" title="Permalink to this headline">¶</a></h2>
@@ -187,7 +195,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/5dbeef5ab444564601ee480dce541e45/sim_valve.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_valve</span></code></a></dt><dd><span class="target" id="module-0"></span><p>Example of a pneumatic valve being simulated until threshold is met.</p>
+<dt><a class="reference download internal" download="" href="_downloads/5dbeef5ab444564601ee480dce541e45/sim_valve.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_valve</span></code></a></dt><dd><span class="target" id="module-examples.sim_valve"></span><p>Example of a pneumatic valve being simulated until threshold is met.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -206,42 +214,138 @@
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">prog_models.</span></span><span class="sig-name descname"><span class="pre">PrognosticsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general time-variant state space model of system degradation behavior.</p>
-<p>The PrognosticsModel class is a wrapper around a mathematical model of a
-system as represented by a state, output, input, event_state and threshold equations.</p>
-<p>A Model also has a parameters structure, which contains fields for
-various model parameters.</p>
+<p>The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equations.</p>
+<p>A Model also has a parameters structure, which contains fields for various model parameters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>kwargs</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration parameters for model. Parameters supported by every model include:</p>
-<blockquote>
-<div><ul>
-<li><dl>
-<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
-state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p>
-<p>See: examples.noise for more details</p>
-</dd>
-</dl>
-</li>
-<li><p>process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</p></li>
-<li><dl>
-<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
-output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
-<p>See: examples.noise for more details</p>
-</dd>
-</dl>
-</li>
-<li><p>measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+<dt class="field-odd">Keyword Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>process_noise</strong> (<em>Optional</em><em>, </em><em>float</em><em> or </em><em>Dict</em><em>[</em><em>Srt</em><em>, </em><em>float</em><em>]</em>) – Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p></li>
+<li><p><strong>process_noise_dist</strong> (<em>Optional</em><em>, </em><em>String</em>) – distribution for process noise (e.g., normal, uniform, triangular)</p></li>
+<li><p><strong>measurement_noise</strong> (<em>Optional</em><em>, </em><em>float</em><em> or </em><em>Dict</em><em>[</em><em>Srt</em><em>, </em><em>float</em><em>]</em>) – Measurement noise (applied in output eqn).
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li>
+<li><p><strong>measurement_noise_dist</strong> (<em>Optional</em><em>, </em><em>String</em>) – distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+<li><p><strong>model</strong> (<em>Additional parameters specific to the</em>) – </p></li>
 </ul>
-</div></blockquote>
-<p>E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {‘z1’: 0.1, ‘z2’: 0.3})</p>
-</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – </p>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a><strong>, </strong><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a><strong>, </strong><a class="reference internal" href="exceptions.html#prog_models.ProgModelException" title="prog_models.ProgModelException"><strong>ProgModelException</strong></a> – </p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
 <p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.is_vectorized">
+<span class="sig-name descname"><span class="pre">is_vectorized</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.is_vectorized" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the model is vectorized, False otherwise. Default is False</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.default_parameters">
+<span class="sig-name descname"><span class="pre">default_parameters</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.default_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default parameters for the model class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, float], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters for the specific model object. This is created automatically from the default_parameters and kwargs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.state_limits">
+<span class="sig-name descname"><span class="pre">state_limits</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.state_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Limits on the state variables format {‘state_name’: (lower_limit, upper_limit)}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, tuple[float, float]], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.param_callbacks">
+<span class="sig-name descname"><span class="pre">param_callbacks</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.param_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callbacks for derived parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, list[function]], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.states">
+<span class="sig-name descname"><span class="pre">states</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.outputs">
+<span class="sig-name descname"><span class="pre">outputs</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.observables_keys">
+<span class="sig-name descname"><span class="pre">observables_keys</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.observables_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each observable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.events">
+<span class="sig-name descname"><span class="pre">events</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each event predicted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
@@ -253,6 +357,35 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 <p>The second way to generate a new model is using the model generator method, <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
 <p>See <a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a> for an example of this approach.</p>
 </section>
+</section>
+<section id="updates-in-v1-2-mini-release">
+<h2>Updates in V1.2 (Mini-Release)<a class="headerlink" href="#updates-in-v1-2-mini-release" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>New Feature: Vectorized Models</dt><dd><ul>
+<li><p>Distributed models were vectorized to support vectorized sample-based prognostics approaches</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>New Feature: Dynamic Step Sizes</dt><dd><ul>
+<li><p>Now step size can be a function of time or state</p></li>
+<li><p>See <cite>examples.dynamic_step_size</cite> for more information</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>New Feature: New method model.apply_bounds</dt><dd><ul>
+<li><p>This method allows for other classes to use applied bound limits</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Simulate_to* methods can now specify initial time. Also, outputs are now optional</p></li>
+<li><p>Various bug fixes</p></li>
+</ul>
 </section>
 <section id="updates-in-v1-1">
 <h2>Updates in V1.1<a class="headerlink" href="#updates-in-v1-1" title="Permalink to this headline">¶</a></h2>
@@ -378,20 +511,22 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/dev?labpath=tutorial.ipynb">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">Tutorial</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installing">Installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#model-specific-examples">Model Specific examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-2-mini-release">Updates in V1.2 (Mini-Release)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-1">Updates in V1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tips">Tips</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
 </ul>
 

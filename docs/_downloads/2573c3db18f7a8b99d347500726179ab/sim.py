@@ -30,7 +30,7 @@ def run_example():
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183}, print = True)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, print = True)
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -40,7 +40,7 @@ def run_example():
         'dt': 2, # Timestep
         'print': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
