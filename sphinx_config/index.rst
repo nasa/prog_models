@@ -1,20 +1,24 @@
 Prognostics Models Python Package
 =============================================================
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb
 
 The NASA PCoE Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
 
-The Prognostics Models Package was developed by researchers of the NASA Prognostics Center of Excellence (PCoE). 
+The Prognostics Algorithms Package was developed by researchers of the NASA Prognostics Center of Excellence (PCoE) and `Diagnostics & Prognostics Group <https://www.nasa.gov/content/diagnostics-prognostics>`__.
 
 If you are new to this package, see `<getting_started.html>`__.
 
 .. toctree::
    :maxdepth: 2
    
+   Tutorial <https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb>
    getting_started
    models
    prognostics_model
-   visualize
+   simresult
    exceptions
+   ProgAlgs <https://nasa.github.io/prog_algs>
    dev_guide
 
 Citing this repository
@@ -22,13 +26,13 @@ Citing this repository
 Use the following to cite this repository:
 
 @misc{2021_nasa_prog_model,
-    author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Matthew Daigle},
-    title     = {Prognostics Model Python Package},
-    month     = Aug,
-    year      = 2021,
-    version   = {1.1.0},
-    url       = {https://github.com/nasa/prog_models}
-    }
+  | author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Matthew Daigle},
+  | title     = {Prognostics Model Python Package},
+  | month     = Aug,
+  | year      = 2021,
+  | version   = {1.1.0},
+  | url       = {https://github.com/nasa/prog_models}
+  | }
 
 The corresponding reference should look like this:
 

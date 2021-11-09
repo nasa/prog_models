@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of generating a models from constituant parts. Run using the command `python -m examples.model_gen_example`
+Example of generating a models from constituant parts. 
 
 Model for this example is that of an object thrown into the air, predicting impact event
 """
@@ -74,7 +74,7 @@ def run_example():
 
     # Step 8: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':thrower_height}, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
     
     # Print flight time
     print('The object hit the ground in {} seconds'.format(round(times[-1],2)))

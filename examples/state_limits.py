@@ -28,7 +28,7 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     
     # Print states
     print('Example 1')
@@ -40,7 +40,7 @@ def run_example():
     x0 = m.initialize(u = {}, z = {})
     x0['x'] = -1
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
 
     # Print states
     print('Example 2')
@@ -55,7 +55,7 @@ def run_example():
     m.parameters['g'] = -50000000
     
     print('Example 3')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True)
 
     # Note that the limits can also be applied manually using the apply_limits function
     print('limiting states')

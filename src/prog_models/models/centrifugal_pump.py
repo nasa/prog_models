@@ -11,9 +11,7 @@ from numpy import array, maximum, minimum, ndarray, sqrt, sign
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics model for a centrifugal pump
-
-    This class implements a Centrifugal Pump model as described in the following paper:
+    Prognostics model for a Centrifugal Pump as described in the following paper:
     `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
 
     Events (4)
@@ -47,38 +45,61 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | Tt: Thrust Bearing Temperature (K)
         | w: Rotational Velocity of Pump (rad/sec)
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state).
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | pAtm : Atmospheric pressure
-        | a0, a1, a2 : empirical coefficients for flow torque eqn
-        | A : impeller blade area
-        | b :
-        | n : Pole Phases 
-        | p : Pole Pairs
-        | I : impeller/shaft/motor lumped inertia
-        | r : lumped friction parameter (minus bearing friction)
-        | R1, R2 :
-        | L1 :
-        | FluidI: Pump fluid inertia
-        | c : Pump flow coefficient
-        | cLeak : Internal leak flow coefficient
-        | ALeak : Internal leak area
-        | mcThrust :
-        | HThrust1, HThrust2 :
-        | mcRadial :
-        | HRadial1, HRadial2 :
-        | mcOil :
-        | HOil1, HOil2, HOil3 :
-        | wA, wRadial, wThrust : Wear rates. See also CentrifugalPumpWithWear
-        | lim : Parameter limits (dict)
-        | x0 : Initial state
+    keyword args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        pAtm : float
+            Atmospheric pressure
+        a0, a1, a2 : float
+            empirical coefficients for flow torque eqn
+        A : float
+            impeller blade area
+        b : float
+        n : float
+            Pole Phases 
+        p : float
+            Pole Pairs
+        I : float
+            impeller/shaft/motor lumped inertia
+        r : float 
+            lumped friction parameter (minus bearing friction)
+        R1, R2 : float
+        L1 : float
+        FluidI: float
+            Pump fluid inertia
+        c : float
+            Pump flow coefficient
+        cLeak : float
+            Internal leak flow coefficient
+        ALeak : float
+            Internal leak area
+        mcThrust : float
+        HThrust1, HThrust2 : float
+        mcRadial : float
+        HRadial1, HRadial2 : float
+        mcOil : float
+        HOil1, HOil2, HOil3 : float
+        wA, wRadial, wThrust : float
+            Wear rates. See also CentrifugalPumpWithWear
+        lim : dict
+            Parameter limits
+        x0 : dict
+            Initial state
+    
+    See Also
+    --------
+    CentrifugalPumpWithWear
     """
     events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
@@ -91,27 +112,27 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'pAtm': 101325,
 
         # Torque and pressure parameters
-        'a0': 0.00149204,	# empirical coefficient for flow torque eqn
-        'a1': 5.77703,		# empirical coefficient for flow torque eqn
-        'a2': 9179.4,		# empirical coefficient for flow torque eqn
-        'A': 12.7084,		# impeller blade area
+        'a0': 0.00149204,
+        'a1': 5.77703,
+        'a2': 9179.4,
+        'A': 12.7084,
         'b': 17984.6,
 
-        'n': 3,             # Pole Phases
-        'p': 1,             # Pole Pairs
+        'n': 3,
+        'p': 1,
 
         # Pump/motor dynamics
-        'I': 50,            # impeller/shaft/motor lumped inertia
-        'r': 0.008,         # lumped friction parameter (minus bearing friction)
+        'I': 50,
+        'r': 0.008,
         'R1': 0.36,
         'R2': 0.076,
         'L1': 0.00063,
 
         # Flow coefficients
-        'FluidI': 5,        # pump fluid inertia
-        'c': 8.24123e-5,    # pump flow coefficient
-        'cLeak': 1,         # internal leak flow coefficient
-        'ALeak': 1e-10,     # internal leak area
+        'FluidI': 5,
+        'c': 8.24123e-5,
+        'cLeak': 1,
+        'ALeak': 1e-10,
 
         # Thrust bearing temperature
         'mcThrust': 7.3,
@@ -264,6 +285,10 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
 
     Model Configuration Parameters:
         See CentrifugalPumpBase
+
+    See Also
+    --------
+    CentrifugalPumpBase
     """
     inputs = CentrifugalPumpBase.inputs
     outputs = CentrifugalPumpBase.outputs

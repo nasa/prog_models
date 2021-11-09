@@ -32,7 +32,7 @@ def run_example():
         'save_freq': 100,  # Frequency at which results are saved
         'dt': 2  # Timestep
     }
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
     plot_timeseries(times, inputs, options={'ylabel': 'Variable Load Current (amps)'})
@@ -68,7 +68,7 @@ def run_example():
     
     # Now the future_loading eqn is setup to use the moving average of whats been seen
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
     plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
@@ -98,7 +98,7 @@ def run_example():
     future_loading.std = 0.2
 
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
     plot_timeseries(times, inputs, options={'ylabel': 'Variable Gaussian Current (amps)'})
@@ -137,7 +137,7 @@ def run_example():
         moving_avg({'i': load})
 
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
     plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})
@@ -159,7 +159,7 @@ def run_example():
     future_loading.start = 0.5
 
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
     plot_timeseries(times, inputs, options={'ylabel': 'Moving Average Current (amps)'})

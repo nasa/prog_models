@@ -1,25 +1,25 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
 from .visualize import plot_timeseries
+from copy import deepcopy
 
 
 class SimResult(UserList):
     """
-    Used to store the result of a simulation, with time 
+    `SimResult` is an immutable data structure for the results of a simulation, with time. It is returned from the `simulate_to*` methods for inputs, outputs, states, and event_states for the beginning and ending time step of the simulation, plus any save points indicated by the `savepts` and `save_freq` configuration arguments. The class includes methods for analyzing, manipulating, and visualizing the results of the simulation.
+
+    Args:
+            times (array[float]): Times for each data point where times[n] corresponds to data[n]
+            data (array[Dict[str, float]]): Data points where data[n] corresponds to times[n]
     """
 
     __slots__ = ['times', 'data']  # Optimization 
     
     def __init__(self, times = [], data = []):
-        """
-        Args:
-            times (array(float)): Times for each data point where times[n] corresponds to data[n]
-            data (array(dict)): Data points where data[n] corresponds to times[n]
-        """
-        self.times = times
-        self.data = data
+        self.times = deepcopy(times)
+        self.data = deepcopy(data)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Compare 2 SimResults
 
         Args:
@@ -30,7 +30,7 @@ class SimResult(UserList):
         """
         return self.times == other.times and self.data == other.data
 
-    def index(self, other, *args, **kwargs):
+    def index(self, other : dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
 
@@ -42,11 +42,18 @@ class SimResult(UserList):
         """
         return self.data.index(other, *args, **kwargs)
 
-    def extend(self, other):
+    def extend(self, other) -> None:
+        """
+        Extend the SimResult with another SimResult
+
+        Args:
+            other (SimResult)
+
+        """
         self.times.extend(other.times)
         self.data.extend(other.data)
 
-    def pop(self, index = -1):
+    def pop(self, index : int = -1) -> dict:
         """Remove and return an element
 
         Args:
@@ -55,10 +62,10 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        self.times.remove(index)
+        self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, index):
+    def remove(self, index : int) -> None:
         """Remove an element
 
         Args:
@@ -67,12 +74,12 @@ class SimResult(UserList):
         self.times.remove(index)
         self.data.remove(index)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
         self.data = []
 
-    def time(self, index):
+    def time(self, index : int) -> float:
         """Get time for data point at index `index`
 
         Args:
@@ -119,8 +126,8 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
         self.fcn = fcn
-        self.times = times
-        self.states = states
+        self.times = deepcopy(times)
+        self.states = deepcopy(states)
         self.__data = None
 
     def is_cached(self):
@@ -136,9 +143,9 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.states = []
 
     def extend(self, other):
-        self.times.extend(other.times)
+        self.times.extend(deepcopy(other.times))
         self.__data = None
-        self.states.extend(other.states)
+        self.states.extend(deepcopy(other.states))
 
     def pop(self, index = -1):
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
