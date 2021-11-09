@@ -37,7 +37,7 @@
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/nasa/prog_models/HEAD"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" /></a>
 <p>The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
-<p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>)</p>
+<p>The foundation of this package is the class <a class="reference internal" href="#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code>)</p>
 <section id="installing">
 <h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
 <section id="installing-from-pip-recommended">
@@ -111,6 +111,20 @@
 </li>
 <li><dl>
 <dt><a class="reference download internal" download="" href="_downloads/1e173741004c18e2e2f97234d3eb4521/sensitivity.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sensitivity</span></code></a></dt><dd><span class="target" id="module-examples.sensitivity"></span><p>Example of a sensitivity analysis on a new model.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference download internal" download="" href="_downloads/7bdd7d73bab579719a189b79acfa685c/events.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.events</span></code></a></dt><dd><span class="target" id="module-examples.events"></span><p>Example further illustrating the concept of ‘events’ which generalizes the idea of EOL.</p>
+<p>‘Events’ is the term used to describe something to be predicted.
+Generally in the PHM community these are referred to as End of Life (EOL).
+However, they can be much more.</p>
+<p>In the implementation from the prog_models package, events can be anything that needs to be predicted.
+Events can represent end of life (EOL), end of mission (EOM), warning thresholds, or any event of interest (EOI).</p>
+<p>This example demonstrates how events can be used in your applications.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -206,10 +220,10 @@
 </section>
 <section id="extending">
 <h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
-<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
+<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>) or 2. use the model generator method (<code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code>). These methods are described more below.</p>
 <section id="subclass-method">
 <h3>1. Subclass Method<a class="headerlink" href="#subclass-method" title="Permalink to this headline">¶</a></h3>
-<p>The first method for creating a new prog_model is by creating a new subclass of <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> is described below:</p>
+<p>The first method for creating a new prog_model is by creating a new subclass of <a class="reference internal" href="#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. <a class="reference internal" href="#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> is described below:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">prog_models.</span></span><span class="sig-name descname"><span class="pre">PrognosticsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
@@ -349,12 +363,12 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 </dd></dl>
 
 <p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
-<p>The analysis and simulation tools defined in <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> will then work with your new model.</p>
+<p>The analysis and simulation tools defined in <a class="reference internal" href="#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> will then work with your new model.</p>
 <p>See <a class="reference download internal" download="" href="_downloads/e4947713746e05efe1e55cf84e8ac3f8/new_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model</span></code></a> for an example of this approach.</p>
 </section>
 <section id="model-generator-method">
 <h3>2. Model Generator Method<a class="headerlink" href="#model-generator-method" title="Permalink to this headline">¶</a></h3>
-<p>The second way to generate a new model is using the model generator method, <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
+<p>The second way to generate a new model is using the model generator method, <code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code>. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code> for more detail.</p>
 <p>See <a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a> for an example of this approach.</p>
 </section>
 </section>
@@ -525,6 +539,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 </li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
