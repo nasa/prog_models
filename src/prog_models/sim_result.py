@@ -6,7 +6,7 @@ from copy import deepcopy
 
 class SimResult(UserList):
     """
-    `SimResult` is an immutable data structure for the results of a simulation, with time. It is returned from the `simulate_to*` methods for inputs, outputs, states, and event_states for the beginning and ending time step of the simulation, plus any save points indicated by the `savepts` and `save_freq` configuration arguments. The class includes methods for analyzing, manipulating, and visualizing the results of the simulation.
+    `SimResult` is a data structure for the results of a simulation, with time. It is returned from the `simulate_to*` methods for inputs, outputs, states, and event_states for the beginning and ending time step of the simulation, plus any save points indicated by the `savepts` and `save_freq` configuration arguments. The class includes methods for analyzing, manipulating, and visualizing the results of the simulation.
 
     Args:
             times (array[float]): Times for each data point where times[n] corresponds to data[n]

@@ -20,6 +20,7 @@ If you are new to this package, see `<getting_started.html>`__.
    exceptions
    ProgAlgs <https://nasa.github.io/prog_algs>
    dev_guide
+   GitHub <https://github.com/nasa/prog_models>
 
 Citing this repository
 -----------------------

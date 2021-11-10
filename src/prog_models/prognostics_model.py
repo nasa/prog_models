@@ -734,9 +734,10 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
+             * t0 (Number) : Starting time for simulation in seconds (default: 0.0) \n
              * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> dt\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
-             * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
+             * save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
@@ -745,15 +746,15 @@ class PrognosticsModel(ABC):
         
         Returns
         -------
-        times: [number]
+        times: Array[number]
             Times for each simulated point
-        inputs: [dict]
+        inputs: SimResult
             Future input (from future_loading_eqn) for each time in times
-        states: [dict]
+        states: SimResult
             Estimated states for each time in times
-        outputs: [dict]
+        outputs: SimResult
             Estimated outputs for each time in times
-        event_states: [dict]
+        event_states: SimResult
             Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
         
         Raises

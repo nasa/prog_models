@@ -15,7 +15,7 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="&lt;no title&gt;" href="simresult.html" />
+    <link rel="next" title="Simulation Result Data Structure" href="simresult.html" />
     <link rel="prev" title="Models" href="models.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -636,9 +636,10 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
+<li><p>t0 (Number) : Starting time for simulation in seconds (default: 0.0)</p></li>
 <li><p>dt (Number or function): time step (s), e.g. {‘dt’: 0.1} or function (t, x) -&gt; dt</p></li>
 <li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
-<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
 <li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
 <li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
@@ -651,11 +652,11 @@ If blank, simulation will occur if any event will be met ()</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>times</strong> (<em>[number]</em>) – Times for each simulated point</p></li>
-<li><p><strong>inputs</strong> (<em>[dict]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
-<li><p><strong>states</strong> (<em>[dict]</em>) – Estimated states for each time in times</p></li>
-<li><p><strong>outputs</strong> (<em>[dict]</em>) – Estimated outputs for each time in times</p></li>
-<li><p><strong>event_states</strong> (<em>[dict]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+<li><p><strong>times</strong> (<em>Array[number]</em>) – Times for each simulated point</p></li>
+<li><p><strong>inputs</strong> (<em>SimResult</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
+<li><p><strong>states</strong> (<em>SimResult</em>) – Estimated states for each time in times</p></li>
+<li><p><strong>outputs</strong> (<em>SimResult</em>) – Estimated outputs for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>SimResult</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
 </ul>
 </p>
 </dd>
@@ -749,9 +750,11 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/nasa/prog_models">GitHub</a></li>
 </ul>
 
 <div class="relations">
@@ -759,7 +762,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="models.html" title="previous chapter">Models</a></li>
-      <li>Next: <a href="simresult.html" title="next chapter">&lt;no title&gt;</a></li>
+      <li>Next: <a href="simresult.html" title="next chapter">Simulation Result Data Structure</a></li>
   </ul></li>
 </ul>
 </div>

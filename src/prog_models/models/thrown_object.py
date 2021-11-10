@@ -22,6 +22,7 @@ class ThrownObject(PrognosticsModel):
         'falling',  # Event- object is falling
         'impact'  # Event- object has impacted ground
     ]
+
     is_vectorized = True
 
     # The Default parameters. Overwritten by passing parameters dictionary into constructor
