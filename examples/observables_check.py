@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of benchmarking models. 
+Example of implementation of CLE algorithm to determine maximum current possible from battery on time interval 
 """
 
 from timeit import timeit
@@ -27,20 +27,22 @@ def run_example():
             i = 3
         return {'i': i}
 
+    # Define parameters for CLE test calculations: 
+    time_to_sim_to = 300 # time cutoff value/time interval of simulation 
+    V_cutoff = 3.2 # voltage cutoff value 
+
+    # Initialize to default parameters
+    initial_state = batt.parameters['x0']
+
+    # Run CLE algorithm from default inital state
+    i_start = future_loading(0)
+    CLE_estimate = batt.current_limit_est(initial_state, i_start, delta_t=time_to_sim_to, VCutoff=V_cutoff)
+
     # Simulate to 600 sec
     (times, inputs, states, outputs, event_states) = batt.simulate_to(600, future_loading)
 
     # Using state at 600 sec, run CLE algorithm 
-    CLE_estimate = batt.current_limit_est(states[-1], inputs[-1], delta_t=10, VCutoff=3.0)
-
-    # Step 3: Benchmark simulation for 600 seconds
-    # print('Benchmarking:')
-    # def sim():  
-    #     (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading)
-    # time = timeit(sim, number=10)
-
-    # Print results
-    # print('Simulation Time: {} ms/sim'.format(time*2))
+    CLE_estimate_2 = batt.current_limit_est(states[-1], inputs[-1], delta_t=time_to_sim_to, VCutoff=V_cutoff)
 
     debug_check = 1
 

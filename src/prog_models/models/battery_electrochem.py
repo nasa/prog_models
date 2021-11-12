@@ -430,8 +430,10 @@ class BatteryElectroChemEOD(PrognosticsModel):
             CLE_val = (V_OCV - VCutoff)/R_lump
             relative_change = abs((CLE_val - CLE_old)/CLE_old)
         params['x0'] = original_state
+        a=1
         return {
-            'CLE': CLE_val
+            'CLE': CLE_val,
+            'final_voltage': outputs[1]['v']
         }
 
     def observables(self, x) -> dict:
