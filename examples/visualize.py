@@ -2,13 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of Visualization Module. Run using the command `python -m examples.visualize`
+Example of Visualization Module. 
 """
 
 import matplotlib.pyplot as plt
 from prog_models.visualize import plot_timeseries
-
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 
 def run_example():
     print('Visualize Module Example')
@@ -20,10 +19,8 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    first_output = {'x':m.parameters['thrower_height']}
     options={'dt':0.005, 'save_freq':1}
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load,
-                                                                             first_output, 
                                                                              threshold_keys=[event], 
                                                                              **options)
     

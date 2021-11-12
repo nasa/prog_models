@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Prognostics Models Python Package &#8212; Prognostics Models Python Package 1.1.0 documentation</title>
+    <title>Prognostics Models Python Package &#8212; Prognostics Models Python Package 1.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -34,16 +34,20 @@
             
   <section id="prognostics-models-python-package">
 <h1>Prognostics Models Python Package<a class="headerlink" href="#prognostics-models-python-package" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" /></a>
 <p>The NASA PCoE Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
-<p>The Prognostics Models Package was developed by researchers of the NASA Prognostics Center of Excellence (PCoE).</p>
+<p>The Prognostics Algorithms Package was developed by researchers of the NASA Prognostics Center of Excellence (PCoE) and <a class="reference external" href="https://www.nasa.gov/content/diagnostics-prognostics">Diagnostics &amp; Prognostics Group</a>.</p>
 <p>If you are new to this package, see <a class="reference external" href="getting_started.html">getting_started.html</a>.</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#installing">Installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#summary">Summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#use">Use</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#model-specific-examples">Model Specific examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#extending">Extending</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#updates-in-v1-2-mini-release">Updates in V1.2 (Mini-Release)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#updates-in-v1-1">Updates in V1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#tips">Tips</a></li>
 </ul>
@@ -57,11 +61,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="exceptions.html#prognostics-model-exceptions">Prognostics Model Exceptions</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="dev_guide.html#installing-from-a-branch">Installing from a branch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dev_guide.html#contributing">Contributing</a></li>
@@ -72,19 +77,22 @@
 <li class="toctree-l2"><a class="reference internal" href="dev_guide.html#npr-7150">NPR 7150</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/nasa/prog_models">GitHub</a></li>
 </ul>
 </div>
 <section id="citing-this-repository">
 <h2>Citing this repository<a class="headerlink" href="#citing-this-repository" title="Permalink to this headline">¶</a></h2>
 <p>Use the following to cite this repository:</p>
-<dl class="simple">
-<dt>&#64;misc{2021_nasa_prog_model,</dt><dd><p>author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Matthew Daigle},
-title     = {Prognostics Model Python Package},
-month     = Aug,
-year      = 2021,
-version   = {1.1.0},
-url       = {<a class="reference external" href="https://github.com/nasa/prog_models">https://github.com/nasa/prog_models</a>}
-}</p>
+<dl>
+<dt>&#64;misc{2021_nasa_prog_model,</dt><dd><div class="line-block">
+<div class="line">author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Matthew Daigle},</div>
+<div class="line">title     = {Prognostics Model Python Package},</div>
+<div class="line">month     = Aug,</div>
+<div class="line">year      = 2021,</div>
+<div class="line">version   = {1.1.0},</div>
+<div class="line">url       = {<a class="reference external" href="https://github.com/nasa/prog_models">https://github.com/nasa/prog_models</a>}</div>
+<div class="line">}</div>
+</div>
 </dd>
 </dl>
 <p>The corresponding reference should look like this:</p>
@@ -125,12 +133,15 @@ url       = {<a class="reference external" href="https://github.com/nasa/prog_mo
 
 <h3>Navigation</h3>
 <ul>
+<li class="toctree-l1"><a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/nasa/prog_models">GitHub</a></li>
 </ul>
 
 <div class="relations">

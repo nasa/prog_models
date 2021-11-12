@@ -3,8 +3,9 @@
 
 from .. import PrognosticsModel
 
-from math import asinh, log, inf
+from math import inf
 from copy import deepcopy
+from numpy import arcsinh, log
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -101,10 +102,8 @@ def update_qSBmax(params):
 
 class BatteryElectroChemEOD(PrognosticsModel):
     """
-    Prognostics model for a battery, represented by an electrochemical equations.
-
-    This class implements an Electro chemistry model as described in the following paper:
-    `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`
+    Vectorized prognostics model for a battery, represented by an electrochemical equations as described in the following paper:
+    `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`. This model predicts the end of discharge event. 
 
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
 
@@ -128,43 +127,71 @@ class BatteryElectroChemEOD(PrognosticsModel):
         | t: Temperature of battery (°C) 
         | v: Voltage supplied by battery
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state). 
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | qMobile :
-        | xnMax : Maximum mole fraction (neg electrode)
-        | xnMin : Minimum mole fraction (neg electrode)
-        | xpMax : Maximum mole fraction (pos electrode)
-        | xpMin : Minimum mole fraction (pos electrode) - note xn + xp = 1
-        | Ro : for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)
-        | alpha : anodic/cathodic electrochemical transfer coefficient
-        | Sn : Surface area (- electrode) 
-        | Sp : Surface area (+ electrode)
-        | kn : lumped constant for BV (- electrode)
-        | kp : lumped constant for BV (+ electrode)
-        | Vol : total interior battery volume/2 (for computing concentrations)
-        | VolSFraction : fraction of total volume occupied by surface volume
-        | tDiffusion : diffusion time constant (increasing this causes decrease in diffusion rate)
-        | to : for Ohmic voltage
-        | tsn : for surface overpotential (neg)
-        | tsp : for surface overpotential (pos)
-        | U0p : Redlich-Kister parameter (+ electrode)
-        | Ap : Redlich-Kister parameters (+ electrode)
-        | U0n : Redlich-Kister parameter (- electrode)
-        | An : Redlich-Kister parameters (- electrode)
-        | VEOD : End of Discharge Voltage Threshold
-        | x0 : Initial state
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        qMobile : float
+        xnMax : float
+            Maximum mole fraction (neg electrode)
+        xnMin : float
+            Minimum mole fraction (neg electrode)
+        xpMax : float
+            Maximum mole fraction (pos electrode)
+        xpMin : float
+            Minimum mole fraction (pos electrode) - note xn + xp = 1
+        Ro : float
+            for Ohmic drop (current collector resistances plus electrolyte resistance plus solid phase resistances at anode and cathode)
+        alpha : float
+            anodic/cathodic electrochemical transfer coefficient
+        Sn : float
+            Surface area (- electrode) 
+        Sp : float
+            Surface area (+ electrode)
+        kn : float
+            lumped constant for BV (- electrode)
+        kp : float
+            lumped constant for BV (+ electrode)
+        Vol : float
+            total interior battery volume/2 (for computing concentrations)
+        VolSFraction : float
+            fraction of total volume occupied by surface volume
+        tDiffusion : float
+            diffusion time constant (increasing this causes decrease in diffusion rate)
+        to : float
+            for Ohmic voltage
+        tsn : float
+            for surface overpotential (neg)
+        tsp : float
+            for surface overpotential (pos)
+        U0p, Ap : float
+            Redlich-Kister parameter (+ electrode)
+        U0n, An : float
+            Redlich-Kister parameter (- electrode)
+        VEOD : float
+            End of Discharge Voltage Threshold
+        x0 : dict
+            Initial state
+
+    See Also
+    --------
+    BatteryElectroChemEOL, BatteryElectroChem, BatteryElectroChemEODEOL
     """
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         'qMobile': 7600,
@@ -230,7 +257,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u=None, z=None):
         return self.parameters['x0']
 
     def dx(self, x, u):
@@ -241,13 +268,15 @@ class BatteryElectroChemEOD(PrognosticsModel):
         xnS = x['qnS']/params['qSMax']
 
         qdotDiffusionBSn = (CnBulk-CnSurface)/params['tDiffusion']
+        qnBdot = -qdotDiffusionBSn
+        qnSdot = qdotDiffusionBSn - u["i"]
 
         Jn = u['i']/params['Sn']
         Jn0 = params['kn']*((1-xnS)*xnS)**params['alpha']
 
         v_part = R_F*x['tb']/params['alpha']
 
-        VsnNominal = v_part*asinh(Jn/(Jn0 + Jn0))
+        VsnNominal = v_part*arcsinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
 
         # Positive Surface
@@ -262,7 +291,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Jp = u['i']/params['Sp']
         Jp0 = params['kp']*((1-xpS)*xpS)**params['alpha']
 
-        VspNominal = v_part*asinh(Jp/(Jp0+Jp0))
+        VspNominal = v_part*arcsinh(Jp/(Jp0+Jp0))
         Vspdot = (VspNominal-x['Vsp'])/params['tsp']
 
         # Combined
@@ -279,8 +308,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'Vsn': Vsndot,
             'Vsp': Vspdot,
             'tb': Tbdot,
-            'qnB': -qdotDiffusionBSn,
-            'qnS': qdotDiffusionBSn - u['i'],
+            'qnB': qnBdot,
+            'qnS': qnSdot,
             'qpB': qpBdot,
             'qpS': qpSdot
         }
@@ -360,9 +389,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
 class BatteryElectroChemEOL(PrognosticsModel):
     """
-    Prognostics model for a battery degredation, represented by an electrochemical equations.
-
-    This class implements an Electro chemistry model as described in the following paper:
+    Vectorized prognostics model for a battery degredation, represented by an electrochemical model as described in the following paper:
     `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
 
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
@@ -380,18 +407,30 @@ class BatteryElectroChemEOL(PrognosticsModel):
 
     Outputs/Measurements: (0)
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state). 
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | qMaxThreshold : Threshold for qMax (for threshold_met and event_state)
-        | wq, wr, wd : Wear rate for qMax, Ro, and D respectively
-        | x0 : Initial state
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        qMaxThreshold : float
+            Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occured. Note: Battery manufacturers specify a threshold of 70-80% of qMax
+        wq, wr, wd : float
+            Wear rate for qMax, Ro, and D respectively
+        x0 : dict
+            Initial state
+    
+    See Also
+    --------
+    BatteryElectroChemEOD, BatteryElectroChem, BatteryElectroChemEODEOL
     """
     states = ['qMax', 'Ro', 'D']
     events = ['InsufficientCapacity']
@@ -407,15 +446,14 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'wq': -1e-2,
         'wr': 1e-6,
         'wd': 1e-2,
-        'qMaxThreshold': 5320 # Threshold for qMax after which the InsufficientCapacity event has occured
-        # Note: Battery manufacturers specify a threshold of 70-80% of qMax
+        'qMaxThreshold': 5320
     }
 
     state_limits = {
         'qMax': (0, inf)
     }
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u=None, z=None):
         return self.parameters['x0']
 
     def dx(self, x, u):
@@ -448,9 +486,7 @@ def merge_dicts(a : dict, b : dict):
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """
-    Prognostics model for a battery degredation and discharge, represented by an electrochemical equations.
-
-    This class implements an Electro chemistry model as described in the following papers:
+    Prognostics model for a battery degredation and discharge, represented by an electrochemical model as described in the following papers:
 
     1. `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
 
@@ -472,8 +508,13 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         | t: Temperature of battery (°C) 
         | v: Voltage supplied by battery
 
-    Model Configuration Parameters:
-        | see: BatteryElectroChemEOD, BatteryElectroChemEOL
+    See Also
+    --------
+    BatteryElectroChemEOL, BatteryElectroChemEOD, BatteryElectroChem
+
+    Note
+    ----
+        For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
     """
     inputs = BatteryElectroChemEOD.inputs
     outputs = BatteryElectroChemEOD.outputs

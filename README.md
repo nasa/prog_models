@@ -2,6 +2,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/nasa/prog_models/badge)](https://www.codefactor.io/repository/github/nasa/prog_models)
 [![GitHub License](https://img.shields.io/badge/License-NOSA-green)](https://github.com/nasa/prog_models/blob/master/license.pdf)
 [![GitHub Releases](https://img.shields.io/github/release/nasa/prog_models.svg)](https://github.com/nasa/prog_models/releases)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nasa/prog_models/HEAD?tutorial.ipynb)
 
 The NASA Prognostic Model Package is a Python framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
 
@@ -37,16 +38,16 @@ Use the following to cite this repository:
 @misc{2021_nasa_prog_models,
     author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Matthew Daigle},
     title     = {Prognostics Models Python Package},
-    month     = Aug,
+    month     = Nov,
     year      = 2021,
-    version   = {1.1},
+    version   = {1.2},
     url       = {https://github.com/nasa/prog_models}
     }
 ```
 
 The corresponding reference should look like this:
 
-C. Teubert, M. Corbetta, C. Kulkarni, and M. Daigle, Prognostics Models Python Package, v1.1, Aug. 2021. URL https://github.com/nasa/prog_models.
+C. Teubert, M. Corbetta, C. Kulkarni, and M. Daigle, Prognostics Models Python Package, v1.2, Nov. 2021. URL https://github.com/nasa/prog_models.
 
 ## Acknowledgements
 The structure and algorithms of this package are strongly inspired by the [MATLAB Prognostics Model Library](https://github.com/nasa/PrognosticsModelLibrary). We would like to recognize Matthew Daigle and the rest of the team that contributed to the Prognostics Model Library for the contributions their work on the MATLAB library made to the design of prog_models

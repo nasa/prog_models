@@ -2,15 +2,30 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
-from math import sqrt, copysign, inf
+from math import inf
 from copy import deepcopy
+from numpy import sqrt, sign, maximum, minimum, isscalar, array, any, shape
+
+def calc_x(x, forces, Ls, new_x):
+    lower_wall = (x==0 and forces<0) or (new_x<0)
+    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+    if lower_wall:
+        return 0
+    if upper_wall:
+        return Ls
+    return new_x
+
+def calc_v(x, v, dv, forces, Ls, new_x):
+    lower_wall = (x==0 and forces<0) or (new_x<0)
+    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+    if lower_wall or upper_wall:
+        return 0
+    return v + dv
 
 
 class PneumaticValveBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics model for a pneumatic valve.
-
-    This class implements a Pneumatic Valve model as described in the following paper:
+    Prognostics model for a Pneumatic Valve model as described in the following paper:
     `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
     
     Events: (5)
@@ -20,13 +35,13 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         | Spring Failure: Failure due to spring weakening with use
         | Friction Failure: Failure due to increase in friction along the piston with wear
 
-    Inputs/Loading:
+    Inputs/Loading: (4)
         | pL: Fluid pressure at the left side of the plug (Pa)
         | pR: Fluid pressure at the right side of the plug (Pa) 
         | uBot: input pressure at the bottom pneumatic port (Pa) 
         | uTop: input pressure at the botton pneumatic port (Pa) 
 
-    States:
+    States: (10)
         | Aeb: Area of the leak at the bottom pneumatic port
         | Aet: Area of the leak at the top pneumatic port
         | Ai: Area of the internal leak
@@ -38,7 +53,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         | x: Poisition of the piston (m)
         | pDiff: Difference in pressure between the left and the right
 
-    Outputs/Measurements:
+    Outputs/Measurements: 6
         | Q: Flowrate 
         | iB: Is the piston at the bottom (bool)
         | iT: Is the piston at the top (bool)
@@ -46,48 +61,79 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         | pT: Pressure at the top (Pa)
         | x: Position of piston (m)
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state). 
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | g : Acceleration due to gravity (m/s^2)
-        | pAtm : Atmospheric pressure (Pa)
-        | m : Plug mass (kg)
-        | offsetX : Spring offset distance (m)
-        | Ls : Stroke Length (m)
-        | Ap : Surface area of piston for gas contact (m^2)
-        | Vbot0 : Below piston "default" volume (m^3)
-        | Vtop0 : Above piston "default" volume (m^3)
-        | indicatorTol : tolerance bound for open/close indicators
-        | pSupply : Supply Pressure (Pa)
-        | Av : Surface area of plug end (m^2)
-        | Cv : flow coefficient assuming Cv of 1300 GPM
-        | rhoL : density of LH2 in kg/m^3
-        | gas_mass : Molar mass of used gas (kg/mol)
-        | gas_temp : temperature of used gas (K)
-        | gas_gamma :
-        | gas_z :
-        | gas_R :
-        | At :
-        | Ct :
-        | Ab :
-        | Cb :
-        | AbMax : Max limit for state Aeb
-        | AtMax : Max limit for state Aet
-        | AiMax : Max limit for state Ai
-        | kMin : Min limit for state k
-        | rMax : Max limit for state r
-        | x0 : Initial state
-        | wb: Wear parameter for bottom leak
-        | wi: Wear parameter for internal leak
-        | wt: Wear parameter for top leak
-        | wk: Wear parameter for spring
-        | wr: Wear parameter for friction
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        g : float
+            Acceleration due to gravity (m/s^2)
+        pAtm : float
+            Atmospheric pressure (Pa)
+        m : float
+            Plug mass (kg)
+        offsetX : float
+            Spring offset distance (m)
+        Ls : float
+            Stroke Length (m)
+        Ap : float
+            Surface area of piston for gas contact (m^2)
+        Vbot0 : float
+            Below piston "default" volume (m^3)
+        Vtop0 : float
+            Above piston "default" volume (m^3)
+        indicatorTol : float
+            tolerance bound for open/close indicators
+        pSupply : float
+            Supply Pressure (Pa)
+        Av : float
+            Surface area of plug end (m^2)
+        Cv : float
+            flow coefficient assuming Cv of 1300 GPM
+        rhoL : float
+            density of LH2 in kg/m^3
+        gas_mass : float
+            Molar mass of supply gas (kg/mol)
+        gas_temp : float
+            Temperature of supply gas (K)
+        gas_gamma, gas_z, gas_R : float
+            Supply gas parameters
+        At, Ct, Ab, Cb : float
+        AbMax : float
+            Max limit for state Aeb
+        AtMax : float
+            Max limit for state Aet
+        AiMax : float
+            Max limit for state Ai
+        kMin : float
+            Min limit for state k
+        rMax : float
+            Max limit for state r
+        x0 : Dict[str, float] 
+            Initial state
+        wb: float
+            Wear parameter for bottom leak
+        wi: float
+            Wear parameter for internal leak
+        wt: float
+            Wear parameter for top leak
+        wk: float
+            Wear parameter for spring
+        wr: float
+            Wear parameter for friction
+
+    Note
+    ----
+    Supply gas parameters (gas_mass, gas_temp, gas_gamme, gas_z, gas_R) are for Nitrogen by default
     """
     events = ["Bottom Leak", "Top Leak", "Internal Leak", "Spring Failure", "Friction Failure"]
     inputs = ["pL", "pR", "uBot", "uTop"]
@@ -104,6 +150,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         "pDiff"  # pL-pR
     ]
     outputs = ["Q", "iB", "iT", "pB", "pT", "x"]
+    is_vectorized = True
     default_parameters = {  # Set to defaults
         # Environmental Parameters
         'R': 8.314,  # Universal Gas Constant
@@ -182,6 +229,20 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         return x0
 
     def gas_flow(self, pIn, pOut, C, A):
+        # Step 1: If array- run for each element
+        # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
+        inputs = array([pIn, pOut, C, A])
+        if any([not isscalar(i) for i in inputs]):
+            # Handle case where one or more is array
+            size = [shape(i) for i in inputs]
+            size = max([i[0] if i else 0 for i in size])  # Size of array
+
+            # Create Iterable Elements for scalars
+            iter_inputs = [[i] * size if isscalar(i) else i for i in inputs]
+
+            # Run each element through function
+            return array([self.gas_flow(a, b, c, d) for a, b, c, d in zip(*iter_inputs)])
+
         k = self.parameters['gas_gamma']
         T = self.parameters['gas_temp']
         Z = self.parameters['gas_z']
@@ -225,16 +286,14 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         vdot = pistonForces/params['m']
 
         new_x = x['x']+x['v']*dt
-        if (x['x']==0 and pistonForces<0) or (new_x<0):
-            vel = 0
-            pos = 0
-        elif (x['x']==params['Ls'] and pistonForces>0) or (new_x>params['Ls']):
-            vel = 0
-            pos = params['Ls']
+
+        if isscalar(pistonForces):
+            vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
+            pos = calc_x(x['x'], pistonForces, params['Ls'], new_x)
         else:
-            # moving
-            vel = x['v'] + vdot*dt
-            pos = new_x
+            # If array- run for each element
+            vel = [calc_v(xi, vi, vdot_i*dt, force, params['Ls'], new_x_i) for xi, vi, vdot_i, force, new_x_i in zip(x['x'], x['v'], vdot, pistonForces, new_x)]
+            pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
 
         return {
             'x': pos,
@@ -253,10 +312,10 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
-        maxFlow = params['Cv']*params['Av']*copysign(sqrt(2/params['rhoL']*abs(x['pDiff'])),x['pDiff'])
+        maxFlow = params['Cv']*params['Av']*sqrt(2/params['rhoL']*abs(x['pDiff'])) * sign(x['pDiff'])
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
-        trueFlow = maxFlow * max(0,x['x'])/params['Ls']
+        trueFlow = maxFlow * maximum(0,x['x'])/params['Ls']
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 

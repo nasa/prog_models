@@ -5,7 +5,7 @@
 Example demonstrating ways to use the derived parameters feature for model building. 
 """
 
-from .new_model import ThrownObject
+from prog_models.models.thrown_object import ThrownObject
 
 def run_example():
     # For this example we will use the ThrownObject model from the new_model example.

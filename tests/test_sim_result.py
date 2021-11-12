@@ -53,6 +53,16 @@ class TestSimResult(unittest.TestCase):
         except IndexError:
             pass
 
+        # Catch bug that occured where lazysimresults weren't actually different
+        # This occured because the underlying arrays of time and state were not copied (see PR #158)
+        result = LazySimResult(f, time, state)
+        result2 = LazySimResult(f, time, state)
+        self.assertTrue(result == result2)
+        self.assertEqual(len(result), len(result2))
+        result.extend(LazySimResult(f, time, state))
+        self.assertFalse(result == result2)
+        self.assertNotEqual(len(result), len(result2))
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
