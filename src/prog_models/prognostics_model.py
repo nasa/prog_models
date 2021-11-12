@@ -791,7 +791,7 @@ class PrognosticsModel(ABC):
 
         # Configure
         config = { # Defaults
-            't': 0.0,
+            't0': 0.0,
             'dt': 1.0,
             'save_pts': [],
             'save_freq': 10.0,
@@ -823,7 +823,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
-        t = config['t']
+        t = config['t0']
         u = future_loading_eqn(t)
         if 'x' in config:
             x = config['x']
