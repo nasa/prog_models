@@ -400,34 +400,38 @@ class BatteryElectroChemEOD(PrognosticsModel):
         params = self.parameters
         z = self.output(x)  # provides present voltage and temp
         w = self.get_OCV(x)  # provides present open current voltage
-        VCell = z['v']
-        VOpen = w['OCV']
-        # lumped value for total resistance used in paper; tests done with ROhm
-        # RLump = (VOpen - VCell)/u['i']
-        ROhm = params['Ro']
-        iMaxEst = u['i']  # initialize iMaxEst
-        relChange = 1   # initialize relative change
+        
+        # Define approximate for R_lump
+            # Currently estimated with R_ohm, defined as R0
+            # Potential future work (from Elizabeth Hale):
+                # VCell = z['v']
+                # VOpen = w['OCV']
+                # RLump = (VOpen - VCell)/u['i']
+        R_lump = params['Ro']
+
+        # Initialize values 
+        CLE_val = u['i']  # initialize CLE_val
+        relative_change = 1   # initialize relative change
         last_state = x  # initialize last state
-        # save original initialization parameters to restore later
-        original_state = params['x0']
+        original_state = params['x0'] # save original initialization parameters to restore later
         params['x0'] = last_state  # start model simulation at present state
         first_output = z  # first output based on present state
         time_to_simulate_to = delta_t  # time cutoff
         sim_config = {'save_freq': delta_t, 'dt': 0.1}
-        while relChange > 0.001:  # convergence criteria in Bharathraj et al.
-            def cle_loading(t, x=None):  # load for simulation is iMaxEst
-                return {'i': iMaxEst}
+        while relative_change > 0.001:  # convergence criteria in Bharathraj et al.
+            def cle_loading(t, x=None):  # load for simulation is CLE_val
+                return {'i': CLE_val}
             (times, inputs, states, outputs, event_states) = self.simulate_to(time_to_simulate_to,
                                                                               cle_loading, first_output, **sim_config)
             last_state = states[1]
-            V_Open_Cutoff = self.get_OCV(last_state)
-            VOpenCutoff = V_Open_Cutoff['OCV']
-            iMaxEstPrev = iMaxEst
-            iMaxEst = (VOpenCutoff - VCutoff)/ROhm
-            relChange = abs((iMaxEst - iMaxEstPrev)/iMaxEstPrev)
+            V_OCV_temp = self.get_OCV(last_state)
+            V_OCV = V_OCV_temp['OCV']
+            CLE_old = CLE_val
+            CLE_val = (V_OCV - VCutoff)/R_lump
+            relative_change = abs((CLE_val - CLE_old)/CLE_old)
         params['x0'] = original_state
         return {
-            'CLE': iMaxEst
+            'CLE': CLE_val
         }
 
     def observables(self, x) -> dict:
