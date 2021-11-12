@@ -11,7 +11,7 @@
 # Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
 
 from prog_models import PrognosticsModel
-import math
+from numpy import inf
 
 # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
 # See examples.derived_params
@@ -68,7 +68,7 @@ class ProgModelTemplate(PrognosticsModel):
     state_limits = {
         # 'state': (lower_limit, upper_limit)
         # only specify for states with limits
-        'Examples State 1': (0, math.inf),
+        'Examples State 1': (0, inf),
         'Examples State 4': (-2, 3)
     }
 
@@ -265,6 +265,7 @@ class ProgModelTemplate(PrognosticsModel):
 
         return event_x
         
+    # Note: Thresholds met equation below is not strictly necessary. By default threshold_met will check if event_state is ≤ 0 for each event
     def threshold_met(self, t, x):
         """
         For each event threshold, calculate if it has been met

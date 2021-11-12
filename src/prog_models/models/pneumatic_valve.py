@@ -287,8 +287,6 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
         new_x = x['x']+x['v']*dt
 
-        pos = minimum(maximum(new_x, 0.0), params['Ls'])
-
         if isscalar(pistonForces):
             vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
             pos = calc_x(x['x'], pistonForces, params['Ls'], new_x)

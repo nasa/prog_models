@@ -15,7 +15,7 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Visualization" href="visualize.html" />
+    <link rel="next" title="Simulation Result Data Structure" href="simresult.html" />
     <link rel="prev" title="Models" href="models.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -39,42 +39,138 @@
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">prog_models.</span></span><span class="sig-name descname"><span class="pre">PrognosticsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general time-variant state space model of system degradation behavior.</p>
-<p>The PrognosticsModel class is a wrapper around a mathematical model of a
-system as represented by a state, output, input, event_state and threshold equations.</p>
-<p>A Model also has a parameters structure, which contains fields for
-various model parameters.</p>
+<p>The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equations.</p>
+<p>A Model also has a parameters structure, which contains fields for various model parameters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>kwargs</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration parameters for model. Parameters supported by every model include:</p>
-<blockquote>
-<div><ul>
-<li><dl>
-<dt>process_noise<span class="classifier">Process noise (applied at dx/next_state).</span></dt><dd><p>Can be scalar (e.g., .2) characteric of the process noise distribution to be applied to every state, a dictionary of values for each
-state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p>
-<p>See: examples.noise for more details</p>
-</dd>
-</dl>
-</li>
-<li><p>process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)</p></li>
-<li><dl>
-<dt>measurement_noise<span class="classifier">Measurement noise (applied in output eqn)</span></dt><dd><p>Can be number (e.g., .2) characteric of the process noise distribution applied to every output, a dictionary of values for each
-output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p>
-<p>See: examples.noise for more details</p>
-</dd>
-</dl>
-</li>
-<li><p>measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+<dt class="field-odd">Keyword Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>process_noise</strong> (<em>Optional</em><em>, </em><em>float</em><em> or </em><em>Dict</em><em>[</em><em>Srt</em><em>, </em><em>float</em><em>]</em>) – Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p></li>
+<li><p><strong>process_noise_dist</strong> (<em>Optional</em><em>, </em><em>String</em>) – distribution for process noise (e.g., normal, uniform, triangular)</p></li>
+<li><p><strong>measurement_noise</strong> (<em>Optional</em><em>, </em><em>float</em><em> or </em><em>Dict</em><em>[</em><em>Srt</em><em>, </em><em>float</em><em>]</em>) – Measurement noise (applied in output eqn).
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li>
+<li><p><strong>measurement_noise_dist</strong> (<em>Optional</em><em>, </em><em>String</em>) – distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+<li><p><strong>model</strong> (<em>Additional parameters specific to the</em>) – </p></li>
 </ul>
-</div></blockquote>
-<p>E.g., PrognosticsModel(process_noise= 0.3, measurement_noise= {‘z1’: 0.1, ‘z2’: 0.3})</p>
-</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a> – </p>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a><strong>, </strong><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a><strong>, </strong><a class="reference internal" href="exceptions.html#prog_models.ProgModelException" title="prog_models.ProgModelException"><strong>ProgModelException</strong></a> – </p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
 <p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.is_vectorized">
+<span class="sig-name descname"><span class="pre">is_vectorized</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.is_vectorized" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the model is vectorized, False otherwise. Default is False</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.default_parameters">
+<span class="sig-name descname"><span class="pre">default_parameters</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.default_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default parameters for the model class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, float], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters for the specific model object. This is created automatically from the default_parameters and kwargs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.state_limits">
+<span class="sig-name descname"><span class="pre">state_limits</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.state_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Limits on the state variables format {‘state_name’: (lower_limit, upper_limit)}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, tuple[float, float]], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.param_callbacks">
+<span class="sig-name descname"><span class="pre">param_callbacks</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.param_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callbacks for derived parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict[str, list[function]], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.states">
+<span class="sig-name descname"><span class="pre">states</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.outputs">
+<span class="sig-name descname"><span class="pre">outputs</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.observables_keys">
+<span class="sig-name descname"><span class="pre">observables_keys</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.observables_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each observable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.events">
+<span class="sig-name descname"><span class="pre">events</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each event predicted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str], optional</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.apply_limits">
 <span class="sig-name descname"><span class="pre">apply_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel.apply_limits" title="Permalink to this definition">¶</a></dt>
@@ -336,7 +432,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 
 <dl class="py method">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.initialize">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.initialize" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate initial state given inputs and outputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -471,7 +567,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.simulate_to">
-<span class="sig-name descname"><span class="pre">simulate_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.simulate_to" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">simulate_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.simulate_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model for a given number of seconds</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -480,6 +576,7 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <p>e.g., time = 200</p>
 </p></li>
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em><em>, </em><em>optional</em>) – First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this</p></li>
 <li><p><strong>options</strong> (<em>kwargs</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
 <p>Note: configuration of the model is set through model.parameters</p>
 <p>Supported parameters: see <cite>simulate_to_threshold</cite></p>
@@ -525,13 +622,13 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 
 <dl class="py method">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.simulate_to_threshold">
-<span class="sig-name descname"><span class="pre">simulate_to_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">simulate_to_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">future_loading_eqn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.simulate_to_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate prognostics model until any or specified threshold(s) have been met</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>future_loading_eqn</strong> (<em>callable</em>) – Function of (t) -&gt; z used to predict future loading (output) at a given time (t)</p></li>
-<li><p><strong>first_output</strong> (<em>dict</em>) – First measured output, needed to initialize state</p></li>
+<li><p><strong>first_output</strong> (<em>dict</em><em>, </em><em>optional</em>) – First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this</p></li>
 <li><p><strong>threshold_keys</strong> (<em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Keys for events that will trigger the end of simulation.
 If blank, simulation will occur if any event will be met ()</p></li>
 <li><p><strong>options</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – <p>Configuration options for the simulation</p>
@@ -539,9 +636,10 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <p>Supported parameters:</p>
 <blockquote>
 <div><ul>
+<li><p>t0 (Number) : Starting time for simulation in seconds (default: 0.0)</p></li>
 <li><p>dt (Number or function): time step (s), e.g. {‘dt’: 0.1} or function (t, x) -&gt; dt</p></li>
 <li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
-<li><p>save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
+<li><p>save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
 <li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
 <li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
 <li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
@@ -554,11 +652,11 @@ If blank, simulation will occur if any event will be met ()</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>times</strong> (<em>[number]</em>) – Times for each simulated point</p></li>
-<li><p><strong>inputs</strong> (<em>[dict]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
-<li><p><strong>states</strong> (<em>[dict]</em>) – Estimated states for each time in times</p></li>
-<li><p><strong>outputs</strong> (<em>[dict]</em>) – Estimated outputs for each time in times</p></li>
-<li><p><strong>event_states</strong> (<em>[dict]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+<li><p><strong>times</strong> (<em>Array[number]</em>) – Times for each simulated point</p></li>
+<li><p><strong>inputs</strong> (<em>SimResult</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
+<li><p><strong>states</strong> (<em>SimResult</em>) – Estimated states for each time in times</p></li>
+<li><p><strong>outputs</strong> (<em>SimResult</em>) – Estimated outputs for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>SimResult</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
 </ul>
 </p>
 </dd>
@@ -648,13 +746,15 @@ If blank, simulation will occur if any event will be met ()</p></li>
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/dev?labpath=tutorial.ipynb">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Prognostics Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/nasa/prog_models">GitHub</a></li>
 </ul>
 
 <div class="relations">
@@ -662,7 +762,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="models.html" title="previous chapter">Models</a></li>
-      <li>Next: <a href="visualize.html" title="next chapter">Visualization</a></li>
+      <li>Next: <a href="simresult.html" title="next chapter">Simulation Result Data Structure</a></li>
   </ul></li>
 </ul>
 </div>

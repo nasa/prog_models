@@ -20,6 +20,7 @@ If you are new to this package, see `<getting_started.html>`__.
    exceptions
    ProgAlgs <https://nasa.github.io/prog_algs>
    dev_guide
+   GitHub <https://github.com/nasa/prog_models>
 
 Citing this repository
 -----------------------
@@ -28,15 +29,15 @@ Use the following to cite this repository:
 @misc{2021_nasa_prog_model,
   | author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Matthew Daigle},
   | title     = {Prognostics Model Python Package},
-  | month     = Aug,
+  | month     = Nov,
   | year      = 2021,
-  | version   = {1.1.0},
+  | version   = {1.2.0},
   | url       = {https://github.com/nasa/prog_models}
   | }
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, M. Daigle, Prognostics Model Python Package, v1.1, Aug. 2021. URL https://github.com/nasa/prog_models.
+C. Teubert, C. Kulkarni, M. Corbetta, M. Daigle, Prognostics Model Python Package, v1.2, Nov. 2021. URL https://github.com/nasa/prog_models.
 
 Indices and tables
 -----------------------

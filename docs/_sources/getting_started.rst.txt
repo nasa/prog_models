@@ -7,15 +7,41 @@ The NASA Prognostics Models Package is a python framework for defining, building
 
 The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (:py:meth:`prog_models.PrognosticsModel.generate_model`)
 
-A few definitions:
+Installing
+-----------------------
 
-* **events**: some state that can be predicted (e.g., system failure). An event has either occured or not. 
+Installing from pip (recommended)
+********************************************
+The latest stable release of `prog_models` is hosted on PyPi. For most users (unless you want to contribute to the development of `prog_models`), the version on PyPi will be adequate. To install from the command line, use the following command:
 
-* **event state**: progress towards event occuring. Defined as a number where an event state of 0 indicates the event has occured and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occuring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called "State of Health"
+.. code-block:: console
+
+    $ pip install prog_models
+
+Installing pre-release versions with GitHub
+********************************************
+For users who would like to contribute to `prog_models` or would like to use pre-release features can do so using the 'dev' branch (or a feature branch) on the `prog_models GitHub repo <https://github.com/nasa/prog_models>`__. This isn't recommended for most users as this version may be unstable. To use this version, use the following commands:
+
+.. code-block:: console
+
+    $ git clone https://github.com/nasa/prog_models
+    $ cd prog_algs
+    $ git checkout dev 
+    $ pip install -e .
+
+Summary
+---------
+A few definitions to get started:
+
+* **events**: something that can be predicted (e.g., system failure). An event has either occurred or not. 
+
+* **event state**: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called "State of Health"
 
 * **inputs**: control applied to the system being modeled (e.g., current drawn from a battery)
 
 * **outputs**: measured sensor values from a system (e.g., voltage and temperature of a battery)
+
+* **observables**: performance characteristics of a system that are a function of system state, but are not directly measured.
 
 * **states**: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be. 
 
@@ -23,20 +49,12 @@ A few definitions:
 
 * **measurement noise**: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects 
 
-Installing
-----------
-You can install the package using pip:
-    `pip install prog_models`
-
 Use 
 ----
-See the below examples for examples of use. Run these examples using the command `python -m examples.[Example name]` (e.g., `python -m examples.sim_example`). Note: some windows users would use `py -m examples.[Example name]` instead of python. The examples are summarized below:
+The best way to learn how to use `prog_models` is through the `tutorial <https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb>`__. There are also a number of examples which show different aspects of the package, summarized and linked below:
 
 * :download:`examples.sim <../examples/sim.py>`
     .. automodule:: examples.sim
-    |
-* :download:`examples.sim_valve <../examples/sim_valve.py>`
-    .. automodule:: examples.sim_valve
     |
 * :download:`examples.model_gen <../examples/model_gen.py>`
     .. automodule:: examples.model_gen
@@ -49,6 +67,9 @@ See the below examples for examples of use. Run these examples using the command
     |
 * :download:`examples.sensitivity <../examples/sensitivity.py>`
     .. automodule:: examples.sensitivity
+    |
+* :download:`examples.events <../examples/events.py>`
+    .. automodule:: examples.events
     |
 * :download:`examples.noise <../examples/noise.py>`
     .. automodule:: examples.noise
@@ -71,8 +92,8 @@ See the below examples for examples of use. Run these examples using the command
 * :download:`examples.dynamic_step_size <../examples/dynamic_step_size.py>`
     .. automodule:: examples.dynamic_step_size
     |
-
-There is also an included tutorial (:download:`tutorial <../tutorial.ipynb>`).
+* :download:`tutorial <../tutorial.ipynb>`
+    |
 
 Model Specific examples
 ------------------------
@@ -107,6 +128,18 @@ See :download:`examples.new_model <../examples/new_model.py>` for an example of 
 The second way to generate a new model is using the model generator method, :py:meth:`prog_models.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.PrognosticsModel.generate_model` for more detail.
 
 See :download:`examples.model_gen <../examples/model_gen.py>` for an example of this approach.
+
+Updates in V1.2 (Mini-Release)
+------------------------------
+* New Feature: Vectorized Models
+    * Distributed models were vectorized to support vectorized sample-based prognostics approaches
+* New Feature: Dynamic Step Sizes
+    * Now step size can be a function of time or state
+    * See `examples.dynamic_step_size` for more information
+* New Feature: New method model.apply_bounds
+    * This method allows for other classes to use applied bound limits
+* Simulate_to* methods can now specify initial time. Also, outputs are now optional
+* Various bug fixes
 
 Updates in V1.1
 ---------------

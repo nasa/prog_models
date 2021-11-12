@@ -17,3 +17,9 @@ class ProgModelTypeError(ProgModelException, TypeError):
     """
     Prognostics Type Error - indicates the model could not be constructed
     """
+
+
+class ProgModelStateLimitWarning(Warning):
+    """
+    Prognostics State Limit Warning - indicates the model state was outside the limits, and was adjusted
+    """

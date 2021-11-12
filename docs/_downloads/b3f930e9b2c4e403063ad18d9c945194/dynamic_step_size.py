@@ -30,7 +30,7 @@ def run_example():
     # Here we're printing every time step so we can see the step size change
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, save_freq=1e-99, print=True, dt=next_time, threshold_keys=['impact'])
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, save_freq=1e-99, print=True, dt=next_time, threshold_keys=['impact'])
 
     # Example 2
     print("EXAMPLE 2: dt of 1 until impact event state 0.5, then 0.25 \n\nSetting up...\n")
@@ -49,7 +49,7 @@ def run_example():
     # Here we're printing every time step so we can see the step size change
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, {'x':m.parameters['thrower_height']}, save_freq=1e-99, print=True, dt=next_time, threshold_keys=['impact'])
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, save_freq=1e-99, print=True, dt=next_time, threshold_keys=['impact'])
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

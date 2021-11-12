@@ -1,11 +1,12 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException
+from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
 import numpy as np
 from copy import deepcopy
+from warnings import warn
 from collections import UserDict
 import types
 from array import array
@@ -448,8 +449,10 @@ class PrognosticsModel(ABC):
         """
         for (key, limit) in self.state_limits.items():
             if x[key] < limit[0]:
+                warn("State {} limited to {} (was {})".format(key, limit[0], x[key]), ProgModelStateLimitWarning)
                 x[key] = limit[0]
             elif x[key] > limit[1]:
+                warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
                 x[key] = limit[1]
         return x
 
@@ -734,9 +737,10 @@ class PrognosticsModel(ABC):
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
+             * t0 (Number) : Starting time for simulation in seconds (default: 0.0) \n
              * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> dt\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
-             * save_pts ([Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
+             * save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
              * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
              * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
@@ -745,15 +749,15 @@ class PrognosticsModel(ABC):
         
         Returns
         -------
-        times: [number]
+        times: Array[number]
             Times for each simulated point
-        inputs: [dict]
+        inputs: SimResult
             Future input (from future_loading_eqn) for each time in times
-        states: [dict]
+        states: SimResult
             Estimated states for each time in times
-        outputs: [dict]
+        outputs: SimResult
             Estimated outputs for each time in times
-        event_states: [dict]
+        event_states: SimResult
             Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
         
         Raises
@@ -787,7 +791,7 @@ class PrognosticsModel(ABC):
 
         # Configure
         config = { # Defaults
-            't': 0.0,
+            't0': 0.0,
             'dt': 1.0,
             'save_pts': [],
             'save_freq': 10.0,
@@ -819,7 +823,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
-        t = config['t']
+        t = config['t0']
         u = future_loading_eqn(t)
         if 'x' in config:
             x = config['x']
