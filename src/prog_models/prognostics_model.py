@@ -1,11 +1,12 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException
+from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
 import numpy as np
 from copy import deepcopy
+from warnings import warn
 from collections import UserDict
 import types
 from array import array
@@ -448,8 +449,10 @@ class PrognosticsModel(ABC):
         """
         for (key, limit) in self.state_limits.items():
             if x[key] < limit[0]:
+                warn("State {} limited to {} (was {})".format(key, limit[0], x[key]), ProgModelStateLimitWarning)
                 x[key] = limit[0]
             elif x[key] > limit[1]:
+                warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
                 x[key] = limit[1]
         return x
 

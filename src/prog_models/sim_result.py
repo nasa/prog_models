@@ -102,7 +102,7 @@ class SimResult(UserList):
         """
         return plot_timeseries(self.times, self.data, options=kwargs)  
 
-    def __not_implemented(self):
+    def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
 
     # Functions of list not implemented
@@ -143,9 +143,9 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.states = []
 
     def extend(self, other):
-        self.times.extend(deepcopy(other.times))
+        self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
         self.__data = None
-        self.states.extend(deepcopy(other.states))
+        self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
 
     def pop(self, index = -1):
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
