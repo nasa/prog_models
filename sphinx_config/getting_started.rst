@@ -92,6 +92,8 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
 * :download:`examples.dynamic_step_size <../examples/dynamic_step_size.py>`
     .. automodule:: examples.dynamic_step_size
     |
+* :download:`tutorial <../tutorial.ipynb>`
+    |
 
 Model Specific examples
 ------------------------
