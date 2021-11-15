@@ -117,3 +117,7 @@ jobs:
       run: |
         cd prog_algs 
         python -m tests
+    - name: "Upload coverage to Codecov"
+      uses: codecov/codecov-action@v2
+      with:
+        fail_ci_if_error: true
