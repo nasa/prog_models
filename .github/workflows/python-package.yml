@@ -61,10 +61,6 @@ jobs:
         python -m pip install -e .
     - name: Run tests
       run: python -m tests
-    - name: "Upload coverage to Codecov"
-      uses: codecov/codecov-action@v2
-      with:
-        fail_ci_if_error: true
   test_prog_algs_released:
     runs-on: ubuntu-latest
     strategy:
