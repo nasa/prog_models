@@ -139,7 +139,7 @@ jobs:
         pip install coverage
     - name: Run coverage
       run: |
-        coverage run tests.py
+        coverage run -m tests
         coverage xml
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v2
