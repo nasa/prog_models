@@ -30,7 +30,7 @@ class BatteryCircuit(PrognosticsModel):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[Srt, float]
+        process_noise : Optional, float or Dict[Str, float]
           Process noise (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
