@@ -637,13 +637,13 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <blockquote>
 <div><ul>
 <li><p>t0 (Number) : Starting time for simulation in seconds (default: 0.0)</p></li>
-<li><p>dt (Number or function): time step (s), e.g. {‘dt’: 0.1} or function (t, x) -&gt; dt</p></li>
+<li><p>dt (Number or function): time step (s), e.g. dt = 0.1 or function (t, x) -&gt; dt</p></li>
 <li><p>save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
 <li><p>save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
 <li><p>horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
-<li><p>x (dict): optional, initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
-<li><p>thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
-<li><p>print (bool): optional, toggle intermediate printing, e.g., print_inter = True</p></li>
+<li><p>x (dict): initial state dict, e.g., x= {‘x1’: 10, ‘x2’: -5.3}</p></li>
+<li><p>thresholds_met_eqn (function/lambda): custom equation to indicate logic for when to stop sim f(thresholds_met) -&gt; bool</p></li>
+<li><p>print (bool): toggle intermediate printing, e.g., print = True</p></li>
 </ul>
 </div></blockquote>
 <p>e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])</p>

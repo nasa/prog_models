@@ -25,7 +25,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | V: Voltage
         | pdisch: Discharge Pressure (Pa)
         | psuc: Suction Pressure (Pa)
-        | wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)
+        | wsync: Synchronous Rotational Speed of Supply Voltage (rad/sec)
 
     States: (9)
         | A: Impeller Area (m^2)
