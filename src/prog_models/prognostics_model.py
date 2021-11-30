@@ -738,13 +738,13 @@ class PrognosticsModel(ABC):
             Note: configuration of the model is set through model.parameters.\n
             Supported parameters:\n
              * t0 (Number) : Starting time for simulation in seconds (default: 0.0) \n
-             * dt (Number or function): time step (s), e.g. {'dt': 0.1} or function (t, x) -> dt\n
+             * dt (Number or function): time step (s), e.g. dt = 0.1 or function (t, x) -> dt\n
              * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
              * save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
              * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
-             * x (dict): optional, initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
-             * thresholds_met_eqn (function/lambda): optional, custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-             * print (bool): optional, toggle intermediate printing, e.g., print_inter = True\n
+             * x (dict): initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
+             * thresholds_met_eqn (function/lambda): custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
+             * print (bool): toggle intermediate printing, e.g., print = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
         
         Returns

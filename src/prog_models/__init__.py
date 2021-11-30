@@ -4,4 +4,4 @@
 from .prognostics_model import PrognosticsModel
 from .exceptions import ProgModelException, ProgModelInputException, ProgModelTypeError
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
