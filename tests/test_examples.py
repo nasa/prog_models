@@ -168,13 +168,24 @@ class TestExamples(unittest.TestCase):
         # Reset stdout 
         sys.stdout = _stdout
 
-    def test_state_bounds(self):
+    def test_vectorized(self):
         # set stdout (so it wont print)
         _stdout = sys.stdout
         sys.stdout = StringIO()
 
         # Run example
         vectorized.run_example()
+
+        # Reset stdout 
+        sys.stdout = _stdout
+
+    def test_sim_pump_example(self):
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        # Run example
+        sim_pump.run_example()
 
         # Reset stdout 
         sys.stdout = _stdout
