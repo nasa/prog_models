@@ -249,6 +249,12 @@ class PrognosticsModel(ABC):
         except Exception:
             raise ProgModelTypeError('Model noise poorly configured')
 
+    def __eq__(self, other):
+        """
+        Check if two models are equal
+        """
+        return self.__class__ == other.__class__ and self.parameters == other.parameters
+    
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
     
