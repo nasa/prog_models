@@ -47,6 +47,7 @@ setup(
     license = 'NOSA',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/nasa/prog_models/issues',
+        'Docs': 'https://nasa.github.io/prog_models',
         'Organization': 'https://prognostics.nasa.gov/',
         'Source': 'https://github.com/nasa/prog_models',
     },

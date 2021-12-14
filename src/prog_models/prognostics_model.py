@@ -734,25 +734,32 @@ class PrognosticsModel(ABC):
         ----------
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
+
+        Keyword Arguments
+        -----------------
+        t0 : Number, optional
+            Starting time for simulation in seconds (default: 0.0) \n
+        dt : Number or function, optional
+            time step (s), e.g. dt = 0.1 or function (t, x) -> dt\n
+        save_freq : Number, optional
+            Frequency at which output is saved (s), e.g., save_freq = 10 \n
+        save_pts : List[Number], optional
+            Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
+        horizon : Number, optional
+            maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : dict, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
-        threshold_keys: [str], optional
+        threshold_keys: List[str] or str, optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
-        options: keyword arguments, optional
-            Configuration options for the simulation \n
-            Note: configuration of the model is set through model.parameters.\n
-            Supported parameters:\n
-             * t0 (Number) : Starting time for simulation in seconds (default: 0.0) \n
-             * dt (Number or function): time step (s), e.g. dt = 0.1 or function (t, x) -> dt\n
-             * save_freq (Number): Frequency at which output is saved (s), e.g., save_freq = 10 \n
-             * save_pts (List[Number]): Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
-             * horizon (Number): maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
-             * x (dict): initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
-             * thresholds_met_eqn (function/lambda): custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-             * print (bool): toggle intermediate printing, e.g., print = True\n
+        x : dict, optional
+            initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
+        thresholds_met_eqn : function/lambda, optional
+            custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
+        print : bool, optional
+            toggle intermediate printing, e.g., print = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
-        
+    
         Returns
         -------
         times: Array[number]
@@ -784,6 +791,10 @@ class PrognosticsModel(ABC):
         | first_output = {'o1': 3.2, 'o2': 1.2}
         | m = PrognosticsModel() # Replace with specific model being simulated
         | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
+
+        Note
+        ----
+        configuration of the model is set through model.parameters.\n
         """
         # Input Validation
         if first_output and not all(key in first_output for key in self.outputs):
@@ -791,6 +802,10 @@ class PrognosticsModel(ABC):
 
         if not (callable(future_loading_eqn)):
             raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
+        
+        if isinstance(threshold_keys, str):
+            # A single threshold key
+            threshold_keys = [threshold_keys]
 
         if threshold_keys and not all([key in self.events for key in threshold_keys]):
             raise ProgModelInputException("threshold_keys must be event names")

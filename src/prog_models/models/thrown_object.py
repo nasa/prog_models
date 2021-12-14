@@ -8,6 +8,40 @@ from numpy import maximum
 class ThrownObject(PrognosticsModel):
     """
     Model that similates an object thrown into the air without air resistance
+
+    Events (2)
+        | falling: The object is falling
+        | impact: The object has hit the ground
+
+    Inputs/Loading: (0)
+
+    States: (2)
+        | x: Position in space (m)
+        | v: Velocity in space (m/s)
+
+    Outputs/Measurements: (1)
+        | x: Position in space (m)
+
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        g : Optional, float
+            Acceleration due to gravity (m/s^2). Default is 9.81 m/s^2 (standard gravity)
+        thrower_height : Optional, float
+            Height of the thrower (m). Default is 1.83 m
+        throwing_speed : Optional, float
+            Speed at which the ball is thrown (m/s). Default is 40 m/s
     """
 
     inputs = []  # no inputs, no way to control
