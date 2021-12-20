@@ -15,8 +15,8 @@ from importlib import import_module
 def make_test_function(example):
     def test(self):
         ex = import_module("examples." + example)
-        
-        with patch('matplotlib.pyplot') as p:
+
+        with patch('matplotlib.pyplot.show'):
             ex.run_example()
     return test
 
