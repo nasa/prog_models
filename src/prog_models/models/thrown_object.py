@@ -46,15 +46,16 @@ class ThrownObject(PrognosticsModel):
 
     inputs = []  # no inputs, no way to control
     states = [
-        'x',  # Position (m) 
-        'v'  # Velocity (m/s)
+        'x',    # Position (m) 
+        'v',    # Velocity (m/s)
+        'max_x' # Maximum state
         ]
     outputs = [
-        'x'  # Position (m)
+        'x'     # Position (m)
     ]
     events = [
         'falling',  # Event- object is falling
-        'impact'  # Event- object has impacted ground
+        'impact'    # Event- object has impacted ground
     ]
 
     is_vectorized = True
@@ -74,12 +75,15 @@ class ThrownObject(PrognosticsModel):
     def initialize(self, u=None, z=None):
         return {
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+            'v': self.parameters['throwing_speed'],  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+            'max_x': self.parameters['thrower_height']
             }
     
-    def dx(self, x, u):
-        return {'x': x['v'],
-                'v': self.parameters['g']}  # Acceleration of gravity
+    def next_state(self, x, u, dt):
+        next_x =  x['x'] + x['v']*dt
+        return {'x': next_x,
+                'v': x['v'] + self.parameters['g']*dt,  # Acceleration of gravity
+                'max_x': max(x['max_x'], next_x)}
 
     def output(self, x):
         return {'x': x['x']}
@@ -93,8 +97,8 @@ class ThrownObject(PrognosticsModel):
         }
 
     def event_state(self, x): 
-        self.max_x = maximum(self.max_x, x['x'])  # Maximum altitude
+        x['max_x'] = maximum(x['max_x'], x['x'])  # Maximum altitude
         return {
             'falling': maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': maximum(x['x']/self.max_x,0)  # 1 until falling begins, then it's fraction of height
+            'impact': maximum(x['x']/x['max_x'],0)  # 1 until falling begins, then it's fraction of height
         }
