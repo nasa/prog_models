@@ -83,7 +83,7 @@ class ThrownObject(PrognosticsModel):
         next_x =  x['x'] + x['v']*dt
         return {'x': next_x,
                 'v': x['v'] + self.parameters['g']*dt,  # Acceleration of gravity
-                'max_x': max(x['max_x'], next_x)}
+                'max_x': maximum(x['max_x'], next_x)}
 
     def output(self, x):
         return {'x': x['x']}
