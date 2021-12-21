@@ -7,7 +7,7 @@ from numbers import Number
 import numpy as np
 from copy import deepcopy
 from warnings import warn
-from collections import UserDict
+from collections import UserDict, abc
 import types
 from array import array
 from .sim_result import SimResult, LazySimResult
@@ -830,6 +830,8 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if config['save_freq'] <= 0:
             raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
+        if not isinstance(config['save_pts'], abc.Iterable):
+            raise ProgModelInputException("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
         if not isinstance(config['horizon'], Number):
             raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
