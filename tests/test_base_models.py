@@ -513,6 +513,14 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
+    def test_pickle(self):
+        m = MockProgModel(p1 = 1.3)
+        import pickle
+        pickle.dump(m, open('model_test.pkl', 'wb'))
+        m2 = pickle.load(open('model_test.pkl', 'rb'))
+        isinstance(m2, MockProgModel)
+        self.assertEqual(m.parameters['p1'], m2.parameters['p1'])
+        self.assertEqual(m, m2)
 
     def test_sim_to_thresh(self):
         m = MockProgModel(process_noise = 0.0)

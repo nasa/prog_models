@@ -27,6 +27,16 @@ class TestSimResult(unittest.TestCase):
         except IndexError:
             pass
     
+    def test_pickle(self):
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        import pickle
+        pickle.dump(result, open('model_test.pkl', 'wb'))
+        result2 = pickle.load(open('model_test.pkl', 'rb'))
+        self.assertEqual(result, result2)
+    
     def test_cached_sim_result(self):
         def f(x):
             return x * 2

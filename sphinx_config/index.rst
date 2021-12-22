@@ -29,15 +29,15 @@ Use the following to cite this repository:
 @misc{2021_nasa_prog_model,
   | author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Matthew Daigle},
   | title     = {Prognostics Model Python Package},
-  | month     = Nov,
+  | month     = Dec,
   | year      = 2021,
-  | version   = {1.2.0},
+  | version   = {1.2.2},
   | url       = {https://github.com/nasa/prog_models}
   | }
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, M. Daigle, Prognostics Model Python Package, v1.2, Nov. 2021. URL https://github.com/nasa/prog_models.
+C. Teubert, C. Kulkarni, M. Corbetta, M. Daigle, Prognostics Model Python Package, v1.2.2, Dec. 2021. URL https://github.com/nasa/prog_models.
 
 Indices and tables
 -----------------------
