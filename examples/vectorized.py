@@ -18,7 +18,8 @@ def run_example():
     # For this example we are saying there are 4 throwers of various strengths and heights
     first_state = {
         'x': array([1.75, 1.8, 1.85, 1.9]),
-        'v': array([35, 39, 22, 47])
+        'v': array([35, 39, 22, 47]),
+        'max_x': array([1.75, 1.8, 1.85, 1.9])
     }
 
     # Step 3: Simulate to threshold
