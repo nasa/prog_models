@@ -206,9 +206,11 @@ class PrognosticsModel(ABC):
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
-    observables_keys = []  # Identifies for each observable
+    performance_metric_keys = []  # Identifies for each performance metric
     events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
+
+    observables_keys = performance_metric_keys # for backwards compatability
 
     def __init__(self, **kwargs):
         if not hasattr(self, 'inputs'):
@@ -509,9 +511,9 @@ class PrognosticsModel(ABC):
         # Apply Limits
         return self.apply_limits(next_state)
 
-    def observables(self, x) -> dict:
+    def performance_metrics(self, x) -> dict:
         """
-        Calculate observables where
+        Calculate performance metrics where
 
         Parameters
         ----------
@@ -521,9 +523,9 @@ class PrognosticsModel(ABC):
         
         Returns
         -------
-        obs : dict
-            Observables, with keys defined by model.observables. \n
-            e.g., obs = {'tMax':33, 'iMax':19} given observables = ['tMax', 'iMax']
+        pm : dict
+            Performance Metrics, with keys defined by model.performance_metric_keys. \n
+            e.g., pm = {'tMax':33, 'iMax':19} given performance_metric_keys = ['tMax', 'iMax']
 
         Example
         -------
@@ -531,9 +533,11 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | obs = m.observables(3.0, x) # Returns {'tMax':33, 'iMax':19}
+        | pm = m.performance_metrics(x) # Returns {'tMax':33, 'iMax':19}
         """
         return {}
+    
+    observables = performance_metrics
 
     @abstractmethod
     def output(self, x) -> dict:
@@ -558,7 +562,7 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | z = m.output(3.0, x) # Returns {'o1': 1.2}
+        | z = m.output(x) # Returns {'o1': 1.2}
         """
         return {}
 
