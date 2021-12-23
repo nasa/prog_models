@@ -70,7 +70,6 @@ class ThrownObject(PrognosticsModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.max_x = 0.0
 
     def initialize(self, u=None, z=None):
         return {
