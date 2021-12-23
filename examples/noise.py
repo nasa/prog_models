@@ -30,7 +30,7 @@ def run_example():
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex3: noise- more noise on position than velocity
-    process_noise = {'x': 0.25, 'v': 0.75, 'max_x': 0}
+    process_noise = {'x': 0.25, 'v': 0.75}
     m = ThrownObject(process_noise = process_noise) 
     print('\nExample with more noise on position than velocity')
     (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
@@ -38,7 +38,7 @@ def run_example():
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex4: noise- Ex3 but uniform
-    process_noise = {'x': 0.25, 'v': 0.75, 'max_x': 0}
+    process_noise = {'x': 0.25, 'v': 0.75}
     process_noise_dist = 'uniform'
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(**model_config) 
@@ -48,7 +48,7 @@ def run_example():
     print('\t- impact time: {}s'.format(times[-1]))
 
     # Ex5: noise- Ex3 but triangle
-    process_noise = {'x': 0.25, 'v': 0.75, 'max_x': 1e-9}
+    process_noise = {'x': 0.25, 'v': 0.75}
     process_noise_dist = 'triangular'
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(**model_config) 
@@ -76,8 +76,7 @@ def run_example():
     def apply_proportional_process_noise(self, x, dt = 1):
         return {
             'x': x['x'],  # No noise on state
-            'v': x['v'] - dt*0.5*x['v'],
-            'max_x': x['max_x']  # No noise on max_x
+            'v': x['v'] - dt*0.5*x['v']
         }
     model_config = {'process_noise': apply_proportional_process_noise}
     m = ThrownObject(**model_config)
