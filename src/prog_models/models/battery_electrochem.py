@@ -6,6 +6,7 @@ from .. import PrognosticsModel
 from math import inf
 from copy import deepcopy
 from numpy import arcsinh, log
+import warnings
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -483,6 +484,13 @@ def merge_dicts(a : dict, b : dict):
         else:
             a[key] = b[key]
 
+def OverwrittenWarning(params):
+    """
+    Function to warn if overwritten changes
+    """
+    warnings.warn("Ro, qMobile, and tDiffusion will be overwritten within the model as part of battery aging modeling. Use BatteryElectroChemEOD to remove this behavior.")
+    return {}
+
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """
@@ -528,14 +536,22 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     state_limits = deepcopy(BatteryElectroChemEOD.state_limits)
     state_limits.update(BatteryElectroChemEOL.state_limits)
 
+    def __init__(self):
+        self.param_callbacks['qMobile'].append(OverwrittenWarning)
+        self.param_callbacks['tDiffusion'] = [OverwrittenWarning]
+        self.param_callbacks['Ro'] = [OverwrittenWarning]
+        super().__init__()
+
     def initialize(self, u = {}, z = {}):
         return self.parameters['x0']
 
     def dx(self, x, u):
         # Set EOD Parameters (corresponding to health)
-        self.parameters['qMobile'] = x['qMax']
-        self.parameters['Ro'] = x['Ro']
-        self.parameters['tDiffusion'] = x['D']
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['qMobile'] = x['qMax']
+            self.parameters['Ro'] = x['Ro']
+            self.parameters['tDiffusion'] = x['D']
         
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
@@ -543,12 +559,9 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         return x_dot
 
     def output(self, x):
-        # Set EOD Parameters (corresponding to health)
-        self.parameters['qMobile'] = x['qMax']
-        self.parameters['Ro'] = x['Ro']
-        self.parameters['tDiffusion'] = x['D']
-        
-        # Calculate
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['qMobile'] = x['qMax']
         return BatteryElectroChemEOD.output(self, x)
 
     def event_state(self, x):
