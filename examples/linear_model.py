@@ -63,8 +63,8 @@ class ThrownObject(LinearModel):
     ]
 
     A = np.array([[0, 1], [0, 0]])
-    C = np.array([[0], [-9.81]])
-    D = np.array([[1, 0]])
+    E = np.array([[0], [-9.81]])
+    C = np.array([[1, 0]])
     F = None # Will override method
 
     # The Default parameters. Overwritten by passing parameters dictionary into constructor
