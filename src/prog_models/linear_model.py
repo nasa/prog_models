@@ -9,19 +9,19 @@ import numpy as np
 class LinearModel(PrognosticsModel, ABC):
     """
     A linear prognostics model. Used when behavior can be described using a simple linear time-series model defined by the following equations:
-        * dx/dt = Ax + Bu + C
-        * z = Dx + E
+        * dx/dt = Ax + Bu + E
+        * z = Cx + D
         * es = Fx + G
     where x is state, u is input, z is output and es is event state
 
     Linear Models must inherit from this class and define the following properties:
-        * A: 2-d numpy.array[float] 
-        * B: 2-d numpy.array[float], optional (zeros by default)
-        * C: 2-d numpy.array[float], optional (zeros by default)
-        * D: 2-d numpy.array[float]
-        * E: 2-d numpy.array[float], optional (zeros by default)
-        * F: 2-d numpy.array[float]
-        * G: 2-d numpy.array[float], optional (zeros by default)
+        * A: 2-d numpy.array[float], dimensions: n_states x n_states
+        * B: 2-d numpy.array[float], optional (zeros by default), dimensions: n_states x n_inputs
+        * C: 2-d numpy.array[float], optional (zeros by default), dimensions: n_outputs x n_states
+        * D: 1-d numpy.array[float], dimensions: n_outputs x 1
+        * E: 1-d numpy.array[float], optional (zeros by default), dimensions: n_states x 1
+        * F: 2-d numpy.array[float], dimensions: n_es x n_states
+        * G: 1-d numpy.array[float], optional (zeros by default), dimensions: n_es x 1
         * inputs:  list[str] - input keys
         * states:  list[str] - state keys
         * outputs: list[str] - output keys
@@ -40,17 +40,17 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((n_states, n_inputs))
 
     @property
-    def C(self):
+    def E(self):
         n_states = len(self.states)
         return np.zeros((n_states, 1))
 
     @property
     @abstractmethod
-    def D(self):
+    def C(self):
         pass
 
     @property
-    def E(self):
+    def D(self):
         n_outputs = len(self.outputs)
         return np.zeros((n_outputs, 1))
 
@@ -68,13 +68,13 @@ class LinearModel(PrognosticsModel, ABC):
         x_array = np.array([list(x.values())]).T
         u_array = np.array([list(u.values())]).T
 
-        dx_array = np.matmul(self.A, x_array) + np.matmul(self.B, u_array) + self.C
+        dx_array = np.matmul(self.A, x_array) + np.matmul(self.B, u_array) + self.E
         return {key: value[0] for key, value in zip(self.states, dx_array)}
         
     def output(self, x):
         x_array = np.array([list(x.values())]).T
 
-        z_array = np.matmul(self.D, x_array) + self.E
+        z_array = np.matmul(self.C, x_array) + self.D
         return {key: value[0] for key, value in zip(self.outputs, z_array)}
 
     def event_state(self, x):
