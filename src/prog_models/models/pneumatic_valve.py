@@ -4,7 +4,8 @@
 from .. import prognostics_model
 from math import inf
 from copy import deepcopy
-from numpy import sqrt, sign, maximum, minimum, isscalar, array, any, shape
+from numpy import sqrt, sign, maximum, isscalar, array, any, shape
+import warnings
 
 def calc_x(x, forces, Ls, new_x):
     lower_wall = (x==0 and forces<0) or (new_x<0)
@@ -348,6 +349,13 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             "Friction Failure": x['r'] > params['rMax']
         }
 
+def OverwrittenWarning(params):
+    """
+    Function to warn if overwritten changes
+    """
+    warnings.warn("wb, wi, wk, wr and wt will be overwritten within the model, since the wear rates are part of the state. Use PneumaticValveBase to remove this behavior.")
+    return {}
+
 
 class PneumaticValveWithWear(PneumaticValveBase):
     """
@@ -386,12 +394,22 @@ class PneumaticValveWithWear(PneumaticValveBase):
 
     state_limits = deepcopy(PneumaticValveBase.state_limits)
 
+    param_callbacks = {
+        'wb': [OverwrittenWarning],
+        'wi': [OverwrittenWarning],
+        'wk': [OverwrittenWarning],
+        'wr': [OverwrittenWarning],
+        'wt': [OverwrittenWarning]
+    }
+
     def next_state(self, x, u, dt):
-        self.parameters['wb'] = x['wb']
-        self.parameters['wi'] = x['wi']
-        self.parameters['wk'] = x['wk']
-        self.parameters['wr'] = x['wr']
-        self.parameters['wt'] = x['wt']
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['wb'] = x['wb']
+            self.parameters['wi'] = x['wi']
+            self.parameters['wk'] = x['wk']
+            self.parameters['wr'] = x['wr']
+            self.parameters['wt'] = x['wt']
         next_x = PneumaticValveBase.next_state(self, x, u, dt)
         next_x.update({
             'wb': x['wb'],
