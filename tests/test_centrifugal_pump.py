@@ -150,6 +150,16 @@ class TestCentrifugalPump(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
         self.assertAlmostEqual(times[-1], 23891)
 
+        # Check warning when changing overwritten Parameters
+        with self.assertWarns(UserWarning):
+            pump.parameters['wA']  = 1e-2
+
+        with self.assertWarns(UserWarning):
+            pump.parameters['wRadial']  = 1e-2
+
+        with self.assertWarns(UserWarning):
+            pump.parameters['wThrust']  = 1e-10
+
     def test_centrifugal_pump(self):
         self.assertEqual(CentrifugalPump,CentrifugalPumpWithWear)
         # CentrifugalPump is alias for "with wear"

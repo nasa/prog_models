@@ -178,6 +178,22 @@ class TestPneumaticValve(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
         self.assertAlmostEqual(times[-1], 782.53, 0)
 
+        # Test warning when setting overwritten parameters
+        with self.assertWarns(UserWarning):
+            m.parameters['wb'] = 1
+
+        with self.assertWarns(UserWarning):
+            m.parameters['wi'] = 1
+
+        with self.assertWarns(UserWarning):
+            m.parameters['wk'] = 1
+
+        with self.assertWarns(UserWarning):
+            m.parameters['wr'] = 1
+
+        with self.assertWarns(UserWarning):
+            m.parameters['wt'] = 1
+
     def test_pneumatic_valve_base(self):
         # Test using PneumaticValveBase
         m = PneumaticValveBase(process_noise= 0)
