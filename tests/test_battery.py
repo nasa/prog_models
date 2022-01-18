@@ -27,6 +27,16 @@ class TestBattery(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         self.assertEqual(BatteryElectroChem, BatteryElectroChemEODEOL)
 
+        # check warning raised when changing overwritten parameter
+        with self.assertWarns(UserWarning):
+            batt.parameters['Ro'] = 10
+        
+        with self.assertWarns(UserWarning):
+            batt.parameters['qMobile'] = 10
+
+        with self.assertWarns(UserWarning):
+            batt.parameters['tDiffusion'] = 10
+
     def test_battery_electrochem_EOD(self):
         batt = BatteryElectroChemEOD()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})

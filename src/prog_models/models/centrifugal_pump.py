@@ -7,6 +7,7 @@ import math
 from math import inf
 from copy import deepcopy
 from numpy import array, maximum, minimum, ndarray, sqrt, sign
+import warnings
 
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
@@ -260,6 +261,13 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'PumpOilOverheat': x['To'] >= self.parameters['lim']['To']
         }
 
+def OverwrittenWarning(params):
+    """
+    Function to warn if overwritten changes
+    """
+    warnings.warn("wA, wRadial, and wThrust will be overwritten within the model, since the wear rates are part of the state. Use CentrifugalPumpBase to remove this behavior.")
+    return {}
+
 
 class CentrifugalPumpWithWear(CentrifugalPumpBase):
     """
@@ -303,10 +311,18 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
 
     state_limits = deepcopy(CentrifugalPumpBase.state_limits)
 
+    param_callbacks = {
+        'wA': [OverwrittenWarning],
+        'wRadial': [OverwrittenWarning],
+        'wThrust': [OverwrittenWarning]
+    }
+
     def next_state(self, x, u, dt):
-        self.parameters['wA'] = x['wA']
-        self.parameters['wRadial'] = x['wRadial']
-        self.parameters['wThrust'] = x['wThrust']
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['wA'] = x['wA']
+            self.parameters['wRadial'] = x['wRadial']
+            self.parameters['wThrust'] = x['wThrust']
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
         next_x.update({
             'wA': x['wA'],
