@@ -100,3 +100,4 @@ cython_debug/
 ex.pickle
 
 .vscode/
+.DS_Store
