@@ -42,7 +42,23 @@ class LinearModel(PrognosticsModel, ABC):
             self._propertyCheck(self.A, len(self.states), len(self.states))
         # @property B Matrix Check
         if (self.B.any()):
-            pass
+            self._propertyCheck(self.B, len(self.states), len(self.inputs))
+        # @property C Matrix Check
+        if (self.C.any()):
+            self._propertyCheck(self.C, len(self.outputs), len(self.states))
+        # @property D Matrix Check
+        if (self.D.any()):
+            self._propertyCheck(self.D, len(self.outputs), 1)
+        # @property E Matrix Check
+        if (self.E.any()):
+            self._propertyCheck(self.E, len(self.states), 1)
+        # @property F Matrix Check
+        if (self.F is not None and self.F.any()): # Maybe a prettier way to do this?
+            # logic: if F is none, let it pass. otherwise, check if not one and perform matrix check
+            self._propertyCheck(self.F, len(self.events), len(self.states))
+        # @property G Matrix Check
+        if (self.G.any()):
+            self._propertyCheck(self.G, len(self.events), 1)
 
     def _propertyCheck(self, matrix, rowsCount, colsCount):
         raiseInformative = false
