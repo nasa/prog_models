@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from sympy import false, true
 from . import PrognosticsModel
 from abc import ABC, abstractmethod
 import numpy as np
@@ -28,6 +29,31 @@ class LinearModel(PrognosticsModel, ABC):
         * events:  list[str] - event keys
     """
 
+    def __init__(self):
+        super().__init__()
+
+        """
+        Member matrices size checks for user specified @property(s)
+        """
+        # @property A Matrix Check
+        if (self.A.any()):
+            # could replace len(self.states) with self.n_states if saved as member var
+            # we could also track which arr specifically if needed, put that in error message with %s
+            self._propertyCheck(self.A, len(self.states), len(self.states))
+        # @property B Matrix Check
+        if (self.B.any()):
+            pass
+
+    def _propertyCheck(self, matrix, rowsCount, colsCount):
+        raiseInformative = false
+        # first perform col check for each row
+        for subArr in matrix:
+            if len(subArr) != colsCount:
+                raiseInformative = true # we could also track which arr specifically if needed, put that in error message with %s
+                break
+        if (raiseInformative or len(matrix) != rowsCount): # check along cols, rows
+            raise Exception("Matrix size check failed, property {type(matrix)} dimensions improperly formed")
+                
     @property
     @abstractmethod
     def A(self):
