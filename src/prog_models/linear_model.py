@@ -39,28 +39,34 @@ class LinearModel(PrognosticsModel, ABC):
         if (self.A.any()):
             # could replace len(self.states) with self.n_states if saved as member var
             # we could also track which arr specifically if needed, put that in error message with %s
-            self._propertyCheck(self.A, len(self.states), len(self.states))
+            self._propertyCheck(self.A, len(self.states), len(self.states), ["A","states","states"])
         # @property B Matrix Check
         if (self.B.any()):
-            self._propertyCheck(self.B, len(self.states), len(self.inputs))
+            self._propertyCheck(self.B, len(self.states), len(self.inputs), ["B","states","inputs"])
         # @property C Matrix Check
         if (self.C.any()):
-            self._propertyCheck(self.C, len(self.outputs), len(self.states))
+            self._propertyCheck(self.C, len(self.outputs), len(self.states), ["C","outputs","states"])
         # @property D Matrix Check
         if (self.D.any()):
-            self._propertyCheck(self.D, len(self.outputs), 1)
+            self._propertyCheck(self.D, len(self.outputs), 1, ["D","outputs","1"])
         # @property E Matrix Check
         if (self.E.any()):
-            self._propertyCheck(self.E, len(self.states), 1)
+            self._propertyCheck(self.E, len(self.states), 1, ["E","states","1"])
         # @property F Matrix Check
         if (self.F is not None and self.F.any()): # Maybe a prettier way to do this?
             # logic: if F is none, let it pass. otherwise, check if not one and perform matrix check
-            self._propertyCheck(self.F, len(self.events), len(self.states))
+            self._propertyCheck(self.F, len(self.events), len(self.states), ["F","events","states"])
         # @property G Matrix Check
         if (self.G.any()):
-            self._propertyCheck(self.G, len(self.events), 1)
+            self._propertyCheck(self.G, len(self.events), 1, ["G","events","1"])
 
-    def _propertyCheck(self, matrix, rowsCount, colsCount):
+    def _propertyCheck(self, matrix, rowsCount, colsCount, notes):
+        """
+        matrix: Input matrix to check dimensions of (e.g. self.A, self.B, etc)
+        rowsCount: Row count to check matrix against
+        colsCount: Column count to check matrix against
+        notes: List of strings containing information for exception message debugging
+        """
         raiseInformative = false
         # first perform col check for each row
         for subArr in matrix:
@@ -68,7 +74,7 @@ class LinearModel(PrognosticsModel, ABC):
                 raiseInformative = true # we could also track which arr specifically if needed, put that in error message with %s
                 break
         if (raiseInformative or len(matrix) != rowsCount): # check along cols, rows
-            raise Exception("Matrix size check failed, property {type(matrix)} dimensions improperly formed")
+            raise Exception("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
                 
     @property
     @abstractmethod
