@@ -60,7 +60,7 @@ class LinearModel(PrognosticsModel, ABC):
                 raiseInformative = True # we could also track which arr specifically if needed, put that in error message with %s
                 break
         if (raiseInformative or len(matrix) != rowsCount): # check along cols, rows
-            raise Exception("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
+            raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
                 
     @property
     @abstractmethod
