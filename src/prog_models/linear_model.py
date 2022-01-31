@@ -1,7 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from sympy import false, true
 from . import PrognosticsModel
 from abc import ABC, abstractmethod
 import numpy as np
@@ -67,11 +66,11 @@ class LinearModel(PrognosticsModel, ABC):
         colsCount: Column count to check matrix against
         notes: List of strings containing information for exception message debugging
         """
-        raiseInformative = false
+        raiseInformative = False
         # first perform col check for each row
         for subArr in matrix:
             if len(subArr) != colsCount:
-                raiseInformative = true # we could also track which arr specifically if needed, put that in error message with %s
+                raiseInformative = True # we could also track which arr specifically if needed, put that in error message with %s
                 break
         if (raiseInformative or len(matrix) != rowsCount): # check along cols, rows
             raise Exception("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
