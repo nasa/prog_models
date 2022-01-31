@@ -30,10 +30,7 @@ class LinearModel(PrognosticsModel, ABC):
 
     def __init__(self):
         super().__init__()
-
-        """
-        Member matrices size checks for user specified @property(s)
-        """
+        # Member matrices size checks for user specified @property(s)
         # @property A Matrix Check
         if (self.A.any()):
             # could replace len(self.states) with self.n_states if saved as member var
