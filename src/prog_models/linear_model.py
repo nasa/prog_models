@@ -53,6 +53,9 @@ class LinearModel(PrognosticsModel, ABC):
         colsCount: Column count to check matrix against
         notes: List of strings containing information for exception message debugging
         """
+        if (not isinstance(matrix, np.ndarray)):
+            raise TypeError("Matrix type check failed: @property {} dimensions is not of type NumPy array.".format(notes[0]))
+
         raiseInformative = False
         # first perform col check for each row
         for subArr in matrix:
