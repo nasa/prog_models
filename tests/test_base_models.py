@@ -1,6 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
+
+from attr import Attribute
 from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
@@ -913,6 +915,34 @@ class TestModels(unittest.TestCase):
 
         m = ThrownObject()
         m.simulate_to_threshold(lambda t, x = None: {})
+
+        # Matrix Dimension Checking
+        # when matrix is not of type NumPy ndarray
+        with self.assertRaises(TypeError):
+            m.A = [[0, 1], [0, 0]] # standard 2-D array
+            m.matrixCheck() 
+       
+        # when matrix is not 2 dimensional (2-D array)
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1], [0, 0], [1, 0]]) # 3-D array
+            m.matrixCheck()
+        
+        # when matrix has improperly shaped column count
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1, 2, 3], [0, 0, 1, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0], [0]]) # less column values per row
+            m.matrixCheck()  
+
+        # when matrix has improprely shaped rows count
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1], [0, 0], [1, 0], [1, 1]]) # extra rows per matrix
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1]]) # less rows per matrix
+            m.matrixCheck()
+        
 
 # This allows the module to be executed directly
 def run_tests():
