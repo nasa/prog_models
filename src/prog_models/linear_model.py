@@ -55,14 +55,16 @@ class LinearModel(PrognosticsModel, ABC):
         """
         if (not isinstance(matrix, np.ndarray)):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type NumPy array.".format(notes[0]))
-
+        print(notes[0], matrix.ndim)
         raiseInformative = False
         # first perform col check for each row
         for subArr in matrix:
             if len(subArr) != colsCount:
                 raiseInformative = True # we could also track which arr specifically if needed, put that in error message with %s
                 break
-        if (raiseInformative or len(matrix) != rowsCount): # check along cols, rows
+        if (raiseInformative or 
+            len(matrix) != rowsCount or
+            matrix.ndim != 2):
             raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
                 
     @property
