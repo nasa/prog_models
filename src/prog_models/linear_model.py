@@ -52,9 +52,12 @@ class LinearModel(PrognosticsModel, ABC):
         colsCount: Column count to check matrix against
         notes: List of strings containing information for exception message debugging
         """
+        if isinstance(matrix, list):
+            setattr(self, "self."+notes[0], np.array(matrix))
+            matrix = getattr(self, "self."+notes[0])
         if (not isinstance(matrix, np.ndarray)):
-            raise TypeError("Matrix type check failed: @property {} dimensions is not of type NumPy array.".format(notes[0]))
-        
+            raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
+
         matrixShape = matrix.shape
         if (matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
             len(matrixShape) == 1 or # check .shape returns 2-tuple, meaning all rows are of equal length
