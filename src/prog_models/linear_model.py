@@ -30,7 +30,6 @@ class LinearModel(PrognosticsModel, ABC):
 
     def __init__(self):
         super().__init__()
-        # @property A,B,C,D,E,F,G Matrix Size Check
         self.matrixCheck()
 
     def matrixCheck(self):
@@ -55,13 +54,13 @@ class LinearModel(PrognosticsModel, ABC):
         """
         if (not isinstance(matrix, np.ndarray)):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type NumPy array.".format(notes[0]))
-        print(notes[0], matrix.ndim)
+
         raiseInformative = False
-        # first perform col check for each row
         for subArr in matrix:
             if len(subArr) != colsCount:
-                raiseInformative = True # we could also track which arr specifically if needed, put that in error message with %s
+                raiseInformative = True 
                 break
+        # Ensures columns per row, rows in matrix, and dimensions in matrix are valid.
         if (raiseInformative or 
             len(matrix) != rowsCount or
             matrix.ndim != 2):
