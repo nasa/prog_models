@@ -56,9 +56,10 @@ class LinearModel(PrognosticsModel, ABC):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type NumPy array.".format(notes[0]))
         
         matrixShape = matrix.shape
-        if (matrixShape[0] != rowsCount or
-            matrixShape[1] != colsCount or
-            matrix.ndim != 2):
+        if (matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
+            len(matrixShape) == 1 or # check .shape returns 2-tuple, meaning all rows are of equal length
+            matrixShape[1] != colsCount or # check all rows are equal to correct column count
+            matrix.ndim != 2): # check matrix is 2 dimensional
             raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
    
     @property

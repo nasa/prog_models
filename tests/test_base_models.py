@@ -933,6 +933,9 @@ class TestModels(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.A = np.array([[0], [0]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
             m.matrixCheck()  
 
         # when matrix has improprely shaped rows count
