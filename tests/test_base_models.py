@@ -1,13 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-
-from attr import Attribute
-from sympy import true
 from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
-
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -944,7 +940,7 @@ class TestModels(unittest.TestCase):
             m.A = set() # set
             m.matrixCheck() 
         with self.assertRaises(TypeError):
-            m.A = true # boolean
+            m.A = True # boolean
             m.matrixCheck()
         # @C
         with self.assertRaises(TypeError):
@@ -969,7 +965,7 @@ class TestModels(unittest.TestCase):
             m.C = set() # set
             m.matrixCheck() 
         with self.assertRaises(TypeError):
-            m.C = true # boolean
+            m.C = True # boolean
             m.matrixCheck()
         # @E
         with self.assertRaises(TypeError):
@@ -994,7 +990,7 @@ class TestModels(unittest.TestCase):
             m.E = set() # set
             m.matrixCheck() 
         with self.assertRaises(TypeError):
-            m.E = true # boolean
+            m.E = True # boolean
             m.matrixCheck()
         # @F
         with self.assertRaises(TypeError):
@@ -1019,7 +1015,7 @@ class TestModels(unittest.TestCase):
             m.F = set() # set
             m.matrixCheck() 
         with self.assertRaises(TypeError):
-            m.F = true # boolean
+            m.F = True # boolean
             m.matrixCheck()
         
         # Matrix Dimension Checking
