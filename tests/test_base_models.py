@@ -915,6 +915,12 @@ class TestModels(unittest.TestCase):
         # len() = events states inputs outputs
         #         1      2      0      1
 
+        # Specific @property F unittests
+        self.assertEquals(m.F, None)
+        with self.assertRaises(AttributeError): # F matrix and event_state defined
+            m.F = np.array([[0, 1]])
+            m.matrixCheck()
+
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
         # when matrix is not of type NumPy ndarray or standard list
         # @A
@@ -1055,13 +1061,6 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError):
             m.E = np.array([[0], [1], [2]]) # 3-D array
             m.matrixCheck()
-        # @D 1x1
-        with self.assertRaises(AttributeError):
-            m.D = np.array([]) # 0-D array
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.D = np.array([[0], [1]]) # 2-D array
-            m.matrixCheck()
         
         # when matrix is improperly shaped
         # @A 2x2
@@ -1138,10 +1137,6 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.E = np.array([[0, 1]]) # less row
             m.matrixCheck()
-        # @F 1x2 or None; None in ThrownObject m
-        with self.assertRaises(AttributeError):
-            m.F = np.array([[0, 1]]) # extra column values per row
-            m.matrixCheck()
         # @G 1x1
         with self.assertRaises(AttributeError):
             m.G = np.array([0, 1]) # extra column values per row
@@ -1155,9 +1150,6 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.G = np.array([[]]) # less row
             m.matrixCheck()
-
-        # Specific @property F unittests
-        
 
 # This allows the module to be executed directly
 def run_tests():
