@@ -996,9 +996,9 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.F = "[[0, 1], [0, 0]]" # string
             m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.F = None # None
-            m.matrixCheck() 
+        # with self.assertRaises(TypeError):
+        #     m.F = None # None
+        #     m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.F = 0 # int
             m.matrixCheck()
@@ -1155,6 +1155,9 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.G = np.array([[]]) # less row
             m.matrixCheck()
+
+        # Specific @property F unittests
+        
 
 # This allows the module to be executed directly
 def run_tests():
