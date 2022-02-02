@@ -33,7 +33,7 @@ class PrognosticsModelParameters(UserDict):
             self[key] = deepcopy(value)
 
         # Add class variables for length of inputs, outputs, events, state, and performance
-        self.lenStates = len(self.states)
+        self.n_states = len(self.states)
 
         # Add and run callbacks
         # Has to be done here so the base parameters are all set 
