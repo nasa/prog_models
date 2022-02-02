@@ -43,10 +43,7 @@ class LinearModel(PrognosticsModel, ABC):
         self._propertyCheck(self.E, len(self.states), 1, ["E","states","1"])
         self._propertyCheck(self.G, len(self.events), 1, ["G","events","1"])
 
-        if ((self.F is None and not callable(getattr(self, 'event_state'))) or # F is None and no event_state method
-              (self.F is not None and callable(getattr(self, 'event_state')))):  # F is not None (matrix) and event_state method specified
-            raise AttributeError("Matrix type check failed: @property F must be either of type None or have an event state function specified.")
-        elif (self.F is not None):
+        if (self.F is not None):
             self._propertyCheck(self.F, len(self.events), len(self.states), ["F","events","states"])
 
     def _propertyCheck(self, matrix, rowsCount, colsCount, notes):
