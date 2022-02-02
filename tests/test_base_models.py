@@ -5,7 +5,6 @@ from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
 
-
 class MockModel():
     states = ['a', 'b', 'c', 't']
     inputs = ['i1', 'i2']
@@ -913,6 +912,235 @@ class TestModels(unittest.TestCase):
 
         m = ThrownObject()
         m.simulate_to_threshold(lambda t, x = None: {})
+        # len() = events states inputs outputs
+        #         1      2      0      1
+
+        # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
+        # when matrix is not of type NumPy ndarray or standard list
+        # @A
+        with self.assertRaises(TypeError):
+            m.A = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.A = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.A = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = True # boolean
+            m.matrixCheck()
+        # @C
+        with self.assertRaises(TypeError):
+            m.C = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.C = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.C = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = True # boolean
+            m.matrixCheck()
+        # @E
+        with self.assertRaises(TypeError):
+            m.E = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.E = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.E = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = True # boolean
+            m.matrixCheck()
+        # @F
+        with self.assertRaises(TypeError):
+            m.F = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.F = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.F = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = True # boolean
+            m.matrixCheck()
+        
+        # Matrix Dimension Checking
+        # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)
+        # @A 2x2
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1]]) # 1-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1], [0, 0], [1, 0]]) # 3-D array
+            m.matrixCheck()
+        # @B 2x0
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[]]) # 1-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[], [], []]) # 3-D array
+            m.matrixCheck()
+        # @C 1x2
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[]]) # 0-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[0, 0], [1, 1]]) # 2-D array
+            m.matrixCheck()
+        # @D 1x1
+        with self.assertRaises(AttributeError):
+            m.D = np.array([]) # 0-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[0], [1]]) # 2-D array
+            m.matrixCheck()
+        # E 2x1
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[0]]) # 1-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[0], [1], [2]]) # 3-D array
+            m.matrixCheck()
+        
+        # when matrix is improperly shaped
+        # @A 2x2
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1, 2, 3], [0, 0, 1, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0], [0]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1]]) # less row
+            m.matrixCheck()
+        # @B 2x0
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[0, 1 ,2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[0]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 1], [1, 1], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 1]]) # less row
+            m.matrixCheck()
+        # @C 1x2
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[1, 0, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[1]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.C = np.array([[0, 0], [1, 1], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.C = np.array([[]]) # less row
+            m.matrixCheck()
+        # @D 1x1
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[1, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.D = np.array([[0], [1]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.D = np.array([[]]) # less row
+            m.matrixCheck()
+        # @E 2x1
+        with self.assertRaises(TypeError):
+            m.E = np.array([0,0], [-9.81, -1]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[], []]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.E = np.array([[0, 1, 2], [0]]) # one row has more columns than another
+            m.matrixCheck() 
+        with self.assertRaises(AttributeError): 
+            m.E = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.E = np.array([[0, 1]]) # less row
+            m.matrixCheck()
+        # @G 1x1
+        with self.assertRaises(AttributeError):
+            m.G = np.array([0, 1]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.G = np.array([[]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.G = np.array([[0], [1]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.G = np.array([[]]) # less row
+            m.matrixCheck()
 
 # This allows the module to be executed directly
 def run_tests():
