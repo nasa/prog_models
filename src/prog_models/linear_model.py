@@ -43,7 +43,7 @@ class LinearModel(PrognosticsModel, ABC):
         self._propertyCheck(self.E, len(self.states), 1, ["E","states","1"])
         self._propertyCheck(self.G, len(self.events), 1, ["G","events","1"])
 
-        if (self.F is not None):
+        if self.F is not None:
             self._propertyCheck(self.F, len(self.events), len(self.states), ["F","events","states"])
 
     def _propertyCheck(self, matrix, rowsCount, colsCount, notes):
@@ -56,14 +56,14 @@ class LinearModel(PrognosticsModel, ABC):
         if isinstance(matrix, list):
             setattr(self, "self."+notes[0], np.array(matrix))
             matrix = getattr(self, "self."+notes[0])
-        if (not isinstance(matrix, np.ndarray)):
+        if not isinstance(matrix, np.ndarray):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
 
         matrixShape = matrix.shape
-        if (matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
+        if matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
             len(matrixShape) == 1 or # check .shape returns 2-tuple, meaning all rows are of equal length
             matrixShape[1] != colsCount or # check all rows are equal to correct column count
-            matrix.ndim != 2): # check matrix is 2 dimensional
+            matrix.ndim != 2: # check matrix is 2 dimensional
             raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
    
     @property
