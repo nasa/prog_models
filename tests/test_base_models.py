@@ -915,16 +915,6 @@ class TestModels(unittest.TestCase):
         # len() = events states inputs outputs
         #         1      2      0      1
 
-        # Specific @property F unittests
-        self.assertEquals(m.F, None)
-        with self.assertRaises(AttributeError): # F matrix and event_state defined
-            m.F = np.array([[0, 1]])
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): # F is None and event_state not defined
-            m.F = None
-            delattr(m, "event_state")
-            m.matrixCheck()
-
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
         # when matrix is not of type NumPy ndarray or standard list
         # @A
@@ -1006,9 +996,6 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.F = "[[0, 1], [0, 0]]" # string
             m.matrixCheck() 
-        # with self.assertRaises(TypeError):
-        #     m.F = None # None
-        #     m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.F = 0 # int
             m.matrixCheck()
