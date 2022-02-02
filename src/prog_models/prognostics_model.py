@@ -32,6 +32,9 @@ class PrognosticsModelParameters(UserDict):
             # Deepcopy is needed here to force copying when value is an object (e.g., dict)
             self[key] = deepcopy(value)
 
+        # Add class variables for length of inputs, outputs, events, state, and performance
+        self.lenStates = len(self.states)
+
         # Add and run callbacks
         # Has to be done here so the base parameters are all set 
         self.callbacks = callbacks
