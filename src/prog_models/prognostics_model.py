@@ -213,6 +213,12 @@ class PrognosticsModel(ABC):
     observables_keys = performance_metric_keys # for backwards compatability
 
     def __init__(self, **kwargs):
+        self.n_inputs = len(self.inputs)
+        self.n_states = len(self.states)
+        self.n_events = len(self.events)
+        self.n_outputs = len(self.outputs)
+        self.n_performance = len(self.performance_metric_keys)
+        
         if not hasattr(self, 'inputs'):
             raise ProgModelTypeError('Must have `inputs` attribute')
         
@@ -902,8 +908,8 @@ class PrognosticsModel(ABC):
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
                         times[len(times) - 1],
-                        inputs[len(inputs) - 1],
-                        states[len(states) - 1],
+                        inputs[self.n_inputs - 1],
+                        states[self.n_states - 1],
                         saved_outputs[len(saved_outputs) - 1],
                         saved_event_states[len(saved_event_states) - 1]))  
         else:
