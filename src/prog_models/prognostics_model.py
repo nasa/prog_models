@@ -908,8 +908,8 @@ class PrognosticsModel(ABC):
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
                         times[len(times) - 1],
-                        inputs[self.n_inputs - 1],
-                        states[self.n_states - 1],
+                        inputs[len(inputs) - 1],
+                        states[len(states) - 1],
                         saved_outputs[len(saved_outputs) - 1],
                         saved_event_states[len(saved_event_states) - 1]))  
         else:
