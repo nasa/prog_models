@@ -213,12 +213,6 @@ class PrognosticsModel(ABC):
     observables_keys = performance_metric_keys # for backwards compatability
 
     def __init__(self, **kwargs):
-        self.n_inputs = len(self.inputs)
-        self.n_states = len(self.states)
-        self.n_events = len(self.events)
-        self.n_outputs = len(self.outputs)
-        self.n_performance = len(self.performance_metric_keys)
-        
         if not hasattr(self, 'inputs'):
             raise ProgModelTypeError('Must have `inputs` attribute')
         
@@ -237,6 +231,12 @@ class PrognosticsModel(ABC):
             iter(self.outputs)
         except TypeError:
             raise ProgModelTypeError('model.outputs must be iterable')
+
+        self.n_inputs = len(self.inputs)
+        self.n_states = len(self.states)
+        self.n_events = len(self.events)
+        self.n_outputs = len(self.outputs)
+        self.n_performance = len(self.performance_metric_keys)
 
         self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
         try:
