@@ -886,7 +886,7 @@ class PrognosticsModel(ABC):
 
         # Initialization of save arrays
         times = array('d')
-        inputs = []
+        inputs = [] # CHANGE TO SAVED_INPUTS
         states = []  
         saved_outputs = []
         saved_event_states = []
@@ -907,11 +907,11 @@ class PrognosticsModel(ABC):
                 saved_event_states.append(event_state(x))
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
-                        times[len(times) - 1],
-                        inputs[len(inputs) - 1],
-                        states[len(states) - 1],
-                        saved_outputs[len(saved_outputs) - 1],
-                        saved_event_states[len(saved_event_states) - 1]))  
+                        times[-1],
+                        inputs[-1],
+                        states[-1],
+                        saved_outputs[-1],
+                        saved_event_states[-1]))  
         else:
             def update_all():
                 times.append(t)
