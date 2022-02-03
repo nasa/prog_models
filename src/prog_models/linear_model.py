@@ -28,8 +28,8 @@ class LinearModel(PrognosticsModel, ABC):
         * events:  list[str] - event keys
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.matrixCheck()
 
     def matrixCheck(self):
