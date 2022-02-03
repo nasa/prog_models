@@ -885,9 +885,9 @@ class PrognosticsModel(ABC):
                 return any(t_met)
 
         # Initialization of save arrays
-        times = array('d')
-        inputs = [] # CHANGE TO SAVED_INPUTS
-        states = []  
+        saved_times = array('d')
+        saved_inputs = [] # CHANGE TO SAVED_INPUTS
+        saved_states = []  
         saved_outputs = []
         saved_event_states = []
         save_freq = config['save_freq']
@@ -900,23 +900,23 @@ class PrognosticsModel(ABC):
         # confgure optional intermediate printing
         if config['print']:
             def update_all():
-                times.append(t)
-                inputs.append(u)
-                states.append(deepcopy(x))  # Avoid optimization where x is not copied
+                saved_times.append(t)
+                saved_inputs.append(u)
+                saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
                 saved_outputs.append(output(x))
                 saved_event_states.append(event_state(x))
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
-                        times[-1],
-                        inputs[-1],
-                        states[-1],
+                        saved_times[-1],
+                        saved_inputs[-1],
+                        saved_states[-1],
                         saved_outputs[-1],
                         saved_event_states[-1]))  
         else:
             def update_all():
-                times.append(t)
-                inputs.append(u)
-                states.append(deepcopy(x))  # Avoid optimization where x is not copied
+                saved_times.append(t)
+                saved_inputs.append(u)
+                saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
 
         # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
@@ -943,22 +943,22 @@ class PrognosticsModel(ABC):
                 break
 
         # Save final state
-        if times[-1] != t:
+        if saved_times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(self.output, times, states) 
-            saved_event_states = LazySimResult(self.event_state, times, states)
+            saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
+            saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
-            saved_outputs = SimResult(times, saved_outputs)
-            saved_event_states = SimResult(times, saved_event_states)
+            saved_outputs = SimResult(saved_times, saved_outputs)
+            saved_event_states = SimResult(saved_times, saved_event_states)
         
         return (
-            times, 
-            SimResult(times, inputs), 
-            SimResult(times, states), 
+            saved_times, 
+            SimResult(saved_times, saved_inputs), 
+            SimResult(saved_times, saved_states), 
             saved_outputs, 
             saved_event_states
         )
