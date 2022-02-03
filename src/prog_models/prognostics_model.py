@@ -232,12 +232,6 @@ class PrognosticsModel(ABC):
         except TypeError:
             raise ProgModelTypeError('model.outputs must be iterable')
 
-        self.n_inputs = len(self.inputs)
-        self.n_states = len(self.states)
-        self.n_events = len(self.events)
-        self.n_outputs = len(self.outputs)
-        self.n_performance = len(self.performance_metric_keys)
-
         self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
         try:
             self.parameters.update(kwargs)
@@ -256,6 +250,12 @@ class PrognosticsModel(ABC):
                 self.parameters['measurement_noise'] = self.parameters['measurement_noise'] # To force  __setitem__
         except Exception:
             raise ProgModelTypeError('Model noise poorly configured')
+
+        self.n_inputs = len(self.inputs)
+        self.n_states = len(self.states)
+        self.n_events = len(self.events)
+        self.n_outputs = len(self.outputs)
+        self.n_performance = len(self.performance_metric_keys)
 
     def __eq__(self, other):
         """
