@@ -38,8 +38,8 @@ class LinearModel(PrognosticsModel, ABC):
         """
         self._propertyCheck(self.A, self.n_states, self.n_states, ["A","states","states"])
         self._propertyCheck(self.B, self.n_states, len(self.inputs), ["B","states","inputs"])
-        self._propertyCheck(self.C, len(self.outputs), self.n_states, ["C","outputs","states"])
-        self._propertyCheck(self.D, len(self.outputs), 1, ["D","outputs","1"])
+        self._propertyCheck(self.C, self.n_outputs, self.n_states, ["C","outputs","states"])
+        self._propertyCheck(self.D, self.n_outputs, 1, ["D","outputs","1"])
         self._propertyCheck(self.E, self.n_states, 1, ["E","states","1"])
         self._propertyCheck(self.G, len(self.events), 1, ["G","events","1"])
 
@@ -79,7 +79,6 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def E(self):
-        # n_states = self.n_states
         return np.zeros((self.n_states, 1))
 
     @property
@@ -89,7 +88,7 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def D(self):
-        n_outputs = len(self.outputs)
+        n_outputs = self.n_outputs
         return np.zeros((n_outputs, 1))
 
     @property
