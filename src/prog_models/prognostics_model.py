@@ -886,7 +886,7 @@ class PrognosticsModel(ABC):
 
         # Initialization of save arrays
         saved_times = array('d')
-        saved_inputs = [] # CHANGE TO SAVED_INPUTS
+        saved_inputs = []
         saved_states = []  
         saved_outputs = []
         saved_event_states = []
