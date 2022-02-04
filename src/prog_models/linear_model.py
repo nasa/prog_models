@@ -78,7 +78,8 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def E(self):
-        return np.zeros((self.n_states, 1))
+        n_states = self.n_states
+        return np.zeros((n_states, 1))
 
     @property
     @abstractmethod
