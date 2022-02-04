@@ -36,15 +36,15 @@ class LinearModel(PrognosticsModel, ABC):
         """
         Public class method for checking matrices dimensions across all properties of the model.
         """
-        self._propertyCheck(self.A, len(self.states), len(self.states), ["A","states","states"])
-        self._propertyCheck(self.B, len(self.states), len(self.inputs), ["B","states","inputs"])
-        self._propertyCheck(self.C, len(self.outputs), len(self.states), ["C","outputs","states"])
-        self._propertyCheck(self.D, len(self.outputs), 1, ["D","outputs","1"])
-        self._propertyCheck(self.E, len(self.states), 1, ["E","states","1"])
-        self._propertyCheck(self.G, len(self.events), 1, ["G","events","1"])
+        self._propertyCheck(self.A, self.n_states, self.n_states, ["A","states","states"])
+        self._propertyCheck(self.B, self.n_states, self.n_inputs, ["B","states","inputs"])
+        self._propertyCheck(self.C, self.n_outputs, self.n_states, ["C","outputs","states"])
+        self._propertyCheck(self.D, self.n_outputs, 1, ["D","outputs","1"])
+        self._propertyCheck(self.E, self.n_states, 1, ["E","states","1"])
+        self._propertyCheck(self.G, self.n_events, 1, ["G","events","1"])
 
         if self.F is not None:
-            self._propertyCheck(self.F, len(self.events), len(self.states), ["F","events","states"])
+            self._propertyCheck(self.F, self.n_events, self.n_states, ["F","events","states"])
 
     def _propertyCheck(self, matrix, rowsCount, colsCount, notes):
         """
@@ -73,14 +73,11 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def B(self):
-        n_inputs = len(self.inputs)
-        n_states = len(self.states)
-        return np.zeros((n_states, n_inputs))
+        return np.zeros((self.n_states, self.n_inputs))
 
     @property
     def E(self):
-        n_states = len(self.states)
-        return np.zeros((n_states, 1))
+        return np.zeros((self.n_states, 1))
 
     @property
     @abstractmethod
@@ -89,8 +86,7 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def D(self):
-        n_outputs = len(self.outputs)
-        return np.zeros((n_outputs, 1))
+        return np.zeros((self.n_outputs, 1))
 
     @property
     @abstractmethod
@@ -99,8 +95,7 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def G(self):
-        n_events = len(self.events)
-        return np.zeros((n_events, 1))
+        return np.zeros((self.n_events, 1))
 
     def dx(self, x, u):
         x_array = np.array([list(x.values())]).T
