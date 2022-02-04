@@ -73,7 +73,6 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def B(self):
-        # n_inputs = self.n_inputs
         return np.zeros((self.n_states, self.n_inputs))
 
     @property
