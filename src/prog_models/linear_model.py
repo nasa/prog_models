@@ -73,13 +73,14 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def B(self):
-        n_inputs = len(self.inputs) 
-        return np.zeros((self.n_states, n_inputs))
+        n_inputs = len(self.inputs)
+        n_states = self.n_states
+        return np.zeros((n_states, n_inputs))
 
     @property
     def E(self):
-        n_states = self.n_states
-        return np.zeros((n_states, 1))
+        # n_states = self.n_states
+        return np.zeros((self.n_states, 1))
 
     @property
     @abstractmethod
