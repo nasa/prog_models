@@ -38,7 +38,12 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result, result2)
 
     def test_pickle_lazy(self):
-        pass
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
     
     def test_cached_sim_result(self):
         def f(x):
