@@ -130,6 +130,9 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.states = deepcopy(states)
         self.__data = None
 
+    def __reduce__(self):
+        return (self.__class__, (self.fcn, self.times, self.states))
+
     def is_cached(self):
         """
         Returns:
