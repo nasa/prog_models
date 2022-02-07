@@ -51,7 +51,7 @@ class TestSimResult(unittest.TestCase):
         self.assertNotEqual(sim_result, converted_lazy_result) # converted is not the same as the original SimResult
 
         import pickle # try pickle'ing
-        pickle.dump(converted_lazy_result, open('model_test.pkl', 'wb'))
+        pickle.dump(lazy_result, open('model_test.pkl', 'wb'))
         pickle_converted_result = pickle.load(open('model_test.pkl', 'rb'))
         self.assertEqual(converted_lazy_result, pickle_converted_result)
     
