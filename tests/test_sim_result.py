@@ -43,11 +43,17 @@ class TestSimResult(unittest.TestCase):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
-        result = LazySimResult(f, time, state)
+        lazy_result = LazySimResult(f, time, state) # Ordinary LazySimResult with f, time, state
+        sim_result = SimResult(time, state) # Ordinary SimResult with time,state
+
+        # Casting LazySimResult to  SimResult? or rather, building a new obj with manipulated time,state
+        converted_result = SimResult(lazy_result.times, lazy_result.data)
+        self.assertNotEqual(converted_result, sim_result) # converted is not the same as the original SimResult
 
         import pickle
-        with self.assertRaises(AttributeError):
-            pickle.dump(result, open('model_test.pkl', 'wb'))
+        pickle.dump(converted_result, open('model_test.pkl', 'wb'))
+        pickle_converted_result = pickle.load(open('model_test.pkl', 'rb'))
+        self.assertEqual(converted_result, pickle_converted_result)
         
     
     def test_cached_sim_result(self):
