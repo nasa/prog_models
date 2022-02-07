@@ -44,6 +44,11 @@ class TestSimResult(unittest.TestCase):
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
+
+        import pickle
+        with self.assertRaises(AttributeError):
+            pickle.dump(result, open('model_test.pkl', 'wb'))
+        
     
     def test_cached_sim_result(self):
         def f(x):
