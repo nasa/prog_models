@@ -36,6 +36,9 @@ class TestSimResult(unittest.TestCase):
         pickle.dump(result, open('model_test.pkl', 'wb'))
         result2 = pickle.load(open('model_test.pkl', 'rb'))
         self.assertEqual(result, result2)
+
+    def test_pickle_lazy(self):
+        pass
     
     def test_cached_sim_result(self):
         def f(x):

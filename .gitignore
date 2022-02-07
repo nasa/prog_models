@@ -101,3 +101,4 @@ ex.pickle
 
 .vscode/
 .DS_Store
+model_test.pkl
