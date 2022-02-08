@@ -55,6 +55,37 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
     
+    def test_index(self):
+        NUM_ELEMENTS = 5 # Creating two result objects
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        # other_arg = {2.5:1}
+        # other_arg = {1:2.5}
+        other_arg = 2.5
+
+        self.assertEqual(result.index(other_arg), 1)
+
+    def test_pop(self):
+        NUM_ELEMENTS = 5 # Creating two result objects
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+
+        result.pop(2) # Test specified index
+        self.assertEqual(result.data, [0.0, 2.5, 7.5, 10.0])
+        result.pop() # Test default index -1 (last element)
+        self.assertEqual(result.data, [0.0, 2.5, 7.5])
+        self.assertRaises(IndexError, result.pop, 5) # Test specifying an invalid index value
+        self.assertRaises(IndexError, result.pop, 3)
+        self.assertRaises(TypeError, result.pop, "5") # Test specifying an invalid index type
+        self.assertRaises(TypeError, result.pop, [0,1])
+        self.assertRaises(TypeError, result.pop, {})
+        self.assertRaises(TypeError, result.pop, set())
+        self.assertRaises(TypeError, result.pop, 1.5)
+        # self.assertRaises(TypeError, result.pop, True) # This removes index 1 because boolean True, is this okay?
+
+    
     def test_cached_sim_result(self):
         def f(x):
             return x * 2
