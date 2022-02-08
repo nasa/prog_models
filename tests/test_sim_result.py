@@ -85,6 +85,34 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.pop, 1.5)
         # self.assertRaises(TypeError, result.pop, True) # This removes index 1 because boolean True, is this okay?
 
+    def test_remove(self):
+        NUM_ELEMENTS = 5 # Creating two result objects
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+
+        # print(result.times) # [0, 1, 2, 3, 4]
+        # print(result.data)  # [0.0, 2.5, 5.0, 7.5, 10.0]
+        result.remove(0) # Test specified index
+        self.assertEqual(result.times, [1, 2, 3, 4])
+        self.assertEqual(result.data, [2.5, 5.0, 7.5, 10.0])
+
+        # result.remove(1) # Test specified index
+        # self.assertEqual(result.times, [2, 3, 4]) # Passes
+        # self.assertEqual(result.data, [2.5, 5.0, 7.5, 10.0]) # wrong behavior? ValueError 
+
+        # because ValueError, any type can be passed to be removed
+        # self.assertRaises(TypeError, result.remove, ) # Test no index specified
+        # self.assertRaises(TypeError, result.remove, "5") # Test specifying an invalid index type
+        # self.assertRaises(TypeError, result.remove, [0,1])
+        # self.assertRaises(TypeError, result.remove, {})
+        # self.assertRaises(TypeError, result.remove, set())
+        # self.assertRaises(TypeError, result.remove, 1.5)
+
+        # self.assertRaises(IndexError, result.remove, 5) # Test specifying an invalid value
+        # self.assertRaises(IndexError, result.remove, 3)
+        # self.assertRaises(TypeError, result.remove, True) # This removes index 1 because boolean True, is this okay?
+
     
     def test_cached_sim_result(self):
         def f(x):
