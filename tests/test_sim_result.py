@@ -144,6 +144,13 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.time, set())
         self.assertRaises(TypeError, result.time, 1.5)
         # self.assertRaises(TypeError, result.time, True) # Test no input given
+
+    def test_plot(self):
+        NUM_ELEMENTS = 5 # Creating two result objects
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        # INCOMPLETE
     
     def test_cached_sim_result(self):
         def f(x):
