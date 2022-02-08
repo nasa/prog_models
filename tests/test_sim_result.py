@@ -46,7 +46,6 @@ class TestSimResult(unittest.TestCase):
         lazy_result = LazySimResult(f, time, state) # Ordinary LazySimResult with f, time, state
         sim_result = SimResult(time, state) # Ordinary SimResult with time,state
 
-        # Casting LazySimResult to  SimResult? or rather, building a new obj with manipulated time,state
         converted_lazy_result = SimResult(lazy_result.times, lazy_result.data)
         self.assertNotEqual(sim_result, converted_lazy_result) # converted is not the same as the original SimResult
 

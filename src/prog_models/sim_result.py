@@ -131,7 +131,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
 
     def __reduce__(self):
-        return (self.__class__, (self.fcn, self.times, self.states))
+        return (self.__class__.__base__, (self.times, self.data))
 
     def is_cached(self):
         """
