@@ -113,6 +113,18 @@ class TestSimResult(unittest.TestCase):
         # self.assertRaises(IndexError, result.remove, 3)
         # self.assertRaises(TypeError, result.remove, True) # This removes index 1 because boolean True, is this okay?
 
+    def test_clear(self):
+        NUM_ELEMENTS = 5 # Creating two result objects
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        self.assertEqual(result.times, [0, 1, 2, 3, 4])
+        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0])
+        self.assertRaises(TypeError, result.clear, True)
+        
+        result.clear()
+        self.assertEqual(result.times, [])
+        self.assertEqual(result.data, [])
     
     def test_cached_sim_result(self):
         def f(x):
