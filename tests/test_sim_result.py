@@ -103,7 +103,7 @@ class TestSimResult(unittest.TestCase):
 
         # because ValueError, any type can be passed to be removed
         # self.assertRaises(TypeError, result.remove, ) # Test no index specified
-        # self.assertRaises(TypeError, result.remove, "5") # Test specifying an invalid index type
+        # self.assertRaises(TypeError, result.remove, "5") # Tests specifying an invalid index type
         # self.assertRaises(TypeError, result.remove, [0,1])
         # self.assertRaises(TypeError, result.remove, {})
         # self.assertRaises(TypeError, result.remove, set())
@@ -121,10 +121,29 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.times, [0, 1, 2, 3, 4])
         self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0])
         self.assertRaises(TypeError, result.clear, True)
-        
+
         result.clear()
         self.assertEqual(result.times, [])
         self.assertEqual(result.data, [])
+
+    def test_time(self):
+        NUM_ELEMENTS = 5 # Creating two result objects
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        self.assertEqual(result.time(0), result.times[0])
+        self.assertEqual(result.time(1), result.times[1])
+        self.assertEqual(result.time(2), result.times[2])
+        self.assertEqual(result.time(3), result.times[3])
+        self.assertEqual(result.time(4), result.times[4])
+
+        self.assertRaises(TypeError, result.time, ) # Test no input given
+        self.assertRaises(TypeError, result.time, "0") # Tests specifying an invalid index type 
+        self.assertRaises(TypeError, result.time, [0,1])
+        self.assertRaises(TypeError, result.time, {})
+        self.assertRaises(TypeError, result.time, set())
+        self.assertRaises(TypeError, result.time, 1.5)
+        # self.assertRaises(TypeError, result.time, True) # Test no input given
     
     def test_cached_sim_result(self):
         def f(x):
