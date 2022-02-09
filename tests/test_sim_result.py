@@ -198,7 +198,9 @@ class TestSimResult(unittest.TestCase):
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
+        self.assertFalse(result.is_cached())
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
+        self.assertTrue(result.is_cached())
 
     def test_lazy_clear(self):
         def f(x):
@@ -238,7 +240,9 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result2.data, [0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
         self.assertEqual(result2.states, [0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
 
+        self.assertTrue(result.is_cached())
         result.extend(result2)
+        self.assertFalse(result.is_cached())
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) # Assert data is correct after extending
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
@@ -251,14 +255,20 @@ class TestSimResult(unittest.TestCase):
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
+        self.assertFalse(result.is_cached())
         result.pop(1) # Test specified index
+        self.assertFalse(result.is_cached())
         self.assertEqual(result.times, [0, 2, 3, 4])
         self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
         self.assertEqual(result.states, [0.0, 5.0, 7.5, 10.0])
+
+        self.assertTrue(result.is_cached())
         result.pop() # Test default index -1 (last element)
+        self.assertTrue(result.is_cached())
         self.assertEqual(result.times, [0, 2, 3])
         self.assertEqual(result.data, [0.0, 10.0, 15.0])
         self.assertEqual(result.states, [0.0, 5.0, 7.5])
+
         result.pop(-1) # Test argument of index -1 (last element)
         self.assertEqual(result.times, [0, 2])
         self.assertEqual(result.data, [0.0, 10.0])
@@ -321,7 +331,10 @@ class TestSimResult(unittest.TestCase):
         result = LazySimResult(f, time, state)
         print(result.data, result.times) # [0.0, 5.0, 10.0, 15.0, 20.0]
 
+        self.assertTrue(result.is_cached())
         result.remove(5.0)
+        self.assertTrue(result.is_cached())
+
         self.assertEqual(result.times, [0, 2, 3, 4])
         self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
         result.remove(0.0)
