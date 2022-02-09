@@ -2,7 +2,6 @@
 
 import unittest
 
-from attr import Attribute
 from prog_models.sim_result import SimResult, LazySimResult
 
 class TestSimResult(unittest.TestCase):
