@@ -202,7 +202,7 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
 
-    def test_lazy_pop():
+    def test_lazy_pop(self):
         def f(x):
             return x * 2
         NUM_ELEMENTS = 5
