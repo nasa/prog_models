@@ -76,6 +76,10 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.data, [0.0, 2.5, 7.5, 10.0])
         result.pop() # Test default index -1 (last element)
         self.assertEqual(result.data, [0.0, 2.5, 7.5])
+        result.pop(-1) # Test argument of index -1 (last element)
+        self.assertEqual(result.data, [0.0, 2.5])
+        result.pop(0) # Test argument of 0
+        self.assertEqual(result.data, [2.5])
         self.assertRaises(IndexError, result.pop, 5) # Test specifying an invalid index value
         self.assertRaises(IndexError, result.pop, 3)
         self.assertRaises(TypeError, result.pop, "5") # Test specifying an invalid index type
@@ -190,6 +194,8 @@ class TestSimResult(unittest.TestCase):
         time2 = list(range(NUM_ELEMENTS))
         state2 = [i * 5 for i in range(NUM_ELEMENTS)]
         result2 = LazySimResult(f2, time2, state2)
+        # self.assertRaises(NameError, result.extend, result3) # Raise error when extend called on other arg that doesn't exist
+
         self.assertEqual(result.times, [0, 1, 2, 3, 4]) # Assert data is correct before extending
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0])
@@ -218,6 +224,14 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.times, [0, 2, 3])
         self.assertEqual(result.data, [0.0, 10.0, 15.0])
         self.assertEqual(result.states, [0.0, 5.0, 7.5])
+        result.pop(-1) # Test argument of index -1 (last element)
+        self.assertEqual(result.times, [0, 2])
+        self.assertEqual(result.data, [0.0, 10.0])
+        self.assertEqual(result.states, [0.0, 5.0])
+        result.pop(0) # Test argument of 0
+        self.assertEqual(result.times, [2])
+        self.assertEqual(result.data, [10.0])
+        self.assertEqual(result.states, [5.0])
         # Test erroneous input
         self.assertRaises(IndexError, result.pop, 5) # Test specifying an invalid index value
         self.assertRaises(IndexError, result.pop, 3)
