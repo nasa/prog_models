@@ -150,6 +150,15 @@ class TestSimResult(unittest.TestCase):
         # INCOMPLETE
     
     # Tests for LazySimResult
+    def test_lazy_data_fcn(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
+        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
+
     def test_lazy_clear(self):
         def f(x):
             return x * 2
@@ -192,6 +201,18 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) # Assert data is correct after extending
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
+
+    def test_lazy_pop():
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
+
+        print(result.times, result.data, result.states)
+        result.pop(1)
+        print(result.times, result.data, result.states)
 
     def test_cached_sim_result(self):
         def f(x):

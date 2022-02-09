@@ -156,7 +156,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
         self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
 
-    def pop(self, index = -1):
+    def pop(self, index : int = -1):
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
