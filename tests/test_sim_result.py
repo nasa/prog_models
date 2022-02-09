@@ -101,26 +101,23 @@ class TestSimResult(unittest.TestCase):
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
 
-        # print(result.times) # [0, 1, 2, 3, 4]
-        # print(result.data)  # [0.0, 2.5, 5.0, 7.5, 10.0]
-        result.remove(0) # Test specified index
-        self.assertEqual(result.times, [1, 2, 3, 4])
-        self.assertEqual(result.data, [2.5, 5.0, 7.5, 10.0])
+        result.remove(5.0)
+        self.assertEqual(result.times, [0, 1, 3, 4])
+        self.assertEqual(result.data, [0.0, 2.5, 7.5, 10.0])
+        result.remove(0.0)
+        self.assertEqual(result.times, [1, 3, 4])
+        self.assertEqual(result.data, [2.5, 7.5, 10.0])
+        result.remove(10.0)
+        self.assertEqual(result.times, [1, 3])
+        self.assertEqual(result.data, [2.5, 7.5])
 
-        # result.remove(1) # Test specified index
-        # self.assertEqual(result.times, [2, 3, 4]) # Passes
-        # self.assertEqual(result.data, [2.5, 5.0, 7.5, 10.0]) # wrong behavior? ValueError 
-
-        # because ValueError, any type can be passed to be removed
-        # self.assertRaises(TypeError, result.remove, ) # Test no index specified
-        # self.assertRaises(TypeError, result.remove, "5") # Tests specifying an invalid index type
-        # self.assertRaises(TypeError, result.remove, [0,1])
-        # self.assertRaises(TypeError, result.remove, {})
-        # self.assertRaises(TypeError, result.remove, set())
-        # self.assertRaises(TypeError, result.remove, 1.5)
-
-        # self.assertRaises(IndexError, result.remove, 5) # Test specifying an invalid value
-        # self.assertRaises(IndexError, result.remove, 3)
+        self.assertRaises(TypeError, result.remove, ) # Test no index specified
+        self.assertRaises(ValueError, result.remove, 10.0) # Test nonexistent data value
+        self.assertRaises(ValueError, result.remove, -1) # Type checking negated as index searches for element in list
+        self.assertRaises(ValueError, result.remove, "5") # Thus all value types allowed to be searched
+        self.assertRaises(ValueError, result.remove, [0,1])
+        self.assertRaises(ValueError, result.remove, {})
+        self.assertRaises(ValueError, result.remove, set())
 
     def test_clear(self):
         NUM_ELEMENTS = 5 # Creating two result objects
@@ -315,6 +312,33 @@ class TestSimResult(unittest.TestCase):
         result.extend(LazySimResult(f, time, state))
         self.assertFalse(result == result2)
         self.assertNotEqual(len(result), len(result2))
+
+    def test_lazy_remove(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
+        print(result.data, result.times) # [0.0, 5.0, 10.0, 15.0, 20.0]
+
+        result.remove(5.0)
+        self.assertEqual(result.times, [0, 2, 3, 4])
+        self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
+        result.remove(0.0)
+        self.assertEqual(result.times, [2, 3, 4])
+        self.assertEqual(result.data, [10.0, 15.0, 20.0])
+        result.remove(20.0)
+        self.assertEqual(result.times, [2, 3])
+        self.assertEqual(result.data, [10.0, 15.0])
+
+        self.assertRaises(TypeError, result.remove, ) # Test no index specified
+        self.assertRaises(ValueError, result.remove, 20.0) # Test nonexistent data value
+        self.assertRaises(ValueError, result.remove, -1) # Type checking negated as index searches for element in list
+        self.assertRaises(ValueError, result.remove, "5") # Thus all value types allowed to be searched
+        self.assertRaises(ValueError, result.remove, [0,1])
+        self.assertRaises(ValueError, result.remove, {})
+        self.assertRaises(ValueError, result.remove, set())
 
     def test_lazy_not_implemented(self):
         # Not implemented functions, should raise errors

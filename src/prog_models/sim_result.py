@@ -71,8 +71,8 @@ class SimResult(UserList):
         Args:
             target (int): Value of element to be removed.
         """
-        self.data.pop(self.times.index(target))
-        self.times.remove(target)
+        self.times.pop(self.data.index(target))
+        self.data.remove(target)
 
     def clear(self) -> None:
         """Clear the SimResult"""
