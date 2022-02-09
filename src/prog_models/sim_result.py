@@ -173,7 +173,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.states.pop(target_index)
         if self.__data is not None:
             self.__data.remove(target)
-        # self.data.remove(target)
 
     @property
     def data(self):
