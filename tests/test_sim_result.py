@@ -83,7 +83,6 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.pop, {})
         self.assertRaises(TypeError, result.pop, set())
         self.assertRaises(TypeError, result.pop, 1.5)
-        # self.assertRaises(TypeError, result.pop, True) # This removes index 1 because boolean True, is this okay?
 
     def test_remove(self):
         NUM_ELEMENTS = 5 # Creating two result objects
@@ -111,7 +110,6 @@ class TestSimResult(unittest.TestCase):
 
         # self.assertRaises(IndexError, result.remove, 5) # Test specifying an invalid value
         # self.assertRaises(IndexError, result.remove, 3)
-        # self.assertRaises(TypeError, result.remove, True) # This removes index 1 because boolean True, is this okay?
 
     def test_clear(self):
         NUM_ELEMENTS = 5 # Creating two result objects
@@ -143,7 +141,6 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.time, {})
         self.assertRaises(TypeError, result.time, set())
         self.assertRaises(TypeError, result.time, 1.5)
-        # self.assertRaises(TypeError, result.time, True) # Test no input given
 
     def test_plot(self):
         NUM_ELEMENTS = 5 # Creating two result objects
