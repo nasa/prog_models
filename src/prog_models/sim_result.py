@@ -69,7 +69,7 @@ class SimResult(UserList):
         """Remove an element
 
         Args:
-            target (int): Value of element to be removed.
+            target: Value of element to be removed.
         """
         self.times.pop(self.data.index(target))
         self.data.remove(target)
