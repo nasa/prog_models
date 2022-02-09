@@ -166,7 +166,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """Remove an element
 
         Args:
-            target (int): Value of element to be removed.
+            target: Value of element to be removed.
         """
         target_index = self.data.index(target)
         self.times.pop(target_index)
