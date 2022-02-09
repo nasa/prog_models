@@ -255,16 +255,12 @@ class TestSimResult(unittest.TestCase):
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
-        self.assertFalse(result.is_cached())
         result.pop(1) # Test specified index
-        self.assertFalse(result.is_cached())
         self.assertEqual(result.times, [0, 2, 3, 4])
         self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
         self.assertEqual(result.states, [0.0, 5.0, 7.5, 10.0])
 
-        self.assertTrue(result.is_cached())
         result.pop() # Test default index -1 (last element)
-        self.assertTrue(result.is_cached())
         self.assertEqual(result.times, [0, 2, 3])
         self.assertEqual(result.data, [0.0, 10.0, 15.0])
         self.assertEqual(result.states, [0.0, 5.0, 7.5])
@@ -329,12 +325,8 @@ class TestSimResult(unittest.TestCase):
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
-        print(result.data, result.times) # [0.0, 5.0, 10.0, 15.0, 20.0]
 
-        self.assertTrue(result.is_cached())
         result.remove(5.0)
-        self.assertTrue(result.is_cached())
-
         self.assertEqual(result.times, [0, 2, 3, 4])
         self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
         result.remove(0.0)
