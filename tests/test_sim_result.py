@@ -149,6 +149,24 @@ class TestSimResult(unittest.TestCase):
         result = SimResult(time, state)
         # INCOMPLETE
     
+    # Tests for LazySimResult
+    def test_lazy_clear(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
+        self.assertEqual(result.times, [0, 1, 2, 3, 4])
+        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
+        self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0])
+        self.assertRaises(TypeError, result.clear, True)
+
+        result.clear()
+        self.assertEqual(result.times, [])
+        self.assertEqual(result.data, [])
+        self.assertEqual(result.states, [])
+
     def test_cached_sim_result(self):
         def f(x):
             return x * 2
@@ -184,6 +202,7 @@ class TestSimResult(unittest.TestCase):
         result.extend(LazySimResult(f, time, state))
         self.assertFalse(result == result2)
         self.assertNotEqual(len(result), len(result2))
+
 
 # This allows the module to be executed directly
 def run_tests():
