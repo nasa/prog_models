@@ -63,12 +63,13 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.index(10.0), 4)
         self.assertEqual(result.index(2.5), 1)
         self.assertEqual(result.index(0.0), 0)
+        self.assertRaises(ValueError, result.index, 6.0) # Other argument doesn't exist
         self.assertRaises(ValueError, result.index, -1) # Non-existent data value
+        self.assertRaises(ValueError, result.index, "7.5") # Data specified incorrectly as string
         self.assertRaises(ValueError, result.index, None) # Not type errors because its simply looking for an object in list
         self.assertRaises(ValueError, result.index, [1, 2])
-        self.assertRaises(ValueError, result.index, {}) # Non-existent data value
-        self.assertRaises(ValueError, result.index, set()) # Non-existent data value
-        self.assertRaises(ValueError, result.index, "7.5") # Non-existent data value
+        self.assertRaises(ValueError, result.index, {})
+        self.assertRaises(ValueError, result.index, set())
 
     def test_pop(self):
         NUM_ELEMENTS = 5 # Creating two result objects
