@@ -1,6 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
+
+from attr import Attribute
 from prog_models.sim_result import SimResult, LazySimResult
 
 class TestSimResult(unittest.TestCase):
@@ -181,6 +183,17 @@ class TestSimResult(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = False)
         plot_test = event_states.plot() # Plot doesn't raise error
 
+    def test_not_implemented(self):
+        # Not implemented functions, should raise errors
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        self.assertRaises(NotImplementedError, result.append)
+        self.assertRaises(NotImplementedError, result.count)
+        self.assertRaises(NotImplementedError, result.insert)
+        self.assertRaises(NotImplementedError, result.reverse)
+
     # Tests for LazySimResult
     def test_lazy_data_fcn(self):
         def f(x):
@@ -222,8 +235,6 @@ class TestSimResult(unittest.TestCase):
         time2 = list(range(NUM_ELEMENTS))
         state2 = [i * 5 for i in range(NUM_ELEMENTS)]
         result2 = LazySimResult(f2, time2, state2)
-        # self.assertRaises(NameError, result.extend, result3) # Raise error when extend called on other arg that doesn't exist
-
         self.assertEqual(result.times, [0, 1, 2, 3, 4]) # Assert data is correct before extending
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0])
@@ -304,6 +315,19 @@ class TestSimResult(unittest.TestCase):
         result.extend(LazySimResult(f, time, state))
         self.assertFalse(result == result2)
         self.assertNotEqual(len(result), len(result2))
+
+    def test_lazy_not_implemented(self):
+        # Not implemented functions, should raise errors
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
+        self.assertRaises(NotImplementedError, result.append)
+        self.assertRaises(NotImplementedError, result.count)
+        self.assertRaises(NotImplementedError, result.insert)
+        self.assertRaises(NotImplementedError, result.reverse)
 
 
 # This allows the module to be executed directly
