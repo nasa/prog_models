@@ -210,9 +210,24 @@ class TestSimResult(unittest.TestCase):
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
-        print(result.times, result.data, result.states)
-        result.pop(1)
-        print(result.times, result.data, result.states)
+        result.pop(1) # Test specified index
+        self.assertEqual(result.times, [0, 2, 3, 4])
+        self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
+        self.assertEqual(result.states, [0.0, 5.0, 7.5, 10.0])
+        result.pop() # Test default index -1 (last element)
+        self.assertEqual(result.times, [0, 2, 3])
+        self.assertEqual(result.data, [0.0, 10.0, 15.0])
+        self.assertEqual(result.states, [0.0, 5.0, 7.5])
+        # Test erroneous input
+        self.assertRaises(IndexError, result.pop, 5) # Test specifying an invalid index value
+        self.assertRaises(IndexError, result.pop, 3)
+        self.assertRaises(TypeError, result.pop, "5") # Test specifying an invalid index type
+        self.assertRaises(TypeError, result.pop, [0,1])
+        self.assertRaises(TypeError, result.pop, {})
+        self.assertRaises(TypeError, result.pop, set())
+        self.assertRaises(TypeError, result.pop, 1.5)
+
+
 
     def test_cached_sim_result(self):
         def f(x):
