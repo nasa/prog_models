@@ -162,6 +162,19 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             return self.__data.pop(index)
         return self.fcn(x)
 
+    def remove(self, target : int) -> None:
+        """Remove an element
+
+        Args:
+            target (int): Value of element to be removed.
+        """
+        target_index = self.data.index(target)
+        self.times.pop(target_index)
+        self.states.pop(target_index)
+        if self.__data is not None:
+            self.__data.remove(target)
+        # self.data.remove(target)
+
     @property
     def data(self):
         """
