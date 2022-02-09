@@ -152,12 +152,35 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.time, 1.5)
 
     def test_plot(self):
-        NUM_ELEMENTS = 5 # Creating two result objects
-        time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
-        result = SimResult(time, state)
-        # INCOMPLETE
-    
+        # Testing model taken from events.py
+        YELLOW_THRESH, RED_THRESH, THRESHOLD = 0.15, 0.1, 0.05
+        from prog_models.models import BatteryElectroChemEOD
+        class MyBatt(BatteryElectroChemEOD):
+            events = BatteryElectroChemEOD.events + ['EOD_warn_yellow', 'EOD_warn_red', 'EOD_requirement_threshold']
+            def event_state(self, state):
+                event_state = super().event_state(state)
+                event_state['EOD_warn_yellow'] = (event_state['EOD']-YELLOW_THRESH)/(1-YELLOW_THRESH) 
+                event_state['EOD_warn_red'] = (event_state['EOD']-RED_THRESH)/(1-RED_THRESH)
+                event_state['EOD_requirement_threshold'] = (event_state['EOD']-THRESHOLD)/(1-THRESHOLD)
+                return event_state
+            def threshold_met(self, x):
+                t_met =  super().threshold_met(x)
+                event_state = self.event_state(x)
+                t_met['EOD_warn_yellow'] = event_state['EOD_warn_yellow'] <= 0
+                t_met['EOD_warn_red'] = event_state['EOD_warn_red'] <= 0
+                t_met['EOD_requirement_threshold'] = event_state['EOD_requirement_threshold'] <= 0
+                return t_met
+        def future_loading(t, x=None):
+            if (t < 600): i = 2
+            elif (t < 900): i = 1
+            elif (t < 1800): i = 4
+            elif (t < 3000): i = 2     
+            else: i = 3
+            return {'i': i} 
+        m = MyBatt()
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = False)
+        plot_test = event_states.plot() # Plot doesn't raise error
+
     # Tests for LazySimResult
     def test_lazy_data_fcn(self):
         def f(x):
@@ -245,8 +268,6 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.pop, {})
         self.assertRaises(TypeError, result.pop, set())
         self.assertRaises(TypeError, result.pop, 1.5)
-
-
 
     def test_cached_sim_result(self):
         def f(x):
