@@ -55,6 +55,23 @@ class TestSimResult(unittest.TestCase):
         result.extend(result2) # Extend result with result2
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+
+    def test_pickle_lazy(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        lazy_result = LazySimResult(f, time, state) # Ordinary LazySimResult with f, time, state
+        sim_result = SimResult(time, state) # Ordinary SimResult with time,state
+
+        converted_lazy_result = SimResult(lazy_result.times, lazy_result.data)
+        self.assertNotEqual(sim_result, converted_lazy_result) # converted is not the same as the original SimResult
+
+        import pickle # try pickle'ing
+        pickle.dump(lazy_result, open('model_test.pkl', 'wb'))
+        pickle_converted_result = pickle.load(open('model_test.pkl', 'rb'))
+        self.assertEqual(converted_lazy_result, pickle_converted_result)
     
     def test_index(self):
         NUM_ELEMENTS = 5 # Creating two result objects
