@@ -60,11 +60,15 @@ class TestSimResult(unittest.TestCase):
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
-        # other_arg = {2.5:1}
-        # other_arg = {1:2.5}
-        other_arg = 2.5
-
-        self.assertEqual(result.index(other_arg), 1)
+        self.assertEqual(result.index(10.0), 4)
+        self.assertEqual(result.index(2.5), 1)
+        self.assertEqual(result.index(0.0), 0)
+        self.assertRaises(ValueError, result.index, -1) # Non-existent data value
+        self.assertRaises(ValueError, result.index, None) # Not type errors because its simply looking for an object in list
+        self.assertRaises(ValueError, result.index, [1, 2])
+        self.assertRaises(ValueError, result.index, {}) # Non-existent data value
+        self.assertRaises(ValueError, result.index, set()) # Non-existent data value
+        self.assertRaises(ValueError, result.index, "7.5") # Non-existent data value
 
     def test_pop(self):
         NUM_ELEMENTS = 5 # Creating two result objects
