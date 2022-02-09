@@ -65,7 +65,7 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, target : int) -> None:
+    def remove(self, target) -> None:
         """Remove an element
 
         Args:
