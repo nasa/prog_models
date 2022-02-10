@@ -90,7 +90,7 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(ValueError, result.index, set())
 
     def test_pop(self):
-        NUM_ELEMENTS = 5 # Creating two result objects
+        NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)

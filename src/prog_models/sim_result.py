@@ -69,11 +69,11 @@ class SimResult(UserList):
         """Remove an element
 
         Args:
-            d: Value of element to be removed.
-            t: Time of element to be removed.
+            d: Data value to be removed.
+            t: Time value to be removed.
         """
-        if (d is not None and t is not None) or (d is None and t is None):
-            raise ValueError("ValueError: Only one named argument, target or time, can be specified.")
+        if (not [i for i in (d,t) if i is not None or None]):
+            raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
        
         if (t is not None):
             self.data.pop(self.times.index(t))
@@ -173,17 +173,29 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             return self.__data.pop(index)
         return self.fcn(x)
 
-    def remove(self, target) -> None:
+    def remove(self, d = None, t = None, s = None) -> None:
         """Remove an element
-
+         
         Args:
-            target: Value of element to be removed.
-        """
-        target_index = self.data.index(target)
-        self.times.pop(target_index)
-        self.states.pop(target_index)
-        if self.__data is not None:
-            self.__data.remove(target)
+            d: Data value to be removed.
+            t: Time value to be removed.
+            s: State value to be removed.
+        """ 
+        if (not [i for i in (d,t,s) if i is not None or None]):
+            raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
+       
+        if (t is not None):
+            self.data.pop(self.times.index(t))
+            self.times.remove(t)
+        else:
+            self.times.pop(self.data.index(d))
+            self.data.remove(d)
+
+        # target_index = self.data.index(target)
+        # self.times.pop(target_index)
+        # self.states.pop(target_index)
+        # if self.__data is not None:
+        #     self.__data.remove(target)
 
     @property
     def data(self):
