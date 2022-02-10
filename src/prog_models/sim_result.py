@@ -74,6 +74,7 @@ class SimResult(UserList):
         """
         if (d is not None and t is not None) or (d is None and t is None):
             raise ValueError("ValueError: Only one named argument, target or time, can be specified.")
+       
         if (t is not None):
             self.data.pop(self.times.index(t))
             self.times.remove(t)
