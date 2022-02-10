@@ -123,7 +123,7 @@ class TestSimResult(unittest.TestCase):
         result.remove(0.0)
         self.assertEqual(result.times, [1, 3, 4])
         self.assertEqual(result.data, [2.5, 7.5, 10.0])
-        result.remove(10.0)
+        result.remove(data = 10.0) # Testing named arguments
         self.assertEqual(result.times, [1, 3])
         self.assertEqual(result.data, [2.5, 7.5])
 

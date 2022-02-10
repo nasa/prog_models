@@ -65,20 +65,20 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, target = None, time = None) -> None:
+    def remove(self, data = None, time = None) -> None:
         """Remove an element
 
         Args:
             target: Value of element to be removed.
             time: Time of element to be removed.
         """
-        if (target and time) or (target is None and time is None):
+        if (data and time) or (data is None and time is None):
             raise ValueError("ValueError: Only one named argument, target or time, can be specified.")
         if (time is not None):
             self.data.pop(self.times.index(time))
             self.times.remove(time)
-        self.times.pop(self.data.index(target))
-        self.data.remove(target)
+        self.times.pop(self.data.index(data))
+        self.data.remove(data)
         
     def clear(self) -> None:
         """Clear the SimResult"""
