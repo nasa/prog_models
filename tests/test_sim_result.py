@@ -120,17 +120,17 @@ class TestSimResult(unittest.TestCase):
         result.remove(5.0)
         self.assertEqual(result.times, [0, 1, 3, 4])
         self.assertEqual(result.data, [0.0, 2.5, 7.5, 10.0])
-        result.remove(0.0)
+        result.remove(d = 0.0)
         self.assertEqual(result.times, [1, 3, 4])
         self.assertEqual(result.data, [2.5, 7.5, 10.0])
-        result.remove(data = 10.0) # Testing named arguments
-        self.assertEqual(result.times, [1, 3])
-        self.assertEqual(result.data, [2.5, 7.5])
+        result.remove(t = 3) # Testing named arguments
+        self.assertEqual(result.times, [1, 4])
+        self.assertEqual(result.data, [2.5, 10.0])
 
         self.assertRaises(ValueError, result.remove, ) # If nothing specified, raise ValueError
         self.assertRaises(ValueError, result.remove, None, None) # Passing both as None
         self.assertRaises(ValueError, result.remove, 0.0, 1) # Passing arguments to both
-        self.assertRaises(ValueError, result.remove, 10.0) # Test nonexistent data value
+        self.assertRaises(ValueError, result.remove, 7.5) # Test nonexistent data value
         self.assertRaises(ValueError, result.remove, -1) # Type checking negated as index searches for element in list
         self.assertRaises(ValueError, result.remove, "5") # Thus all value types allowed to be searched
         self.assertRaises(ValueError, result.remove, [0,1])
