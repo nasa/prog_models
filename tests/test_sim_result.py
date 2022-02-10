@@ -127,7 +127,9 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.times, [1, 3])
         self.assertEqual(result.data, [2.5, 7.5])
 
-        self.assertRaises(TypeError, result.remove, ) # Test no index specified
+        self.assertRaises(ValueError, result.remove, ) # If nothing specified, raise ValueError
+        self.assertRaises(ValueError, result.remove, None, None) # Passing both as None
+        self.assertRaises(ValueError, result.remove, 0.0, 1) # Passing arguments to both
         self.assertRaises(ValueError, result.remove, 10.0) # Test nonexistent data value
         self.assertRaises(ValueError, result.remove, -1) # Type checking negated as index searches for element in list
         self.assertRaises(ValueError, result.remove, "5") # Thus all value types allowed to be searched

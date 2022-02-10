@@ -74,14 +74,11 @@ class SimResult(UserList):
         """
         if (target and time) or (target is None and time is None):
             raise ValueError("ValueError: Only one named argument, target or time, can be specified.")
-
-        print(target, time)
-        if (target):
-            self.times.pop(self.data.index(target))
-            self.data.remove(target)
-        elif (time):
+        if (time is not None):
             self.data.pop(self.times.index(time))
             self.times.remove(time)
+        self.times.pop(self.data.index(target))
+        self.data.remove(target)
         
     def clear(self) -> None:
         """Clear the SimResult"""
