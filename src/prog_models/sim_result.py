@@ -200,8 +200,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             target_index = self.data.index(d)
             self.times.pop(target_index)
             self.states.pop(target_index)
-            if self.__data is not None:
-                self.__data.pop(target_index)
+            self.__data.pop(target_index)
 
     @property
     def data(self):
