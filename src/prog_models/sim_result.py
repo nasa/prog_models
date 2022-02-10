@@ -181,7 +181,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             t: Time value to be removed.
             s: State value to be removed.
         """ 
-        if (not [i for i in (d,t,s) if i is not None or None]) or (sum([i is None for i in (d, t, s)]) != 2):
+        if sum([i is None for i in (d, t, s)]) != 2:
             raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
        
         if (t is not None):
