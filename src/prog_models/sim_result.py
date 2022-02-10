@@ -65,14 +65,14 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, index : int) -> None:
+    def remove(self, target) -> None:
         """Remove an element
 
         Args:
-            index (int): Index of element to be removed.
+            target: Value of element to be removed.
         """
-        self.times.remove(index)
-        self.data.remove(index)
+        self.times.pop(self.data.index(target))
+        self.data.remove(target)
 
     def clear(self) -> None:
         """Clear the SimResult"""
@@ -150,7 +150,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
         self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
 
-    def pop(self, index = -1):
+    def pop(self, index : int = -1):
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
@@ -164,6 +164,18 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if self.__data is not None:
             return self.__data.pop(index)
         return self.fcn(x)
+
+    def remove(self, target) -> None:
+        """Remove an element
+
+        Args:
+            target: Value of element to be removed.
+        """
+        target_index = self.data.index(target)
+        self.times.pop(target_index)
+        self.states.pop(target_index)
+        if self.__data is not None:
+            self.__data.remove(target)
 
     @property
     def data(self):
