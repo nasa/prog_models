@@ -181,21 +181,27 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             t: Time value to be removed.
             s: State value to be removed.
         """ 
-        if (not [i for i in (d,t,s) if i is not None or None]):
+        if (not [i for i in (d,t,s) if i is not None or None]) or (not [i for i in (d,t) if i is None]) or (not [i for i in (t,s) if i is None]) or (not [i for i in (d,s) if i is None]):
             raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
        
         if (t is not None):
-            self.data.pop(self.times.index(t))
-            self.times.remove(t)
+            target_index = self.times.index(t)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
+        elif (s is not None):
+            target_index = self.states.index(s)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
         else:
-            self.times.pop(self.data.index(d))
-            self.data.remove(d)
-
-        # target_index = self.data.index(target)
-        # self.times.pop(target_index)
-        # self.states.pop(target_index)
-        # if self.__data is not None:
-        #     self.__data.remove(target)
+            target_index = self.data.index(d)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
 
     @property
     def data(self):
