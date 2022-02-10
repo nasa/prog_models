@@ -343,23 +343,39 @@ class TestSimResult(unittest.TestCase):
     def test_lazy_remove(self):
         def f(x):
             return x * 2
-        NUM_ELEMENTS = 5
+        NUM_ELEMENTS = 10
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
-        result.remove(5.0)
-        self.assertEqual(result.times, [0, 2, 3, 4])
-        self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0])
-        result.remove(0.0)
-        self.assertEqual(result.times, [2, 3, 4])
-        self.assertEqual(result.data, [10.0, 15.0, 20.0])
-        result.remove(20.0)
-        self.assertEqual(result.times, [2, 3])
-        self.assertEqual(result.data, [10.0, 15.0])
+        result.remove(5.0) # Unnamed default positional argument removal of data value
+        self.assertEqual(result.times, [0, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0] )
+        self.assertEqual(result.states, [0.0, 5.0, 7.5, 10.0, 12.5, 15.0, 17.5, 20.0, 22.5])
+        result.remove(d = 0.0) # Named argument removal of data value
+        self.assertEqual(result.times, [2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(result.data, [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0] )
+        self.assertEqual(result.states, [5.0, 7.5, 10.0, 12.5, 15.0, 17.5, 20.0, 22.5])
+        result.remove(t = 7) # Named argument removal of times value
+        self.assertEqual(result.times, [2, 3, 4, 5, 6, 8, 9])
+        self.assertEqual(result.data, [10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 45.0] )
+        self.assertEqual(result.states, [5.0, 7.5, 10.0, 12.5, 15.0, 20.0, 22.5])
+        result.remove(s = 12.5) # Named argument removal of states value
+        self.assertEqual(result.times, [2, 3, 4, 6, 8, 9])
+        self.assertEqual(result.data, [10.0, 15.0, 20.0, 30.0, 40.0, 45.0] )
+        self.assertEqual(result.states, [5.0, 7.5, 10.0, 15.0, 20.0, 22.5])
 
-        self.assertRaises(ValueError, result.remove, ) # Test no index specified
-        self.assertRaises(ValueError, result.remove, 20.0) # Test nonexistent data value
+        self.assertRaises(ValueError, result.remove, ) # Test no values specified
+        self.assertRaises(ValueError, result.remove, 90.0, 2) # Test two values specified positionally
+        self.assertRaises(ValueError, result.remove, 90.0, 2, 15.0) # Test three values specified positionally
+        self.assertRaises(ValueError, result.remove, d=90.0, t=2) # Test d,t values specified by name
+        self.assertRaises(ValueError, result.remove, t=2, s=15.0) # Test s,t values specified by name
+        self.assertRaises(ValueError, result.remove, d=90.0, s=15.0) # Test d,s values specified by name
+        self.assertRaises(ValueError, result.remove, d=90.0, t=2, s=15.0) # Test three values specified by name
+        self.assertRaises(ValueError, result.remove, 90.0) # Test nonexistent data value
+        self.assertRaises(ValueError, result.remove, d=90.0) # Test nonexistent data value
+        self.assertRaises(ValueError, result.remove, t=90.0) # Test nonexistent times value
+        self.assertRaises(ValueError, result.remove, s=90.0) # Test nonexistent states value
         self.assertRaises(ValueError, result.remove, -1) # Type checking negated as index searches for element in list
         self.assertRaises(ValueError, result.remove, "5") # Thus all value types allowed to be searched
         self.assertRaises(ValueError, result.remove, [0,1])
