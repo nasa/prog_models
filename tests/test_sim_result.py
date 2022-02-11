@@ -395,7 +395,21 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(NotImplementedError, result.insert)
         self.assertRaises(NotImplementedError, result.reverse)
 
+    def test_lazy_to_SimResult(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
 
+        converted_result = result.to_SimResult()
+        self.assertTrue(isinstance(converted_result, SimResult)) # Ensure type is SimResult
+        self.assertEqual(converted_result.times, result.times) # Compare to original LazySimResult
+        self.assertEqual(converted_result.data, result.data)
+        self.assertEqual(converted_result.times, [0, 1, 2, 3, 4]) # Compare to expected values
+        self.assertEqual(converted_result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
+        
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
