@@ -44,10 +44,10 @@ class SimResult(UserList):
 
     def extend(self, other) -> None:
         """
-        Extend the SimResult with another SimResult
+        Extend the SimResult with another SimResult or LazySimResult object
 
         Args:
-            other (SimResult)
+            other (SimResult/LazySimResult)
 
         """
         self.times.extend(other.times)
