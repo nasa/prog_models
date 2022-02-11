@@ -65,15 +65,23 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, target) -> None:
+    def remove(self, d = None, t = None) -> None:
         """Remove an element
 
         Args:
-            target: Value of element to be removed.
+            d: Data value to be removed.
+            t: Time value to be removed.
         """
-        self.times.pop(self.data.index(target))
-        self.data.remove(target)
-
+        if sum([i is None for i in (d, t)]) != 1:
+            raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
+       
+        if (t is not None):
+            self.data.pop(self.times.index(t))
+            self.times.remove(t)
+        else:
+            self.times.pop(self.data.index(d))
+            self.data.remove(d)
+        
     def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
@@ -165,17 +173,34 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             return self.__data.pop(index)
         return self.fcn(x)
 
-    def remove(self, target) -> None:
+    def remove(self, d = None, t = None, s = None) -> None:
         """Remove an element
-
+         
         Args:
-            target: Value of element to be removed.
-        """
-        target_index = self.data.index(target)
-        self.times.pop(target_index)
-        self.states.pop(target_index)
-        if self.__data is not None:
-            self.__data.remove(target)
+            d: Data value to be removed.
+            t: Time value to be removed.
+            s: State value to be removed.
+        """ 
+        if sum([i is None for i in (d, t, s)]) != 2:
+            raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
+       
+        if (t is not None):
+            target_index = self.times.index(t)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
+        elif (s is not None):
+            target_index = self.states.index(s)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
+        else:
+            target_index = self.data.index(d)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            self.__data.pop(target_index)
 
     @property
     def data(self):
