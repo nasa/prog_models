@@ -294,6 +294,39 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
 
+    def test_lazy_extend_cache(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result1 = LazySimResult(f, time, state)
+        result2 = LazySimResult(f, time, state)
+
+        # Case 1
+        result1.extend(result2)
+        self.assertFalse(result1.is_cached()) # False
+        
+        # Case 2
+        result1 = LazySimResult(f, time, state) # Reset result1
+        store_test_data = result1.data # Access result1 data
+        result1.extend(result2) 
+        self.assertFalse(result1.is_cached()) # False
+
+        # Case 3
+        result1 = LazySimResult(f, time, state) # Reset result1
+        store_test_data = result2.data # Access result2 data
+        result1.extend(result2) 
+        self.assertFalse(result1.is_cached()) # False
+
+        # Case 4
+        result1 = LazySimResult(f, time, state) # Reset result1
+        result2 = LazySimResult(f, time, state) # Reset result2
+        store_test_data1 = result1.data # Access result1 data
+        store_test_data2 = result2.data # Access result2 data
+        result1.extend(result2) 
+        self.assertTrue(result1.is_cached()) # True
+
     def test_lazy_extend_error(self):
         def f(x):
             return x * 2
