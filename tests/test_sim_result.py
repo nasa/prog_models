@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
+from prog_models import sim_result
 
 from prog_models.sim_result import SimResult, LazySimResult
 
@@ -55,6 +56,32 @@ class TestSimResult(unittest.TestCase):
         result.extend(result2) # Extend result with result2
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+
+        self.assertRaises(ValueError, result.extend, 0) # Passing non-LazySimResult types to extend method
+        self.assertRaises(ValueError, result.extend, [0,1])
+        self.assertRaises(ValueError, result.extend, {})
+        self.assertRaises(ValueError, result.extend, set())
+        self.assertRaises(ValueError, result.extend, 1.5)
+
+    def test_extended_by_lazy(self):
+        NUM_ELEMENTS = 5 
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state) # Creating one SimResult object
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 10
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result2 = LazySimResult(f, time, state) # Creating one LazySimResult object
+
+        self.assertEqual(result.times, [0, 1, 2, 3, 4])
+        self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0]) # Assert data is correct before extending
+        self.assertEqual(result2.data, [0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
+        result.extend(result2) # Extend result with result2
+        self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
 
     def test_pickle_lazy(self):
         def f(x):
@@ -262,12 +289,63 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result2.data, [0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
         self.assertEqual(result2.states, [0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
 
-        self.assertTrue(result.is_cached())
         result.extend(result2)
-        self.assertFalse(result.is_cached())
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) # Assert data is correct after extending
-        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
+
+    def test_lazy_extend_cache(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result1 = LazySimResult(f, time, state)
+        result2 = LazySimResult(f, time, state)
+
+        # Case 1
+        result1.extend(result2)
+        self.assertFalse(result1.is_cached()) # False
+        
+        # Case 2
+        result1 = LazySimResult(f, time, state) # Reset result1
+        store_test_data = result1.data # Access result1 data
+        result1.extend(result2) 
+        self.assertFalse(result1.is_cached()) # False
+
+        # Case 3
+        result1 = LazySimResult(f, time, state) # Reset result1
+        store_test_data = result2.data # Access result2 data
+        result1.extend(result2) 
+        self.assertFalse(result1.is_cached()) # False
+
+        # Case 4
+        result1 = LazySimResult(f, time, state) # Reset result1
+        result2 = LazySimResult(f, time, state) # Reset result2
+        store_test_data1 = result1.data # Access result1 data
+        store_test_data2 = result2.data # Access result2 data
+        result1.extend(result2) 
+        self.assertTrue(result1.is_cached()) # True
+
+    def test_lazy_extend_error(self):
+        def f(x):
+            return x * 2
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        result = LazySimResult(f, time, state)
+
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        sim_result = SimResult(time, state)
+
+        self.assertRaises(ValueError, result.extend, sim_result) # Passing a SimResult to LazySimResult's extend
+        self.assertRaises(ValueError, result.extend, 0) # Passing non-LazySimResult types to extend method
+        self.assertRaises(ValueError, result.extend, [0,1])
+        self.assertRaises(ValueError, result.extend, {})
+        self.assertRaises(ValueError, result.extend, set())
+        self.assertRaises(ValueError, result.extend, 1.5)
 
     def test_lazy_pop(self):
         def f(x):
@@ -395,7 +473,7 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(NotImplementedError, result.insert)
         self.assertRaises(NotImplementedError, result.reverse)
 
-    def test_lazy_to_SimResult(self):
+    def test_lazy_to_simresult(self):
         def f(x):
             return x * 2
         NUM_ELEMENTS = 5
