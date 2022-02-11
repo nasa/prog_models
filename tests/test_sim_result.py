@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
+from prog_models import sim_result
 
 from prog_models.sim_result import SimResult, LazySimResult
 
@@ -289,26 +290,25 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
         self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
 
-    def test_lazy_extended_by_simresult(self):
+    def test_lazy_extend_error(self):
         def f(x):
             return x * 2
-        NUM_ELEMENTS = 10 
-        time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
-        result2 = LazySimResult(f, time, state) # Creating one LazySimResult object
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
-        result = SimResult(time, state) # Creating one SimResult object
+        result = LazySimResult(f, time, state)
 
-        self.assertEqual(result.times, [0, 1, 2, 3, 4])
-        self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0]) # Assert data is correct before extending
-        self.assertEqual(result2.data, [0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
-        result.extend(result2) # Extend result with result2
-        self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
+        NUM_ELEMENTS = 5
+        time = list(range(NUM_ELEMENTS))
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        sim_result = SimResult(time, state)
 
+        self.assertRaises(ValueError, result.extend, sim_result) # Passing a SimResult to LazySimResult's extend
+        self.assertRaises(ValueError, result.extend, 0) # Passing non-LazySimResult types to extend method
+        self.assertRaises(ValueError, result.extend, [0,1])
+        self.assertRaises(ValueError, result.extend, {})
+        self.assertRaises(ValueError, result.extend, set())
+        self.assertRaises(ValueError, result.extend, 1.5)
 
     def test_lazy_pop(self):
         def f(x):

@@ -158,15 +158,21 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
     def extend(self, other):
         """
-        Extend the LazySimResult with another LazySimResult or SimResult object
+        Extend the LazySimResult with another LazySimResult object
+        Raise ValueError if SimResult is passed
 
         Args:
-            other (SimResult/LazySimResult)
+            other (LazySimResult)
 
         """
-        self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
-        self.__data = None
-        self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+        if (isinstance(other, self.__class__)):
+            self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
+            self.__data = None
+            self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+        elif (isinstance(other, SimResult)):
+            raise ValueError(f"ValueError: {self.__class__} cannot be extended by SimResult. First convert to SimResult using to_simresult() method.")
+        else:
+            raise ValueError(f"ValueError: Argument must be of type {self.__class__}.")
 
     def pop(self, index : int = -1):
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
