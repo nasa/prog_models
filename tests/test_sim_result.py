@@ -395,7 +395,7 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(NotImplementedError, result.insert)
         self.assertRaises(NotImplementedError, result.reverse)
 
-    def test_lazy_to_SimResult(self):
+    def test_lazy_to_simresult(self):
         def f(x):
             return x * 2
         NUM_ELEMENTS = 5
