@@ -403,7 +403,7 @@ class TestSimResult(unittest.TestCase):
         state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
-        converted_result = result.to_SimResult()
+        converted_result = result.to_simresult()
         self.assertTrue(isinstance(converted_result, SimResult)) # Ensure type is SimResult
         self.assertEqual(converted_result.times, result.times) # Compare to original LazySimResult
         self.assertEqual(converted_result.data, result.data)
