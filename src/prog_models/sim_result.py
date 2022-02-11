@@ -149,11 +149,21 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         return self.__data is not None
 
     def clear(self):
+        """
+        Clears the times, states, and data cache for a LazySimResult object
+        """
         self.times = []
         self.__data = None
         self.states = []
 
     def extend(self, other):
+        """
+        Extend the LazySimResult with another LazySimResult or SimResult object
+
+        Args:
+            other (SimResult/LazySimResult)
+
+        """
         self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
         self.__data = None
         self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
