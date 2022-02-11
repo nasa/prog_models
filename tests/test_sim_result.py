@@ -65,17 +65,17 @@ class TestSimResult(unittest.TestCase):
             return x * 2
         NUM_ELEMENTS = 10
         time = list(range(NUM_ELEMENTS))
-        state = [i * 10.0 for i in range(NUM_ELEMENTS)]
+        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         result2 = LazySimResult(f, time, state) # Creating one LazySimResult object
 
         self.assertEqual(result.times, [0, 1, 2, 3, 4])
         self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0]) # Assert data is correct before extending
-        self.assertEqual(result2.data, [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+        self.assertEqual(result2.data, [0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
         
         result.extend(result2) # Extend result with result2
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
 
     def test_pickle_lazy(self):
         def f(x):
