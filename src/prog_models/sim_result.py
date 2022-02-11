@@ -1,5 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
+
+from numpy import isin
 from .visualize import plot_timeseries
 from copy import deepcopy
 
@@ -50,8 +52,11 @@ class SimResult(UserList):
             other (SimResult/LazySimResult)
 
         """
-        self.times.extend(other.times)
-        self.data.extend(other.data)
+        if other.__class__ in [SimResult, LazySimResult]:
+            self.times.extend(other.times)
+            self.data.extend(other.data)
+        else:
+            raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
 
     def pop(self, index : int = -1) -> dict:
         """Remove and return an element
@@ -167,8 +172,11 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         if (isinstance(other, self.__class__)):
             self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
-            self.__data = None
             self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+            if self.__data is None or not other.is_cached():
+                self.__data = None
+            else:
+                self.__data.extend(other.data)
         elif (isinstance(other, SimResult)):
             raise ValueError(f"ValueError: {self.__class__} cannot be extended by SimResult. First convert to SimResult using to_simresult() method.")
         else:
