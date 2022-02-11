@@ -202,6 +202,9 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             self.states.pop(target_index)
             self.__data.pop(target_index)
 
+    def to_SimResult(self, other : SimResult) -> SimResult:
+        pass
+
     @property
     def data(self):
         """
