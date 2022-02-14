@@ -7,7 +7,7 @@ from numbers import Number
 import numpy as np
 from copy import deepcopy
 from warnings import warn
-from collections import UserDict, abc
+from collections import UserDict, abc, namedtuple
 import types
 from array import array
 from .sim_result import SimResult, LazySimResult
@@ -672,7 +672,7 @@ class PrognosticsModel(ABC):
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
-    def simulate_to(self, time, future_loading_eqn, first_output = None, **kwargs) -> tuple:
+    def simulate_to(self, time, future_loading_eqn, first_output = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -736,7 +736,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs) -> tuple:
+    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -955,7 +955,8 @@ class PrognosticsModel(ABC):
             saved_outputs = SimResult(saved_times, saved_outputs)
             saved_event_states = SimResult(saved_times, saved_event_states)
         
-        return (
+        Simulation = namedtuple('Simulation', ['times', 'inputs', 'states', 'outputs', 'event_states'])
+        return Simulation(
             saved_times, 
             SimResult(saved_times, saved_inputs), 
             SimResult(saved_times, saved_states), 
