@@ -210,7 +210,8 @@ class PrognosticsModel(ABC):
     events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
 
-    observables_keys = performance_metric_keys # for backwards compatability
+    observables_keys = performance_metric_keys # for backwards compatability        
+    SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
         if not hasattr(self, 'inputs'):
@@ -955,8 +956,7 @@ class PrognosticsModel(ABC):
             saved_outputs = SimResult(saved_times, saved_outputs)
             saved_event_states = SimResult(saved_times, saved_event_states)
         
-        Simulation = namedtuple('Simulation', ['times', 'inputs', 'states', 'outputs', 'event_states'])
-        return Simulation(
+        return self.SimulationResults(
             saved_times, 
             SimResult(saved_times, saved_inputs), 
             SimResult(saved_times, saved_states), 
