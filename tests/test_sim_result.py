@@ -488,6 +488,10 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(converted_result.times, [0, 1, 2, 3, 4]) # Compare to expected values
         self.assertEqual(converted_result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
         
+    def test_lazy_extend_fcn_check(self):
+        pass
+
+    
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
