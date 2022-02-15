@@ -489,7 +489,25 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(converted_result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
         
     def test_lazy_extend_fcn_check(self):
-        pass
+        def f1(i, arr):
+            for i in range(len(arr)):
+                arr[i] += i
+            return arr
+
+        def f2(i, arr):
+            index = 0
+            while index < len(arr):
+                arr[index] += i
+                index += 1
+            return arr
+
+        arr = [0,1,2,3,4]
+        i = 10
+        self.assertEquals(f1(i,arr), f2(i,arr))
+
+        # comparing references to same function
+        self.assertNotEquals(f1,f2)
+
 
     
 # This allows the module to be executed directly
