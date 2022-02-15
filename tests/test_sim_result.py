@@ -513,12 +513,16 @@ class TestSimResult(unittest.TestCase):
         from inspect import getsource
         self.assertNotEqual(getsource(f1), getsource(f2))
         # using dis.dis to analyze disassembled instructions
+        # from dis import dis
+        # self.assertEqual(dis(f1), dis(f2)) # dis.dis returns none; useless for unittesting
         
-        # from dis import dis, info
-        # self.assertNotEqual(info(f1), info(f2)) # dis.dis returns none
-
-
-
+        # convert to bytecode
+        from dis import Bytecode
+        f1_byte, f2_byte = Bytecode(f1), Bytecode(f2)
+        self.assertNotEqual(f1_byte, f2_byte)
+        self.assertNotEqual(f1_byte.dis(), f2_byte.dis())
+        self.assertNotEqual(f1_byte.info, f2_byte.info)
+        self.assertNotEqual(f1_byte.codeobj, f2_byte.codeobj)
     
 # This allows the module to be executed directly
 def run_tests():
