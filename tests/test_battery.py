@@ -2,7 +2,6 @@
 
 import unittest
 
-from pandas import array
 from prog_models.models import BatteryCircuit, BatteryElectroChem, BatteryElectroChemEOL, BatteryElectroChemEOD, BatteryElectroChemEODEOL
 
 def future_loading(t, x=None):
