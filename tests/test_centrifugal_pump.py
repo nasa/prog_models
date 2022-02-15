@@ -164,6 +164,50 @@ class TestCentrifugalPump(unittest.TestCase):
         self.assertEqual(CentrifugalPump,CentrifugalPumpWithWear)
         # CentrifugalPump is alias for "with wear"
 
+    def test_centrifugal_pump_namedtuple_access(self):
+        pump = CentrifugalPumpWithWear(process_noise= 0)
+
+        cycle_time = 3600
+        def future_loading(t, x=None):
+            t = t % cycle_time
+            if t < cycle_time/2.0:
+                V = 471.2389
+            elif t < cycle_time/2 + 100:
+                V = 471.2389 + (t-cycle_time/2)
+            elif t < cycle_time - 100:
+                V = 571.2389
+            else:
+                V = 471.2398 - (t-cycle_time)
+
+            return {
+                'Tamb': 290,
+                'V': V,
+                'pdisch': 928654, 
+                'psuc': 239179, 
+                'wsync': V * 0.8
+            }
+        x0 = pump.initialize(future_loading(0))
+        x0_test = {
+            'w': 376.991118431,
+            'wA': 0.00,
+            'wRadial': 0.0,
+            'wThrust': 0,
+            'rThrust': 1.4e-6,
+            'rRadial': 1.8e-6,
+            'Tt': 290,
+            'Tr': 290,
+            'To': 290,
+            'Q': 0.0,
+            'A': 12.7084,
+            'QLeak':  -8.303463132934355e-08
+        }
+        # named_results = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
+        # times = named_results.times
+        # inputs = named_results.inputs
+        # states = named_results.states
+        # outputs = named_results.outputs
+        # event_states = named_results.event_states
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
