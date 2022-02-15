@@ -503,10 +503,20 @@ class TestSimResult(unittest.TestCase):
 
         arr = [0,1,2,3,4]
         i = 10
-        self.assertEquals(f1(i,arr), f2(i,arr))
+        self.assertEqual(f1(i,arr), f2(i,arr)) # produce same result
 
         # comparing references to same function
-        self.assertNotEquals(f1,f2)
+        self.assertNotEqual(f1,f2)
+        # comparing bytecode of each; determines if same execution path?
+        self.assertNotEqual(f1.__code__.co_code, f2.__code__.co_code)
+        # using inspect to analyze source code match
+        from inspect import getsource
+        self.assertNotEqual(getsource(f1), getsource(f2))
+        # using dis.dis to analyze disassembled instructions
+        
+        # from dis import dis, info
+        # self.assertNotEqual(info(f1), info(f2)) # dis.dis returns none
+
 
 
     
