@@ -20,18 +20,18 @@ def run_example():
     # Step 3: Simulate to impact
     event = 'impact'
     options={'dt':0.005, 'save_freq':1}
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load,
+    simulated_results = m.simulate_to_threshold(future_load,
                                                                              threshold_keys=[event], 
                                                                              **options)
     
 
     # Display states
     # ==============
-    plot_timeseries(times, states, 
+    plot_timeseries(simulated_results.times, simulated_results.states, 
                           options = {'compact': False, 'suptitle': 'state evolution', 'title': True,
                                      'xlabel': 'time', 'ylabel': {'x': 'position', 'v': 'velocity'}, 'display_labels': 'minimal'},
                           legend  = {'display': True, 'display_at_subplot': 'all'} )
-    plot_timeseries(times, states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
+    plot_timeseries(simulated_results.times, simulated_results.states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
                                                     'xlabel': 'time', 'ylabel':'position'})
     plt.show()
 
