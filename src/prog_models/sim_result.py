@@ -163,6 +163,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         Extend the LazySimResult with another LazySimResult object
         Raise ValueError if SimResult is passed
+        Function fcn of other LazySimResult MUST match function fcn of LazySimResult object to be extended
 
         Args:
             other (LazySimResult)
