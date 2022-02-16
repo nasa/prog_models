@@ -74,10 +74,10 @@ def run_example():
 
     # Step 8: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
     
     # Print flight time
-    print('The object hit the ground in {} seconds'.format(round(times[-1],2)))
+    print('The object hit the ground in {} seconds'.format(round(simulated_results.times[-1],2)))
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

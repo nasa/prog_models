@@ -16,26 +16,26 @@ def run_example():
     # Ex1: No noise
     process_noise = 0
     m = ThrownObject(process_noise = process_noise)
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     print('Example without noise')
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
     # Ex2: with noise - same noise applied to every state
     process_noise = 0.5
     m = ThrownObject(process_noise = process_noise)  # Noise with a std of 0.5 to every state
     print('\nExample without same noise for every state')
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
     # Ex3: noise- more noise on position than velocity
     process_noise = {'x': 0.25, 'v': 0.75}
     m = ThrownObject(process_noise = process_noise) 
     print('\nExample with more noise on position than velocity')
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
     # Ex4: noise- Ex3 but uniform
     process_noise = {'x': 0.25, 'v': 0.75}
@@ -43,9 +43,9 @@ def run_example():
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(**model_config) 
     print('\nExample with more uniform noise')
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
     # Ex5: noise- Ex3 but triangle
     process_noise = {'x': 0.25, 'v': 0.75}
@@ -53,9 +53,9 @@ def run_example():
     model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
     m = ThrownObject(**model_config) 
     print('\nExample with triangular process noise')
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
     # Ex6: Measurement noise
     # Everything we've done with process noise, we can also do with measurement noise.
@@ -65,10 +65,10 @@ def run_example():
     model_config = {'measurement_noise_dist': measurement_noise_dist, 'measurement_noise': measurement_noise}
     m = ThrownObject(**model_config) 
     print('\nExample with measurement noise')
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- outputs: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, outputs)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- outputs: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.outputs)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
     print(' note the output is sometimes not the same as state- that is the measurement noise')
 
     # Ex7: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
@@ -81,9 +81,9 @@ def run_example():
     model_config = {'process_noise': apply_proportional_process_noise}
     m = ThrownObject(**model_config)
     print('\nExample with proportional noise on velocity')
-    (times, _, states, outputs, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(times, states)])) 
-    print('\t- impact time: {}s'.format(times[-1]))
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
+    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
