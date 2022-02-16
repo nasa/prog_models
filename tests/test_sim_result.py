@@ -228,6 +228,40 @@ class TestSimResult(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = False)
         plot_test = event_states.plot() # Plot doesn't raise error
 
+    def test_namedtuple_access(self):
+        # Testing model taken from events.py
+        YELLOW_THRESH, RED_THRESH, THRESHOLD = 0.15, 0.1, 0.05
+        from prog_models.models import BatteryElectroChemEOD
+        class MyBatt(BatteryElectroChemEOD):
+            events = BatteryElectroChemEOD.events + ['EOD_warn_yellow', 'EOD_warn_red', 'EOD_requirement_threshold']
+            def event_state(self, state):
+                event_state = super().event_state(state)
+                event_state['EOD_warn_yellow'] = (event_state['EOD']-YELLOW_THRESH)/(1-YELLOW_THRESH) 
+                event_state['EOD_warn_red'] = (event_state['EOD']-RED_THRESH)/(1-RED_THRESH)
+                event_state['EOD_requirement_threshold'] = (event_state['EOD']-THRESHOLD)/(1-THRESHOLD)
+                return event_state
+            def threshold_met(self, x):
+                t_met =  super().threshold_met(x)
+                event_state = self.event_state(x)
+                t_met['EOD_warn_yellow'] = event_state['EOD_warn_yellow'] <= 0
+                t_met['EOD_warn_red'] = event_state['EOD_warn_red'] <= 0
+                t_met['EOD_requirement_threshold'] = event_state['EOD_requirement_threshold'] <= 0
+                return t_met
+        def future_loading(t, x=None):
+            if (t < 600): i = 2
+            elif (t < 900): i = 1
+            elif (t < 1800): i = 4
+            elif (t < 3000): i = 2     
+            else: i = 3
+            return {'i': i} 
+        m = MyBatt()
+        named_results = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = False)
+        times = named_results.times
+        inputs = named_results.inputs
+        states = named_results.states
+        outputs = named_results.outputs
+        event_states = named_results.event_states
+
     def test_not_implemented(self):
         # Not implemented functions, should raise errors
         NUM_ELEMENTS = 5
