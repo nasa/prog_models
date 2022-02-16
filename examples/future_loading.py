@@ -31,11 +31,11 @@ def run_example():
         'save_freq': 100,  # Frequency at which results are saved
         'dt': 2  # Timestep
     }
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
+    simulated_results = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
-    inputs.plot(ylabel = 'Variable Load Current (amps)')
-    event_states.plot(ylabel = 'Variable Load Event State')
+    simulated_results.inputs.plot(ylabel = 'Variable Load Current (amps)')
+    simulated_results.event_states.plot(ylabel = 'Variable Load Event State')
 
     ## Example 2: Moving Average loading 
     # This is useful in cases where you are running reoccuring simulations, and are measuring the actual load on the system, 
@@ -67,11 +67,11 @@ def run_example():
     
     # Now the future_loading eqn is setup to use the moving average of whats been seen
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
+    simulated_results = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
-    inputs.plot(ylabel = 'Moving Average Current (amps)')
-    event_states.plot(ylabel = 'Moving Average Event State')
+    simulated_results.inputs.plot(ylabel = 'Moving Average Current (amps)')
+    simulated_results.event_states.plot(ylabel = 'Moving Average Event State')
 
     # In this case, this estimate is wrong because loading will not be steady, but at least it would give you an approximation.
 
@@ -97,11 +97,11 @@ def run_example():
     future_loading.std = 0.2
 
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
+    simulated_results = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
-    inputs.plot(ylabel = 'Variable Gaussian Current (amps)')
-    event_states.plot(ylabel = 'Variable Gaussian Event State')
+    simulated_results.inputs.plot(ylabel = 'Variable Gaussian Current (amps)')
+    simulated_results.event_states.plot(ylabel = 'Variable Gaussian Event State')
 
     # Example 4: Gaussian- increasing with time
     # For this we're using moving average. This is realistic because the further out from current time you get, 
@@ -136,11 +136,11 @@ def run_example():
         moving_avg({'i': load})
 
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
+    simulated_results = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
-    inputs.plot(ylabel = 'Moving Average Current (amps)')
-    event_states.plot(ylabel = 'Moving Average Event State')
+    simulated_results.inputs.plot(ylabel = 'Moving Average Current (amps)')
+    simulated_results.event_states.plot(ylabel = 'Moving Average Event State')
     
     # In this example future_loading.t has to be updated with current time before each prediction.
     
@@ -158,11 +158,11 @@ def run_example():
     future_loading.start = 0.5
 
     # Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
+    simulated_results = m.simulate_to_threshold(future_loading, **options)
 
     # Now lets plot the inputs and event_states
-    inputs.plot(ylabel = 'Moving Average Current (amps)')
-    event_states.plot(ylabel = 'Moving Average Event State')
+    simulated_results.inputs.plot(ylabel = 'Moving Average Current (amps)')
+    simulated_results.event_states.plot(ylabel = 'Moving Average Event State')
 
     # In this example future_loading.t has to be updated with current time before each prediction.
 

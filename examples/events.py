@@ -79,10 +79,10 @@ def run_example():
     m = MyBatt()
 
     # 2b: Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = True)
+    simulated_results = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = True)
 
     # 2c: Plot results
-    event_states.plot()
+    simulated_results.event_states.plot()
     import matplotlib.pyplot as plt
     plt.show()
 
