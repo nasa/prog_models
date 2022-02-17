@@ -2,28 +2,30 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 class ProgressBar():
-    def __init__(self, n, prefix='', suffix='', decimals=1, print_length=100, fill='█', print_end = " "):
+    def __init__(self, n, increments, prefix='', suffix='', decimals=1, print_length=100, fill='█', print_end = " "):
         self.n = n
+        self.increments = increments
         self.prefix = prefix
         self.suffix = suffix
         self.decimals = decimals
         self.print_length = print_length
         self.fill = fill
         self.print_end = print_end
+        print('\r%s |%s| %s%% %s' % (self.prefix, self.fill * 0 + '-' * (self.print_length - 0), 0, self.suffix), end = self.print_end)
 
-    def __call__(self, iteration):
+    def __call__(self, index):
+        iteration = index + self.increments
         percent = ("{0:." + str(self.decimals) + "f}").format(100 * (iteration / float(self.n)))
         filledLength = int(self.print_length * iteration // self.n)
         bar = self.fill * filledLength + '-' * (self.print_length - filledLength)
         print('\r%s |%s| %s%% %s' % (self.prefix, bar, percent, self.suffix), end = self.print_end)
         # Print New Line on Complete
-        if iteration == self.n-1:
-            bar = self.fill * (int(self.print_length * (iteration+1) // self.n))
-            print('\r%s |%s| %s%% %s' % (self.prefix, bar, "100.0", self.suffix), end = self.print_end)
+        if iteration == self.n:
+            print('')
 
-if __name__ == '__main__':
-    from time import sleep
-    pb = ProgressBar(10, 'Progress',)
-    for i in range(10):
-        sleep(.25)
-        pb(i)
+# if __name__ == '__main__':
+#     from time import sleep
+#     pb = ProgressBar(10, 1, 'Progress',)
+#     for i in range(10):
+#         sleep(.25)
+#         pb(i)
