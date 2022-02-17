@@ -30,23 +30,23 @@ def run_example():
     event = 'impact'
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     
-    # Print states
-    print('Example 1')
-    for i, state in enumerate(states):
-        print('State ', i, ': ', state)
-    print()
+    # # Print states
+    # print('Example 1')
+    # for i, state in enumerate(states):
+    #     print('State ', i, ': ', state)
+    # print()
 
-    # Let's try setting x to a number outside of its bounds
-    x0 = m.initialize(u = {}, z = {})
-    x0['x'] = -1
+    # # Let's try setting x to a number outside of its bounds
+    # x0 = m.initialize(u = {}, z = {})
+    # x0['x'] = -1
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
+    # (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
 
-    # Print states
-    print('Example 2')
-    for i, state in enumerate(states):
-        print('State ', i, ': ', state)
-    print()
+    # # Print states
+    # print('Example 2')
+    # for i, state in enumerate(states):
+    #     print('State ', i, ': ', state)
+    # print()
 
     # Let's see what happens when the objects speed aproaches its limit
     x0 = m.initialize(u = {}, z = {})
@@ -55,7 +55,7 @@ def run_example():
     m.parameters['g'] = -50000000
     
     print('Example 3')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True, progress = False)
 
     # Note that the limits can also be applied manually using the apply_limits function
     print('limiting states')

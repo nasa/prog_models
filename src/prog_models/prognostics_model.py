@@ -769,6 +769,8 @@ class PrognosticsModel(ABC):
         print : bool, optional
             toggle intermediate printing, e.g., print = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
+        progress : bool, optional
+            toggle progress bar printing, e.g., progress = True\n
     
         Returns
         -------
@@ -933,6 +935,7 @@ class PrognosticsModel(ABC):
             simulate_progress = ProgressBar(horizon, "Progress")
         while t < horizon:
             if config['progress']:
+                print("CHECK: ", t, horizon)
                 simulate_progress(t)
             dt = next_time(t, x)
             t = t + dt
@@ -945,7 +948,9 @@ class PrognosticsModel(ABC):
                 save_pt_index += 1
                 update_all()
             if check_thresholds(thresthold_met_eqn(x)):
+                print("HIT BREAK?")
                 break
+            print(f'time: {t}, horizon: {horizon}, threshold: {check_thresholds(thresthold_met_eqn(x))}')
 
         # Save final state
         if saved_times[-1] != t:
