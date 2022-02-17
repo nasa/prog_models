@@ -928,7 +928,10 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
+        simulate_progress = ProgressBar(horizon, "Progress")
         while t < horizon:
+            simulate_progress(t)
+            # print("HORIZON LOOP", t, horizon)
             dt = next_time(t, x)
             t = t + dt
             u = future_loading_eqn(t, x)
