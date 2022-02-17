@@ -11,7 +11,7 @@ from collections import UserDict, abc
 import types
 from array import array
 from .sim_result import SimResult, LazySimResult
-
+from .utils import ProgressBar
 
 class PrognosticsModelParameters(UserDict):
     """
