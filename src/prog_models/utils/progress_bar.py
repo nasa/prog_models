@@ -1,3 +1,6 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 class ProgressBar():
     def __init__(self, n, prefix='', suffix='', decimals=1, print_length=100, fill='█', print_end = " "):
         self.n = n

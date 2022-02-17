@@ -2,5 +2,3 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .progress_bar import ProgressBar
-
-__version__ = '1.2.2'
