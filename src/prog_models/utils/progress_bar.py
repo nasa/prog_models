@@ -15,18 +15,12 @@ class ProgressBar():
         print('\r%s |%s| %s%% %s' % (self.prefix, bar, percent, self.suffix), end = self.print_end)
         # Print New Line on Complete
         if iteration == self.n-1:
-            from time import sleep
-            sleep(.25)
             bar = self.fill * (int(self.print_length * (iteration+1) // self.n))
-            print('\r%s |%s| %s%% %s' % (self.prefix, bar, "100.0%", self.suffix), end = self.print_end)
+            print('\r%s |%s| %s%% %s' % (self.prefix, bar, "100.0", self.suffix), end = self.print_end)
 
 if __name__ == '__main__':
     from time import sleep
     pb = ProgressBar(10, 'Progress',)
     for i in range(10):
-        # print(i)
         sleep(.25)
         pb(i)
-    # sleep(1)
-    # pb(10)
-    
