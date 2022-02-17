@@ -827,7 +827,8 @@ class PrognosticsModel(ABC):
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
-            'print': False
+            'print': False,
+            'progress': False
         }
         config.update(kwargs)
         
@@ -928,10 +929,11 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
-        simulate_progress = ProgressBar(horizon, "Progress")
+        if config['progress']:
+            simulate_progress = ProgressBar(horizon, "Progress")
         while t < horizon:
-            simulate_progress(t)
-            # print("HORIZON LOOP", t, horizon)
+            if config['progress']:
+                simulate_progress(t)
             dt = next_time(t, x)
             t = t + dt
             u = future_loading_eqn(t, x)
