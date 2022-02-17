@@ -932,11 +932,13 @@ class PrognosticsModel(ABC):
         # Simulate
         update_all()
         if config['progress']:
-            simulate_progress = ProgressBar(horizon, "Progress")
+            simulate_progress = ProgressBar(100, "Progress")
         while t < horizon:
             if config['progress']:
-                print("CHECK: ", t, horizon)
-                simulate_progress(t)
+                # print("CHECK: ", t, horizon)
+                # perform some conversion of t/event_state to a percentage
+                # converted_iteration = t calc
+                # simulate_progress(converted_iteration)
             dt = next_time(t, x)
             t = t + dt
             u = future_loading_eqn(t, x)
