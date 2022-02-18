@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from lib2to3.pytree import convert
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
@@ -933,12 +934,14 @@ class PrognosticsModel(ABC):
         update_all()
         if config['progress']:
             simulate_progress = ProgressBar(100, "Progress")
+        last_percentage = 0
         while t < horizon:
             if config['progress']:
-                # print("CHECK: ", t, horizon)
                 # perform some conversion of t/event_state to a percentage
-                # converted_iteration = t calc
-                # simulate_progress(converted_iteration)
+                converted_iteration = t/horizon * 100
+                if converted_iteration - last_percentage > 1: # ensure we only print if % change greater than 1%
+                    simulate_progress(converted_iteration)
+                    last_percentage = converted_iteration
             dt = next_time(t, x)
             t = t + dt
             u = future_loading_eqn(t, x)
@@ -952,7 +955,6 @@ class PrognosticsModel(ABC):
             if check_thresholds(thresthold_met_eqn(x)):
                 print("HIT BREAK?")
                 break
-            print(f'time: {t}, horizon: {horizon}, threshold: {check_thresholds(thresthold_met_eqn(x))}')
 
         # Save final state
         if saved_times[-1] != t:
