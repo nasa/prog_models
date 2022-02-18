@@ -934,15 +934,21 @@ class PrognosticsModel(ABC):
         # Simulate
         update_all()
         if config['progress']:
+            print("should have printed")
             simulate_progress = ProgressBar(100, "Progress")
         last_percentage = 0
         while t < horizon:
             if config['progress']:
                 # perform some conversion of t/event_state to a percentage
-                converted_iteration = int((t/horizon * 100) + 1) # fix for not hitting 100? using 100 scale
+                percentages = [int((t/horizon * 100) + 1), ] # time already in list
+                # time_percentage = int((t/horizon * 100) + 1) # fix for not hitting 100? using 100 scale
+                for val in saved_event_states[-1].values():
+                    percentages.append(int((1-val)*100)+1)
+                converted_iteration = max(percentages)
                 if converted_iteration - last_percentage > 1: # ensure we only print if % change greater than 1%
                     simulate_progress(converted_iteration)
                     last_percentage = converted_iteration
+
             dt = next_time(t, x)
             t = t + dt
             u = future_loading_eqn(t, x)
