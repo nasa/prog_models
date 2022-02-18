@@ -938,7 +938,7 @@ class PrognosticsModel(ABC):
         while t < horizon:
             if config['progress']:
                 # perform some conversion of t/event_state to a percentage
-                converted_iteration = t/horizon * 100
+                converted_iteration = int((t/horizon * 100) + 1) # fix for not hitting 100? using 100 scale
                 if converted_iteration - last_percentage > 1: # ensure we only print if % change greater than 1%
                     simulate_progress(converted_iteration)
                     last_percentage = converted_iteration
@@ -953,7 +953,6 @@ class PrognosticsModel(ABC):
                 save_pt_index += 1
                 update_all()
             if check_thresholds(thresthold_met_eqn(x)):
-                print("HIT BREAK?")
                 break
 
         # Save final state
