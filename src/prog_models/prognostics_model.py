@@ -874,6 +874,7 @@ class PrognosticsModel(ABC):
         event_state = self.event_state
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
+            threshold_keys = []
         elif threshold_keys is None: 
             # Note: Dont use implicit boolean in this check- it would then activate for an empty array
             def check_thresholds(thresholds_met):
@@ -952,7 +953,8 @@ class PrognosticsModel(ABC):
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
-            if check_thresholds(thresthold_met_eqn(x)):
+            if check_thresholds(thresthold_met_eqn(x)): #0 when event has occured, 1  when there has no progress, negative has been passed, from increment size stepped last threshold
+            #threshold keys, or people define own equation if so, only do time
                 break
 
         # Save final state
