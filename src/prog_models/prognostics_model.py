@@ -931,24 +931,22 @@ class PrognosticsModel(ABC):
             def next_time(t, x):
                 return dt
         
+        # defining progress bar printing function
+        def print_progress_bar(simulate_progress, last_percentage):
+            percentages = [int((t/horizon * 100))+1, ]
+            for val in saved_event_states[-1].values():
+                percentages.append(int((1-val)*100)+1)
+            converted_iteration = 100 if max(percentages) > 100 else max(percentages)
+            if converted_iteration - last_percentage > 1: # need this to print progress while running simulation
+                simulate_progress(converted_iteration)
+            return converted_iteration
+        
         # Simulate
         update_all()
         if config['progress']:
-            print("should have printed")
             simulate_progress = ProgressBar(100, "Progress")
         last_percentage = 0
         while t < horizon:
-            if config['progress']:
-                # perform some conversion of t/event_state to a percentage
-                percentages = [int((t/horizon * 100) + 1), ] # time already in list
-                # time_percentage = int((t/horizon * 100) + 1) # fix for not hitting 100? using 100 scale
-                for val in saved_event_states[-1].values():
-                    percentages.append(int((1-val)*100)+1)
-                converted_iteration = max(percentages)
-                if converted_iteration - last_percentage > 1: # ensure we only print if % change greater than 1%
-                    simulate_progress(converted_iteration)
-                    last_percentage = converted_iteration
-
             dt = next_time(t, x)
             t = t + dt
             u = future_loading_eqn(t, x)
@@ -959,14 +957,21 @@ class PrognosticsModel(ABC):
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
-            if check_thresholds(thresthold_met_eqn(x)): #0 when event has occured, 1  when there has no progress, negative has been passed, from increment size stepped last threshold
-            #threshold keys, or people define own equation if so, only do time
-                break
+            if config['progress']:
+                progress_bar_percent = print_progress_bar(simulate_progress, last_percentage) 
+                if progress_bar_percent - last_percentage > 1:
+                    last_percentage = progress_bar_percent
 
+            if check_thresholds(thresthold_met_eqn(x)): # can't put the progress printing here/final print because of below update_all()
+                break
+        
         # Save final state
         if saved_times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
             update_all()
+
+        if config['progress']: # need this for final 100% print; above final update_all() affects progress bar
+            print_progress_bar(simulate_progress, last_percentage)
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
@@ -975,7 +980,7 @@ class PrognosticsModel(ABC):
         else:
             saved_outputs = SimResult(saved_times, saved_outputs)
             saved_event_states = SimResult(saved_times, saved_event_states)
-        
+
         return (
             saved_times, 
             SimResult(saved_times, saved_inputs), 

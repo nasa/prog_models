@@ -20,10 +20,4 @@ class ProgressBar():
         # Print New Line on Complete
         if iteration == self.n:
             print('')
-
-# if __name__ == '__main__':
-#     from time import sleep
-#     pb = ProgressBar(10, 'Progress',)
-#     for i in range(10):
-#         sleep(.25)
-#         pb(i)
+            

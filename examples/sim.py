@@ -28,9 +28,9 @@ def run_example():
             i = 3
         return {'i': i}
     # # simulate for 200 seconds
-    # print('\n\n------------------------------------------------')
-    # print('Simulating for 200 seconds\n\n')
-    # (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, print = True, progress = True)
+    print('\n\n------------------------------------------------')
+    print('Simulating for 200 seconds\n\n')
+    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, print = True, progress = True)
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
