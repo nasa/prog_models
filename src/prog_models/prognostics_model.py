@@ -932,13 +932,13 @@ class PrognosticsModel(ABC):
                 return dt
         
         # defining progress bar printing function
-        def print_progress_bar(simulate_progress, last_percentage):
+        def print_progress_bar(prog_bar, past_per):
             percentages = [int((t/horizon * 100))+1, ]
             for val in saved_event_states[-1].values():
                 percentages.append(int((1-val)*100)+1)
             converted_iteration = 100 if max(percentages) > 100 else max(percentages)
-            if converted_iteration - last_percentage > 1: # need this to print progress while running simulation
-                simulate_progress(converted_iteration)
+            if converted_iteration - past_per > 1: # need this to print progress while running simulation
+                prog_bar(converted_iteration)
             return converted_iteration
         
         # Simulate
@@ -959,7 +959,7 @@ class PrognosticsModel(ABC):
                 update_all()
             if config['progress']:
                 progress_bar_percent = print_progress_bar(simulate_progress, last_percentage) 
-                if progress_bar_percent - last_percentage > 1:
+                if progress_bar_percent - last_percentage > 1: # this check to ensure we only print every 1%, and not all iterations
                     last_percentage = progress_bar_percent
 
             if check_thresholds(thresthold_met_eqn(x)): # can't put the progress printing here/final print because of below update_all()
@@ -970,7 +970,7 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
 
-        if config['progress']: # need this for final 100% print; above final update_all() affects progress bar
+        if config['progress']: # need this for final 100% print; above save final state update_all() affects progress bar
             print_progress_bar(simulate_progress, last_percentage)
         
         if not saved_outputs:
