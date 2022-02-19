@@ -933,10 +933,10 @@ class PrognosticsModel(ABC):
         
         # defining progress bar printing function
         def print_progress_bar(prog_bar, past_per):
-            percentages = [int((t/horizon * 100))+1, ]
+            percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
             for val in saved_event_states[-1].values():
                 percentages.append(int((1-val)*100)+1)
-            converted_iteration = 100 if max(percentages) > 100 else max(percentages)
+            converted_iteration = 100 if max(percentages) > 100 else max(percentages) # catch going negative over threshold jumps, undefined behavior
             if converted_iteration - past_per > 1: # need this to print progress while running simulation
                 prog_bar(converted_iteration)
             return converted_iteration
@@ -945,7 +945,7 @@ class PrognosticsModel(ABC):
         update_all()
         if config['progress']:
             simulate_progress = ProgressBar(100, "Progress")
-        last_percentage = 0
+            last_percentage = 0
         while t < horizon:
             dt = next_time(t, x)
             t = t + dt
