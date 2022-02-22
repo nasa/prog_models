@@ -935,7 +935,8 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
-        if config['progress']:
+        progress = config['progress']
+        if progress:
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
             def print_progress_bar(prog_bar, past_per):
@@ -970,7 +971,7 @@ class PrognosticsModel(ABC):
             # This check prevents double recording when the last state was a savepoint
             update_all()
 
-        if config['progress']: # need this for final 100% print; above save final state update_all() affects progress bar
+        if progress: # need this for final 100% print; above save final state update_all() affects progress bar
             print_progress_bar(simulate_progress, last_percentage)
         
         if not saved_outputs:
