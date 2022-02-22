@@ -876,8 +876,13 @@ class PrognosticsModel(ABC):
             check_thresholds = config['thresholds_met_eqn']
             threshold_keys = []
         elif threshold_keys is None: 
-            # Note: Simulate until any event met
-            threshold_keys = self.events
+            # Note: Dont use implicit boolean in this check- it would then activate for an empty array
+            def check_thresholds(thresholds_met):
+                t_met = thresholds_met.values()
+                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                    return np.any(t_met)
+                return any(t_met)
+            # threshold_keys = self.events
 
         else:
             def check_thresholds(thresholds_met):
@@ -928,21 +933,19 @@ class PrognosticsModel(ABC):
             def next_time(t, x):
                 return dt
         
-        # defining progress bar printing function
-        def print_progress_bar(prog_bar, past_per):
-            percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
-            for val in saved_event_states[-1].values():
-                percentages.append(int((1-val)*100)+1)
-            converted_iteration = 100 if max(percentages) > 100 else max(percentages) # catch going negative over threshold jumps, undefined behavior
-            if converted_iteration - past_per > 1: # need this to print progress while running simulation
-                prog_bar(converted_iteration)
-            return converted_iteration
-        
         # Simulate
         update_all()
         if config['progress']:
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
+            def print_progress_bar(prog_bar, past_per):
+                percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
+                for val in saved_event_states[-1].values():
+                    percentages.append(int((1-val)*100)+1)
+                converted_iteration = 100 if max(percentages) > 100 else max(percentages) # catch going negative over threshold jumps, undefined behavior
+                if converted_iteration - past_per > 1: # need this to print progress while running simulation
+                    prog_bar(converted_iteration)
+                return converted_iteration
         while t < horizon:
             dt = next_time(t, x)
             t = t + dt
