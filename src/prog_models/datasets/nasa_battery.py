@@ -81,14 +81,14 @@ def load_data(batt_id):
 
     # Reformat
     desc = {
-        'procedure': result['procedure'][0,0][0],
-        'description': result['description'][0,0][0],
+        'procedure': str(result['procedure'][0,0][0]),
+        'description': str(result['description'][0,0][0]),
         'runs': 
         [
             {
-                'type': run_type[0], 
-                'desc': desc[0],
-                'date': date[0]
+                'type': str(run_type[0]), 
+                'desc': str(desc[0]),
+                'date': str(date[0])
             } for (run_type, desc, date) in zip(result['step'][0,0]['type'][0], result['step'][0,0]['comment'][0], result['step'][0,0]['date'][0])
         ]
     }
