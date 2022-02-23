@@ -43,12 +43,25 @@ cache = {}  # Cache for downloaded data
 # Cache is used to prevent files from being downloaded twice
 
 def load_data(batt_id):
-    """Loads data from URL using requests"""
-    if isinstance(batt_id, Iterable) and not isinstance(batt_id, str):
-        return [load_data(id_i) for id_i in batt_id]
+    """Loads data for one or more batteries from NASA's PCoE Dataset
+    https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/
+
+    Args:
+        batt_id (str): Battery name from dataset (RW1-28)
+
+    Raises:
+        ValueError: Battery not in dataset (should be RW1-28)
+
+    Returns:
+        tuple[list[dict], list[np.array]]: 
+            0: List of dictionaries with details of each run in the dataset. e.g., [{'type': 'D', 'desc': 'low current discharge at 0.04A'}, ...]
+            1: List of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are ('relativeTime', 'current' (amps), 'voltage', 'temperature' (°C)) in that order.
+    """
     if isinstance(batt_id, int):
         # Convert to string
         batt_id = 'RW' + str(batt_id)
+    if not isinstance(batt_id, str):
+        raise ValueError('Battery ID must be a string')
 
     if batt_id not in urls:
         raise ValueError('Unknown battery ID: {}'.format(batt_id))
@@ -80,4 +93,4 @@ def load_data(batt_id):
         ], np.float64).T for i in range(result.shape[1])
     ]
 
-    return {'run_details': run_details, 'data': result}
+    return run_details, result
