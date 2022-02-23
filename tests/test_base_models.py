@@ -1142,6 +1142,14 @@ class TestModels(unittest.TestCase):
             m.G = np.array([[]]) # less row
             m.matrixCheck()
 
+    def test_progress_bar(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # Any event, default
+        simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()

@@ -932,7 +932,6 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
-
         if progress:
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
