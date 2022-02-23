@@ -11,11 +11,19 @@ DATASET_ID = 1
 
 def run_example():
     # Step 1: Download and import the dataset for a single battery
+    # Note: This may take some time
     from prog_models.datasets import nasa_battery
+    print('Downloading... ', end='')
     (desc, data) = nasa_battery.load_data(DATASET_ID)
+    print('done')
+
+    # We recommend saving the dataset to disk for future use
+    # This way you dont have to download it each time
+    import pickle
+    pickle.dump((desc, data), open(f'dataset_{DATASET_ID}.pkl', 'wb'))
 
     # Step 2: Access the dataset description
-    print(f'Dataset {DATASET_ID}')
+    print(f'\nDataset {DATASET_ID}')
     print(desc['description'])
     print(f'Procedure: {desc["procedure"]}')
 
@@ -27,13 +35,23 @@ def run_example():
     #    2: voltage
     #    3: temperature (°C)
     # so that data[a][b, 3] is the temperature at time index b (relative to the start of the run) for run 1
-    print(f'Number of runs: {len(data)}')
-    print(f'Analyzing run 4')
+    print(f'\nNumber of runs: {len(data)}')
+    print(f'\nAnalyzing run 4')
     print(f'number of time indices: {len(data[4])}')
     print(f"Details of run 4: {desc['runs'][4]}")
 
-    # Step 4: Plot the dataset
-    # TODO
+    # Plot the run
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.plot(data[4][:, 0], data[4][:, 1])
+    plt.ylabel('Current (A)')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(data[4][:, 0], data[4][:, 2])
+    plt.ylabel('Voltage (V)')
+    plt.xlabel('Time (s)')
+    plt.show()
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
