@@ -1,5 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+import io
+import sys
 import unittest
 from prog_models import *
 from prog_models.models import *
@@ -1147,8 +1149,18 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
+        # Define output redirection
+        capturedOutput = io.StringIO()
+        sys.stdout = capturedOutput
+
         # Any event, default
-        simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
+        sys.stdout = sys.__stdout__
+        adj =  [l+"%" for l in capturedOutput.getvalue().split("%") if l]
+        for a in adj:
+            print(a)
+        # print(adj)
+
 
 # This allows the module to be executed directly
 def run_tests():
@@ -1156,7 +1168,6 @@ def run_tests():
     
 def main():
     # This ensures that the directory containing ProgModelTemplate is in the python search directory
-    import sys
     from os.path import dirname, join
     sys.path.append(join(dirname(__file__), ".."))
 
