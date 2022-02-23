@@ -876,7 +876,7 @@ class PrognosticsModel(ABC):
             check_thresholds = config['thresholds_met_eqn']
             threshold_keys = []
         elif threshold_keys is None: 
-            # Note: Setting events to threshold_keys if it is None
+            # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
 
         def check_thresholds(thresholds_met):
