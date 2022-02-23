@@ -1156,9 +1156,9 @@ class TestModels(unittest.TestCase):
         # Any event, default
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
         sys.stdout = sys.__stdout__
-        adj =  [l+"%" for l in capturedOutput.getvalue().split("%") if l]
-        for a in adj:
-            print(a)
+        capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l]
+        for line in capture_split:
+            # do checking
         # print(adj)
 
 
