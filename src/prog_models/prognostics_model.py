@@ -872,18 +872,17 @@ class PrognosticsModel(ABC):
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
         progress = config['progress']
+        def check_thresholds(thresholds_met):
+            t_met = [thresholds_met[key] for key in threshold_keys]
+            if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                return np.any(t_met)
+            return any(t_met)
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
             threshold_keys = []
         elif threshold_keys is None: 
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
-
-        def check_thresholds(thresholds_met):
-            t_met = [thresholds_met[key] for key in threshold_keys]
-            if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                return np.any(t_met)
-            return any(t_met)
 
         # Initialization of save arrays
         saved_times = array('d')
