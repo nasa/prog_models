@@ -28,11 +28,11 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     
     # Print states
     print('Example 1')
-    for i, state in enumerate(states):
+    for i, state in enumerate(simulated_results.states):
         print('State ', i, ': ', state)
     print()
 
@@ -40,11 +40,11 @@ def run_example():
     x0 = m.initialize(u = {}, z = {})
     x0['x'] = -1
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
 
     # Print states
     print('Example 2')
-    for i, state in enumerate(states):
+    for i, state in enumerate(simulated_results.states):
         print('State ', i, ': ', state)
     print()
 
