@@ -1,9 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from lib2to3.pytree import convert
-
-from prog_models.utils import progress_bar
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
