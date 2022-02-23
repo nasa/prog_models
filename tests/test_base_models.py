@@ -1153,14 +1153,14 @@ class TestModels(unittest.TestCase):
         capturedOutput = io.StringIO()
         sys.stdout = capturedOutput
 
-        # Any event, default
+        # Test progress bar matching
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
         sys.stdout = sys.__stdout__
-        capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l]
-        for line in capture_split:
-            # do checking
-        # print(adj)
-
+        capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l][:11]
+        percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
+        for i in range(len(capture_split)):
+            actual = '%s |%s| %s%% %s' % ("Progress", "█" * percentage_vals[i] + '-' * (100 - percentage_vals[i]), str(percentage_vals[i])+".0","")
+            self.assertEqual(capture_split[i].strip(), actual.strip())
 
 # This allows the module to be executed directly
 def run_tests():
