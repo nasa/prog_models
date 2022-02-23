@@ -876,20 +876,14 @@ class PrognosticsModel(ABC):
             check_thresholds = config['thresholds_met_eqn']
             threshold_keys = []
         elif threshold_keys is None: 
-            # Note: Dont use implicit boolean in this check- it would then activate for an empty array
-            def check_thresholds(thresholds_met):
-                t_met = thresholds_met.values()
-                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                    return np.any(t_met)
-                return any(t_met)
-            # threshold_keys = self.events
+            # Note: Setting events to threshold_keys if it is None
+            threshold_keys = self.events
 
-        else:
-            def check_thresholds(thresholds_met):
-                t_met = [thresholds_met[key] for key in threshold_keys]
-                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                    return np.any(t_met)
-                return any(t_met)
+        def check_thresholds(thresholds_met):
+            t_met = [thresholds_met[key] for key in threshold_keys]
+            if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                return np.any(t_met)
+            return any(t_met)
 
         # Initialization of save arrays
         saved_times = array('d')
