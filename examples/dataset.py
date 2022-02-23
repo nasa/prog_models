@@ -34,7 +34,7 @@ def run_example():
     #    1: current (amps)
     #    2: voltage
     #    3: temperature (°C)
-    # so that data[a][b, 3] is the temperature at time index b (relative to the start of the run) for run 1
+    # so that data[a][b, 3] is the temperature at time index b (relative to the start of the run) for run a
     print(f'\nNumber of runs: {len(data)}')
     print(f'\nAnalyzing run 4')
     print(f'number of time indices: {len(data[4])}')
