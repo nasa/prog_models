@@ -88,8 +88,9 @@ def load_data(batt_id):
         [
             {
                 'type': run_type[0], 
-                'desc': desc[0]
-            } for (run_type, desc) in zip(result['step'][0,0]['type'][0], result['step'][0,0]['comment'][0])
+                'desc': desc[0],
+                'date': date[0]
+            } for (run_type, desc, date) in zip(result['step'][0,0]['type'][0], result['step'][0,0]['comment'][0], result['step'][0,0]['date'][0])
         ]
     }
 
