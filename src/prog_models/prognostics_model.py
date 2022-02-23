@@ -2,6 +2,8 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from lib2to3.pytree import convert
+
+from prog_models.utils import progress_bar
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
@@ -872,6 +874,7 @@ class PrognosticsModel(ABC):
         output = self.__output
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
+        progress = config['progress']
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
             threshold_keys = []
@@ -929,18 +932,11 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
-        progress = config['progress']
+
         if progress:
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
-            def print_progress_bar(prog_bar, past_per):
-                percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
-                for val in event_state(x).values():
-                    percentages.append(int((1-val)*100)+1)
-                converted_iteration = min(100, max(percentages)) # catch going negative over threshold jumps, undefined behavior
-                if converted_iteration - past_per > 1: # need this to print progress while running simulation
-                    prog_bar(converted_iteration)
-                return converted_iteration
+       
         while t < horizon:
             dt = next_time(t, x)
             t = t + dt
@@ -953,9 +949,13 @@ class PrognosticsModel(ABC):
                 save_pt_index += 1
                 update_all()
             if config['progress']:
-                progress_bar_percent = print_progress_bar(simulate_progress, last_percentage) 
-                if progress_bar_percent - last_percentage > 1: # this check to ensure we only print every 1%, and not all iterations
-                    last_percentage = progress_bar_percent
+                percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
+                for val in event_state(x).values():
+                    percentages.append(int((1-val)*100)+1)
+                converted_iteration = min(100, max(percentages)) # catch going negative over threshold jumps, undefined behavior
+                if converted_iteration - last_percentage > 1: # need this to print progress while running simulation
+                    simulate_progress(converted_iteration)
+                    last_percentage = converted_iteration
 
             if check_thresholds(thresthold_met_eqn(x)): # can't put the progress printing here/final print because of below update_all()
                 break
