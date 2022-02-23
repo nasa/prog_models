@@ -949,10 +949,10 @@ class PrognosticsModel(ABC):
                 save_pt_index += 1
                 update_all()
             if config['progress']:
-                percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
+                percentages = [(t/horizon), ] # start on first iteration at index 1 instead of 0
                 for val in event_state(x).values():
-                    percentages.append(int((1-val)*100)+1)
-                converted_iteration = min(100, max(percentages)) # catch going negative over threshold jumps, undefined behavior
+                    percentages.append((1-val))
+                converted_iteration = min(100, max(percentages)*100) # catch going negative over threshold jumps, undefined behavior
                 if converted_iteration - last_percentage > 1: # need this to print progress while running simulation
                     simulate_progress(converted_iteration)
                     last_percentage = converted_iteration
