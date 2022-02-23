@@ -935,7 +935,7 @@ class PrognosticsModel(ABC):
             last_percentage = 0
             def print_progress_bar(prog_bar, past_per):
                 percentages = [int((t/horizon * 100))+1, ] # start on first iteration at index 1 instead of 0
-                for val in saved_event_states[-1].values():
+                for val in event_state(x).values():
                     percentages.append(int((1-val)*100)+1)
                 converted_iteration = min(100, max(percentages)) # catch going negative over threshold jumps, undefined behavior
                 if converted_iteration - past_per > 1: # need this to print progress while running simulation
@@ -964,9 +964,6 @@ class PrognosticsModel(ABC):
         if saved_times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
             update_all()
-
-        if progress: # need this for final 100% print; above save final state update_all() affects progress bar
-            print_progress_bar(simulate_progress, last_percentage)
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
