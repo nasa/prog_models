@@ -947,7 +947,7 @@ class PrognosticsModel(ABC):
             if config['progress']:
                 percentages = [1-val for val in event_state(x).values()]
                 percentages.append((t/horizon))
-                converted_iteration = min(100, max(percentages)*100)
+                converted_iteration = int(max(min(100, max(percentages)*100), 0))
                 if converted_iteration - last_percentage > 1:
                     simulate_progress(converted_iteration)
                     last_percentage = converted_iteration
