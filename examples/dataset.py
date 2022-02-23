@@ -51,7 +51,18 @@ def run_example():
     plt.plot(data[4][:, 0], data[4][:, 2])
     plt.ylabel('Voltage (V)')
     plt.xlabel('Time (s)')
+    plt.title('Run 4')
+
+    # Graph all reference discharge profiles
+    indices = [i for i, x in enumerate(desc['runs']) if 'reference discharge' in x['desc'] and 'rest' not in x['desc']]
+    plt.figure()
+    for i in indices:
+        plt.plot(data[i][:, 0], data[i][:, 2], label=f"Run {i}")
+    plt.title('Reference discharge profiles')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Voltage (V)')
     plt.show()
+
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
