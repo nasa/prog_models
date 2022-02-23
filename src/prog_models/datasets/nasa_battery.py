@@ -53,8 +53,8 @@ def load_data(batt_id):
         ValueError: Battery not in dataset (should be RW1-28)
 
     Returns:
-        tuple[list[dict], list[np.array]]: 
-            0: List of dictionaries with details of each run in the dataset. e.g., [{'type': 'D', 'desc': 'low current discharge at 0.04A'}, ...]
+        tuple[dict, list[np.array]]: (description, data)
+            0: description of the data. 
             1: List of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are ('relativeTime', 'current' (amps), 'voltage', 'temperature' (°C)) in that order.
     """
     if isinstance(batt_id, int):
@@ -78,19 +78,26 @@ def load_data(batt_id):
     f = cache[url].open(f'{cache[url].infolist()[0].filename}Matlab/{batt_id}.mat')
 
     # Load matlab file
-    result = loadmat(f)['data']['step'][0,0]
+    result = loadmat(f)['data']
 
     # Reformat
-    run_details = [
-        {
-            'type': run_type[0], 
-            'desc': desc[0]
-        } for (run_type, desc) in zip(result['type'][0], result['comment'][0])
-    ]
+    desc = {
+        'procedure': result['procedure'][0,0][0],
+        'description': result['description'][0,0][0],
+        'runs': 
+        [
+            {
+                'type': run_type[0], 
+                'desc': desc[0]
+            } for (run_type, desc) in zip(result['step'][0,0]['type'][0], result['step'][0,0]['comment'][0])
+        ]
+    }
+
+    result = result['step'][0,0]
     result = [
         np.array([
             result[key][0, i][0] for key in ('relativeTime', 'current', 'voltage', 'temperature')
         ], np.float64).T for i in range(result.shape[1])
     ]
 
-    return run_details, result
+    return desc, result
