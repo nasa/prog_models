@@ -12,6 +12,8 @@ from unittest.mock import patch
 import pkgutil
 from importlib import import_module
 
+examples_skipped = 'dataset'
+
 def make_test_function(example):
     def test(self):
         ex = import_module("examples." + example)
@@ -38,8 +40,9 @@ def run_tests():
 def main():
     # Create tests for each example
     for _, name, _ in pkgutil.iter_modules(['examples']):
-        test_func = make_test_function(name)
-        setattr(TestExamples, 'test_{0}'.format(name), test_func)   
+        if name not in examples_skipped:
+            test_func = make_test_function(name)
+            setattr(TestExamples, 'test_{0}'.format(name), test_func)   
 
 
     l = unittest.TestLoader()
