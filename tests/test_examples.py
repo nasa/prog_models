@@ -40,10 +40,9 @@ def run_tests():
 def main():
     # Create tests for each example
     for _, name, _ in pkgutil.iter_modules(['examples']):
-        if name in examples_skipped:
-            continue
-        test_func = make_test_function(name)
-        setattr(TestExamples, 'test_{0}'.format(name), test_func)   
+        if name not in examples_skipped:
+            test_func = make_test_function(name)
+            setattr(TestExamples, 'test_{0}'.format(name), test_func)   
 
 
     l = unittest.TestLoader()
