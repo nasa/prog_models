@@ -11,7 +11,7 @@ from collections import UserDict, abc, namedtuple
 import types
 from array import array
 from .sim_result import SimResult, LazySimResult
-
+from .utils import ProgressBar
 
 class PrognosticsModelParameters(UserDict):
     """
@@ -770,6 +770,8 @@ class PrognosticsModel(ABC):
         print : bool, optional
             toggle intermediate printing, e.g., print = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
+        progress : bool, optional
+            toggle progress bar printing, e.g., progress = True\n
     
         Returns
         -------
@@ -828,7 +830,8 @@ class PrognosticsModel(ABC):
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
-            'print': False
+            'print': False,
+            'progress': False
         }
         config.update(kwargs)
         
@@ -869,21 +872,18 @@ class PrognosticsModel(ABC):
         output = self.__output
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
+        progress = config['progress']
+        def check_thresholds(thresholds_met):
+            t_met = [thresholds_met[key] for key in threshold_keys]
+            if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                return np.any(t_met)
+            return any(t_met)
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
+            threshold_keys = []
         elif threshold_keys is None: 
-            # Note: Dont use implicit boolean in this check- it would then activate for an empty array
-            def check_thresholds(thresholds_met):
-                t_met = thresholds_met.values()
-                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                    return np.any(t_met)
-                return any(t_met)
-        else:
-            def check_thresholds(thresholds_met):
-                t_met = [thresholds_met[key] for key in threshold_keys]
-                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                    return np.any(t_met)
-                return any(t_met)
+            # Note: Setting threshold_keys to be all events if it is None
+            threshold_keys = self.events
 
         # Initialization of save arrays
         saved_times = array('d')
@@ -929,6 +929,10 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
+        if progress:
+            simulate_progress = ProgressBar(100, "Progress")
+            last_percentage = 0
+       
         while t < horizon:
             dt = next_time(t, x)
             t = t + dt
@@ -940,9 +944,17 @@ class PrognosticsModel(ABC):
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
+            if config['progress']:
+                percentages = [1-val for val in event_state(x).values()]
+                percentages.append((t/horizon))
+                converted_iteration = int(max(min(100, max(percentages)*100), 0))
+                if converted_iteration - last_percentage > 1:
+                    simulate_progress(converted_iteration)
+                    last_percentage = converted_iteration
+
             if check_thresholds(thresthold_met_eqn(x)):
                 break
-
+        
         # Save final state
         if saved_times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
