@@ -1197,7 +1197,9 @@ class TestModels(unittest.TestCase):
 
         m = ThrownObject()
         m.simulate_to_threshold(lambda t, x = None: {})
-        print(m.n_events, m.n_states)
+        m.matrixCheck()
+        self.assertIsInstance(m.F, np.ndarray)
+        self.assertEqual(m.F.all(), np.array([[1, 0]]).all())
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)
