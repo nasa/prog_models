@@ -1199,7 +1199,7 @@ class TestModels(unittest.TestCase):
         m.simulate_to_threshold(lambda t, x = None: {})
         m.matrixCheck()
         self.assertIsInstance(m.F, np.ndarray)
-        self.assertEqual(m.F.all(), np.array([[1, 0]]).all())
+        self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
 
     def test_init_matrix_as_list(self):
         from prog_models import LinearModel
@@ -1243,6 +1243,7 @@ class TestModels(unittest.TestCase):
         m = ThrownObject()
         m.matrixCheck()
         self.assertIsInstance(m.A, np.ndarray)
+        self.assertTrue(np.array_equal(m.A, np.array([[0, 1], [0, 0]])))
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)
