@@ -1211,8 +1211,8 @@ class TestModels(unittest.TestCase):
             events = ['impact']
 
             A = [[0, 1], [0, 0]]
-            E = np.array([[0], [-9.81]])
-            C = np.array([[1, 0]])
+            E = [[0], [-9.81]]
+            C = [[1, 0]]
             F = None # Will override method
 
             default_parameters = {
@@ -1244,6 +1244,10 @@ class TestModels(unittest.TestCase):
         m.matrixCheck()
         self.assertIsInstance(m.A, np.ndarray)
         self.assertTrue(np.array_equal(m.A, np.array([[0, 1], [0, 0]])))
+        self.assertIsInstance(m.E, np.ndarray)
+        self.assertTrue(np.array_equal(m.E, np.array([[0], [-9.81]])))
+        self.assertIsInstance(m.C, np.ndarray)
+        self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
 
     def test_event_state_function(self):
         from prog_models import LinearModel
