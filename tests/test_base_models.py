@@ -1210,7 +1210,7 @@ class TestModels(unittest.TestCase):
             outputs = ['x']
             events = ['impact']
 
-            A = np.array([[0, 1], [0, 0]])
+            A = [[0, 1], [0, 0]]
             E = np.array([[0], [-9.81]])
             C = np.array([[1, 0]])
             F = None # Will override method
@@ -1241,7 +1241,8 @@ class TestModels(unittest.TestCase):
                 }
 
         m = ThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: {})
+        m.matrixCheck()
+        self.assertIsInstance(m.A, np.ndarray)
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)

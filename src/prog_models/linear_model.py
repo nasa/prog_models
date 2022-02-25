@@ -56,6 +56,8 @@ class LinearModel(PrognosticsModel, ABC):
         if isinstance(matrix, list):
             setattr(self, "self."+notes[0], np.array(matrix))
             matrix = getattr(self, "self."+notes[0])
+            print("SET HERE", type(matrix))
+            # locals()["self."+notes[0]] = np.array(matrix)
         if not isinstance(matrix, np.ndarray):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
 
