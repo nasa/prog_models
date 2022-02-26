@@ -1245,9 +1245,35 @@ class TestModels(unittest.TestCase):
         self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
 
     def test_event_state_function(self):
-        # m = MockModel()
-        # m.event_state({'t': 0})
-        pass
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = [[0, 1], [0, 0]]
+            E = [[0], [-9.81]]
+            C = [[1, 0]]
+            F = None # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return {
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    }
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+        # test coverage needs testing of event_state not overridden
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)
