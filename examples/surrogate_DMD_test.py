@@ -90,7 +90,6 @@ def run_example_DMD_dx():
     print('Simulation Time from DMD (in next_state): {} ms/sim'.format(timeDMD*2))
 
 
-
 def run_example_DMD(): 
     batt = DMDModel()
     batt.parameters['process_noise'] = 0
@@ -114,7 +113,7 @@ def run_example_DMD():
     }
 
     ## Simulate to Threshold: 
-    simulated_results = batt.simulate_to_threshold(future_loading, **options)
+    # simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
     ## Simulate to specific time: 
     # simulated_results = batt.simulate_to(600, future_loading, **options)
@@ -128,17 +127,15 @@ def run_example_DMD():
     # Print results
     print('Simulation Time from DMD: {} ms/sim'.format(timeDMD*2))
 
-    debug = 1
-
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
     # Run Full Simulation:
-    # run_example_Full()
+    run_example_Full()
     
     # Run DMD approximation in next_state
     # run_example_DMD_dx()
 
     # Run Full DMD approximation 
-    run_example_DMD()
+    # run_example_DMD()
     
