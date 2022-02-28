@@ -67,9 +67,6 @@ class ThrownObject(PrognosticsModel):
         'process_noise': 0.0  # amount of noise in each step
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def initialize(self, u=None, z=None):
         return {
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
