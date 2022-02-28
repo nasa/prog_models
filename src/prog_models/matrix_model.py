@@ -14,6 +14,16 @@ import numpy as np
 
 
 class MatrixModel(PrognosticsModel, ABC):
+    __state_limits = {}
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.state_limits_mat = (
+            [[self.state_limits[key][0]] if key in self.state_limits else [-float('inf')] for key in self.states],
+            [[self.state_limits[key][1]] if key in self.state_limits else [float('inf')] for key in self.states])
+
+        # TODO(CT): Issue- this doesn't support changing state_limits after construction
+
     def initialize_matrix(self, u = None, z = None):
         pass
 
@@ -60,6 +70,31 @@ class MatrixModel(PrognosticsModel, ABC):
         x_mat = np.vstack((x[key] for key in self.states))
         t_met = self.threshold_matrix(x_mat)
         return {event: t_met_i for (event, t_met_i) in zip(self.events, t_met)}
+
+    def apply_process_noise_matrix(self, x, dt=1):
+        # TODO(CT): ACTUAL LOGIC
+        return x
+
+    def apply_limits_matrix(self, x):
+        return x.clip(*self.state_limits_mat)
+
+    def __next_state_matrix(self, x, u, dt):
+        # Calculate next state and add process noise
+        next_state = self.apply_process_noise_matrix(self.next_state_matrix(x, u, dt))
+
+        # Apply Limits
+        return self.apply_limits_matrix(next_state)
+
+    def apply_measurement_noise_matrix(self, z):
+        # TODO(CT): ACTUAL LOGIC
+        return z
+    
+    def __output_matrix(self, x):
+        # Calculate next state, forward one timestep
+        z = self.output_matrix(x)
+
+        # Add measurement noise
+        return self.apply_measurement_noise(z)
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         """
@@ -192,10 +227,11 @@ class MatrixModel(PrognosticsModel, ABC):
             x = self.initialize(u, first_output)
         
         # Optimization
-        next_state = self.next_state_matrix # TODO: noise, limits
-        output = self.output_matrix # TODO: noise, limits
+        next_state = self.__next_state_matrix
+        output = self.__output_matrix
         thresthold_met_eqn = self.threshold_met_matrix
         event_state = self.event_state_matrix # TODO: Get this working
+
         progress = config['progress']
         def check_thresholds(thresholds_met):
             t_met = [thresholds_met[key] for key in threshold_keys]
