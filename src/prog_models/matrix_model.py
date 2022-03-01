@@ -1,26 +1,137 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .exceptions import ProgModelInputException
-from . import PrognosticsModel
+from .exceptions import ProgModelInputException, ProgModelTypeError
+from .prognostics_model import PrognosticsModel, PrognosticsModelParameters
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
+from warnings import warn
 
 from abc import ABC, abstractmethod
 from array import array
 from collections import abc
 from numbers import Number
 import numpy as np
+import types
 
+
+class MatrixModelParameters(PrognosticsModelParameters):
+    def __init__(self, model):
+        self.__m = model
+        super().__init__(model, model.parameters, model.parameters.callbacks)
+
+    def __setitem__(self, key, value):
+        # TODO(CT): Link to process_noise/process_noise_mat option
+
+        super().__setitem__(key, value)
+
+        # TODO(CT): Fix process_noise/process_noise_mat connection
+        # I'm thinking hidden variable _process_noise_mat- if process_noise_matrix set directly, set flag- otherwise link it to process_noise
+
+        # Logic specific to matrix 
+        if key == "process_noise":
+            # if updating process_noise- update process_noise_matrix to equivilant matrix
+            if callable(value):
+                def process_noise_adapt(self, x, dt=1):
+                    x_dict = {state: x_i for (state, x_i) in zip(self.states, x)}
+                    x_dict = self.apply_process_noise(x_dict, dt)
+                    return np.array([[x_dict[state]] for state in self.states])
+                
+                self.__m.apply_process_noise_matrix = types.MethodType(process_noise_adapt, self.__m)
+                warn('For maximum efficiency when using custom process noise functions with Matrix-type models, set process_noise_matrix as well as process_noise.')
+            else:
+                self['process_noise_matrix'] = np.array(
+                    [[value[key]] for key in self.__m.states])
+        elif key == "measurement_noise":
+            # if updating measurement_noise- update measurement_noise_matrix to equivilant matrix
+            if callable(value):
+                def measurement_noise_adapt(self, z):
+                    z_dict = {output: z_i for (output, z_i) in zip(self.outputs, z)}
+                    z_dict = self.apply_measurement_noise(z_dict)
+                    return np.array([[z_dict[output]] for output in self.outputs])
+                
+                self.__m.apply_measurement_noise_matrix = types.MethodType(measurement_noise_adapt, self.__m)
+                warn('For maximum efficiency when using custom measurement noise functions with Matrix-type models, set measurement_noise_matrix as well as measurement_noise.')
+            else:
+                self['measurement_noise_matrix'] = np.array(
+                    [[value[key]] for key in self.__m.outputs])
+        elif key == 'process_noise_matrix':
+            if callable(self['process_noise_matrix']):  # Provided a function
+                self.__m.apply_process_noise_matrix = types.MethodType(self['process_noise_matrix'], self.__m)
+            else:  # Not a function
+                # Process noise is single number - convert to dict
+                if isinstance(self['process_noise_matrix'], Number):
+                    self['process_noise_matrix'] = {key: self['process_noise_matrix'] for key in self.__m.states}
+                
+                # Process distribution type
+                if 'process_noise_dist_matrix' in self and self['process_noise_dist_matrix'].lower() not in ["gaussian", "normal"]:
+                    # Update process noise distribution to custom
+                    if self['process_noise_dist_matrix'].lower() == "uniform":
+                        def uniform_process_noise(self, x, dt=1):
+                            return {key: x[key] + \
+                                dt*np.random.uniform(-self.parameters['process_noise_matrix'][key], self.parameters['processprocess_noise_matrix_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
+                                    for key in self.states}
+                        self.__m.apply_process_noise_matrix = types.MethodType(uniform_process_noise, self.__m)
+                    elif self['process_noise_dist_matrix'].lower() == "triangular":
+                        def triangular_process_noise(self, x, dt=1):
+                            return {key: x[key] + \
+                                dt*np.random.triangular(-self.parameters['process_noise_matrix'][key], 0, self.parameters['process_noise_matrix'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
+                                    for key in self.states}
+                        self.__m.apply_process_noise_matrix = types.MethodType(triangular_process_noise, self.__m)
+                    else:
+                        raise ProgModelTypeError("Unsupported process noise distribution")
+                
+                # Make sure every key is present (single value already handled above)
+                if self['process_noise_matrix'].shape[0] != len(self.__m.states):
+                    raise ProgModelTypeError("Process noise must have every key in model.states")
+        elif key == 'measurement_noise_matrix':
+            if callable(self['measurement_noise_matrix']):
+                self.__m.apply_measurement_noise_matrix = types.MethodType(self['measurement_noise_matrix'], self.__m)
+            else:
+                # Process noise is single number - convert to dict
+                if isinstance(self['measurement_noise_matrix'], Number):
+                    self['measurement_noise_matrix'] = {key: self['measurement_noise_matrix'] for key in self.__m.outputs}
+                
+                # Process distribution type
+                if 'measurement_noise_dist_matrix' in self and self['measurement_noise_dist_matrix'].lower() not in ["gaussian", "normal"]:
+                    # Update measurement noise distribution to custom
+                    if self['measurement_noise_dist_matrix'].lower() == "uniform":
+                        def uniform_noise(self, x):
+                            return {key: x[key] + \
+                                np.random.uniform(-self.parameters['measurement_noise_matrix'][key], self.parameters['measurement_noise_matrix'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
+                                    for key in self.outputs}
+                        self.__m.apply_measurement_noise_matrix = types.MethodType(uniform_noise, self.__m)
+                    elif self['measurement_noise_dist_matrix'].lower() == "triangular":
+                        def triangular_noise(self, x):
+                            return {key: x[key] + \
+                                np.random.triangular(-self.parameters['measurement_noise_matrix'][key], 0, self.parameters['measurement_noise_matrix'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
+                                    for key in self.outputs}
+                        self.__m.apply_measurement_noise_matrix = types.MethodType(triangular_noise, self.__m)
+                    else:
+                        raise ProgModelTypeError("Unsupported measurement noise distribution")
+                
+                # Make sure every key is present (single value already handled above)
+                if self['measurement_noise_matrix'].shape[0] != len(self.__m.outputs):
+                    raise ProgModelTypeError("Measurement noise must have ever key in model.states")
 
 class MatrixModel(PrognosticsModel, ABC):
+    default_parameters = {
+        'process_noise_matrix': {},
+    }
+
     __state_limits = {}
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        # Upgrade parameters to include logic for matrix model
+        self.parameters = MatrixModelParameters(self)
+
+        # TODO: only if mat not a member
         self.state_limits_mat = (
             [[self.state_limits[key][0]] if key in self.state_limits else [-float('inf')] for key in self.states],
             [[self.state_limits[key][1]] if key in self.state_limits else [float('inf')] for key in self.states])
+
 
         # TODO(CT): Issue- this doesn't support changing state_limits after construction
 
@@ -28,8 +139,8 @@ class MatrixModel(PrognosticsModel, ABC):
         pass
 
     def initialize(self, u = None, z = None):
-        z_mat = np.vstack((z[key] for key in self.outputs))
-        u_mat = np.vstack((u[key] for key in self.inputs))
+        z_mat = np.array([[z[key]] for key in self.outputs])
+        u_mat = np.array([[u[key]] for key in self.inputs])
         x = self.initialize_matrix(u_mat, z_mat)
         return {key: x_i for key, x_i in zip(self.states, x)}
 
@@ -40,8 +151,8 @@ class MatrixModel(PrognosticsModel, ABC):
         return self.dx_matrix(x, u) * dt
 
     def next_state(self, x, u, dt):
-        x_mat = np.vstack((x[key] for key in self.states))
-        u_mat = np.vstack((u[key] for key in self.inputs))
+        x_mat = np.array([[x[key]] for key in self.states])
+        u_mat = np.array([[u[key]] for key in self.inputs])
         x_next = self.next_state_matrix(x_mat, u_mat, dt)
         return {state: x_next_i for (state, x_next_i) in zip(self.states, x_next)}
 
@@ -50,7 +161,7 @@ class MatrixModel(PrognosticsModel, ABC):
         pass
 
     def output(self, x):
-        x_mat = np.vstack((x[key] for key in self.states))
+        x_mat = np.array([[x[key]] for key in self.states])
         z = self.output(x_mat)
         return {output: z_i for (output, z_i) in zip(self.outputs, z)}
 
@@ -58,7 +169,7 @@ class MatrixModel(PrognosticsModel, ABC):
         pass
 
     def event_state(self, x):
-        x_mat = np.vstack((x[key] for key in self.states))
+        x_mat = np.array([[x[key]] for key in self.states])
         es = self.event_state_matrix(x_mat)
         return {event: es_i for (event, es_i) in zip(self.events, es)}
 
@@ -67,12 +178,14 @@ class MatrixModel(PrognosticsModel, ABC):
         return  es[es <= 0]
 
     def threshold(self, x):
-        x_mat = np.vstack((x[key] for key in self.states))
+        x_mat = np.array([[x[key]] for key in self.states])
         t_met = self.threshold_matrix(x_mat)
         return {event: t_met_i for (event, t_met_i) in zip(self.events, t_met)}
 
     def apply_process_noise_matrix(self, x, dt=1):
-        # TODO(CT): ACTUAL LOGIC
+        x + np.random.normal(
+                    0, self.parameters['process_noise_matrix'],
+                    size=x.shape) * dt
         return x
 
     def apply_limits_matrix(self, x):
@@ -86,7 +199,9 @@ class MatrixModel(PrognosticsModel, ABC):
         return self.apply_limits_matrix(next_state)
 
     def apply_measurement_noise_matrix(self, z):
-        # TODO(CT): ACTUAL LOGIC
+        z + np.random.normal(
+                    0, self.parameters['measurement_noise_matrix'],
+                    size=z.shape)
         return z
     
     def __output_matrix(self, x):
