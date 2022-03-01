@@ -9,7 +9,6 @@ from copy import deepcopy
 from warnings import warn
 from collections import UserDict, abc, namedtuple
 import types
-from array import array
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 
@@ -886,7 +885,7 @@ class PrognosticsModel(ABC):
             threshold_keys = self.events
 
         # Initialization of save arrays
-        saved_times = array('d')
+        saved_times = np.array(dtype=np.float64)
         saved_inputs = []
         saved_states = []  
         saved_outputs = []

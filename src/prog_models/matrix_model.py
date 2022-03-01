@@ -8,7 +8,6 @@ from .utils import ProgressBar
 from warnings import warn
 
 from abc import ABC, abstractmethod
-from array import array
 from collections import abc
 from numbers import Number
 import numpy as np
@@ -364,7 +363,7 @@ class MatrixModel(PrognosticsModel, ABC):
         threshold_keys = [self.events.index(event) for event in threshold_keys]
 
         # Initialization of save arrays
-        saved_times = array('d')
+        saved_times = np.array(dtype=np.float64)
         saved_inputs = []
         saved_states = []  
         saved_outputs = []
