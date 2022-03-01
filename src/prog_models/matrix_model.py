@@ -15,6 +15,16 @@ import types
 
 
 class MatrixModelParameters(PrognosticsModelParameters):
+    """
+    MatrixModelParameters extends PrognosticsModelParameters to provide the logic specific to MatrixModel. Specifically, it provides the logic for updating the noise parameters specific to the MatrixModel.
+
+    Args:
+        model (Matrix): The model with member parameters of type PrognosticsModelParameters.
+
+    Use:
+        # Upgrade model parameters
+        model.parameters = MatrixModelParameters(model)
+    """
     def __init__(self, model):
         self.__m = model
         super().__init__(model, model.parameters, model.parameters.callbacks)
@@ -113,12 +123,78 @@ class MatrixModelParameters(PrognosticsModelParameters):
                 if self['measurement_noise_matrix'].shape[0] != len(self.__m.outputs):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.states")
 
-class MatrixModel(PrognosticsModel, ABC):
-    default_parameters = {
-        'process_noise_matrix': {},
-    }
 
-    __state_limits = {}
+class MatrixModel(PrognosticsModel, ABC):
+    """
+    A time-variant state space model of system degradation behavior, where states, inputs, outputs, event_states, and thresholds_met are represented as matricies instead of dictionaries. This is important for some applications like surrogate and machine learned models where the state is represented by a tensor, and operations by matrix operations. Simulation functions propogate the state using the matrix form, preventing the inefficiency of having to convert to and from dictionaries.
+
+    The MatrixModel class is an extension of the basic PrognosticsModel class. Like PrognosticsModel, MatrixModel a wrapper around a mathematical model of a system. The model is represented by a state_matrix, output_matrix, input_matrix, event_state_matrix, and threshold_matrix equations.
+
+    A Model also has a parameters structure, which contains fields for various model parameters.
+
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          Process noise provided in this form will be converted into its matrix form for computation
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x, dt) -> x
+        process_noise_matrix : Optional, float or Array
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., np.array([[0.2], [0.3]])), or a function (x, dt) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        process_noise_dist_matrix : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular) specific to the matrix model
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_matrix : Optional, float or Array
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., np.array([[0.2], [0.3]]), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        measurement_noise_dist_matrix : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular) specific to the matrix model
+        Additional parameters specific to the model
+
+    Raises
+    ------
+        ProgModelTypeError, ProgModelInputException, ProgModelException
+
+    Example
+    -------
+        m = MatrixModel(process_noise = 3.2)
+
+    Attributes
+    ----------
+        is_vectorized : bool, optional
+            True if the model is vectorized, False otherwise. Default is False
+        default_parameters : dict[str, float], optional
+            Default parameters for the model class
+        parameters : dict[str, float]
+            Parameters for the specific model object. This is created automatically from the default_parameters and kwargs
+        state_limits: dict[str, tuple[float, float]], optional
+            Limits on the state variables format {'state_name': (lower_limit, upper_limit)}
+        state_limits_mat: tuple[np.array, np.array], optional
+            Limits on the state variables format (lower_limit, upper_limit)
+            Note: will be generated from state_limits if not provided
+        param_callbacks : dict[str, list[function]], optional
+            Callbacks for derived parameters
+        inputs: List[str]
+            Identifiers for each input
+        states: List[str]
+            Identifiers for each state
+        outputs: List[str]
+            Identifiers for each output
+        performance_metric_keys: List[str], optional
+            Identifiers for each performance metric
+        events: List[str], optional
+            Identifiers for each event predicted 
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -130,74 +206,576 @@ class MatrixModel(PrognosticsModel, ABC):
         self.state_limits_mat = (
             [[self.state_limits[key][0]] if key in self.state_limits else [-float('inf')] for key in self.states],
             [[self.state_limits[key][1]] if key in self.state_limits else [float('inf')] for key in self.states])
-
-
         # TODO(CT): Issue- this doesn't support changing state_limits after construction
 
     def initialize_matrix(self, u = None, z = None):
+        """
+        Calculate initial state given inputs and outputs in matrix form. This method or initialize() is overwritten by children classes
+
+        Parameters
+        ----------
+        u : np.array as column vector
+            Inputs, in order of model.inputs \n
+            e.g., u = np.array([[3.2]]) given inputs = ['i']
+        z : np.array as column vector
+            Outputs, in order of model.outputs \n
+            e.g., z = np.array([[12.4], [3.3]]) given inputs = ['t', 'v']
+
+        Returns
+        -------
+        x : np.array as column vector
+            First state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = MatrixModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize_matrix(u, z) # Initialize first state
+
+        See Also
+        --------
+        initialize
+        """
         pass
 
-    def initialize(self, u = None, z = None):
-        if z is None:
-            z_mat = None
-        else:
-            z_mat = np.array([[z[key]] for key in self.outputs])
-        
-        if u is None:
-            u_mat = None
-        else:
-            u_mat = np.array([[u[key]] for key in self.inputs])
+    def initialize(self, u = {}, z = {}):
+        """
+        Calculate initial state given inputs and outputs in dictionary form. calls initialize_matrix
+
+        Parameters
+        ----------
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+        z : dict
+            Outputs, with keys defined by model.outputs \n
+            e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+
+        Returns
+        -------
+        x : dict
+            First state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+
+        See Also
+        --------
+        initialize_matrix
+        """
+
+        # Convert to matrix
+        z_mat = np.array([[z[key]] if key in z else [None] for key in self.outputs])
+        u_mat = np.array([[u[key]] if key in u else [None] for key in self.inputs])
+
+        # Initialize
         x = self.initialize_matrix(u_mat, z_mat)
+
+        # Convert to dictionary
         return {key: x_i for key, x_i in zip(self.states, x)}
 
     def dx_matrix(self, x, u):
+        """
+        Calculate the first derivative of state `x` at a specific time `t`, given state and input, in matrix form. This method is overwritten by children classes
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        u : np.array as column vector
+            Inputs, in order of model.inputs \n
+            e.g., u = np.array([[3.2]]) given inputs = ['i']
+
+        Returns
+        -------
+        dx : np.array as column vector
+            first derivative of state, in order of model.states \n
+            e.g., x = np.array([[-3.1], [1.7]]) given states = ['abc', 'def']
+        
+        Example
+        -------
+        | m = DerivMatrixModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | dx = m.dx_matrix(x, u) # Returns first derivative of state given input u
+        
+        See Also
+        --------
+        dx
+        next_state
+        next_state_matrix
+
+        Note
+        ----
+        A model should overwrite either `next_state_matrix` or `dx_matrix`. Override `dx_matrix` for continuous models,
+        and `next_state_matrix` for discrete, where the behavior cannot be described by the first derivative
+        """
         pass
 
+    def dx(self, x, u):
+        """
+        Calculate the first derivative of state `x` at a specific time `t`, given state and input in dictionary form. Uses dx_matrix function
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+
+        Returns
+        -------
+        dx : dict
+            First derivitive of state, with keys defined by model.states \n
+            e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
+        
+        Example
+        -------
+        | m = DerivProgModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | dx = m.dx(x, u) # Returns first derivative of state given input u
+        
+        See Also
+        --------
+        dx_matrix
+        next_state
+        next_state_matrix
+        """
+        # Convert to matrix
+        x_mat = np.array([[x[key]] for key in self.states])
+        u_mat = np.array([[u[key]] for key in self.inputs])
+
+        # Calculate
+        x_next = self.dx(x_mat, u_mat)
+
+        # Convert to dictionary
+        return {state: x_next_i for (state, x_next_i) in zip(self.states, x_next)}
+
     def next_state_matrix(self, x, u, dt):
+        """
+        State transition equation: Calculate next state, where state and input are represented in matrix format. 
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+        dt : number
+            Timestep size in seconds (≥ 0) \n
+            e.g., dt = 0.1
+        
+
+        Returns
+        -------
+        x : dict
+            next state at t0 + dt, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Example
+        -------
+        | m = MatrixModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | dx = m.next_state_matrix(x, u, 0.1) # Returns first derivative of state given input u
+        
+        See Also
+        --------
+        dx_matrix
+        dx
+        next_state
+
+        Note
+        ----
+        A model should overwrite either `next_state_matrix` or `dx_matrix`. Override `dx_matrix` for continuous models, and `next_state_matrix` for discrete, where the behavior cannot be described by the first derivative
+        """
         return x + self.dx_matrix(x, u) * dt
 
     def next_state(self, x, u, dt):
+        """
+        State transition equation: Calculate next state using state and input, represented by a dictionary. Uses next_state_matrix method
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+        dt : number
+            Timestep size in seconds (≥ 0) \n
+            e.g., dt = 0.1
+        
+
+        Returns
+        -------
+        x : dict
+            Next state, with keys defined by model.states
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u
+        
+        See Also
+        --------
+        dx_matrix
+        dx
+        next_state_matrix
+        """
+        # Convert to matrix
         x_mat = np.array([[x[key]] for key in self.states])
         u_mat = np.array([[u[key]] for key in self.inputs])
+
+        # Calculate
         x_next = self.next_state_matrix(x_mat, u_mat, dt)
+
+        # Convert to dictionary
         return {state: x_next_i for (state, x_next_i) in zip(self.states, x_next)}
 
     @abstractmethod
     def output_matrix(self, x):
+        """
+        Calculate outputs given state in matrix form. Overwritten by children classes
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        
+        Returns
+        -------
+        z : np.array as column vector
+            outputs, in order of model.outputs \n
+            e.g., z = np.array([[12.4], [3.3]]) given outputs = ['t', 'v']
+
+        Example
+        -------
+        | m = MatrixModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | z = m.output(x) # Returns {'o1': 1.2}
+
+        See Also
+        --------
+        output
+        """
         pass
 
     def output(self, x):
+        """
+        Calculate outputs given state in dictionary form. Uses output_matrix function
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        z : dict
+            Outputs, with keys defined by model.outputs. \n
+            e.g., z = {'t':12.4, 'v':3.3} given outputs = ['t', 'v']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | z = m.output(x) # Returns {'o1': 1.2}
+
+        See Also
+        --------
+        output_matrix
+        """
+        # Convert to matrix
         x_mat = np.array([[x[key]] for key in self.states])
+
+        # Calculate
         z = self.output(x_mat)
+
+        # Convert to dictionary
         return {output: z_i for (output, z_i) in zip(self.outputs, z)}
 
     def event_state_matrix(self, x):
+        """
+        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured)), given state represented by a matrix
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        
+        Returns
+        -------
+        event_state : np.array as column vector
+            event states, in order of model.events \n
+            e.g., es = np.array([[0.32],[0.75]]) given events = ['eol', 'eod']
+
+        Example
+        -------
+        | m = MatrixModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | event_state = m.event_state(x) # Returns {'e1': 0.8, 'e2': 0.6}
+
+        Note
+        ----
+        Default is to return an empty array (for system models that do not include any events)
+        
+        See Also
+        --------
+        threshold_met_matrix
+        threshold_met
+        event_state
+        """
         return np.array([[]])
 
     def event_state(self, x):
+        """
+        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured)), given a state, represented by a dictionary
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states\n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        event_state : dict
+            Event States, with keys defined by prognostics_model.events.\n
+            e.g., event_state = {'EOL':0.32} given events = ['EOL']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | event_state = m.event_state(x) # Returns {'e1': 0.8, 'e2': 0.6}
+
+        Note
+        ----
+        Default is to return an empty array (for system models that do not include any events)
+        
+        See Also
+        --------
+        event_state_matrix
+        threshold_met_matrix
+        threshold_met
+        """
+
+        # Convert to matrix
         x_mat = np.array([[x[key]] for key in self.states])
+
+        # Calculate
         es = self.event_state_matrix(x_mat)
+
+        # Convert to dictionary
         return {event: es_i for (event, es_i) in zip(self.events, es)}
 
     def threshold_matrix(self, x):
+        """
+        For each event threshold, calculate if it has been met given the state, represented by a matrix
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        
+        Returns
+        -------
+        thresholds_met : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[True], [False]]) given events = ['eod', 'eol']
+
+        Example
+        -------
+        | m = MatrixModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | threshold_met = m.threshold_met(x) # returns np.array([[False], [False]])
+
+        Note
+        ----
+        If not overwritten, the default behavior is to say the threshold is met if the event state is <= 0
+        
+        See Also
+        --------
+        event_state_matrix
+        event_state
+        threshold
+        """
         es = self.event_state_matrix(x)
         return  es[es <= 0]
 
     def threshold(self, x):
+        """
+        For each event threshold, calculate if it has been met given state, represented by a dictionary
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states\n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        thresholds_met : dict
+            If each threshold has been met (bool), with keys defined by prognostics_model.events\n
+            e.g., thresholds_met = {'EOL': False} given events = ['EOL']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = {'u1': 3.2}
+        | z = {'z1': 2.2}
+        | x = m.initialize(u, z) # Initialize first state
+        | threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
+
+        Note
+        ----
+        If not overwritten, the default behavior is to say the threshold is met if the event state is <= 0
+        
+        See Also
+        --------
+        event_state_matrix
+        event_state
+        threshold_met_matrix
+        """
+        # Convert to matrix
         x_mat = np.array([[x[key]] for key in self.states])
+
+        # Calculate
         t_met = self.threshold_matrix(x_mat)
+
+        # Convert to dictionary
         return {event: t_met_i for (event, t_met_i) in zip(self.events, t_met)}
 
     def apply_process_noise_matrix(self, x, dt=1):
+        """
+        Apply process noise to the state, represted by a matrix
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        dt : Number, optional
+            Time step (e.g., dt = 0.1)
+
+        Returns
+        -------
+        x : np.array as column vector
+            state, with applied noise in order of model.states \n
+            e.g., x = np.array([[332.15], [221.023]]) given states = ['abc', 'def']
+        
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.apply_process_noise(x) 
+
+        Note
+        ----
+        Configured using parameters `process_noise_matrix` and `process_noise_dist_matrix`
+        """
         x + np.random.normal(
                     0, self.parameters['process_noise_matrix'],
                     size=x.shape) * dt
         return x
 
     def apply_limits_matrix(self, x):
+        """
+        Apply state bound limits given state represented by a matrix. Any state outside of limits will be set to the closest limit.
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+
+        Returns
+        -------
+        x : np.array as column vector
+            bounded state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        """
         return x.clip(*self.state_limits_mat)
 
     def __next_state_matrix(self, x, u, dt):
+        """
+        State transition equation: Calls next_state_matrix(), calculating the next state, and then adds noise and limits
+
+        Parameters
+        ----------
+        x : np.array as column vector
+            state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+        u : dict
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = {'i':3.2} given inputs = ['i']
+        dt : number
+            Timestep size in seconds (≥ 0) \n
+            e.g., dt = 0.1
+
+        Returns
+        -------
+        x : np.array as column vector
+            next state, in order of model.states \n
+            e.g., x = np.array([[332.1], [221.003]]) given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = np.array([[3.2], [1.2]])
+        | z = np.array([[2.2], [3.3], [4.4]])
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.__next_state(x, u, 0.1) # Returns state, with noise, at 3.1 seconds given input u
+        
+        See Also
+        --------
+        next_state_matrix
+        dx_matrix
+
+
+        Note
+        ----
+        A model should not overwrite '__next_state_matrix'
+        A model should overwrite either `next_state_matrix` or `dx_matrix`. Override `dx_matrix` for continuous models, and `next_state_matrix` for discrete, where the behavior cannot be described by the first derivative.
+        """
         # Calculate next state and add process noise
         next_state = self.apply_process_noise_matrix(self.next_state_matrix(x, u, dt))
 
@@ -205,12 +783,58 @@ class MatrixModel(PrognosticsModel, ABC):
         return self.apply_limits_matrix(next_state)
 
     def apply_measurement_noise_matrix(self, z):
+        """
+        Apply measurement noise to the measurement, represented by a matrix
+
+        Parameters
+        ----------
+        z : np.array as column vector
+            Outputs, in order of model.outputs \n
+            e.g., z = np.array([[12.4], [3.3]]) given inputs = ['t', 'v']
+ 
+        Returns
+        -------
+        z : np.array as column vector
+            Outputs, with applied noise in order of model.outputs \n
+            e.g., z = np.array([[12.45], [3.26]]) given inputs = ['t', 'v']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | z = np.array([[12.45], [3.26]])
+        | z = m.apply_measurement_noise(z)
+
+        Note
+        ----
+        Configured using parameters `measurement_noise_matrix` and `measurement_noise_dist_matrix`
+        """
         z + np.random.normal(
                     0, self.parameters['measurement_noise_matrix'],
                     size=z.shape)
         return z
     
     def __output_matrix(self, x):
+        """
+        Calls output, which calculates next state forward one timestep, and then adds noise
+
+        Parameters
+        ----------
+        x : dict
+            state, with keys defined by model.states \n
+            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+        
+        Returns
+        -------
+        z : dict
+            Outputs, with keys defined by model.outputs. \n
+            e.g., z = {'t':12.4, 'v':3.3} given outputs = ['t', 'v']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | z = np.array([[12.45], [3.26]])
+        | z = m.__output_matrix(z)
+        """
         # Calculate next state, forward one timestep
         z = self.output_matrix(x)
 
@@ -219,12 +843,12 @@ class MatrixModel(PrognosticsModel, ABC):
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         """
-        Simulate prognostics model until any or specified threshold(s) have been met
+        Simulate prognostics model until any or specified threshold(s) have been met. Uses the special matrix functions (e.g., dx_matrix, output_matrix) in simulation, eliminating any need to convert to and from dictionaries. 
 
         Parameters
         ----------
         future_loading_eqn : callable
-            Function of (t) -> z used to predict future loading (output) at a given time (t)
+            Function of (t) -> z used to predict future loading (output) at a given time (t). z is returned in matrix format as a column vector.
 
         Keyword Arguments
         -----------------

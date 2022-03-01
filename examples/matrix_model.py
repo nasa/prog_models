@@ -4,7 +4,7 @@
 """
 This example shows the use of the advanced feature - matrix models. Matrix models represent the state of the system using matricies instead of dictionaries as are used by `PrognosticsModel`. This is important for some applications like surrogate and machine learned models where the state is represented by a tensor, and operations by matrix operations. Simulation functions propogate the state using the matrix form, preventing the inefficiency of having to convert to and from dictionaries.
 
-In this example, a model is designed to simulate a thrown object. This model is exercised like a regular model.
+In this example, a model is designed to simulate a thrown object using matrix notation (instead of dictionary notation as in the standard model). The implementation of the model is comparable to a standard model, except that, since it is a subclass of MatrixModel, it defines functions as *_matrix() to compute matrix operations within each function.
 """
 
 def run_example():
