@@ -185,8 +185,8 @@ class PrognosticsModel(ABC):
             Identifiers for each state
         outputs: List[str]
             Identifiers for each output
-        observables_keys: List[str], optional
-            Identifiers for each observable
+        performance_metric_keys: List[str], optional
+            Identifiers for each performance metric
         events: List[str], optional
             Identifiers for each event predicted 
     """
