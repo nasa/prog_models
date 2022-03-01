@@ -138,8 +138,15 @@ class MatrixModel(PrognosticsModel, ABC):
         pass
 
     def initialize(self, u = None, z = None):
-        z_mat = np.array([[z[key]] for key in self.outputs])
-        u_mat = np.array([[u[key]] for key in self.inputs])
+        if z is None:
+            z_mat = None
+        else:
+            z_mat = np.array([[z[key]] for key in self.outputs])
+        
+        if u is None:
+            u_mat = None
+        else:
+            u_mat = np.array([[u[key]] for key in self.inputs])
         x = self.initialize_matrix(u_mat, z_mat)
         return {key: x_i for key, x_i in zip(self.states, x)}
 
@@ -147,7 +154,7 @@ class MatrixModel(PrognosticsModel, ABC):
         pass
 
     def next_state_matrix(self, x, u, dt):
-        return self.dx_matrix(x, u) * dt
+        return x + self.dx_matrix(x, u) * dt
 
     def next_state(self, x, u, dt):
         x_mat = np.array([[x[key]] for key in self.states])
@@ -165,7 +172,7 @@ class MatrixModel(PrognosticsModel, ABC):
         return {output: z_i for (output, z_i) in zip(self.outputs, z)}
 
     def event_state_matrix(self, x):
-        pass
+        return np.array([[]])
 
     def event_state(self, x):
         x_mat = np.array([[x[key]] for key in self.states])
@@ -363,7 +370,7 @@ class MatrixModel(PrognosticsModel, ABC):
         threshold_keys = [self.events.index(event) for event in threshold_keys]
 
         # Initialization of save arrays
-        saved_times = np.array(dtype=np.float64)
+        saved_times = []
         saved_inputs = []
         saved_states = []  
         saved_outputs = []
@@ -380,9 +387,9 @@ class MatrixModel(PrognosticsModel, ABC):
             def update_all():
                 saved_times.append(t)
                 saved_inputs.append({key: u_i for key, u_i in zip(self.inputs, u)})
-                saved_states.append({key: x_i for key, x_i in zip(self.states, x)})
-                saved_outputs.append({key: z_i for key, z_i in zip(self.outputs, output(x))})
-                saved_event_states.append({key: es_i for key, es_i in zip(self.events, event_state(x))})
+                saved_states.append({key: x_i for key, x_i in zip(self.states, x_mat)})
+                saved_outputs.append({key: z_i for key, z_i in zip(self.outputs, self.output_matrix(x_mat))})
+                saved_event_states.append({key: es_i for key, es_i in zip(self.events, self.event_state_matrix(x_mat))})
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
                         saved_times[-1],
