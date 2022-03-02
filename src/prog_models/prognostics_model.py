@@ -185,8 +185,8 @@ class PrognosticsModel(ABC):
             Identifiers for each state
         outputs: List[str]
             Identifiers for each output
-        observables_keys: List[str], optional
-            Identifiers for each observable
+        performance_metric_keys: List[str], optional
+            Identifiers for each performance metric
         events: List[str], optional
             Identifiers for each event predicted 
     """
@@ -798,9 +798,9 @@ class PrognosticsModel(ABC):
         -------
         | def future_load_eqn(t):
         |     if t< 5.0: # Load is 3.0 for first 5 seconds
-        |         return 3.0
+        |         return {'load': 3.0}
         |     else:
-        |         return 5.0
+        |         return {'load': 5.0}
         | first_output = {'o1': 3.2, 'o2': 1.2}
         | m = PrognosticsModel() # Replace with specific model being simulated
         | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)

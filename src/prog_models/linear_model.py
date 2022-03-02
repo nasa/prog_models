@@ -36,26 +36,27 @@ class LinearModel(PrognosticsModel, ABC):
         """
         Public class method for checking matrices dimensions across all properties of the model.
         """
-        self._propertyCheck(self.A, self.n_states, self.n_states, ["A","states","states"])
-        self._propertyCheck(self.B, self.n_states, self.n_inputs, ["B","states","inputs"])
-        self._propertyCheck(self.C, self.n_outputs, self.n_states, ["C","outputs","states"])
-        self._propertyCheck(self.D, self.n_outputs, 1, ["D","outputs","1"])
-        self._propertyCheck(self.E, self.n_states, 1, ["E","states","1"])
-        self._propertyCheck(self.G, self.n_events, 1, ["G","events","1"])
+        self._propertyCheck(self.n_states, self.n_states, ["A","states","states"])
+        self._propertyCheck(self.n_states, self.n_inputs, ["B","states","inputs"])
+        self._propertyCheck(self.n_outputs, self.n_states, ["C","outputs","states"])
+        self._propertyCheck(self.n_outputs, 1, ["D","outputs","1"])
+        self._propertyCheck(self.n_states, 1, ["E","states","1"])
+        self._propertyCheck(self.n_events, 1, ["G","events","1"])
 
         if self.F is not None:
-            self._propertyCheck(self.F, self.n_events, self.n_states, ["F","events","states"])
+            self._propertyCheck(self.n_events, self.n_states, ["F","events","states"])
 
-    def _propertyCheck(self, matrix, rowsCount, colsCount, notes):
+    def _propertyCheck(self, rowsCount, colsCount, notes):
         """
         matrix: Input matrix to check dimensions of (e.g. self.A, self.B, etc)
         rowsCount: Row count to check matrix against
         colsCount: Column count to check matrix against
         notes: List of strings containing information for exception message debugging
         """
-        if isinstance(matrix, list):
-            setattr(self, "self."+notes[0], np.array(matrix))
-            matrix = getattr(self, "self."+notes[0])
+        target_property = getattr(self, notes[0])
+        if isinstance(target_property, list):
+            setattr(self, notes[0], np.array(target_property))
+        matrix = getattr(self, notes[0]) 
         if not isinstance(matrix, np.ndarray):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
 

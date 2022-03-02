@@ -3,6 +3,7 @@
 import io
 import sys
 import unittest
+import numpy as np
 from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
@@ -886,8 +887,6 @@ class TestModels(unittest.TestCase):
             pass
 
     def test_linear_model(self):
-        from prog_models import LinearModel
-        import numpy as np
         class ThrownObject(LinearModel):
             inputs = [] 
             states = ['x', 'v']
@@ -1155,6 +1154,126 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.G = np.array([[]]) # less row
             m.matrixCheck()
+
+    def test_F_property_not_none(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = np.array([[0, 1], [0, 0]])
+            E = np.array([[0], [-9.81]])
+            C = np.array([[1, 0]])
+            F = np.array([[1, 0]]) # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return {
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    }
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+
+            def event_state(self, x): 
+                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+                return {
+                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+                }
+
+        m = ThrownObject()
+        m.simulate_to_threshold(lambda t, x = None: {})
+        m.matrixCheck()
+        self.assertIsInstance(m.F, np.ndarray)
+        self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
+
+    def test_init_matrix_as_list(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = [[0, 1], [0, 0]]
+            E = [[0], [-9.81]]
+            C = [[1, 0]]
+            F = None # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return {
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    }
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+
+            def event_state(self, x): 
+                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+                return {
+                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+                }
+
+        m = ThrownObject()
+        m.matrixCheck()
+        self.assertIsInstance(m.A, np.ndarray)
+        self.assertTrue(np.array_equal(m.A, np.array([[0, 1], [0, 0]])))
+        self.assertIsInstance(m.E, np.ndarray)
+        self.assertTrue(np.array_equal(m.E, np.array([[0], [-9.81]])))
+        self.assertIsInstance(m.C, np.ndarray)
+        self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
+
+    def test_event_state_function(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = [[0, 1], [0, 0]]
+            E = [[0], [-9.81]]
+            C = [[1, 0]]
+            F = None # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return {
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    }
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+        # test coverage needs testing of event_state not overridden
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)
