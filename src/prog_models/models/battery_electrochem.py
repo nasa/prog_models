@@ -191,7 +191,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     """
     events = ['EOD']
     inputs = ['i']
-    states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
+    states = ['Vo', 'Vsn', 'Vsp', 'tb', 'qpS', 'qpB', 'qnS', 'qnB'] # Original order: ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
     is_vectorized = True
 
@@ -587,7 +587,8 @@ class DMDModel_dx(BatteryElectroChemEOD): #(BatteryElectroChemEODEOL):
     electrochemistry battery model.)
     """
     def __init__(self):
-        # Define DMD matrix, learned from data  
+        # Define DMD matrix, learned from data 
+        # # Matrix for state order: V0, Vsn, Vsp, tb, qpS, qpB, qnS, qnB, voltage, SOC 
         self.mat_DMD = np.array([[0.846432997947377, -0.000667098306969, -0.003499055627984, -0.000005962670043, 0.000002538926066, -0.000000079499872, -0.000002494565138, 0.000000479248614, -0.000135296929176, -0.000000000265174, 0.017926553930082],
             [0.000013805997785, 0.999127480001299, 0.011748463029297, -0.000004303858395, 0.000000051919248, 0.000000095473959, -0.000000030536919, 0.000000099949084, 0.000038090840986, 0.000000000009139, 0.000020598758753],
             [0.000186666241108, -0.000104306447939, 0.998182329965222, -0.000002492017443, -0.000001048132155, 0.000000176230319, 0.000001059990774, -0.000000061631353, 0.000016326810677, 0.000000000131199, 0.000012977790646],
@@ -629,15 +630,3 @@ class DMDModel_dx(BatteryElectroChemEOD): #(BatteryElectroChemEODEOL):
             'qpB': float(Xprime_new[5]),
             'qpS': float(Xprime_new[4])
         }
-
-# class DMDModel(BatteryElectroChemEODEOL):
-
-    """
-    This class uses a linear approximation and dynamic mode decomposition to simulate a battery throughout time.
-    Given an initial state and the current imposed, it returns the states of an electrochemistry battery model, 
-    voltage, and SOC throughout time until threshold is met. 
-
-    See BatteryElectroChemEOD for more details. 
-    This class overrides the simulate_to and simulate_to_threshold functions and implements a linear approximation 
-    for the ODE system in the electrochemistry model. 
-    """
