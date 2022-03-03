@@ -8,7 +8,6 @@ class TestTutorials(unittest.TestCase):
         with testbook('./tutorial.ipynb', execute=True) as tb:
             self.assertEqual(tb.__class__.__name__, "TestbookNotebookClient")
 
-
 def run_tests():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
