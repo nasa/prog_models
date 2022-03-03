@@ -6,6 +6,7 @@ from .test_examples import main as examples_main
 from .test_centrifugal_pump import main as centrifugal_pump_main
 from .test_pneumatic_valve import main as pneumatic_valve_main
 from .test_battery import main as battery_main
+from .test_tutorials import main as tutorials_main
 
 from io import StringIO
 import sys
@@ -58,6 +59,11 @@ if __name__ == '__main__':
 
     try:
         pneumatic_valve_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        tutorials_main()
     except Exception:
         was_successful = False
 
