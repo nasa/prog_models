@@ -12,6 +12,49 @@ import types
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 
+
+class DictLikeMatrixWrapper():
+    def __init__(self, keys, matrix):
+        self._keys = keys
+        self.matrix = matrix
+        
+    def __getitem__(self, key):
+        return self.matrix[self._keys.index(key)][0]
+
+    def __setitem__(self, key, value):
+        self.matrix[self._keys.index(key)] = np.atleast_1d(value)
+
+    def __iter__(self):
+        return iter(self._keys)
+
+    def __len__(self):
+        return len(self._keys)
+
+    def __eq__(self, other):
+        return self._keys == other._keys and self.matrix == other.matrix
+
+    def __hash__(self):
+        return hash(self.keys) + hash(self.matrix)
+    
+    def __str__(self):
+        return self.__repr__()
+
+    def keys(self):
+        return self._keys
+
+    def values(self):
+        return np.array([value[0] for value in self.matrix])
+
+    def items(self):
+        return zip(self._keys, np.array([value[0] for value in self.matrix]))
+
+    def __contains__(self, key):
+        return key in self._keys
+
+    def __repr__(self) -> str:
+        return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
+
+
 class PrognosticsModelParameters(UserDict):
     """
     Prognostics Model Parameters - this class replaces a standard dictionary.
@@ -257,6 +300,26 @@ class PrognosticsModel(ABC):
         self.n_outputs = len(self.outputs)
         self.n_performance = len(self.performance_metric_keys)
 
+        # Setup Containers 
+        # These containers should be used instead of dictionaries for models that use the internal matrix state
+        states = self.states
+        class StateContainer(DictLikeMatrixWrapper):
+            def __init__(self, dict):
+                super().__init__(states, np.array([[dict[k]] for k in states]))
+        self.StateContainer = StateContainer
+
+        inputs = self.inputs
+        class InputContainer(DictLikeMatrixWrapper):
+            def __init__(self, dict):
+                super().__init__(inputs, np.array([[dict[k]] for k in inputs]))
+        self.InputContainer = InputContainer
+
+        outputs = self.outputs
+        class OutputContainer(DictLikeMatrixWrapper):
+            def __init__(self, dict):
+                super().__init__(outputs, np.array([[dict[k]] for k in outputs]))
+        self.OutputContainer = OutputContainer
+
     def __eq__(self, other):
         """
         Check if two models are equal
@@ -321,11 +384,11 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return {key: z[key] \
+        return self.OutputContainer({key: z[key] \
             + np.random.normal(
                 0, self.parameters['measurement_noise'][key],
                 size=None if np.isscalar(z[key]) else len(z[key]))
-                for key in z.keys()}
+                for key in z.keys()})
         
     def apply_process_noise(self, x, dt=1) -> dict:
         """
@@ -357,11 +420,11 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] +
+        return self.StateContainer({key: x[key] +
                 dt*np.random.normal(
                     0, self.parameters['process_noise'][key],
                     size=None if np.isscalar(x[key]) else len(x[key]))
-                    for key in x.keys()}
+                    for key in x.keys()})
 
     def dx(self, x, u):
         """
