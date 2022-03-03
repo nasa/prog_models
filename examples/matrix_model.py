@@ -68,7 +68,7 @@ def run_example():
             return np.array(
                 [[x[1] < 0],
                 [x[0] <= 0]],
-                dtype=np.bool)
+                dtype=bool)
 
         def event_state_matrix(self, x): 
             x_max = x[0] + np.square(x[1])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height

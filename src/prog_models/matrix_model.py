@@ -1010,10 +1010,10 @@ class MatrixModel(PrognosticsModel, ABC):
         if config['print']:
             def update_all():
                 saved_times.append(t)
-                saved_inputs.append({key: u_i for key, u_i in zip(self.inputs, u)})
-                saved_states.append({key: x_i for key, x_i in zip(self.states, x_mat)})
-                saved_outputs.append({key: z_i for key, z_i in zip(self.outputs, self.output_matrix(x_mat))})
-                saved_event_states.append({key: es_i for key, es_i in zip(self.events, self.event_state_matrix(x_mat))})
+                saved_inputs.append({key: u_i[0] for key, u_i in zip(self.inputs, u)})
+                saved_states.append({key: x_i[0] for key, x_i in zip(self.states, x_mat)})
+                saved_outputs.append({key: z_i[0] for key, z_i in zip(self.outputs, self.output_matrix(x_mat))})
+                saved_event_states.append({key: es_i[0] for key, es_i in zip(self.events, self.event_state_matrix(x_mat))})
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
                         saved_times[-1],
@@ -1024,8 +1024,8 @@ class MatrixModel(PrognosticsModel, ABC):
         else:
             def update_all():
                 saved_times.append(t)
-                saved_inputs.append({key: u_i for key, u_i in zip(self.inputs, u)})
-                saved_states.append({key: x_i for key, x_i in zip(self.states, x)})
+                saved_inputs.append({key: u_i[0] for key, u_i in zip(self.inputs, u)})
+                saved_states.append({key: x_i[0] for key, x_i in zip(self.states, x_mat)})
 
         # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
