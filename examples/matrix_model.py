@@ -46,6 +46,7 @@ def run_example():
                 'v': self.parameters['throwing_speed']})
 
         def next_state(self, x, u, dt):
+            # Here we will use the matrix version for each variable
             # Note: x.matrix is a column vector
             # Note: u.matrix is a column vector
             #   and u.matrix is in the order of model.inputs, above
@@ -89,9 +90,8 @@ def run_example():
     x = thrown_object.StateContainer({'x': 1.93, 'v': 40})
     print('State at 0.1 seconds: ', thrown_object.next_state(x, None, 0.1))
 
-    # Now lets use it for simulation. Here the simulate_to_threshold function is using the matrix version, storing internal state information as a matrix, but the results returned are dictionaries
-    # this way the same interface is maintained as PrognosticsModel
-    thrown_object.simulate_to_threshold(lambda t, x = None: np.array([[]]), print = True, threshold_keys = 'impact', dt = 0.1, save_freq = 1)
+    # Now lets use it for simulation.
+    thrown_object.simulate_to_threshold(lambda t, x = None: thrown_object.InputContainer({}), print = True, threshold_keys = 'impact', dt = 0.1, save_freq = 1)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
