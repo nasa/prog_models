@@ -59,6 +59,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .
+        python -m pip install testbook
     - name: Run tests
       run: python -m tests
   test_prog_algs_released:
@@ -76,6 +77,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .
+        python -m pip install testbook
     - name: Clone prog_algs
       uses: actions/checkout@v2
       with:
@@ -104,6 +106,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .
+        python -m pip install testbook
     - name: Clone prog_algs
       uses: actions/checkout@v2
       with:
