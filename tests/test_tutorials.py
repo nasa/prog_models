@@ -1,13 +1,13 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from nbformat import read, NO_CONVERT
-from nbconvert.preprocessors import ExecutePreprocessor
+from testbook import testbook
 
 class TestTutorials(unittest.TestCase):
     def test_tutorial_ipynb(self):
-        with open('./tutorial.ipynb') as file:
-            ExecutePreprocessor(timeout=600, kernel_name='python3').preprocess(read(file, NO_CONVERT))
+        with testbook('./tutorial.ipynb', execute=True) as tb:
+            self.assertEqual(tb.__class__.__name__, "TestbookNotebookClient")
+
 
 def run_tests():
     l = unittest.TestLoader()
