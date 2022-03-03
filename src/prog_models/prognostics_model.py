@@ -9,7 +9,6 @@ from copy import deepcopy
 from warnings import warn
 from collections import UserDict, abc, namedtuple
 import types
-from array import array
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 
@@ -165,7 +164,7 @@ class PrognosticsModel(ABC):
 
     Example
     -------
-        m = PrognosticsModel({'process_noise': 3.2})
+        m = PrognosticsModel(process_noise = 3.2)
 
     Attributes
     ----------
@@ -549,7 +548,7 @@ class PrognosticsModel(ABC):
     @abstractmethod
     def output(self, x) -> dict:
         """
-        Calculate next state, forward one timestep
+        Calculate outputs given state
 
         Parameters
         ----------
@@ -592,9 +591,7 @@ class PrognosticsModel(ABC):
         Example
         -------
         | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = {'u1': 3.2}
-        | z = {'z1': 2.2}
-        | x = m.initialize(u, z) # Initialize first state
+        | z = {'o1': 1.2}
         | z = m.__output(3.0, x) # Returns {'o1': 1.2} with noise added
         """
 
@@ -651,7 +648,7 @@ class PrognosticsModel(ABC):
         Returns
         -------
         thresholds_met : dict
-            If each threshold has been met (bool), with deys defined by prognostics_model.events\n
+            If each threshold has been met (bool), with keys defined by prognostics_model.events\n
             e.g., thresholds_met = {'EOL': False} given events = ['EOL']
 
         Example
@@ -886,7 +883,7 @@ class PrognosticsModel(ABC):
             threshold_keys = self.events
 
         # Initialization of save arrays
-        saved_times = array('d')
+        saved_times = []
         saved_inputs = []
         saved_states = []  
         saved_outputs = []
@@ -938,12 +935,16 @@ class PrognosticsModel(ABC):
             t = t + dt
             u = future_loading_eqn(t, x)
             x = next_state(x, u, dt)
+
+            # Save if at appropriate time
             if (t >= next_save):
                 next_save += save_freq
                 update_all()
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
+
+            # Update progress bar
             if config['progress']:
                 percentages = [1-val for val in event_state(x).values()]
                 percentages.append((t/horizon))
@@ -952,6 +953,7 @@ class PrognosticsModel(ABC):
                     simulate_progress(converted_iteration)
                     last_percentage = converted_iteration
 
+            # Check thresholds
             if check_thresholds(thresthold_met_eqn(x)):
                 break
         
