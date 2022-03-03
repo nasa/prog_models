@@ -113,15 +113,15 @@ class PrognosticsModelParameters(UserDict):
                     # Update process noise distribution to custom
                     if self['process_noise_dist'].lower() == "uniform":
                         def uniform_process_noise(self, x, dt=1):
-                            return {key: x[key] + \
+                            return self.StateContainer({key: x[key] + \
                                 dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states}
+                                    for key in self.states})
                         self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                     elif self['process_noise_dist'].lower() == "triangular":
                         def triangular_process_noise(self, x, dt=1):
-                            return {key: x[key] + \
+                            return self.StateContainer({key: x[key] + \
                                 dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states}
+                                    for key in self.states})
                         self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                     else:
                         raise ProgModelTypeError("Unsupported process noise distribution")
@@ -142,15 +142,15 @@ class PrognosticsModelParameters(UserDict):
                     # Update measurement noise distribution to custom
                     if self['measurement_noise_dist'].lower() == "uniform":
                         def uniform_noise(self, x):
-                            return {key: x[key] + \
+                            return self.OutputContainer({key: x[key] + \
                                 np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs}
+                                    for key in self.outputs})
                         self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                     elif self['measurement_noise_dist'].lower() == "triangular":
                         def triangular_noise(self, x):
-                            return {key: x[key] + \
+                            return self.OutputContainer({key: x[key] + \
                                 np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs}
+                                    for key in self.outputs})
                         self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                     else:
                         raise ProgModelTypeError("Unsupported measurement noise distribution")
