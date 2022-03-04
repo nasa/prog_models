@@ -7,6 +7,16 @@ import numpy as np
 
 
 class DictLikeMatrixWrapper():
+    """
+    A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessable. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
+    
+    Arguments
+    ---------
+    keys: list
+        The keys of the dictionary. e.g., model.states or model.inputs
+    data: dict or numpy array
+        The contained data (e.g., input, state, output). If numpy array should be column vector in same order as keys
+    """
     def __init__(self, keys, data):
         self._keys = keys
         if isinstance(data, dict):

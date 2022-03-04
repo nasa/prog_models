@@ -190,6 +190,12 @@ class PrognosticsModel(ABC):
             Identifiers for each performance metric
         events: List[str], optional
             Identifiers for each event predicted 
+        StateContainer : DictLikeMatrixWrapper
+            Class for state container - used for representing state
+        OutputContainer : DictLikeMatrixWrapper
+            Class for output container - used for representing output
+        InputContainer : DictLikeMatrixWrapper
+            Class for input container - used for representing input
     """
     is_vectorized = False
 
