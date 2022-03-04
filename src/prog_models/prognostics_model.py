@@ -14,12 +14,17 @@ from .utils import ProgressBar
 
 
 class DictLikeMatrixWrapper():
-    def __init__(self, keys, matrix):
+    def __init__(self, keys, data):
         self._keys = keys
-        self.matrix = matrix
-        
+        if isinstance(data, dict):
+            self.matrix = np.array([[data[key]] for key in keys])
+        elif isinstance(data, np.ndarray):
+            self.matrix = data
+        else:
+            raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
+
     def __getitem__(self, key):
-        return self.matrix[self._keys.index(key)][0]
+        return self.matrix[self._keys.index(key)][0].item()
 
     def __setitem__(self, key, value):
         self.matrix[self._keys.index(key)] = np.atleast_1d(value)
@@ -304,20 +309,20 @@ class PrognosticsModel(ABC):
         # These containers should be used instead of dictionaries for models that use the internal matrix state
         states = self.states
         class StateContainer(DictLikeMatrixWrapper):
-            def __init__(self, dict):
-                super().__init__(states, np.array([[dict[k]] for k in states]))
+            def __init__(self, data):
+                super().__init__(states, data)
         self.StateContainer = StateContainer
 
         inputs = self.inputs
         class InputContainer(DictLikeMatrixWrapper):
-            def __init__(self, dict):
-                super().__init__(inputs, np.array([[dict[k]] for k in inputs]))
+            def __init__(self, data):
+                super().__init__(inputs, data)
         self.InputContainer = InputContainer
 
         outputs = self.outputs
         class OutputContainer(DictLikeMatrixWrapper):
-            def __init__(self, dict):
-                super().__init__(outputs, np.array([[dict[k]] for k in outputs]))
+            def __init__(self, data):
+                super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
 
     def __eq__(self, other):

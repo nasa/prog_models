@@ -50,16 +50,14 @@ def run_example():
             # Note: x.matrix is a column vector
             # Note: u.matrix is a column vector
             #   and u.matrix is in the order of model.inputs, above
-            # Note: Here we're updating x instead of creating a new state from StateContainer
 
-            A = np.matrix([[0, 1], [0, 0]])  # State transition matrix
-            B = np.matrix([[0], [self.parameters['g']]])  # Acceleration due to gravity
+            A = np.array([[0, 1], [0, 0]])  # State transition matrix
+            B = np.array([[0], [self.parameters['g']]])  # Acceleration due to gravity
 
-            x.matrix += (np.matmul(A, x.matrix) + B) * dt
-            return x
-
+            return self.StateContainer(x.matrix + (np.matmul(A, x.matrix) + B) * dt)
+            
         def output(self, x):
-            # Note- states can still be accessed a dictionary 
+            # Note- states can still be accessed a dictionary
             return self.OutputContainer({'x': x['x']})
 
         # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
