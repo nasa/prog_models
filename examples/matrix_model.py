@@ -53,8 +53,9 @@ def run_example():
 
             A = np.array([[0, 1], [0, 0]])  # State transition matrix
             B = np.array([[0], [self.parameters['g']]])  # Acceleration due to gravity
+            x.matrix += (np.matmul(A, x.matrix) + B) * dt
 
-            return self.StateContainer(x.matrix + (np.matmul(A, x.matrix) + B) * dt)
+            return x.matrix
             
         def output(self, x):
             # Note- states can still be accessed a dictionary
