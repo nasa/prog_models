@@ -293,6 +293,12 @@ class PrognosticsModel(ABC):
     
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
+
+    def __getstate__(self):
+        return self.parameters.data
+
+    def __setstate__(self, state):
+        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u = None, z = None) -> dict:
