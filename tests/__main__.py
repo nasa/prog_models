@@ -2,6 +2,7 @@
 
 from .test_base_models import main as base_models_main
 from .test_sim_result import main as sim_result_main
+from .test_dict_like_matrix_wrapper import main as dict_like_matrix_wrapper_main
 from .test_examples import main as examples_main
 from .test_centrifugal_pump import main as centrifugal_pump_main
 from .test_pneumatic_valve import main as pneumatic_valve_main
@@ -58,6 +59,11 @@ if __name__ == '__main__':
 
     try:
         pneumatic_valve_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        dict_like_matrix_wrapper_main()
     except Exception:
         was_successful = False
 

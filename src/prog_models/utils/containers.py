@@ -21,6 +21,8 @@ class DictLikeMatrixWrapper():
         self._keys = keys
         if isinstance(data, dict):
             self.matrix = np.array([[data[key]] for key in keys])
+        elif isinstance(data, np.matrix):
+            self.matrix = np.array(data)
         elif isinstance(data, np.ndarray):
             self.matrix = data
         else:
@@ -39,7 +41,7 @@ class DictLikeMatrixWrapper():
         return len(self._keys)
 
     def __eq__(self, other):
-        return self._keys == other._keys and self.matrix == other.matrix
+        return self._keys == other._keys and (self.matrix == other.matrix).all()
 
     def __hash__(self):
         return hash(self.keys) + hash(self.matrix)
