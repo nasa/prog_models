@@ -19,12 +19,12 @@ class DictLikeMatrixWrapper():
     """
     def __init__(self, keys, data):
         self._keys = keys
-        if isinstance(data, dict):
-            self.matrix = np.array([[data[key]] for key in keys])
-        elif isinstance(data, np.matrix):
+        if isinstance(data, np.matrix):
             self.matrix = np.array(data)
         elif isinstance(data, np.ndarray):
             self.matrix = data
+        elif isinstance(data, dict):
+            self.matrix = np.array([[data[key]] for key in keys])
         else:
             raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
 
