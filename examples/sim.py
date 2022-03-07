@@ -26,7 +26,7 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': i}
+        return batt.InputContainer({'i': i})
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')

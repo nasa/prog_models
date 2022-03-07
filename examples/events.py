@@ -60,6 +60,8 @@ def run_example():
             return t_met
 
     # Step 2: Use it
+    m = MyBatt()
+
     # 2a: Setup model
     def future_loading(t, x=None):
         # Variable (piece-wise) future loading scheme 
@@ -74,10 +76,8 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': i}
+        return m.InputContainer({'i': i})
     
-    m = MyBatt()
-
     # 2b: Simulate to threshold
     simulated_results = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = True)
 
