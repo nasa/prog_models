@@ -132,7 +132,7 @@ class ProgModelTemplate(PrognosticsModel):
             'Examples State 3': 44,
             'Examples State 4': [1, 2, 3]
         }
-        return x0
+        return self.StateContainer(x0)
 
     # UNCOMMENT THIS FUNCTION FOR CONTINUOUS MODELS
     # def dx(self, t, x, u):
@@ -173,7 +173,7 @@ class ProgModelTemplate(PrognosticsModel):
     #         'Examples State 3': 4.7,
     #         'Examples State 4': 220
     #     }
-    #     return dxdt
+    #     return self.StateContainer(dxdt)
 
     # UNCOMMENT THIS FUNCTION FOR DISCRETE MODELS
     # def next_state(self, t, x, u, dt):
@@ -206,7 +206,7 @@ class ProgModelTemplate(PrognosticsModel):
     #     next_x = x
     #     # ADD LOGIC TO CALCULATE next_x from x
 
-    #     return next_x 
+    #     return self.StateContainer(next_x)
 
     def output(self, t, x):
         """
@@ -230,10 +230,10 @@ class ProgModelTemplate(PrognosticsModel):
 
         # REPLACE BELOW WITH LOGIC TO CALCULATE OUTPUTS
         # NOTE: KEYS FOR z MATCH 'outputs' LIST ABOVE
-        z = {
+        z = self.OutputContainer({
             'Example Output 1': 0.0,
             'Example Output 2': 0.0  
-        }
+        })
 
         return z
 
