@@ -11,6 +11,8 @@ from collections import UserDict, abc, namedtuple
 import types
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
+from .utils.containers import DictLikeMatrixWrapper
+
 
 class PrognosticsModelParameters(UserDict):
     """
@@ -70,15 +72,15 @@ class PrognosticsModelParameters(UserDict):
                     # Update process noise distribution to custom
                     if self['process_noise_dist'].lower() == "uniform":
                         def uniform_process_noise(self, x, dt=1):
-                            return {key: x[key] + \
+                            return self.StateContainer({key: x[key] + \
                                 dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states}
+                                    for key in self.states})
                         self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
                     elif self['process_noise_dist'].lower() == "triangular":
                         def triangular_process_noise(self, x, dt=1):
-                            return {key: x[key] + \
+                            return self.StateContainer({key: x[key] + \
                                 dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states}
+                                    for key in self.states})
                         self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
                     else:
                         raise ProgModelTypeError("Unsupported process noise distribution")
@@ -99,15 +101,15 @@ class PrognosticsModelParameters(UserDict):
                     # Update measurement noise distribution to custom
                     if self['measurement_noise_dist'].lower() == "uniform":
                         def uniform_noise(self, x):
-                            return {key: x[key] + \
+                            return self.OutputContainer({key: x[key] + \
                                 np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs}
+                                    for key in self.outputs})
                         self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
                     elif self['measurement_noise_dist'].lower() == "triangular":
                         def triangular_noise(self, x):
-                            return {key: x[key] + \
+                            return self.OutputContainer({key: x[key] + \
                                 np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs}
+                                    for key in self.outputs})
                         self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
                     else:
                         raise ProgModelTypeError("Unsupported measurement noise distribution")
@@ -188,6 +190,12 @@ class PrognosticsModel(ABC):
             Identifiers for each performance metric
         events: List[str], optional
             Identifiers for each event predicted 
+        StateContainer : DictLikeMatrixWrapper
+            Class for state container - used for representing state
+        OutputContainer : DictLikeMatrixWrapper
+            Class for output container - used for representing output
+        InputContainer : DictLikeMatrixWrapper
+            Class for input container - used for representing input
     """
     is_vectorized = False
 
@@ -257,6 +265,26 @@ class PrognosticsModel(ABC):
         self.n_outputs = len(self.outputs)
         self.n_performance = len(self.performance_metric_keys)
 
+        # Setup Containers 
+        # These containers should be used instead of dictionaries for models that use the internal matrix state
+        states = self.states
+        class StateContainer(DictLikeMatrixWrapper):
+            def __init__(self, data):
+                super().__init__(states, data)
+        self.StateContainer = StateContainer
+
+        inputs = self.inputs
+        class InputContainer(DictLikeMatrixWrapper):
+            def __init__(self, data):
+                super().__init__(inputs, data)
+        self.InputContainer = InputContainer
+
+        outputs = self.outputs
+        class OutputContainer(DictLikeMatrixWrapper):
+            def __init__(self, data):
+                super().__init__(outputs, data)
+        self.OutputContainer = OutputContainer
+
     def __eq__(self, other):
         """
         Check if two models are equal
@@ -265,6 +293,12 @@ class PrognosticsModel(ABC):
     
     def __str__(self):
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
+
+    def __getstate__(self):
+        return self.parameters.data
+
+    def __setstate__(self, state):
+        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u = None, z = None) -> dict:
@@ -321,11 +355,11 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return {key: z[key] \
+        return self.OutputContainer({key: z[key] \
             + np.random.normal(
                 0, self.parameters['measurement_noise'][key],
                 size=None if np.isscalar(z[key]) else len(z[key]))
-                for key in z.keys()}
+                for key in z.keys()})
         
     def apply_process_noise(self, x, dt=1) -> dict:
         """
@@ -357,11 +391,11 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] +
+        return self.StateContainer({key: x[key] +
                 dt*np.random.normal(
                     0, self.parameters['process_noise'][key],
                     size=None if np.isscalar(x[key]) else len(x[key]))
-                    for key in x.keys()}
+                    for key in x.keys()})
 
     def dx(self, x, u):
         """
