@@ -23,26 +23,26 @@ def run_example_Full():
     ## Define Loading Profile
     def future_loading(t, x=None):
         if (t < 500):
-            i = 3
+            i = 1
         elif (t < 1000):
             i = 1
         elif (t < 2000):
-            i = 2
+            i = 1
         else:
-            i = 4
+            i = 1
         return {'i': i}
 
     # Simulation Options
     options = {
         'save_freq': 1,  # Frequency at which results are saved
-        'dt': 1  # Timestep
+        'dt': 0.1  # Timestep
     }
     
     ## Simulate to Threshold 
-    simulated_results = batt.simulate_to_threshold(future_loading, **options)
+    # simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
     ## Simulate to specific time 
-    # simulated_results = batt.simulate_to(600, future_loading, **options)
+    simulated_results = batt.simulate_to(600, future_loading, **options)
 
     ## Benchmarking
     print('Benchmarking Full Simulation:')
@@ -202,10 +202,10 @@ def run_example_DMD_linear():
 # This allows the module to be executed directly 
 if __name__ == '__main__':
     # Run Full Simulation:
-    # run_example_Full()
+    run_example_Full()
     
     # Run DMD approximation in next_state
     # run_example_DMD_dx()
 
     # Run DMD approximation using LinearModel
-    run_example_DMD_linear()
+    # run_example_DMD_linear()

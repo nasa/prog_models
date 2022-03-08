@@ -1160,4 +1160,42 @@ class PrognosticsModel(ABC):
 
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
-        self.parameters['process_noise'] = p_noise                
+        self.parameters['process_noise'] = p_noise   
+
+    def generate_surrogate(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+
+        # Configure
+        config = { # Defaults
+            't0': 0.0,
+            'dt': 1.0,
+            'save_pts': [],
+            'save_freq': 10.0,
+            'horizon': 1e100, # Default horizon (in s), essentially inf
+            'print': False,
+            'progress': False
+        }
+        config.update(kwargs)
+
+        #(times, inputs, states, outputs, event_states) = self.simulate_to_threshold(future_loading_eqn, **kwargs)
+        (times, inputs, states, outputs, event_states) = self.simulate_to(2000,future_loading_eqn, **kwargs)
+        
+        # Initialize DMD matrices
+        X_mat = np.zeros((len(states[0])+3,len(times)-20))
+        XPrime_mat = np.zeros((len(states[0])+2,len(times)-20))
+
+        for iter in range(len(times)-20):
+            time_now = times[iter]
+            current_now = future_loading_eqn(time_now)['i']
+            states_now = np.array([[states[iter]['Vo']], [states[iter]['Vsn']], [states[iter]['Vsp']], [states[iter]['tb']], [states[iter]['qpS']], [states[iter]['qpB']], [states[iter]['qnS']], [states[iter]['qnB']]])
+            states_next = np.array([[states[iter+1]['Vo']], [states[iter+1]['Vsn']], [states[iter+1]['Vsp']], [states[iter+1]['tb']], [states[iter+1]['qpS']], [states[iter+1]['qpB']], [states[iter+1]['qnS']], [states[iter+1]['qnB']]])
+
+            X_mat[:,iter] = np.vstack((states_now,np.array([outputs[iter]['v']]),[event_states[iter]['EOD']],[current_now]))[:,0]
+            XPrime_mat[:,iter] = np.vstack((states_next,np.array([outputs[iter+1]['v']]),[event_states[iter+1]['EOD']]))[:,0]
+            
+        # Calculate DMD matrix:
+        DMD_matrix = np.dot(XPrime_mat,np.linalg.pinv(X_mat))
+
+        return DMD_matrix 
+        
+
+             
