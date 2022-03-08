@@ -90,7 +90,15 @@ def run_example():
     print('State at 0.1 seconds: ', thrown_object.next_state(x, None, 0.1))
 
     # Now lets use it for simulation.
-    thrown_object.simulate_to_threshold(lambda t, x = None: thrown_object.InputContainer({}), print = True, threshold_keys = 'impact', dt = 0.1, save_freq = 1)
+    def future_loading(t, x=None):
+        return thrown_object.InputContainer({})
+
+    thrown_object.simulate_to_threshold(
+        future_loading, 
+        print = True, 
+        threshold_keys = 'impact', 
+        dt = 0.1, 
+        save_freq = 1)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
