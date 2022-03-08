@@ -25,13 +25,18 @@ def _test_ex():
     sys.stdout = _stdout
 
 if __name__ == '__main__':
-    from timeit import timeit
-    print("\nExample Runtime: ", timeit(_test_ex, number=10))
+    was_successful = True
+
+    try:
+        from timeit import timeit
+        print("\nExample Runtime: ", timeit(_test_ex, number=10))
+    except Exception as e:
+        print("\Benchmarking Failed: ", e)
+        was_successful = False
 
     print("\n\nTesting individual exectution of test files")
 
     # Run tests individually to test them and make sure they can be executed individually
-    was_successful = True
     try:
         base_models_main()
     except Exception:
