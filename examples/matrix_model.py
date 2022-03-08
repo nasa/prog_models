@@ -55,7 +55,7 @@ def run_example():
             B = np.array([[0], [self.parameters['g']]])  # Acceleration due to gravity
             x.matrix += (np.matmul(A, x.matrix) + B) * dt
 
-            return x.matrix
+            return x
             
         def output(self, x):
             # Note- states can still be accessed a dictionary
