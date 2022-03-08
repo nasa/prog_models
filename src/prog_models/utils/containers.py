@@ -29,7 +29,7 @@ class DictLikeMatrixWrapper():
             raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
 
     def __getitem__(self, key):
-        return self.matrix[self._keys.index(key)][0].item()
+        return self.matrix[self._keys.index(key)][0]
 
     def __setitem__(self, key, value):
         self.matrix[self._keys.index(key)] = np.atleast_1d(value)

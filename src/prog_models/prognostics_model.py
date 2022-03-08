@@ -59,7 +59,7 @@ class PrognosticsModelParameters(UserDict):
                 changes = callback(self)
                 self.update(changes) # Merge in changes
         
-        if key == 'process_noise':
+        if key == 'process_noise' or key == 'process_noise_dist':
             if callable(self['process_noise']):  # Provided a function
                 self.__m.apply_process_noise = types.MethodType(self['process_noise'], self.__m)
             else:  # Not a function
@@ -88,7 +88,7 @@ class PrognosticsModelParameters(UserDict):
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['process_noise'] for key in self.__m.states]):
                     raise ProgModelTypeError("Process noise must have every key in model.states")
-        elif key == 'measurement_noise':
+        elif key == 'measurement_noise' or key == 'measurement_noise_dist':
             if callable(self['measurement_noise']):
                 self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
             else:
@@ -239,25 +239,35 @@ class PrognosticsModel(ABC):
             iter(self.outputs)
         except TypeError:
             raise ProgModelTypeError('model.outputs must be iterable')
+        
+        # Default params for any model
+        params = PrognosticsModel.default_parameters.copy()
 
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
+        # Add params specific to the model
+        params.update(self.__class__.default_parameters) 
+
+        # Add params specific passed via command line arguments
         try:
-            self.parameters.update(kwargs)
+            params.update(kwargs)
         except TypeError:
-            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(kwargs)))
+            raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
 
-        try:
-            if 'process_noise' not in self.parameters:
-                self.parameters['process_noise'] = 0.1
-            else:
-                self.parameters['process_noise'] = self.parameters['process_noise']         # To force  __setitem__
+        self.__setstate__(params)
 
-            if 'measurement_noise' not in self.parameters:
-                self.parameters['measurement_noise'] = 0.0
-            else:
-                self.parameters['measurement_noise'] = self.parameters['measurement_noise'] # To force  __setitem__
-        except Exception:
-            raise ProgModelTypeError('Model noise poorly configured')
+    def __eq__(self, other):
+        """
+        Check if two models are equal
+        """
+        return self.__class__ == other.__class__ and self.parameters == other.parameters
+    
+    def __str__(self):
+        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
+
+    def __getstate__(self):
+        return self.parameters.data
+
+    def __setstate__(self, state):
+        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
 
         self.n_inputs = len(self.inputs)
         self.n_states = len(self.states)
@@ -284,21 +294,6 @@ class PrognosticsModel(ABC):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
-
-    def __eq__(self, other):
-        """
-        Check if two models are equal
-        """
-        return self.__class__ == other.__class__ and self.parameters == other.parameters
-    
-    def __str__(self):
-        return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
-
-    def __getstate__(self):
-        return self.parameters.data
-
-    def __setstate__(self, state):
-        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u = None, z = None) -> dict:
