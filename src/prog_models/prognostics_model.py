@@ -1223,22 +1223,21 @@ class PrognosticsModel(ABC):
 
             # Simulate to threshold 
             (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **kwargs)
-            # (times, inputs, states, outputs, event_states) = self.simulate_to(2000,load_fcn_now, **kwargs)
         
             # Initialize DMD matrices
             time_temp = np.array(times[0:-20])
-            X_mat_temp = np.zeros((len(states[0])+3,len(times)-20))
-            XPrime_mat_temp = np.zeros((len(states[0])+2,len(times)-20))
+            X_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-20))
+            XPrime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-20))
 
             # Save DMD matrices
             for iter in range(len(times)-20):
                 time_now = times[iter]
-                current_now = load_fcn_now(time_now)['i']
-                states_now = np.array([[states[iter]['Vo']], [states[iter]['Vsn']], [states[iter]['Vsp']], [states[iter]['tb']], [states[iter]['qpS']], [states[iter]['qpB']], [states[iter]['qnS']], [states[iter]['qnB']]])
-                states_next = np.array([[states[iter+1]['Vo']], [states[iter+1]['Vsn']], [states[iter+1]['Vsp']], [states[iter+1]['tb']], [states[iter+1]['qpS']], [states[iter+1]['qpB']], [states[iter+1]['qnS']], [states[iter+1]['qnB']]])
+                current_now = load_fcn_now(time_now)
+                states_now = np.array([list(states[iter].values())]).T 
+                states_next = np.array([list(states[iter+1].values())]).T 
 
-                X_mat_temp[:,iter] = np.vstack((states_now,np.array([outputs[iter]['v']]),[event_states[iter]['EOD']],[current_now]))[:,0]
-                XPrime_mat_temp[:,iter] = np.vstack((states_next,np.array([outputs[iter+1]['v']]),[event_states[iter+1]['EOD']]))[:,0]
+                X_mat_temp[:,iter] = np.vstack((states_now,np.array([list(outputs[iter].values())]).T,np.array([list(event_states[iter].values())]).T,np.array([list(current_now.values())]).T))[:,0] 
+                XPrime_mat_temp[:,iter] = np.vstack((states_next,np.array([list(outputs[iter+1].values())]).T,np.array([list(event_states[iter+1].values())]).T))[:,0] 
                 
             # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
             X_list.append(X_mat_temp)

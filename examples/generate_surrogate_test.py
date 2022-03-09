@@ -35,7 +35,6 @@ def run_example():
     options = {
         'save_freq': 1, # Frequency at which results are saved
         'dt': 0.1, # Timestep
-        'threshold_keys': 'EOD'
     }
 
     # Set noise to 0
