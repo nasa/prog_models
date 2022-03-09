@@ -472,7 +472,7 @@ class PrognosticsModel(ABC):
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        return {key: x[key] + dx[key]*dt for key in dx.keys()}
+        return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
     def apply_limits(self, x):
         """
