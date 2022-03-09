@@ -1193,8 +1193,9 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise   
 
-    def generate_surrogate(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+    def generate_surrogate(self, load_functions, first_output = None, threshold_keys = None, **kwargs):
 
+        ### Generate Data: 
         # Configure
         config = { # Defaults
             't0': 0.0,
@@ -1207,22 +1208,66 @@ class PrognosticsModel(ABC):
         }
         config.update(kwargs)
 
-        #(times, inputs, states, outputs, event_states) = self.simulate_to_threshold(future_loading_eqn, **kwargs)
-        (times, inputs, states, outputs, event_states) = self.simulate_to(2000,future_loading_eqn, **kwargs)
+        # Initialize lists to hold individual matrices
+        X_list = []
+        XPrime_list = []
+        t_end_list = []
+        time_list = []
+
+        for iter2 in range(len(load_functions)):
+            # Print status
+            print('Simulating loading function {} of {}'.format(iter2+1, len(load_functions)))
+
+            # Define current loading function 
+            load_fcn_now = load_functions[iter2]
+
+            # Simulate to threshold 
+            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **kwargs)
+            # (times, inputs, states, outputs, event_states) = self.simulate_to(2000,load_fcn_now, **kwargs)
         
-        # Initialize DMD matrices
-        X_mat = np.zeros((len(states[0])+3,len(times)-20))
-        XPrime_mat = np.zeros((len(states[0])+2,len(times)-20))
+            # Initialize DMD matrices
+            time_temp = np.array(times[0:-20])
+            X_mat_temp = np.zeros((len(states[0])+3,len(times)-20))
+            XPrime_mat_temp = np.zeros((len(states[0])+2,len(times)-20))
 
-        for iter in range(len(times)-20):
-            time_now = times[iter]
-            current_now = future_loading_eqn(time_now)['i']
-            states_now = np.array([[states[iter]['Vo']], [states[iter]['Vsn']], [states[iter]['Vsp']], [states[iter]['tb']], [states[iter]['qpS']], [states[iter]['qpB']], [states[iter]['qnS']], [states[iter]['qnB']]])
-            states_next = np.array([[states[iter+1]['Vo']], [states[iter+1]['Vsn']], [states[iter+1]['Vsp']], [states[iter+1]['tb']], [states[iter+1]['qpS']], [states[iter+1]['qpB']], [states[iter+1]['qnS']], [states[iter+1]['qnB']]])
+            # Save DMD matrices
+            for iter in range(len(times)-20):
+                time_now = times[iter]
+                current_now = load_fcn_now(time_now)['i']
+                states_now = np.array([[states[iter]['Vo']], [states[iter]['Vsn']], [states[iter]['Vsp']], [states[iter]['tb']], [states[iter]['qpS']], [states[iter]['qpB']], [states[iter]['qnS']], [states[iter]['qnB']]])
+                states_next = np.array([[states[iter+1]['Vo']], [states[iter+1]['Vsn']], [states[iter+1]['Vsp']], [states[iter+1]['tb']], [states[iter+1]['qpS']], [states[iter+1]['qpB']], [states[iter+1]['qnS']], [states[iter+1]['qnB']]])
 
-            X_mat[:,iter] = np.vstack((states_now,np.array([outputs[iter]['v']]),[event_states[iter]['EOD']],[current_now]))[:,0]
-            XPrime_mat[:,iter] = np.vstack((states_next,np.array([outputs[iter+1]['v']]),[event_states[iter+1]['EOD']]))[:,0]
-            
+                X_mat_temp[:,iter] = np.vstack((states_now,np.array([outputs[iter]['v']]),[event_states[iter]['EOD']],[current_now]))[:,0]
+                XPrime_mat_temp[:,iter] = np.vstack((states_next,np.array([outputs[iter+1]['v']]),[event_states[iter+1]['EOD']]))[:,0]
+                
+            # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
+            X_list.append(X_mat_temp)
+            XPrime_list.append(XPrime_mat_temp)
+            t_end_list.append(time_now)
+            time_list.append(time_temp)
+
+        ### Format training data for DMD and solve 
+        print('Generate DMD Surrogate Model')
+        
+        # Adjust for differences in length of datasets  
+            # Note: the training dataset consists of a compliation of data from each user-defined loading function 
+            # If these datasets are of different lengths, they will have more or less influence on the resulting DMD linear approximation 
+            # To avoid this, we reduce all of the generated data to be of length equal to the loading profile that reaches EOD first 
+        min_data_index = np.searchsorted(t_end_list,min(t_end_list))
+        min_index = len(time_list[min_data_index]) 
+        min_time = time_list[min_data_index][-1]
+
+        for iter3 in range(len(load_functions)):
+            if iter3 == min_data_index:
+                pass
+            else:
+                X_list[iter3] = X_list[iter3][:,0:min_index]
+                XPrime_list[iter3] = XPrime_list[iter3][:,0:min_index]
+     
+        # Convert lists of datasets into arrays, sequentially stacking data in the horizontal direction
+        X_mat = np.hstack((X_list[:]))
+        XPrime_mat = np.hstack((XPrime_list[:]))
+
         # Calculate DMD matrix:
         DMD_matrix = np.dot(XPrime_mat,np.linalg.pinv(X_mat))
 
