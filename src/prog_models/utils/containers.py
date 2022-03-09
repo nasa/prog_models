@@ -58,6 +58,16 @@ class DictLikeMatrixWrapper():
     def items(self):
         return zip(self._keys, np.array([value[0] for value in self.matrix]))
 
+    def update(self, other):
+        for key in other.keys():
+            if key in self._keys:
+                # Existing key
+                self[key] = other[key]
+            else:
+                # A new key!
+                self._keys.append(key)
+                self.matrix = np.vstack((self.matrix, np.array([other[key]])))
+
     def __contains__(self, key):
         return key in self._keys
 

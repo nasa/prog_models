@@ -43,6 +43,17 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         c2 = DictLikeMatrixWrapper(['a', 'b'], {'a': -1, 'b': -2})
         self.assertEqual(c1, c2)
 
+        # update
+        c1.update({'c': 3, 'b': 2})
+        self.assertTrue((c1.matrix == np.array([[-1], [2], [3]])).all())
+        self.assertEqual(c1['c'], 3)
+        self.assertListEqual(c1.keys(), ['a', 'b', 'c'])
+        other = DictLikeMatrixWrapper(['c', 'd'], np.array([[5], [7]]))
+        c1.update(other)
+        self.assertTrue((c1.matrix == np.array([[-1], [2], [5], [7]])).all())
+        self.assertEqual(c1['d'], 7)
+        self.assertListEqual(c1.keys(), ['a', 'b', 'c', 'd'])
+
     def test_dict_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
         self._checks(c1)
