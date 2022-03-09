@@ -99,20 +99,13 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((self.n_events, 1))
 
     def dx(self, x, u):
-        x_array = np.array([list(x.values())]).T
-        u_array = np.array([list(u.values())]).T
-
-        dx_array = np.matmul(self.A, x_array) + np.matmul(self.B, u_array) + self.E
-        return {key: value[0] for key, value in zip(self.states, dx_array)}
+        dx_array = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
+        return self.StateContainer(dx_array)
         
     def output(self, x):
-        x_array = np.array([list(x.values())]).T
-
-        z_array = np.matmul(self.C, x_array) + self.D
-        return {key: value[0] for key, value in zip(self.outputs, z_array)}
+        z_array = np.matmul(self.C, x.matrix) + self.D
+        return self.OutputContainer(z_array)
 
     def event_state(self, x):
-        x_array = np.array([list(x.values())]).T
-
-        es_array = np.matmul(self.F, x_array) + self.G
+        es_array = np.matmul(self.F, x.matrix) + self.G
         return {key: value[0] for key, value in zip(self.events, es_array)}
