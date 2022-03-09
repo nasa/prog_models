@@ -905,10 +905,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -924,7 +924,7 @@ class TestModels(unittest.TestCase):
                 }
 
         m = ThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: {})
+        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         # len() = events states inputs outputs
         #         1      2      0      1
 
@@ -1174,10 +1174,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -1193,7 +1193,7 @@ class TestModels(unittest.TestCase):
                 }
 
         m = ThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: {})
+        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         m.matrixCheck()
         self.assertIsInstance(m.F, np.ndarray)
         self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
@@ -1217,10 +1217,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -1263,10 +1263,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
