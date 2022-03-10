@@ -8,15 +8,6 @@ class TestTutorials(unittest.TestCase):
         with testbook('./tutorial.ipynb', execute=True) as tb:
             self.assertEqual(tb.__class__.__name__, "TestbookNotebookClient")
 
-def run_tests():
-    l = unittest.TestLoader()
-    runner = unittest.TextTestRunner()
-    print("\n\nTesting Tutorials")
-    result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
-
-    if not result:
-        raise Exception("Failed test")
-
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
@@ -27,5 +18,5 @@ def main():
         raise Exception("Failed test")
 
 if __name__ == '__main__':
-    run_tests()
+    main()
     
