@@ -905,10 +905,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -924,7 +924,7 @@ class TestModels(unittest.TestCase):
                 }
 
         m = ThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: {})
+        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         # len() = events states inputs outputs
         #         1      2      0      1
 
@@ -1174,10 +1174,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -1193,7 +1193,7 @@ class TestModels(unittest.TestCase):
                 }
 
         m = ThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: {})
+        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         m.matrixCheck()
         self.assertIsInstance(m.F, np.ndarray)
         self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
@@ -1217,10 +1217,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -1263,10 +1263,10 @@ class TestModels(unittest.TestCase):
             }
 
             def initialize(self, u=None, z=None):
-                return {
+                return self.StateContainer({
                     'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
                     'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    }
+                    })
             
             def threshold_met(self, x):
                 return {
@@ -1292,6 +1292,23 @@ class TestModels(unittest.TestCase):
         for i in range(len(capture_split)):
             actual = '%s |%s| %s%% %s' % ("Progress", "█" * percentage_vals[i] + '-' * (100 - percentage_vals[i]), str(percentage_vals[i])+".0","")
             self.assertEqual(capture_split[i].strip(), actual.strip())
+        
+    def test_containers(self):
+        m = ThrownObject()
+        c1 = m.StateContainer({'x': 1.7, 'v': 40})
+        c2 = m.StateContainer(np.array([[1.7], [40]]))
+        self.assertEqual(c1, c2)
+        self.assertListEqual(list(c1.keys()), m.states)
+
+        input_c1 = m.InputContainer({})
+        input_c2 = m.InputContainer(np.array([]))
+        self.assertEqual(input_c1, input_c2)
+        self.assertListEqual(list(input_c1.keys()), m.inputs)
+
+        output_c1 = m.OutputContainer({'x': 1.7})
+        output_c2 = m.OutputContainer(np.array([[1.7]]))
+        self.assertEqual(output_c1, output_c2)
+        self.assertListEqual(list(output_c1.keys()), m.outputs)
 
 # This allows the module to be executed directly
 def run_tests():
