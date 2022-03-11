@@ -4,7 +4,7 @@
 from .. import PrognosticsModel
 
 from math import inf
-from numpy import exp, minimum
+import numpy as np
 
 
 class BatteryCircuit(PrognosticsModel):
@@ -120,7 +120,7 @@ class BatteryCircuit(PrognosticsModel):
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
     def dx(self, x, u):
         # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
@@ -133,7 +133,7 @@ class BatteryCircuit(PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1'] * \
             SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Rcp = parameters['Rcp0'] + parameters['Rcp1'] * \
-            exp(parameters['Rcp2']*(-SOC + 1))
+            np.exp(parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
         Tbdot = (Rcp*Rs*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + Rs*Vcp**2*parameters['hcp']) \
             / (parameters['Jt']*Rcp*Rs)
@@ -143,12 +143,12 @@ class BatteryCircuit(PrognosticsModel):
         icp = ib - Vcp/Rcp
         ics = ib - Vcs/Rs
 
-        return {
-            'tb': Tbdot,
-            'qb': -ib,
-            'qcp': icp,
-            'qcs': ics
-        }
+        return self.StateContainer(np.array([
+            [Tbdot],  # tb
+            [-ib],    # qb
+            [icp],    # qcp
+            [ics]     # qcs
+        ]))
     
     def event_state(self, x):
         parameters = self.parameters
@@ -158,7 +158,7 @@ class BatteryCircuit(PrognosticsModel):
         voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
             self.parameters['VDropoff']
         return {
-            'EOD': minimum(charge_EOD, voltage_EOD)
+            'EOD': np.minimum(charge_EOD, voltage_EOD)
         }
 
     def output(self, x):
@@ -169,10 +169,9 @@ class BatteryCircuit(PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
-        return {
-            't': x['tb'],
-            'v': Vb - Vcp - Vcs
-        }
+        return self.OutputContainer(np.array([
+            [x['tb']],            # t
+            [Vb - Vcp - Vcs]]))   # v
 
     def threshold_met(self, x):
         parameters = self.parameters
