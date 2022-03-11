@@ -555,7 +555,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
-        x_dot.update(BatteryElectroChemEOL.dx(self, x, u))
+        x_dot2 = BatteryElectroChemEOL.dx(self, x, u)
+        x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
         return x_dot
 
     def output(self, x):
