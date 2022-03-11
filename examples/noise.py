@@ -14,8 +14,9 @@ def run_example():
     event = 'impact'
 
     # Ex1: No noise
-    process_noise = 0
-    m = ThrownObject(process_noise = process_noise)
+    # You can also add process_noise to 0, but this approach is more efficient
+    process_noise_dist = 'none'
+    m = ThrownObject(process_noise_dist = process_noise_dist)
     simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     print('Example without noise')
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
@@ -23,6 +24,7 @@ def run_example():
 
     # Ex2: with noise - same noise applied to every state
     process_noise = 0.5
+
     m = ThrownObject(process_noise = process_noise)  # Noise with a std of 0.5 to every state
     print('\nExample without same noise for every state')
     simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
