@@ -69,9 +69,13 @@ class PrognosticsModelParameters(UserDict):
                     self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
                 
                 # Process distribution type
-                if 'process_noise_dist' in self:
-                    if self['process_noise_dist'].lower() not in process_noise_functions:
-                        raise ProgModelTypeError("Unsupported process noise distribution")
+                if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
+                    raise ProgModelTypeError("Unsupported process noise distribution")
+                if all(value == 0 for value in self['process_noise'].values()):
+                    # No noise, use none function
+                    fcn = process_noise_functions['none']
+                    self.__m.apply_process_noise = types.MethodType(fcn, self.__m)
+                elif 'process_noise_dist' in self:
                     fcn = process_noise_functions[self['process_noise_dist'].lower()]
                     self.__m.apply_process_noise = types.MethodType(fcn, self.__m)
                 
@@ -87,9 +91,14 @@ class PrognosticsModelParameters(UserDict):
                     self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
                 
                 # Process distribution type
-                if 'measurement_noise_dist' in self:
-                    if self['measurement_noise_dist'].lower() not in measurement_noise_functions:
-                        raise ProgModelTypeError("Unsupported measurement noise distribution")
+                if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:
+                    raise ProgModelTypeError("Unsupported measurement noise distribution")
+
+                if all(value == 0 for value in self['measurement_noise'].values()):
+                    # No noise, use none function
+                    fcn = measurement_noise_functions['none']
+                    self.__m.apply_measurement_noise = types.MethodType(fcn, self.__m)
+                elif 'measurement_noise_dist' in self:
                     fcn = measurement_noise_functions[self['measurement_noise_dist'].lower()]
                     self.__m.apply_measurement_noise = types.MethodType(fcn, self.__m)
                 
