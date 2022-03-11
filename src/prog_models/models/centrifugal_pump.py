@@ -3,7 +3,6 @@
 
 from .. import prognostics_model
 
-import math
 from copy import deepcopy
 import numpy as np
 import warnings
