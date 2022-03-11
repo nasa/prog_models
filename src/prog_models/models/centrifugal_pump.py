@@ -187,9 +187,9 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
-        x0['QLeak'] = math.copynp.sign(\
+        x0['QLeak'] = \
             self.parameters['cLeak']*self.parameters['ALeak']*\
-                math.np.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
+                np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
         return self.StateContainer(x0)
 
     def next_state(self, x, u, dt):
@@ -323,11 +323,12 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
             self.parameters['wRadial'] = x['wRadial']
             self.parameters['wThrust'] = x['wThrust']
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
-        next_x.update({
-            'wA': x['wA'],
-            'wRadial': x['wRadial'],
-            'wThrust': x['wThrust'],
-        })
+
+        next_x.matrix = np.vstack((next_x.matrix, np.array([
+            [x['wA']],
+            [x['wRadial']],
+            [x['wThrust']]
+        ])))
         return next_x
 
 CentrifugalPump = CentrifugalPumpWithWear
