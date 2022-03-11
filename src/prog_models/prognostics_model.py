@@ -12,6 +12,7 @@ import types
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
+from .utils.noise_functions import measurement_noise_functions, process_noise_functions
 
 
 class PrognosticsModelParameters(UserDict):
@@ -68,22 +69,11 @@ class PrognosticsModelParameters(UserDict):
                     self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
                 
                 # Process distribution type
-                if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update process noise distribution to custom
-                    if self['process_noise_dist'].lower() == "uniform":
-                        def uniform_process_noise(self, x, dt=1):
-                            return self.StateContainer({key: x[key] + \
-                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states})
-                        self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
-                    elif self['process_noise_dist'].lower() == "triangular":
-                        def triangular_process_noise(self, x, dt=1):
-                            return self.StateContainer({key: x[key] + \
-                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states})
-                        self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
-                    else:
+                if 'process_noise_dist' in self:
+                    if self['process_noise_dist'].lower() not in process_noise_functions:
                         raise ProgModelTypeError("Unsupported process noise distribution")
+                    fcn = process_noise_functions[self['process_noise_dist'].lower()]
+                    self.__m.apply_process_noise = types.MethodType(fcn, self.__m)
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['process_noise'] for key in self.__m.states]):
@@ -97,26 +87,15 @@ class PrognosticsModelParameters(UserDict):
                     self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
                 
                 # Process distribution type
-                if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update measurement noise distribution to custom
-                    if self['measurement_noise_dist'].lower() == "uniform":
-                        def uniform_noise(self, x):
-                            return self.OutputContainer({key: x[key] + \
-                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs})
-                        self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
-                    elif self['measurement_noise_dist'].lower() == "triangular":
-                        def triangular_noise(self, x):
-                            return self.OutputContainer({key: x[key] + \
-                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs})
-                        self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
-                    else:
+                if 'measurement_noise_dist' in self:
+                    if self['measurement_noise_dist'].lower() not in measurement_noise_functions:
                         raise ProgModelTypeError("Unsupported measurement noise distribution")
+                    fcn = measurement_noise_functions[self['measurement_noise_dist'].lower()]
+                    self.__m.apply_measurement_noise = types.MethodType(fcn, self.__m)
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
-                    raise ProgModelTypeError("Measurement noise must have ever key in model.states")
+                    raise ProgModelTypeError("Measurement noise must have ever key in model.outputs")
 
     def register_derived_callback(self, key, callback):
         """Register a new callback for derived parameters
