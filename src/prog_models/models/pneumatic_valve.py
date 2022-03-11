@@ -2,9 +2,8 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .. import prognostics_model
-from math import inf
 from copy import deepcopy
-from numpy import sqrt, sign, maximum, isscalar, array, any, shape
+import numpy as np
 import warnings
 
 def calc_x(x, forces, Ls, new_x):
@@ -215,34 +214,34 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'Aeb': (0, inf),
-        'Aet': (0, inf),
-        'Ai': (0, inf),
-        'k': (0, inf),
-        'mBot': (0, inf),
-        'mTop': (0, inf),
-        'r': (0, inf)
+        'Aeb': (0, np.inf),
+        'Aet': (0, np.inf),
+        'Ai': (0, np.inf),
+        'k': (0, np.inf),
+        'mBot': (0, np.inf),
+        'mTop': (0, np.inf),
+        'r': (0, np.inf)
     }
 
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
-        return x0
+        return self.StateContainer(x0)
 
     def gas_flow(self, pIn, pOut, C, A):
         # Step 1: If array- run for each element
         # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
-        inputs = array([pIn, pOut, C, A])
-        if any([not isscalar(i) for i in inputs]):
+        inputs = np.array([pIn, pOut, C, A])
+        if np.any([not np.isscalar(i) for i in inputs]):
             # Handle case where one or more is array
-            size = [shape(i) for i in inputs]
+            size = [np.shape(i) for i in inputs]
             size = max([i[0] if i else 0 for i in size])  # Size of array
 
             # Create Iterable Elements for scalars
-            iter_inputs = [[i] * size if isscalar(i) else i for i in inputs]
+            iter_inputs = [[i] * size if np.isscalar(i) else i for i in inputs]
 
             # Run each element through function
-            return array([self.gas_flow(a, b, c, d) for a, b, c, d in zip(*iter_inputs)])
+            return np.array([self.gas_flow(a, b, c, d) for a, b, c, d in zip(*iter_inputs)])
 
         k = self.parameters['gas_gamma']
         T = self.parameters['gas_temp']
@@ -251,13 +250,13 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         threshold = ((k+1)/2)**(k/(k-1))
 
         if pIn/pOut>=threshold:
-            return C*A*pIn*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
+            return C*A*pIn*np.sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
         if pIn>=pOut:
-            return C*A*pIn*sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
+            return C*A*pIn*np.sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
         if pOut/pIn>=threshold:
-            return -C*A*pOut*sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
+            return -C*A*pOut*np.sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
         # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
-        return -C*A*pOut*sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
+        return -C*A*pOut*np.sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
     def next_state(self, x, u, dt):
         params = self.parameters # optimization
@@ -288,7 +287,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
         new_x = x['x']+x['v']*dt
 
-        if isscalar(pistonForces):
+        if np.isscalar(pistonForces):
             vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
             pos = calc_x(x['x'], pistonForces, params['Ls'], new_x)
         else:
@@ -296,38 +295,38 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             vel = [calc_v(xi, vi, vdot_i*dt, force, params['Ls'], new_x_i) for xi, vi, vdot_i, force, new_x_i in zip(x['x'], x['v'], vdot, pistonForces, new_x)]
             pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
 
-        return {
-            'x': pos,
-            'v': vel,
-            'mTop': x['mTop'] + mTopdot * dt,
-            'mBot': x['mBot'] + mBotdot * dt,
-            'Aeb': x['Aeb'] + params['wb'] * dt,
-            'Aet': x['Aet'] + params['wt'] * dt,
-            'Ai': x['Ai'] + Aidot * dt,
-            'k': x['k'] + kdot * dt,
-            'r': x['r'] + rdot * dt,
-            'pDiff': u['pL'] - u['pR']
-        }
+        return self.StateContainer(np.array([
+            [x['Aeb'] + params['wb'] * dt],     # Aeb
+            [x['Aet'] + params['wt'] * dt],     # Aet
+            [x['Ai'] + Aidot * dt],             # Ai
+            [x['k'] + kdot * dt],               # k
+            [x['mBot'] + mBotdot * dt],         # mBot
+            [x['mTop'] + mTopdot * dt],         # mTop
+            [x['r'] + rdot * dt],               # r
+            [vel],                              # v
+            [pos],                              # x
+            [u['pL'] - u['pR']]                 # pL - pR
+        ]))
     
     def output(self, x):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
-        maxFlow = params['Cv']*params['Av']*sqrt(2/params['rhoL']*abs(x['pDiff'])) * sign(x['pDiff'])
+        maxFlow = params['Cv']*params['Av']*np.sqrt(2/params['rhoL']*abs(x['pDiff'])) * np.sign(x['pDiff'])
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
-        trueFlow = maxFlow * maximum(0,x['x'])/params['Ls']
+        trueFlow = maxFlow * np.maximum(0,x['x'])/params['Ls']
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 
-        return {
-            'Q': trueFlow,
-            'iB': indicatorBotm,
-            'iT': indicatorTopm,
-            'pB': 1e-6 * pressureBot,
-            'pT': 1e-6 * pressureTop,
-            'x': x['x']
-        }
+        return self.OutputContainer(np.array([
+            [trueFlow],             # Q
+            [indicatorBotm],        # indicatorBotm
+            [indicatorTopm],        # indicatorTopm
+            [1e-6 *pressureBot],    # pBot
+            [1e-6 *pressureTop],    # pTop
+            [x['x']]                # x
+        ]))
 
     def event_state(self, x):
         params = self.parameters
