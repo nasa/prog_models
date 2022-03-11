@@ -290,10 +290,12 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         if np.isscalar(pistonForces):
             vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
             pos = calc_x(x['x'], pistonForces, params['Ls'], new_x)
+            dp = u['pL'] - u['pR']
         else:
             # If array- run for each element
             vel = [calc_v(xi, vi, vdot_i*dt, force, params['Ls'], new_x_i) for xi, vi, vdot_i, force, new_x_i in zip(x['x'], x['v'], vdot, pistonForces, new_x)]
             pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
+            dp = [u['pL'] - u['pR']] * len(x['x'])
 
         return self.StateContainer(np.array([
             [x['Aeb'] + params['wb'] * dt],     # Aeb
@@ -305,7 +307,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             [x['r'] + rdot * dt],               # r
             [vel],                              # v
             [pos],                              # x
-            [u['pL'] - u['pR']]                 # pL - pR
+            [dp]                                # pL - pR
         ]))
     
     def output(self, x):
@@ -410,13 +412,15 @@ class PneumaticValveWithWear(PneumaticValveBase):
             self.parameters['wr'] = x['wr']
             self.parameters['wt'] = x['wt']
         next_x = PneumaticValveBase.next_state(self, x, u, dt)
-        next_x.update({
-            'wb': x['wb'],
-            'wi': x['wi'],
-            'wk': x['wk'],
-            'wr': x['wr'],
-            'wt': x['wt']
-        })
+
+        # Append this way because the keys in the structure but the values are missing - this is due to the behavior of subclassed models calling their parent functions.
+        next_x.matrix = np.vstack((next_x.matrix, np.array([
+            [x['wb']],
+            [x['wi']],
+            [x['wk']],
+            [x['wr']],
+            [x['wt']]
+        ])))
         return next_x
 
 PneumaticValve = PneumaticValveWithWear
