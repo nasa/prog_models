@@ -76,10 +76,8 @@ def run_example():
     # Ex7: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
     # This can be used to do custom or more complex noise distributions
     def apply_proportional_process_noise(self, x, dt = 1):
-        return {
-            'x': x['x'],  # No noise on state
-            'v': x['v'] - dt*0.5*x['v']
-        }
+        x['v'] -= dt*0.5*x['v']
+        return x
     model_config = {'process_noise': apply_proportional_process_noise}
     m = ThrownObject(**model_config)
     print('\nExample with proportional noise on velocity')
