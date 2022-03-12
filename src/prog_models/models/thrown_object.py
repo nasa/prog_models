@@ -68,19 +68,20 @@ class ThrownObject(PrognosticsModel):
     }
 
     def initialize(self, u=None, z=None):
-        return {
+        return self.StateContainer({
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
             'v': self.parameters['throwing_speed']   # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            }
+            })
     
     def next_state(self, x, u, dt):
         next_x =  x['x'] + x['v']*dt
-        return {'x': next_x,
-                'v': x['v'] + self.parameters['g']*dt  # Acceleration of gravity
-                }
+        return self.StateContainer(np.array([
+            [next_x],
+            [x['v'] + self.parameters['g']*dt]  # Acceleration of gravity
+        ]))
 
     def output(self, x):
-        return {'x': x['x']}
+        return self.OutputContainer(np.array([[x['x']]]))
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
