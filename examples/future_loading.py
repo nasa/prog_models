@@ -25,7 +25,8 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': i}
+        return m.InputContainer({'i': i})
+    
     # Simulate to threshold
     options = {
         'save_freq': 100,  # Frequency at which results are saved
@@ -43,7 +44,7 @@ def run_example():
 
     def future_loading(t, x=None):
         return future_loading.load
-    future_loading.load = {key : 0 for key in m.inputs} 
+    future_loading.load = m.InputContainer({key : 0 for key in m.inputs})
 
     # Lets define another function to handle the moving average logic
     window = 10 # Number of elements in window
@@ -93,7 +94,7 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': normal(i, future_loading.std)}
+        return m.InputContainer({'i': normal(i, future_loading.std)})
     future_loading.std = 0.2
 
     # Simulate to threshold
@@ -150,8 +151,8 @@ def run_example():
     def future_loading(t, x=None):
         if x is not None:
             event_state = future_loading.event_state(x)
-            return {'i': future_loading.start + (1-event_state['EOD']) * future_loading.slope}  # default
-        return {'i': future_loading.start}
+            return m.InputContainer({'i': future_loading.start + (1-event_state['EOD']) * future_loading.slope})  # default
+        return m.InputContainer({'i': future_loading.start})
     future_loading.t = 0
     future_loading.event_state = m.event_state
     future_loading.slope = 2  # difference between input with EOD = 1 and 0. 
