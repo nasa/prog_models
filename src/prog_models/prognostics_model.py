@@ -1225,12 +1225,12 @@ class PrognosticsModel(ABC):
             (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **kwargs)
         
             # Initialize DMD matrices
-            time_temp = np.array(times[0:-20])
-            X_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-20))
-            XPrime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-20))
+            time_temp = np.array(times) # np.array(times[0:-20])
+            X_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times))) # np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-20))
+            XPrime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times))) # np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-20))
 
             # Save DMD matrices
-            for iter in range(len(times)-20):
+            for iter in range(len(times)-1): # range(len(times)-20):
                 time_now = times[iter]
                 current_now = load_fcn_now(time_now)
                 states_now = np.array([list(states[iter].values())]).T 
@@ -1248,18 +1248,16 @@ class PrognosticsModel(ABC):
         ### Format training data for DMD and solve 
         print('Generate DMD Surrogate Model')
         
-        # Adjust for differences in length of datasets  
-            # Note: the training dataset consists of a compliation of data from each user-defined loading function 
+        # Adjust for differences in length of datasets 
+            # Note 1: The model gives a best-fit if not trained on data too close to EOD. To adjust for this, we only keep the first 2/3 of the data traces 
+            # Note 2: the training dataset consists of a compliation of data from each user-defined loading function 
             # If these datasets are of different lengths, they will have more or less influence on the resulting DMD linear approximation 
-            # To avoid this, we reduce all of the generated data to be of length equal to the loading profile that reaches EOD first 
+            # To avoid this, we reduce all of the generated data to be of length equal to 2/3 the loading profile that reaches EOD first (see Note 1)
         min_data_index = np.searchsorted(t_end_list,min(t_end_list))
-        min_index = len(time_list[min_data_index]) 
-        min_time = time_list[min_data_index][-1]
+        min_index = round(len(time_list[min_data_index])*(2/3)) 
+        min_time = time_list[min_data_index][min_index]
 
         for iter3 in range(len(load_functions)):
-            if iter3 == min_data_index:
-                pass
-            else:
                 X_list[iter3] = X_list[iter3][:,0:min_index]
                 XPrime_list[iter3] = XPrime_list[iter3][:,0:min_index]
      
