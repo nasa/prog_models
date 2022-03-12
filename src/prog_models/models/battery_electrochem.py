@@ -3,10 +3,10 @@
 
 from .. import PrognosticsModel
 
-from math import inf
 from copy import deepcopy
-from numpy import arcsinh, log
+import numpy as np
 import warnings
+
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -240,11 +240,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (0, inf),  # Limited by Absolute Zero (0 K)
-        'qnB': (0, inf),
-        'qnS': (0, inf),
-        'qpB': (0, inf),
-        'qpS': (0, inf)
+        'tb': (0, np.inf),  # Limited by Absolute Zero (0 K)
+        'qnB': (0, np.inf),
+        'qnS': (0, np.inf),
+        'qpB': (0, np.inf),
+        'qpS': (0, np.inf)
     }
 
     param_callbacks = {  # Callbacks for derived parameters
@@ -259,7 +259,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
     def dx(self, x, u):
         params = self.parameters
@@ -277,7 +277,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         v_part = R_F*x['tb']/params['alpha']
 
-        VsnNominal = v_part*arcsinh(Jn/(Jn0 + Jn0))
+        VsnNominal = v_part*np.arcsinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
 
         # Positive Surface
@@ -292,7 +292,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Jp = u['i']/params['Sp']
         Jp0 = params['kp']*((1-xpS)*xpS)**params['alpha']
 
-        VspNominal = v_part*arcsinh(Jp/(Jp0+Jp0))
+        VspNominal = v_part*np.arcsinh(Jp/(Jp0+Jp0))
         Vspdot = (VspNominal-x['Vsp'])/params['tsp']
 
         # Combined
@@ -304,16 +304,16 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
-        return {
-            'Vo': Vodot,
-            'Vsn': Vsndot,
-            'Vsp': Vspdot,
-            'tb': Tbdot,
-            'qnB': qnBdot,
-            'qnS': qnSdot,
-            'qpB': qpBdot,
-            'qpS': qpSdot
-        }
+        return self.StateContainer(np.array([
+            [Tbdot],
+            [Vodot],
+            [Vsndot],
+            [Vspdot],
+            [qnBdot],
+            [qnSdot],
+            [qpBdot],
+            [qpSdot]
+        ]))
         
     def event_state(self, x):
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
@@ -351,7 +351,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
             An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
         ]
-        Ven = params['U0n'] + R*x['tb']/F*log(one_minus_xnS/xnS) + sum(VenParts)
+        Ven = params['U0n'] + R*x['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
 
         # Positive Surface
         Ap = params['Ap']
@@ -372,12 +372,12 @@ class BatteryElectroChemEOD(PrognosticsModel):
             Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
             Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
         ]
-        Vep = params['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
 
-        return {
-            't': x['tb'] - 273.15,
-            'v': Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
-        }
+        return self.OutputContainer(np.array([
+            [x['tb'] - 273.15],
+            [Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']]
+        ]))
 
     def threshold_met(self, x):
         z = self.output(x)
@@ -451,20 +451,20 @@ class BatteryElectroChemEOL(PrognosticsModel):
     }
 
     state_limits = {
-        'qMax': (0, inf)
+        'qMax': (0, np.inf)
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def dx(self, _, u):
         params = self.parameters
 
-        return {
-            'qMax': params['wq'] * abs(u['i']),
-            'Ro': params['wr'] * abs(u['i']),
-            'D': params['wd'] * abs(u['i'])
-        }
+        return self.StateContainer(np.array([
+            [params['wq'] * abs(u['i'])],
+            [params['wr'] * abs(u['i'])],
+            [params['wd'] * abs(u['i'])]
+        ]))
 
     def event_state(self, x):
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
@@ -473,8 +473,8 @@ class BatteryElectroChemEOL(PrognosticsModel):
     def threshold_met(self, x):
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
-    def output(self, x):
-        return {}
+    def output(self, _):
+        return self.OutputContainer(np.array([]))
 
 def merge_dicts(a : dict, b : dict):
     """Merge dict b into a"""
@@ -543,7 +543,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         super().__init__()
 
     def initialize(self, u = {}, z = {}):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
     def dx(self, x, u):
         # Set EOD Parameters (corresponding to health)
@@ -555,7 +555,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
-        x_dot.update(BatteryElectroChemEOL.dx(self, x, u))
+        x_dot2 = BatteryElectroChemEOL.dx(self, x, u)
+        x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
         return x_dot
 
     def output(self, x):
