@@ -11,9 +11,9 @@ def uniform_measurement_noise(self, z):
         np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(z[key]) else len(z[key])) \
             for key in self.outputs}) 
 
-def triangular__measurement_noise(self, x):
-    return self.OutputContainer({key: x[key] + \
-        np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
+def triangular_measurement_noise(self, z):
+    return self.OutputContainer({key: z[key] + \
+        np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(z[key]) else len(z[key])) \
             for key in self.outputs})
 
 def normal_measurement_noise(self, z):
@@ -28,7 +28,7 @@ def no_measurement_noise(self, z):
 
 measurement_noise_functions = {
     'uniform': uniform_measurement_noise,
-    'triangular': triangular__measurement_noise,
+    'triangular': triangular_measurement_noise,
     'normal': normal_measurement_noise,
     'gaussian': normal_measurement_noise,
     'none': no_measurement_noise,
