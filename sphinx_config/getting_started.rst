@@ -112,25 +112,15 @@ Model Specific examples
 
 Extending
 ----------
-There are two methods for creating new models: 1. Implementing a new subclass of the base model class (:class:`prog_models.PrognosticsModel`) or 2. use the model generator method (:py:meth:`prog_models.PrognosticsModel.generate_model`). These methods are described more below.
-
-1. Subclass Method
-********************
-The first method for creating a new prog_model is by creating a new subclass of :class:`prog_models.PrognosticsModel`. :class:`prog_models.PrognosticsModel` is described below:
+You can create new models by creating a new subclass of :class:`prog_models.PrognosticsModel`. :class:`prog_models.PrognosticsModel` is described below:
 
 .. autoclass:: prog_models.PrognosticsModel
 
-To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template :class:`prog_model_template.ProgModelTemplate`, replacing the methods with logic defining your specific model.
+To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template :download:`prog_model_template.ProgModelTemplate <../prog_model_template.py>`, replacing the methods with logic defining your specific model.
 
 The analysis and simulation tools defined in :class:`prog_models.PrognosticsModel` will then work with your new model. 
 
 See :download:`examples.new_model <../examples/new_model.py>` for an example of this approach.
-
-2. Model Generator Method
-*************************
-The second way to generate a new model is using the model generator method, :py:meth:`prog_models.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.PrognosticsModel.generate_model` for more detail.
-
-See :download:`examples.model_gen <../examples/model_gen.py>` for an example of this approach.
 
 Updates in V1.2 (Mini-Release)
 ------------------------------

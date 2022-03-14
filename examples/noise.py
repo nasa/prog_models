@@ -14,8 +14,9 @@ def run_example():
     event = 'impact'
 
     # Ex1: No noise
-    process_noise = 0
-    m = ThrownObject(process_noise = process_noise)
+    # You can also add process_noise to 0, but this approach is more efficient
+    process_noise_dist = 'none'
+    m = ThrownObject(process_noise_dist = process_noise_dist)
     simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     print('Example without noise')
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
@@ -23,6 +24,7 @@ def run_example():
 
     # Ex2: with noise - same noise applied to every state
     process_noise = 0.5
+
     m = ThrownObject(process_noise = process_noise)  # Noise with a std of 0.5 to every state
     print('\nExample without same noise for every state')
     simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
@@ -74,10 +76,8 @@ def run_example():
     # Ex7: OK, now for something a little more complicated. Let's try proportional noise on v only (more variation when it's going faster)
     # This can be used to do custom or more complex noise distributions
     def apply_proportional_process_noise(self, x, dt = 1):
-        return {
-            'x': x['x'],  # No noise on state
-            'v': x['v'] - dt*0.5*x['v']
-        }
+        x['v'] -= dt*0.5*x['v']
+        return x
     model_config = {'process_noise': apply_proportional_process_noise}
     m = ThrownObject(**model_config)
     print('\nExample with proportional noise on velocity')

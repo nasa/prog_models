@@ -36,17 +36,17 @@ class ThrownObject(PrognosticsModel):
 
     def initialize(self, u, z):
         self.max_x = 0.0
-        return {
+        return self.StateContainer({
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
             'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            }
+            })
     
     def dx(self, x, u):
-        return {'x': x['v'],
-                'v': self.parameters['g']}  # Acceleration of gravity
+        return self.StateContainer({'x': x['v'],
+                'v': self.parameters['g']})  # Acceleration of gravity
 
     def output(self, x):
-        return {'x': x['x']}
+        return self.OutputContainer({'x': x['x']})
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
@@ -70,7 +70,7 @@ def run_example():
 
     # Step 2: Setup for simulation 
     def future_load(t, x=None):
-        return {}
+        return m.InputContainer({})  # No inputs, no way to control
 
     # Step 3: Simulate to impact
     event = 'impact'

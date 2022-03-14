@@ -34,6 +34,13 @@ class DictLikeMatrixWrapper():
     def __setitem__(self, key, value):
         self.matrix[self._keys.index(key)] = np.atleast_1d(value)
 
+    def __delitem__(self, key):
+        self.matrix = np.delete(self.matrix, self._keys.index(key), axis=0)
+        self._keys.remove(key)
+
+    def __add__(self, other):
+        return DictLikeMatrixWrapper(self._keys, self.matrix + other.matrix)
+
     def __iter__(self):
         return iter(self._keys)
 
@@ -57,6 +64,16 @@ class DictLikeMatrixWrapper():
 
     def items(self):
         return zip(self._keys, np.array([value[0] for value in self.matrix]))
+
+    def update(self, other):
+        for key in other.keys():
+            if key in self._keys:
+                # Existing key
+                self[key] = other[key]
+            else:
+                # A new key!
+                self._keys.append(key)
+                self.matrix = np.vstack((self.matrix, np.array([other[key]])))
 
     def __contains__(self, key):
         return key in self._keys
