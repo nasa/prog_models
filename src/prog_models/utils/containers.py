@@ -34,6 +34,13 @@ class DictLikeMatrixWrapper():
     def __setitem__(self, key, value):
         self.matrix[self._keys.index(key)] = np.atleast_1d(value)
 
+    def __delitem__(self, key):
+        self.matrix = np.delete(self.matrix, self._keys.index(key), axis=0)
+        self._keys.remove(key)
+
+    def __add__(self, other):
+        return DictLikeMatrixWrapper(self._keys, self.matrix + other.matrix)
+
     def __iter__(self):
         return iter(self._keys)
 
