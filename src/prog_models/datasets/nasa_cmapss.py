@@ -6,6 +6,8 @@ import requests
 import zipfile
 
 cache = None
+URL = "https://ti.arc.nasa.gov/c/6/"
+
 
 def load_data(dataset_id):
     """
@@ -70,7 +72,6 @@ def load_data(dataset_id):
     if dataset_id not in range(1, 5):
         raise ValueError(f"Invalid dataset id {dataset_id}")
 
-    URL = "https://ti.arc.nasa.gov/c/6/"
     dataset_id = f"FD0{dataset_id:02d}"
     if cache is None:
         # Download data
