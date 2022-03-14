@@ -54,6 +54,18 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertEqual(c1['d'], 7)
         self.assertListEqual(c1.keys(), ['a', 'b', 'c', 'd'])
 
+        # deleting items
+        del c1['a']
+        self.assertTrue((c1.matrix == np.array([[2], [5], [7]])).all())
+        self.assertListEqual(c1.keys(), ['b', 'c', 'd'])
+        del c1['c']
+        self.assertTrue((c1.matrix == np.array([[2], [7]])).all())
+        self.assertListEqual(c1.keys(), ['b', 'd'])
+        del c1['d']
+        del c1['b']
+        self.assertTrue((c1.matrix == np.array([[]])).all())
+        self.assertListEqual(c1.keys(), [])
+
     def test_dict_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
         self._checks(c1)
@@ -77,7 +89,7 @@ def run_tests():
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
+    print("\n\nTesting Containers")
     result = runner.run(l.loadTestsFromTestCase(TestDictLikeMatrixWrapper)).wasSuccessful()
 
     if not result:
