@@ -17,6 +17,7 @@ If you are new to this package, see `<getting_started.html>`__.
    models
    prognostics_model
    simresult
+   datasets
    exceptions
    ProgAlgs <https://nasa.github.io/prog_algs>
    dev_guide
