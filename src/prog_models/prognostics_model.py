@@ -420,7 +420,7 @@ class PrognosticsModel(ABC):
         """
         
         # Calculate next state and add process noise
-        next_state = self.apply_process_noise(self.next_state(x, u, dt))
+        next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
 
         # Apply Limits
         return self.apply_limits(next_state)
