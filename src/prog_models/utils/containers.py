@@ -18,12 +18,12 @@ class DictLikeMatrixWrapper():
         The contained data (e.g., input, state, output). If numpy array should be column vector in same order as keys
     """
     def __init__(self, keys, data):
-        self._keys = keys
+        self._keys = keys.copy()
         if isinstance(data, np.matrix):
             self.matrix = np.array(data)
         elif isinstance(data, np.ndarray):
             self.matrix = data
-        elif isinstance(data, dict):
+        elif isinstance(data, dict) or isinstance(data, DictLikeMatrixWrapper):
             self.matrix = np.array([[data[key]] for key in keys])
         else:
             raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
