@@ -25,13 +25,13 @@ def run_example():
         else:
             V = 471.2398 - (t-cycle_time)
 
-        return {
+        return pump.InputContainer({
             'Tamb': 290,
             'V': V,
             'pdisch': 928654, 
             'psuc': 239179, 
             'wsync': V * 0.8
-        }
+        })
 
     # Step 3: Sim
     first_output = pump.output(pump.initialize(future_loading(0),{}))

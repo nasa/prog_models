@@ -25,7 +25,7 @@ def run_example():
             i = 2
         else:
             i = 3
-        return {'i': i}
+        return batt.InputContainer({'i': i})
 
     # Step 3: Benchmark simulation for 600 seconds
     print('Benchmarking:')

@@ -16,7 +16,7 @@ def run_example():
 
     # Step 2: Setup for simulation 
     def future_load(t, x=None):
-        return {}
+        return m.InputContainer({})
 
     # Step 3: Setup range on parameters considered
     thrower_height_range = np.arange(1.2, 2.1, 0.1)

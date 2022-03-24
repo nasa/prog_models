@@ -6,134 +6,13 @@ from abc import abstractmethod, ABC
 from numbers import Number
 import numpy as np
 from copy import deepcopy
+import itertools
 from warnings import warn
-from collections import UserDict, abc, namedtuple
-import types
+from collections import abc, namedtuple
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
-
-
-class PrognosticsModelParameters(UserDict):
-    """
-    Prognostics Model Parameters - this class replaces a standard dictionary.
-    It includes the extra logic to process the different supported manners of defining noise.
-
-    Args:
-        model: PrognosticsModel for which the params correspond
-        dict_in: Initial parameters
-        callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
-    """
-    def __init__(self, model, dict_in = {}, callbacks = {}):
-        super().__init__()
-        self.__m = model
-        self.callbacks = {}
-        # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
-        for (key, value) in dict_in.items():
-            # Deepcopy is needed here to force copying when value is an object (e.g., dict)
-            self[key] = deepcopy(value)
-
-        # Add and run callbacks
-        # Has to be done here so the base parameters are all set 
-        self.callbacks = callbacks
-        for key in callbacks:
-            if key in self:
-                for callback in callbacks[key]:
-                    changes = callback(self)
-                    self.update(changes)
-
-    def __setitem__(self, key, value):
-        """Set model configuration, overrides dict.__setitem__()
-
-        Args:
-            key (string): configuration key to set
-            value: value to set that configuration value to
-
-        Raises:
-            ProgModelTypeError: Improper configuration for a model
-        """
-        super().__setitem__(key, value)
-
-        if key in self.callbacks:
-            for callback in self.callbacks[key]:
-                changes = callback(self)
-                self.update(changes) # Merge in changes
-        
-        if key == 'process_noise' or key == 'process_noise_dist':
-            if callable(self['process_noise']):  # Provided a function
-                self.__m.apply_process_noise = types.MethodType(self['process_noise'], self.__m)
-            else:  # Not a function
-                # Process noise is single number - convert to dict
-                if isinstance(self['process_noise'], Number):
-                    self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
-                
-                # Process distribution type
-                if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update process noise distribution to custom
-                    if self['process_noise_dist'].lower() == "uniform":
-                        def uniform_process_noise(self, x, dt=1):
-                            return self.StateContainer({key: x[key] + \
-                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states})
-                        self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
-                    elif self['process_noise_dist'].lower() == "triangular":
-                        def triangular_process_noise(self, x, dt=1):
-                            return self.StateContainer({key: x[key] + \
-                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states})
-                        self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
-                    else:
-                        raise ProgModelTypeError("Unsupported process noise distribution")
-                
-                # Make sure every key is present (single value already handled above)
-                if not all([key in self['process_noise'] for key in self.__m.states]):
-                    raise ProgModelTypeError("Process noise must have every key in model.states")
-        elif key == 'measurement_noise' or key == 'measurement_noise_dist':
-            if callable(self['measurement_noise']):
-                self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
-            else:
-                # Process noise is single number - convert to dict
-                if isinstance(self['measurement_noise'], Number):
-                    self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
-                
-                # Process distribution type
-                if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update measurement noise distribution to custom
-                    if self['measurement_noise_dist'].lower() == "uniform":
-                        def uniform_noise(self, x):
-                            return self.OutputContainer({key: x[key] + \
-                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs})
-                        self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
-                    elif self['measurement_noise_dist'].lower() == "triangular":
-                        def triangular_noise(self, x):
-                            return self.OutputContainer({key: x[key] + \
-                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs})
-                        self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
-                    else:
-                        raise ProgModelTypeError("Unsupported measurement noise distribution")
-                
-                # Make sure every key is present (single value already handled above)
-                if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
-                    raise ProgModelTypeError("Measurement noise must have ever key in model.states")
-
-    def register_derived_callback(self, key, callback):
-        """Register a new callback for derived parameters
-
-        Args:
-            key (string): key for which the callback is triggered
-            callback (function): callback function f(parameters) -> updates (dict)
-        """
-        if key in self.callbacks:
-            self.callbacks[key].append(callback)
-        else:
-            self.callbacks[key] = [callback]
-
-        # Run new callback
-        if key in self:
-            updates = callback(self[key])
-            self.update(updates)
+from .utils.parameters import PrognosticsModelParameters
 
 
 class PrognosticsModel(ABC):
@@ -541,7 +420,7 @@ class PrognosticsModel(ABC):
         """
         
         # Calculate next state and add process noise
-        next_state = self.apply_process_noise(self.next_state(x, u, dt))
+        next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
 
         # Apply Limits
         return self.apply_limits(next_state)
@@ -866,9 +745,10 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
-        if not isinstance(config['save_freq'], Number):
+        if not isinstance(config['save_freq'], Number) and not isinstance(config['save_freq'], tuple):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
-        if config['save_freq'] <= 0:
+        if (isinstance(config['save_freq'], Number) and config['save_freq'] <= 0) or \
+            (isinstance(config['save_freq'], tuple) and config['save_freq'][1] <= 0):
             raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
         if not isinstance(config['save_pts'], abc.Iterable):
             raise ProgModelInputException("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
@@ -917,9 +797,20 @@ class PrognosticsModel(ABC):
         saved_states = []  
         saved_outputs = []
         saved_event_states = []
-        save_freq = config['save_freq']
         horizon = t+config['horizon']
-        next_save = t+save_freq
+        if isinstance(config['save_freq'], tuple):
+            # Tuple used to specify start and frequency
+            t_step = config['save_freq'][1]
+            # Use starting time or the next multiple
+            t_start = config['save_freq'][0]
+            start = max(t_start, t - (t-t_start)%t_step)
+            iterator = itertools.count(start, t_step)
+        else:
+            # Otherwise - start is t0
+            t_step = config['save_freq']
+            iterator = itertools.count(t, t_step)
+        next(iterator) # Skip current time
+        next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
         save_pts.append(1e99)  # Add last endpoint
@@ -967,7 +858,7 @@ class PrognosticsModel(ABC):
 
             # Save if at appropriate time
             if (t >= next_save):
-                next_save += save_freq
+                next_save = next(iterator)
                 update_all()
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1

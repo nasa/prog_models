@@ -28,7 +28,7 @@ def run_example():
             elif event_state["EOD"] < 0.05:
                 load = -1  # Charge
         # Rule for loading at initialization
-        return {'i': load}
+        return batt.InputContainer({'i': load})
 
     # Simulate to EOL Threshold
     print('\n\n------------------------------------------------')

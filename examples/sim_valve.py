@@ -16,20 +16,20 @@ def run_example():
     def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
-                return {
+                return valv.InputContainer({
                     'pL': 3.5e5,
                     'pR': 2.0e5,
                     # Open Valve
                     'uTop': False,
                     'uBot': True
-                }
-            return {
+                })
+            return valv.InputContainer({
                 'pL': 3.5e5,
                 'pR': 2.0e5,
                 # Close Valve
                 'uTop': True,
                 'uBot': False
-            }
+            })
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
