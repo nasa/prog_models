@@ -488,7 +488,7 @@ def OverwrittenWarning(params):
     """
     Function to warn if overwritten changes
     """
-    warnings.warn("Ro, qMobile, and tDiffusion will be overwritten within the model as part of battery aging modeling. Use BatteryElectroChemEOD to remove this behavior.")
+    warnings.warn("Warning: Ro, qMobile, and tDiffusion will be overwritten within the model as part of battery aging modeling. Use BatteryElectroChemEOD to remove this behavior.")
     return {}
 
 

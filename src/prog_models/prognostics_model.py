@@ -371,10 +371,10 @@ class PrognosticsModel(ABC):
         """
         for (key, limit) in self.state_limits.items():
             if x[key] < limit[0]:
-                warn("State {} limited to {} (was {})".format(key, limit[0], x[key]), ProgModelStateLimitWarning)
+                warn("ProgModelStateLimitWarning: State {} limited to {} (was {})".format(key, limit[0], x[key]), ProgModelStateLimitWarning)
                 x[key] = limit[0]
             elif x[key] > limit[1]:
-                warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
+                warn("ProgModelStateLimitWarning: State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
                 x[key] = limit[1]
         return x
 

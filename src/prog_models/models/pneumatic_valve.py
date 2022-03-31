@@ -354,7 +354,7 @@ def OverwrittenWarning(params):
     """
     Function to warn if overwritten changes
     """
-    warnings.warn("wb, wi, wk, wr and wt will be overwritten within the model, since the wear rates are part of the state. Use PneumaticValveBase to remove this behavior.")
+    warnings.warn("Warning: wb, wi, wk, wr and wt will be overwritten within the model, since the wear rates are part of the state. Use PneumaticValveBase to remove this behavior.")
     return {}
 
 

@@ -263,7 +263,7 @@ def OverwrittenWarning(params):
     """
     Function to warn if overwritten changes
     """
-    warnings.warn("wA, wRadial, and wThrust will be overwritten within the model, since the wear rates are part of the state. Use CentrifugalPumpBase to remove this behavior.")
+    warnings.warn("Warning: wA, wRadial, and wThrust will be overwritten within the model, since the wear rates are part of the state. Use CentrifugalPumpBase to remove this behavior.")
     return {}
 
 
