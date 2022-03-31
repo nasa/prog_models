@@ -60,10 +60,10 @@ def load_data(batt_id):
         # Convert to string
         batt_id = 'RW' + str(batt_id)
     if not isinstance(batt_id, str):
-        raise ValueError('Battery ID must be a string')
+        raise ValueError('ValueError: Battery ID must be a string')
 
     if batt_id not in urls:
-        raise ValueError('Unknown battery ID: {}'.format(batt_id))
+        raise ValueError('ValueError: Unknown battery ID: {}'.format(batt_id))
 
     url = urls[batt_id]
 

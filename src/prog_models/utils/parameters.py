@@ -64,7 +64,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
-                    raise ProgModelTypeError("Unsupported process noise distribution")
+                    raise ProgModelTypeError("ProgModelTypeError: Unsupported process noise distribution")
                 if all(value == 0 for value in self['process_noise'].values()):
                     # No noise, use none function
                     fcn = process_noise_functions['none']
@@ -75,7 +75,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['process_noise'] for key in self.__m.states]):
-                    raise ProgModelTypeError("Process noise must have every key in model.states")
+                    raise ProgModelTypeError("ProgModelTypeError: Process noise must have every key in model.states")
         elif key == 'measurement_noise' or key == 'measurement_noise_dist':
             if callable(self['measurement_noise']):
                 self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
@@ -86,7 +86,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:
-                    raise ProgModelTypeError("Unsupported measurement noise distribution")
+                    raise ProgModelTypeError("ProgModelTypeError: Unsupported measurement noise distribution")
 
                 if all(value == 0 for value in self['measurement_noise'].values()):
                     # No noise, use none function
@@ -98,7 +98,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Make sure every key is present (single value already handled above)
                 if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
-                    raise ProgModelTypeError("Measurement noise must have ever key in model.outputs")
+                    raise ProgModelTypeError("ProgModelTypeError: Measurement noise must have ever key in model.outputs")
 
     def register_derived_callback(self, key, callback):
         """Register a new callback for derived parameters

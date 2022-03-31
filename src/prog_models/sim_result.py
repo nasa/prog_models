@@ -114,7 +114,7 @@ class SimResult(UserList):
         return plot_timeseries(self.times, self.data, options=kwargs)  
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
-        raise NotImplementedError("Not Implemented")
+        raise NotImplementedError("NotImplementedError: Not Implemented")
 
     # Functions of list not implemented
     # Specified here to stop users from accidentally trying to use them (due to this classes similarity to list)

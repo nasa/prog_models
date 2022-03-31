@@ -26,7 +26,7 @@ class DictLikeMatrixWrapper():
         elif isinstance(data, dict) or isinstance(data, DictLikeMatrixWrapper):
             self.matrix = np.array([[data[key]] for key in keys])
         else:
-            raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
+            raise ProgModelTypeError(f"ProgModelTypeError: Input must be a dictionary or numpy array, not {type(data)}")     
 
     def __getitem__(self, key):
         return self.matrix[self._keys.index(key)][0]

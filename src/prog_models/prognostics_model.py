@@ -101,23 +101,23 @@ class PrognosticsModel(ABC):
 
     def __init__(self, **kwargs):
         if not hasattr(self, 'inputs'):
-            raise ProgModelTypeError('Must have `inputs` attribute')
+            raise ProgModelTypeError('ProgModelTypeError: Must have `inputs` attribute')
         
         if not hasattr(self, 'states'):
-            raise ProgModelTypeError('Must have `states` attribute')
+            raise ProgModelTypeError('ProgModelTypeError: Must have `states` attribute')
         if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
+            raise ProgModelTypeError('ProgModelTypeError: `states` attribute must have at least one state key')
         try:
             iter(self.states)
         except TypeError:
-            raise ProgModelTypeError('model.states must be iterable')
+            raise ProgModelTypeError('ProgModelTypeError: model.states must be iterable')
 
         if not hasattr(self, 'outputs'):
-            raise ProgModelTypeError('Must have `outputs` attribute')
+            raise ProgModelTypeError('ProgModelTypeError: Must have `outputs` attribute')
         try:
             iter(self.outputs)
         except TypeError:
-            raise ProgModelTypeError('model.outputs must be iterable')
+            raise ProgModelTypeError('ProgModelTypeError: model.outputs must be iterable')
         
         # Default params for any model
         params = PrognosticsModel.default_parameters.copy()
@@ -129,7 +129,7 @@ class PrognosticsModel(ABC):
         try:
             params.update(kwargs)
         except TypeError:
-            raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
+            raise ProgModelTypeError("ProgModelTypeError: Failed to update parameters; check that all parameters are valid")
 
         self.__setstate__(params)
 
@@ -307,7 +307,7 @@ class PrognosticsModel(ABC):
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models,
         and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        raise ProgModelException('dx not defined - please use next_state()')
+        raise ProgModelException('ProgModelException: dx not defined - please use next_state()')
         
     def next_state(self, x, u, dt) -> dict: 
         """
@@ -631,7 +631,7 @@ class PrognosticsModel(ABC):
         
         # Input Validation
         if not isinstance(time, Number) or time < 0:
-            raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
+            raise ProgModelInputException("ProgModelInputException: 'time' must be positive, was {} (type: {})".format(time, type(time)))
 
         # Configure
         config = { # Defaults
@@ -716,17 +716,17 @@ class PrognosticsModel(ABC):
         """
         # Input Validation
         if first_output and not all(key in first_output for key in self.outputs):
-            raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
+            raise ProgModelInputException("ProgModelInputException: Missing key in 'first_output', must have every key in model.outputs")
 
         if not (callable(future_loading_eqn)):
-            raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
+            raise ProgModelInputException("ProgModelInputException: 'future_loading_eqn' must be callable f(t)")
         
         if isinstance(threshold_keys, str):
             # A single threshold key
             threshold_keys = [threshold_keys]
 
         if threshold_keys and not all([key in self.events for key in threshold_keys]):
-            raise ProgModelInputException("threshold_keys must be event names")
+            raise ProgModelInputException("ProgModelInputException: threshold_keys must be event names")
 
         # Configure
         config = { # Defaults
@@ -742,28 +742,28 @@ class PrognosticsModel(ABC):
         
         # Configuration validation
         if not isinstance(config['dt'], Number) and not callable(config['dt']):
-            raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+            raise ProgModelInputException("ProgModelInputException: 'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
-            raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
+            raise ProgModelInputException("ProgModelInputException: 'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number) and not isinstance(config['save_freq'], tuple):
-            raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+            raise ProgModelInputException("ProgModelInputException: 'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if (isinstance(config['save_freq'], Number) and config['save_freq'] <= 0) or \
             (isinstance(config['save_freq'], tuple) and config['save_freq'][1] <= 0):
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
+            raise ProgModelInputException("ProgModelInputException: 'save_freq' must be positive, was {}".format(config['save_freq']))
         if not isinstance(config['save_pts'], abc.Iterable):
-            raise ProgModelInputException("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
+            raise ProgModelInputException("ProgModelInputException: 'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
         if not isinstance(config['horizon'], Number):
-            raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
+            raise ProgModelInputException("ProgModelInputException: 'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['horizon']))
+            raise ProgModelInputException("ProgModelInputException: 'save_freq' must be positive, was {}".format(config['horizon']))
         if 'x' in config and not all([state in config['x'] for state in self.states]):
-            raise ProgModelInputException("'x' must contain every state in model.states")
+            raise ProgModelInputException("ProgModelInputException: 'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
-            raise ProgModelInputException("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
+            raise ProgModelInputException("ProgModelInputException: 'thresholds_met_eqn' must be callable (e.g., function or lambda)")
         if 'thresholds_met_eqn' in config and config['thresholds_met_eqn'].__code__.co_argcount != 1:
-            raise ProgModelInputException("'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
+            raise ProgModelInputException("ProgModelInputException: 'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
         if not isinstance(config['print'], bool):
-            raise ProgModelInputException("'print' must be a bool, was a {}".format(type(config['print'])))
+            raise ProgModelInputException("ProgModelInputException: 'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
         t = config['t0']
