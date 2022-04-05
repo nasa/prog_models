@@ -3,16 +3,14 @@
 
 from .. import prognostics_model
 
-import math
-from math import inf
 from copy import deepcopy
+import numpy as np
+import warnings
 
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics model for a centrifugal pump
-
-    This class implements a Centrifugal Pump model as described in the following paper:
+    Prognostics model for a Centrifugal Pump as described in the following paper:
     `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
 
     Events (4)
@@ -26,7 +24,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | V: Voltage
         | pdisch: Discharge Pressure (Pa)
         | psuc: Suction Pressure (Pa)
-        | wsync: Syncronous Rotational Speed of Supply Voltage (rad/sec)
+        | wsync: Synchronous Rotational Speed of Supply Voltage (rad/sec)
 
     States: (9)
         | A: Impeller Area (m^2)
@@ -46,70 +44,94 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | Tt: Thrust Bearing Temperature (K)
         | w: Rotational Velocity of Pump (rad/sec)
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state).
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | pAtm : Atmospheric pressure
-        | a0, a1, a2 : empirical coefficients for flow torque eqn
-        | A : impeller blade area
-        | b :
-        | n : Pole Phases 
-        | p : Pole Pairs
-        | I : impeller/shaft/motor lumped inertia
-        | r : lumped friction parameter (minus bearing friction)
-        | R1, R2 :
-        | L1 :
-        | FluidI: Pump fluid inertia
-        | c : Pump flow coefficient
-        | cLeak : Internal leak flow coefficient
-        | ALeak : Internal leak area
-        | mcThrust :
-        | HThrust1, HThrust2 :
-        | mcRadial :
-        | HRadial1, HRadial2 :
-        | mcOil :
-        | HOil1, HOil2, HOil3 :
-        | wA, wRadial, wThrust : Wear rates. See also CentrifugalPumpWithWear
-        | lim : Parameter limits (dict)
-        | x0 : Initial state
+    keyword args
+    ------------
+        process_noise : Optional, float or Dict[Srt, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        pAtm : float
+            Atmospheric pressure
+        a0, a1, a2 : float
+            empirical coefficients for flow torque eqn
+        A : float
+            impeller blade area
+        b : float
+        n : float
+            Pole Phases 
+        p : float
+            Pole Pairs
+        I : float
+            impeller/shaft/motor lumped inertia
+        r : float 
+            lumped friction parameter (minus bearing friction)
+        R1, R2 : float
+        L1 : float
+        FluidI: float
+            Pump fluid inertia
+        c : float
+            Pump flow coefficient
+        cLeak : float
+            Internal leak flow coefficient
+        ALeak : float
+            Internal leak area
+        mcThrust : float
+        HThrust1, HThrust2 : float
+        mcRadial : float
+        HRadial1, HRadial2 : float
+        mcOil : float
+        HOil1, HOil2, HOil3 : float
+        wA, wRadial, wThrust : float
+            Wear rates. See also CentrifugalPumpWithWear
+        lim : dict
+            Parameter limits
+        x0 : dict
+            Initial state
+    
+    See Also
+    --------
+    CentrifugalPumpWithWear
     """
     events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
-    states = ['A', 'Q', 'To', 'Tr', 'Tt', 'rRadial', 'rThrust', 'w',  'QLeak']
-    outputs = ['Qout', 'To', 'Tr', 'Tt', 'w']
+    states = ['w', 'Q', 'Tt', 'Tr', 'To', 'A', 'rRadial', 'rThrust', 'QLeak']
+    outputs = ['w', 'Qout', 'Tt', 'Tr', 'To']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         # Environmental parameters
         'pAtm': 101325,
 
         # Torque and pressure parameters
-        'a0': 0.00149204,	# empirical coefficient for flow torque eqn
-        'a1': 5.77703,		# empirical coefficient for flow torque eqn
-        'a2': 9179.4,		# empirical coefficient for flow torque eqn
-        'A': 12.7084,		# impeller blade area
+        'a0': 0.00149204,
+        'a1': 5.77703,
+        'a2': 9179.4,
+        'A': 12.7084,
         'b': 17984.6,
 
-        'n': 3,             # Pole Phases
-        'p': 1,             # Pole Pairs
+        'n': 3,
+        'p': 1,
 
         # Pump/motor dynamics
-        'I': 50,            # impeller/shaft/motor lumped inertia
-        'r': 0.008,         # lumped friction parameter (minus bearing friction)
+        'I': 50,
+        'r': 0.008,
         'R1': 0.36,
         'R2': 0.076,
         'L1': 0.00063,
 
         # Flow coefficients
-        'FluidI': 5,        # pump fluid inertia
-        'c': 8.24123e-5,    # pump flow coefficient
-        'cLeak': 1,         # internal leak flow coefficient
-        'ALeak': 1e-10,     # internal leak area
+        'FluidI': 5,
+        'c': 8.24123e-5,
+        'cLeak': 1,
+        'ALeak': 1e-10,
 
         # Thrust bearing temperature
         'mcThrust': 7.3,
@@ -154,20 +176,20 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'To': (0, inf),  # Limited by absolute zero (0 K)
-        'Tr': (0, inf),  # Limited by absolute zero (0 K)
-        'Tt': (0, inf),  # Limited by absolute zero (0 K)
-        'A': (0, inf),
-        'rThrust': (0, inf),
-        'rRadial': (0, inf)
+        'To': (0, np.inf),  # Limited by absolute zero (0 K)
+        'Tr': (0, np.inf),  # Limited by absolute zero (0 K)
+        'Tt': (0, np.inf),  # Limited by absolute zero (0 K)
+        'A': (0, np.inf),
+        'rThrust': (0, np.inf),
+        'rRadial': (0, np.inf)
     }
 
     def initialize(self, u, z = None):
         x0 = self.parameters['x0']
-        x0['QLeak'] = math.copysign(\
+        x0['QLeak'] = \
             self.parameters['cLeak']*self.parameters['ALeak']*\
-                math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
-        return x0
+                np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
+        return self.StateContainer(x0)
 
     def next_state(self, x, u, dt):
         params = self.parameters
@@ -179,43 +201,47 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         rRadialdot = params['wRadial']*x['rRadial']*x['w']*x['w']
         rThrustdot = params['wThrust']*x['rThrust']*x['w']*x['w']
         friction = (params['r']+x['rThrust']+x['rRadial'])*x['w']
-        QLeak = math.copysign(params['cLeak']*params['ALeak']*math.sqrt(abs(u['psuc']-u['pdisch'])), \
-            u['psuc']-u['pdisch'])
+        if type(x['A']) == np.ndarray:
+            QLeak = np.array([params['cLeak']*params['ALeak'] *
+                           np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])]*len(x['A']))
+        else:
+            QLeak = params['cLeak']*params['ALeak'] * \
+                np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
         Trdot = 1/params['mcRadial'] * (x['rRadial']*x['w']*x['w'] - params['HRadial1']*(x['Tr']-u['Tamb']) - params['HRadial2']*(x['Tr']-x['To']))
         slipn = (u['wsync']-x['w'])/(u['wsync'])
         ppump = x['A']*x['w']*x['w'] + params['b']*x['w']*x['Q']
-        Qout = max(0,x['Q']-QLeak)
-        slip = max(-1,(min(1,slipn)))
+        Qout = np.maximum(0,x['Q']-x['QLeak'])
+        slip = np.maximum(-1,(np.minimum(1,slipn)))
         deltaP = ppump+u['psuc']-u['pdisch']
         Te = params['n']*params['p']*params['R2']/(slip*(u['wsync']+0.00001)) * u['V']**2 \
             /((params['R1']+params['R2']/slip)**2+(u['wsync']*params['L1'])**2)
         backTorque = -params['a2']*Qout**2 + params['a1']*x['w']*Qout + params['a0']*x['w']**2
-        Qo = math.copysign(params['c']*math.sqrt(abs(deltaP)), deltaP)
+        Qo = params['c']*np.sqrt(abs(deltaP)) * np.sign(deltaP)
         wdot = (Te-friction-backTorque)/params['I']
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
-        return {
-            'w': x['w'] + wdot * dt,
-            'Q': x['Q'] + Qdot * dt,
-            'Tt': x['Tt'] + Ttdot * dt,
-            'Tr': x['Tr'] + Trdot * dt,
-            'To': x['To'] + Todot * dt,
-            'A': x['A'] + Adot * dt,
-            'rRadial': x['rRadial'] + rRadialdot * dt,
-            'rThrust': x['rThrust'] + rThrustdot * dt,
-            'QLeak': QLeak
-        }
+        return self.StateContainer(np.array([
+            [x['w'] + wdot * dt],
+            [x['Q'] + Qdot * dt],
+            [x['Tt'] + Ttdot * dt],
+            [x['Tr'] + Trdot * dt],
+            [x['To'] + Todot * dt],
+            [x['A'] + Adot * dt],
+            [x['rRadial'] + rRadialdot * dt],
+            [x['rThrust'] + rThrustdot * dt],
+            [QLeak]
+        ]))
 
     def output(self, x):
-        Qout = max(0,x['Q']-x['QLeak'])
+        Qout = np.maximum(0,x['Q']-x['QLeak'])
 
-        return {
+        return self.OutputContainer({
+            'w':    x['w'],
             'Qout': Qout,
-            'To': x['To'],
-            'Tr': x['Tr'],
-            'Tt': x['Tt'],
-            'w': x['w']
-        }
+            'Tt':   x['Tt'],
+            'Tr':   x['Tr'],
+            'To':   x['To']
+        })
 
     def event_state(self, x):
         return {
@@ -232,6 +258,13 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'RadialBearingOverheat': x['Tr'] >= self.parameters['lim']['Tr'],
             'PumpOilOverheat': x['To'] >= self.parameters['lim']['To']
         }
+
+def OverwrittenWarning(params):
+    """
+    Function to warn if overwritten changes
+    """
+    warnings.warn("wA, wRadial, and wThrust will be overwritten within the model, since the wear rates are part of the state. Use CentrifugalPumpBase to remove this behavior.")
+    return {}
 
 
 class CentrifugalPumpWithWear(CentrifugalPumpBase):
@@ -258,6 +291,10 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
 
     Model Configuration Parameters:
         See CentrifugalPumpBase
+
+    See Also
+    --------
+    CentrifugalPumpBase
     """
     inputs = CentrifugalPumpBase.inputs
     outputs = CentrifugalPumpBase.outputs
@@ -272,16 +309,25 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
 
     state_limits = deepcopy(CentrifugalPumpBase.state_limits)
 
+    param_callbacks = {
+        'wA': [OverwrittenWarning],
+        'wRadial': [OverwrittenWarning],
+        'wThrust': [OverwrittenWarning]
+    }
+
     def next_state(self, x, u, dt):
-        self.parameters['wA'] = x['wA']
-        self.parameters['wRadial'] = x['wRadial']
-        self.parameters['wThrust'] = x['wThrust']
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['wA'] = x['wA']
+            self.parameters['wRadial'] = x['wRadial']
+            self.parameters['wThrust'] = x['wThrust']
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
-        next_x.update({
-            'wA': x['wA'],
-            'wRadial': x['wRadial'],
-            'wThrust': x['wThrust'],
-        })
+
+        next_x.matrix = np.vstack((next_x.matrix, np.array([
+            [x['wA']],
+            [x['wRadial']],
+            [x['wThrust']]
+        ])))
         return next_x
 
 CentrifugalPump = CentrifugalPumpWithWear

@@ -2,14 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim`
+Example of a battery being simulated for a set period of time and then till threshold is met.
 """
 
 from prog_models.models import BatteryCircuit as Battery
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
-
-
 
 def run_example(): 
     # Step 1: Create a model object
@@ -28,11 +26,11 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': i}
+        return batt.InputContainer({'i': i})
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183}, print = True)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, print = True, progress = True)
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -40,9 +38,10 @@ def run_example():
     options = {
         'save_freq': 100, # Frequency at which results are saved
         'dt': 2, # Timestep
-        'print': True
+        'print': True,
+        'progress': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

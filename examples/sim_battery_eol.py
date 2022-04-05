@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met. Run using the command `python -m examples.sim_battery_eol`
+Example of a battery being simulated for a set period of time and then till threshold is met. 
 """
 
 from prog_models.models import BatteryElectroChem as Battery
@@ -28,7 +28,7 @@ def run_example():
             elif event_state["EOD"] < 0.05:
                 load = -1  # Charge
         # Rule for loading at initialization
-        return {'i': load}
+        return batt.InputContainer({'i': load})
 
     # Simulate to EOL Threshold
     print('\n\n------------------------------------------------')
@@ -39,7 +39,7 @@ def run_example():
         'threshold_keys': ['InsufficientCapacity'],  # Simulate to InsufficientCapacity
         'print': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, {'t': 18.95, 'v': 4.183}, **options)
+    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

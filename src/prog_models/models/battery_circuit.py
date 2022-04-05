@@ -1,16 +1,15 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
+from .. import PrognosticsModel
 
-from math import exp, inf
+from math import inf
+import numpy as np
 
 
-class BatteryCircuit(prognostics_model.PrognosticsModel):
+class BatteryCircuit(PrognosticsModel):
     """
-    Prognostics model for a battery, represented by an electric circuit
-    
-    This class implements an equivilant circuit model as described in the following paper:
+    Vectorized prognostics model for a battery, represented by an equivilant circuit model as described in the following paper:
     `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253`
     
     Events: (1)
@@ -29,44 +28,56 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         | t: Temperature of battery (°C)
         | v: Voltage supplied by battery
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state). 
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | V0 : Nominal Battery Voltage
-        | Rp : Battery Parasitic Resistance 
-        | qMax : Maximum Charge
-        | CMax : Max Capacity
-        | VEOD : End of Discharge Voltage Threshold
-        | Cb0 : Battery Capacity Parameter
-        | Cbp0 : Battery Capacity Parameter
-        | Cbp1 : Battery Capacity Parameter
-        | Cbp2 : Battery Capacity Parameter
-        | Cbp3 : Battery Capacity Parameter
-        | Rs : R-C Pair Parameter
-        | Cs : R-C Pair Parameter
-        | Rcp0 : R-C Pair Parameter
-        | Rcp1 : R-C Pair Parameter
-        | Rcp2 : R-C Pair Parameter
-        | Ccp : R-C Pair Parameter
-        | Ta : Ambient Temperature
-        | Jt : Temperature parameter
-        | ha : Heat transfer coefficient, ambient
-        | hcp : Heat transfer coefficient parameter
-        | hcs : Heat transfer coefficient - surface
-        | x0 : Initial state
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[Str, float]
+          Process noise (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for process noise (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[Srt, float]
+          Measurement noise (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for measurement noise (e.g., normal, uniform, triangular)
+        V0 : float
+          Nominal Battery Voltage
+        Rp : float
+          Battery Parasitic Resistance 
+        qMax : float
+          Maximum Charge
+        CMax : float
+          Maximum Capacity
+        VEOD : float
+          End of Discharge Voltage Threshold
+        Cb0, Cbp0, Cbp1, Cbp2, Cbp3 : float 
+          Battery Capacity Parameters
+        Rs, Cs, Rcp0, Rcp1, Rcp2, Ccp : float
+          R-C Pair Parameter
+        Ta : float
+          Ambient Temperature
+        Jt : float
+          Temperature parameter
+        ha : float
+          Heat transfer coefficient, ambient
+        hcp : float
+          Heat transfer coefficient parameter
+        hcs : float
+          Heat transfer coefficient - surface
+        x0 : Dict[Str, float]
+          Initial state
     
-    Note: This is much quicker but also less accurate as the electrochemistry model
+    Note
+    ----
+        This is quicker but also less accurate as the electrochemistry model. We recommend using the electrochemistry model, when possible.
     """
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'qb', 'qcp', 'qcs']
     outputs = ['t',  'v']
+    is_vectorized = True
 
     default_parameters = {  # Set to defaults
         'V0': 4.183,
@@ -100,12 +111,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
             'qb': 7856.3254,
             'qcp': 0,
             'qcs': 0
-        },
-        # current ratings
-        'nomCapacity': 2.2,  # nominal capacity, Ah
-        'CRateMin': 0.7,  # current necessary for cruise,
-        'CRateMax': 2.5   # current necessary for hover
-        # CRateMin, CRateMax based on values determined in `C. Silva and W. Johnson, "VTOL Urban Air Mobility Concept Vehicles for Technology Development" Aviation and Aeronautics Forum (Aviation 2018),June 2018. https://arc.aiaa.org/doi/abs/10.2514/6.2018-3847`
+        }
     }
 
     state_limits = {
@@ -113,8 +119,8 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         'qb': (0, inf)
     }
 
-    def initialize(self, u={}, z={}):
-        return self.parameters['x0']
+    def initialize(self, u=None, z=None):
+        return self.StateContainer(self.parameters['x0'])
 
     def dx(self, x, u):
         # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
@@ -127,7 +133,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1'] * \
             SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Rcp = parameters['Rcp0'] + parameters['Rcp1'] * \
-            exp(parameters['Rcp2']*(-SOC + 1))
+            np.exp(parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
         Tbdot = (Rcp*Rs*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + Rs*Vcp**2*parameters['hcp']) \
             / (parameters['Jt']*Rcp*Rs)
@@ -137,12 +143,12 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         icp = ib - Vcp/Rcp
         ics = ib - Vcs/Rs
 
-        return {
-            'tb': Tbdot,
-            'qb': -ib,
-            'qcp': icp,
-            'qcs': ics
-        }
+        return self.StateContainer(np.array([
+            [Tbdot],  # tb
+            [-ib],    # qb
+            [icp],    # qcp
+            [ics]     # qcs
+        ]))
     
     def event_state(self, x):
         parameters = self.parameters
@@ -152,7 +158,7 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
             self.parameters['VDropoff']
         return {
-            'EOD': min(charge_EOD, voltage_EOD)
+            'EOD': np.minimum(charge_EOD, voltage_EOD)
         }
 
     def output(self, x):
@@ -163,10 +169,9 @@ class BatteryCircuit(prognostics_model.PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
-        return {
-            't': x['tb'],
-            'v': Vb - Vcp - Vcs
-        }
+        return self.OutputContainer(np.array([
+            [x['tb']],            # t
+            [Vb - Vcp - Vcs]]))   # v
 
     def threshold_met(self, x):
         parameters = self.parameters

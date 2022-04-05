@@ -8,8 +8,10 @@
 # 4. Uncomment either dx or next_state function. dx for continuous models, and next_state for discrete
 # 5. Implement logic of model in each method
 
+# Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
+
 from prog_models import PrognosticsModel
-import math
+from numpy import inf
 
 # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
 # See examples.derived_params
@@ -26,6 +28,9 @@ class ProgModelTemplate(PrognosticsModel):
     """
     Template for Prognostics Model
     """
+
+    # V Uncomment Below if the class is vectorized (i.e., if it can accept input to all functions as arrays) V
+    # is_vectorized = True
 
     # REPLACE THE FOLLOWING LIST WITH EVENTS BEING PREDICTED
     events = [
@@ -63,7 +68,7 @@ class ProgModelTemplate(PrognosticsModel):
     state_limits = {
         # 'state': (lower_limit, upper_limit)
         # only specify for states with limits
-        'Examples State 1': (0, math.inf),
+        'Examples State 1': (0, inf),
         'Examples State 4': (-2, 3)
     }
 
@@ -94,7 +99,10 @@ class ProgModelTemplate(PrognosticsModel):
 
         super().__init__(**kwargs) # Run Parent constructor
 
-    def initialize(self, u, z):
+    # Sometimes initial input (u) and initial output (z) are needed to initialize the model
+    # In that case remove the '= None' for the appropriate argument
+    # Note: If they are needed, that requirement propogated through to the simulate_to* functions
+    def initialize(self, u=None, z=None):
         """
         Calculate initial state given inputs and outputs
 
@@ -124,7 +132,7 @@ class ProgModelTemplate(PrognosticsModel):
             'Examples State 3': 44,
             'Examples State 4': [1, 2, 3]
         }
-        return x0
+        return self.StateContainer(x0)
 
     # UNCOMMENT THIS FUNCTION FOR CONTINUOUS MODELS
     # def dx(self, t, x, u):
@@ -165,7 +173,7 @@ class ProgModelTemplate(PrognosticsModel):
     #         'Examples State 3': 4.7,
     #         'Examples State 4': 220
     #     }
-    #     return dxdt
+    #     return self.StateContainer(dxdt)
 
     # UNCOMMENT THIS FUNCTION FOR DISCRETE MODELS
     # def next_state(self, t, x, u, dt):
@@ -198,7 +206,7 @@ class ProgModelTemplate(PrognosticsModel):
     #     next_x = x
     #     # ADD LOGIC TO CALCULATE next_x from x
 
-    #     return next_x 
+    #     return self.StateContainer(next_x)
 
     def output(self, t, x):
         """
@@ -222,10 +230,10 @@ class ProgModelTemplate(PrognosticsModel):
 
         # REPLACE BELOW WITH LOGIC TO CALCULATE OUTPUTS
         # NOTE: KEYS FOR z MATCH 'outputs' LIST ABOVE
-        z = {
+        z = self.OutputContainer({
             'Example Output 1': 0.0,
             'Example Output 2': 0.0  
-        }
+        })
 
         return z
 
@@ -257,6 +265,7 @@ class ProgModelTemplate(PrognosticsModel):
 
         return event_x
         
+    # Note: Thresholds met equation below is not strictly necessary. By default threshold_met will check if event_state is ≤ 0 for each event
     def threshold_met(self, t, x):
         """
         For each event threshold, calculate if it has been met

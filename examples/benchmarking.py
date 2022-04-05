@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of benchmarking models. Run using the command `python -m examples.benchmarking_example`
+Example of benchmarking models. 
 """
 
 from timeit import timeit
@@ -25,12 +25,12 @@ def run_example():
             i = 2
         else:
             i = 3
-        return {'i': i}
+        return batt.InputContainer({'i': i})
 
     # Step 3: Benchmark simulation for 600 seconds
     print('Benchmarking:')
     def sim():  
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(600, future_loading, {'t': 18.95, 'v': 4.183})
+        (times, inputs, states, outputs, event_states) = batt.simulate_to(600, future_loading)
     time = timeit(sim, number=500)
 
     # Print results
