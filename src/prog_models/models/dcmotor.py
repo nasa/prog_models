@@ -1,13 +1,12 @@
 from prog_models import PrognosticsModel
 from math import pi
 import numpy as np
-import scipy.signal as signal
 from copy import deepcopy
 
 # Support Functions
 def backemf(theta):
     """Backemf for the current opsition of rotor (theta)"""
-    theta = theta * (180/pi) # convert rad to deg
+    theta = (theta % (2*pi)) * (180/pi) # convert rad to deg
     if 0. <= theta <= 60:
         f_a = 1
         f_b = -1
@@ -64,13 +63,11 @@ def update_BC(params):
     }
 
 def update_AC(params):
-    R = params['R']
     L1 = params['L1']
     Flx = params['K']
     J = params['J']
     B = params['B']
     Po = params['Po']
-    C_q = params['c_q'] * params['rho'] * pow(params['D'], 5)
     negR_L1 = params['negR_L1']
     return {'Ac': np.array([[negR_L1, 0, 0, -(Flx/L1), 0],
             [0, negR_L1, 0, -(Flx/L1), 0],
@@ -168,15 +165,15 @@ class DCMotor(PrognosticsModel):
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
-    def next_state(self, x, u, dt):
+    def dx(self, x, u):
         params = self.parameters
+
+        U = np.array([[u[key]] for key in self.inputs])  
 
         # Convert to new context
         (F_a, F_b, F_c) = backemf(x['theta'])
-        X = np.array([x[key] for key in self.states])
-        U = np.array([u[key] for key in self.inputs])  
 
         Ac = deepcopy(params['Ac'])
         Ac[0][3] *= F_a
@@ -186,21 +183,13 @@ class DCMotor(PrognosticsModel):
         Ac[3][1] *= F_b
         Ac[3][2] *= F_c
         # TODO(CT): Move F_* to U_vector
-        Ac[3][3] -= params['C_q']*X[3]/params['J']
-        
-        # continuous to discrete
-        dsys = signal.cont2discrete([Ac,params['Bc'],params['Cc'],params['Dc']],dt)
-        Ad = dsys[0]
-        Bd = dsys[1]
-        Cd = dsys[2]
-        Dd = dsys[3]
+        Ac[3][3] -= params['C_q']*x['v_rot']/params['J']
 
-        Xp = np.dot(Ad, X) + np.dot(Bd, U)
-        Xp[4] = Xp[4] % ( 2.0 * pi )
+        dxdt = np.dot(Ac, x.matrix) + np.dot(params['Bc'], U)
 
         # Convert back
         return {
-            key: value for (key, value) in zip(self.states, Xp)
+            key: value[0] for (key, value) in zip(self.states, dxdt)
         }
 
     def output(self, x):

@@ -4,7 +4,7 @@ import scipy.signal as signal
 
 # selection of switching pattern based on rotor position (theta)
 def commutation(theta):
-    theta = theta * (180/pi) # convert rad to deg
+    theta = theta % (2 * pi) * (180/pi) # convert rad to deg
     CL = [[1, -1, 0],
            [1, 0, -1],
            [0, 1, -1],
@@ -16,7 +16,7 @@ def commutation(theta):
 
 # Consts
 DC_volt= 10  # in Volts
-sawtooth_freq= 600  # Hz, sawtooth frequency
+sawtooth_freq= 16000  # Hz, sawtooth frequency
 duty = 1
         
 def esc_loading(t, x = {'theta': 0}):
