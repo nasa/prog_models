@@ -1,3 +1,6 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 from prog_models import PrognosticsModel
 from math import pi
 import numpy as np
@@ -6,7 +9,7 @@ from copy import deepcopy
 # Support Functions
 def backemf(theta):
     """Backemf for the current opsition of rotor (theta)"""
-    theta = (theta % (2*pi)) * (180/pi) # convert rad to deg
+    theta = theta * (180/pi) # convert rad to deg
     if 0. <= theta <= 60:
         f_a = 1
         f_b = -1
@@ -38,11 +41,6 @@ def backemf(theta):
 def update_L1(params):
     return {
         'L1': params['L'] - params['M']
-    }
-
-def update_Cq(params):
-    return {
-        'C_q': params['c_q'] * params['rho'] * pow(params['D'], 5)
     }
 
 def update_R_L1(params):
@@ -112,9 +110,6 @@ class DCMotor(PrognosticsModel):
         | B: Friction in motor / Damping (Not a function of thrust) (Nm/(rad/s))
         | Po: no of poles in rotor 
         | J: Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
-        | c_q coefficient of torque (APC data, derived) [dimensionless]
-        | rho: (Kg/m^3)
-        | D: Propeller diameter (m)
     """
     states = ['i_a', 'i_b', 'i_c', 'v_rot', 'theta']
     inputs = ['v_a', 'v_b', 'v_c', 't_l']
@@ -123,9 +118,6 @@ class DCMotor(PrognosticsModel):
         'L': [update_L1],
         'L1': [update_R_L1, update_BC, update_AC],
         'M': [update_L1],
-        'c_q': [update_Cq, update_AC],
-        'rho': [update_Cq, update_AC],
-        'D': [update_Cq, update_AC],
         'R': [update_R_L1, update_AC],
         'J': [update_BC, update_AC],
         'K': [update_AC],
@@ -145,11 +137,6 @@ class DCMotor(PrognosticsModel):
         # Load parameters 
         'J': 26.967e-6, # (Kg*m^2) Load moment of inertia (neglecting motor shaft inertia)
 
-        # Motor Load parameters
-        'c_q': 0.00542, # coefficient of torque (APC data, derived) [dimensionless]
-        'rho': 1.225, # (Kg/m^3)
-        'D': 0.381, # (m)
-
         # Matricies
         'Cc': np.array([[1, 1, 1, 1, 1]]),
         'Dc': np.array([0,0,0,0]),
@@ -167,7 +154,7 @@ class DCMotor(PrognosticsModel):
     def initialize(self, u=None, z=None):
         return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def next_state(self, x, u, dt):
         params = self.parameters
 
         U = np.array([[u[key]] for key in self.inputs])  
@@ -183,13 +170,14 @@ class DCMotor(PrognosticsModel):
         Ac[3][1] *= F_b
         Ac[3][2] *= F_c
         # TODO(CT): Move F_* to U_vector
-        Ac[3][3] -= params['C_q']*x['v_rot']/params['J']
 
-        dxdt = np.dot(Ac, x.matrix) + np.dot(params['Bc'], U)
+        dxdt = np.dot(Ac, x.matrix) + np.dot(params['Bc'], U) 
+        x_new = x.matrix +  dxdt * dt
+        x_new[4] = x_new[4] % (2 * pi)
 
         # Convert back
         return {
-            key: value[0] for (key, value) in zip(self.states, dxdt)
+            key: value[0] for (key, value) in zip(self.states, x_new)
         }
 
     def output(self, x):
