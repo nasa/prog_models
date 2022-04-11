@@ -63,7 +63,6 @@ def run_example():
     plt.ylabel('Voltage (V)')
     plt.show()
 
-
 # This allows the module to be executed directly 
 if __name__=='__main__':
     run_example()

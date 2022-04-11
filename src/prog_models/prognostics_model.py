@@ -6,6 +6,7 @@ from abc import abstractmethod, ABC
 from numbers import Number
 import numpy as np
 from copy import deepcopy
+import itertools
 from warnings import warn
 from collections import abc, namedtuple
 from .sim_result import SimResult, LazySimResult
@@ -419,7 +420,7 @@ class PrognosticsModel(ABC):
         """
         
         # Calculate next state and add process noise
-        next_state = self.apply_process_noise(self.next_state(x, u, dt))
+        next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
 
         # Apply Limits
         return self.apply_limits(next_state)
@@ -744,9 +745,10 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
-        if not isinstance(config['save_freq'], Number):
+        if not isinstance(config['save_freq'], Number) and not isinstance(config['save_freq'], tuple):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
-        if config['save_freq'] <= 0:
+        if (isinstance(config['save_freq'], Number) and config['save_freq'] <= 0) or \
+            (isinstance(config['save_freq'], tuple) and config['save_freq'][1] <= 0):
             raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
         if not isinstance(config['save_pts'], abc.Iterable):
             raise ProgModelInputException("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
@@ -795,9 +797,20 @@ class PrognosticsModel(ABC):
         saved_states = []  
         saved_outputs = []
         saved_event_states = []
-        save_freq = config['save_freq']
         horizon = t+config['horizon']
-        next_save = t+save_freq
+        if isinstance(config['save_freq'], tuple):
+            # Tuple used to specify start and frequency
+            t_step = config['save_freq'][1]
+            # Use starting time or the next multiple
+            t_start = config['save_freq'][0]
+            start = max(t_start, t - (t-t_start)%t_step)
+            iterator = itertools.count(start, t_step)
+        else:
+            # Otherwise - start is t0
+            t_step = config['save_freq']
+            iterator = itertools.count(t, t_step)
+        next(iterator) # Skip current time
+        next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
         save_pts.append(1e99)  # Add last endpoint
@@ -839,13 +852,15 @@ class PrognosticsModel(ABC):
        
         while t < horizon:
             dt = next_time(t, x)
-            t = t + dt
+            t = t + dt/2
+            # Use state at midpoint of step to best represent the load during the duration of the step
             u = future_loading_eqn(t, x)
+            t = t + dt/2
             x = next_state(x, u, dt)
 
             # Save if at appropriate time
             if (t >= next_save):
-                next_save += save_freq
+                next_save = next(iterator)
                 update_all()
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
