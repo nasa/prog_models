@@ -101,3 +101,7 @@ def load_data(batt_id):
     ]
 
     return desc, result
+
+def clear_cache():
+    """Clears the cache of downloaded data"""
+    cache.clear()
