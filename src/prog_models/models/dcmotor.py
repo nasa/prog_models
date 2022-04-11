@@ -78,7 +78,17 @@ def update_AC(params):
 
 class DCMotor(PrognosticsModel):
     """
-    Model of DC Motor
+    Model of DC Motor.
+
+    References:
+    Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
+    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
+
+    George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
+    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
+
+    Events: (0)
+        | None
 
     Inputs/Loading: (4)
         | v_a, v_b, v_c: Voltages at a, b, c
