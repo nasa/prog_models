@@ -3,6 +3,7 @@
 import unittest
 from prog_models.models.centrifugal_pump import CentrifugalPump, CentrifugalPumpWithWear, CentrifugalPumpBase
 
+
 class TestCentrifugalPump(unittest.TestCase):
     def test_centrifugal_pump_base(self):
         pump = CentrifugalPumpBase(process_noise= 0)
@@ -73,7 +74,7 @@ class TestCentrifugalPump(unittest.TestCase):
         pump.parameters['wA'] = 1e-2
         pump.parameters['wThrust'] = 1e-10
         (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
-        self.assertAlmostEqual(times[-1], 23891)
+        self.assertAlmostEqual(times[-1], 23892)
 
     def test_centrifugal_pump_with_wear(self):
         pump = CentrifugalPumpWithWear(process_noise= 0)
@@ -148,7 +149,7 @@ class TestCentrifugalPump(unittest.TestCase):
         pump.parameters['x0']['wA'] = 1e-2
         pump.parameters['x0']['wThrust'] = 1e-10
         (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
-        self.assertAlmostEqual(times[-1], 23891)
+        self.assertAlmostEqual(times[-1], 23892)
 
         # Check warning when changing overwritten Parameters
         with self.assertWarns(UserWarning):
