@@ -84,6 +84,13 @@ class Powertrain(PrognosticsModel):
         self.esc = esc
         self.motor = motor
 
+    def __eq__(self, other):
+        return (
+            super().__eq__(other) and
+            self.esc == other.esc and
+            self.motor == other.motor
+        )
+
     def initialize(self, u=None, z=None):
         x0 = self.esc.initialize(u=u, z=z)
         x0.update(self.motor.initialize(u=u, z=z))
