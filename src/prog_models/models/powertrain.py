@@ -58,9 +58,9 @@ class Powertrain(PrognosticsModel):
                                 Can be number (e.g., .2) applied to every output, a dictionary of values for each 
                                 output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         | measurement_noise_dist :  Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | c_q :                     Dimensionless coefficient of torque of the propeller [-], (APC data, derived).
-        | rho :                     Air density [Kg/m^3].
-        | D:                        Propeller diameter [m].
+        | c_q :                 Dimensionless coefficient of torque of the propeller [-], (APC data, derived).
+        | rho :                 Air density [Kg/m^3].
+        | D:                    Propeller diameter [m].
 
     """
     inputs = ['duty', 'v']
@@ -113,6 +113,7 @@ class Powertrain(PrognosticsModel):
             'v_c': x_esc['v_c'],
             't_l': self.parameters['C_q']*x['v_rot']**2
         }
+        u_motor = self.motor.InputContainer(u_motor)
         x_motor = self.motor.next_state(x_motor, u_motor, dt)
 
         x_esc.update(x_motor)

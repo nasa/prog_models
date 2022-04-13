@@ -1,19 +1,23 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 from prog_models import PrognosticsModel
-from math import pi, floor
+from math import floor
+import numpy as np
 import scipy.signal as signal
+
+RAD_TO_DEG = 180/np.pi
+PI2 = 2 * np.pi
+CL = [[1, -1, 0],
+        [1, 0, -1],
+        [0, 1, -1],
+        [-1, 1, 0],
+        [-1, 0, 1],
+        [0, -1, 1]
+    ]
 
 # selection of switching pattern based on rotor position (theta)
 def commutation(theta):
-    theta = theta * (180/pi) # convert rad to deg
-    CL = [[1, -1, 0],
-           [1, 0, -1],
-           [0, 1, -1],
-           [-1, 1, 0],
-           [-1, 0, 1],
-           [0, -1, 1]
-        ]
+    theta *= RAD_TO_DEG # convert rad to deg
     return CL[floor(theta/60)%6]
 
 
@@ -54,7 +58,6 @@ class ESC(PrognosticsModel):
     Model Configuration Parameters:
         | sawtooth_freq :       Frequency of PWM signal [Hz], default value in default_parameters.
         | x0 :                  Initial state-vector containing v_a, v_b, v_c and t.
-    
     """
     default_parameters = {
         'sawtooth_freq': 16000, # Hz
@@ -76,16 +79,11 @@ class ESC(PrognosticsModel):
         return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
-        pw = max(signal.square(2 * pi * self.parameters['sawtooth_freq'] * x['t'], duty=u['duty']), 0)
+        pw = np.maximum(signal.square(PI2 * self.parameters['sawtooth_freq'] * x['t'], duty=u['duty']), 0)
         V = pw*u['v']
         SP = commutation(u['theta'])
-        VP = [V * SP[i] for i in range(3)]
-        return self.StateContainer({
-            'v_a': VP[0],
-            'v_b': VP[1],
-            'v_c': VP[2],
-            't': x['t'] + dt
-        })
+        VP = [V * sp_i for sp_i in SP]
+        return self.StateContainer(np.array([[VP[0]], [VP[1]], [VP[2]], [x['t'] + dt]]))
 
     def output(self, x):
         return self.OutputContainer(x)

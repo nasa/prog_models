@@ -2,40 +2,38 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from prog_models import PrognosticsModel
-from math import pi
 import numpy as np
-from copy import deepcopy
+
+RAD_TO_DEG = 180/np.pi
+PI2 = 2 * np.pi
 
 # Support Functions
 def backemf(theta):
-    """Backemf for the current opsition of rotor (theta)"""
-    theta = theta * (180/pi) # convert rad to deg
+    """
+    Backemf for the current opsition of rotor (theta)
+    
+    Parameters
+    ----------
+    theta : float
+        Current position of rotor
+        
+    Returns
+    -------
+    tuple[float, float, float]: f_a, f_b, f_c
+        f_a, f_b, f_c are the three components of the backemf
+    """
+    theta *= RAD_TO_DEG # convert rad to deg
     if 0. <= theta <= 60:
-        f_a = 1
-        f_b = -1
-        f_c = -(1/30)*theta+1
+        return (1, -1, -(1/30)*theta+1)
     elif 60 < theta <= 120:
-        f_a = 1
-        f_b = (1/30)*(theta-60)-1
-        f_c = -1
+        return (1, (1/30)*(theta-60)-1, -1)
     elif 120 < theta <= 180:
-        f_a = -(1/30)*(theta-120)+1
-        f_b = 1
-        f_c = -1
+        return (-(1/30)*(theta-120)+1, 1, -1)
     elif 180 < theta <= 240:
-        f_a = -1
-        f_b = 1
-        f_c = (1/30)*(theta-180)-1
+        return (-1, 1, (1/30)*(theta-180)-1)
     elif 240 < theta <= 300:
-        f_a = -1
-        f_b = -(1/30)*(theta-240)+1
-        f_c = 1
-    else:
-        f_a = (1/30)*(theta-300)-1
-        f_b = -1
-        f_c = 1
-
-    return f_a,f_b,f_c
+        return (-1, -(1/30)*(theta-240)+1, 1)
+    return ((1/30)*(theta-300)-1, -1, 1)
 
 # Derived Paramaters
 def update_L1(params):
@@ -57,7 +55,7 @@ def update_BC(params):
                 [0, 0, (1/L1), 0],
                 [0, 0, 0, -(1/J)],
                 [0, 0, 0, 0]
-                ])
+                ], dtype=np.float64)
     }
 
 def update_AC(params):
@@ -148,8 +146,8 @@ class DCMotor(PrognosticsModel):
         'J': 26.967e-6, # (Kg*m^2) Load moment of inertia (neglecting motor shaft inertia)
 
         # Matricies
-        'Cc': np.array([[1, 1, 1, 1, 1]]),
-        'Dc': np.array([0,0,0,0]),
+        'Cc': np.array([[1, 1, 1, 1, 1]], dtype=np.float64),
+        'Dc': np.array([0,0,0,0], dtype=np.float64),
 
         # Initial State
         'x0': {
@@ -165,14 +163,9 @@ class DCMotor(PrognosticsModel):
         return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
-        params = self.parameters
-
-        U = np.array([[u[key]] for key in self.inputs])  
-
-        # Convert to new context
         (F_a, F_b, F_c) = backemf(x['theta'])
 
-        Ac = deepcopy(params['Ac'])
+        Ac = self.parameters['Ac'].copy()
         Ac[0][3] *= F_a
         Ac[1][3] *= F_b
         Ac[2][3] *= F_c
@@ -181,18 +174,12 @@ class DCMotor(PrognosticsModel):
         Ac[3][2] *= F_c
         # TODO(CT): Move F_* to U_vector
 
-        dxdt = np.dot(Ac, x.matrix) + np.dot(params['Bc'], U) 
-        x_new = x.matrix +  dxdt * dt
-        x_new[4] = x_new[4] % (2 * pi)
+        dxdt = np.dot(Ac, x.matrix) + np.dot(self.parameters['Bc'], u.matrix) 
+        x.matrix +=  dxdt * dt  # Update inplace
+        x.matrix[4] %= PI2  # Wrap angle
 
-        # Convert back
-        return {
-            key: value[0] for (key, value) in zip(self.states, x_new)
-        }
+        return x
 
     def output(self, x):
-        return {
-            'v_rot': x['v_rot'],
-            'theta': x['theta']
-        }    
+        return self.OutputContainer(x.matrix[3:])
         
