@@ -74,7 +74,7 @@ class Powertrain(PrognosticsModel):
 
     default_parameters = {
         # Load parameters 
-        'c_q': 0.00542, # coefficient of torque (APC data, derived) [dimensionless]
+        'c_q': 5.42e-7, # coefficient of torque (APC data, derived) [dimensionless]
         'rho': 1.225, # (Kg/m^3)
         'D': 0.381, # (m)
     }
