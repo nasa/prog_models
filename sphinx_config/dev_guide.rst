@@ -139,6 +139,13 @@ Life Cycle Management
 
 Cost Estimation
 -------------------------------
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| SWE # | Description                      | Compliance | Evidence                                                        |
++=======+==================================+============+=================================================================+
+| 015   | Maintain 1 cost estimate         | FC         | Costs associated are tracked by projects (e.g., SWS, ASO, DRF)  |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 174   | Submit Planning Parameters       | NA         | Specified Center measurement repo does not exist                |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Schedules
 -------------------------------
@@ -230,7 +237,7 @@ Requirements
 +=======+==================================+============+================================================================================+
 | 050   | Software Requirements            | FC         | `Enhancement Issues <https://github.com/nasa/prog_models/labels/enhancement>`_ |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
-| 0503  | Requirement Change Tracking      | FC         | `Tracked in Issues <https://github.com/nasa/prog_models/labels/enhancement>`_  |
+| 053   | Requirement Change Tracking      | FC         | `Tracked in Issues <https://github.com/nasa/prog_models/labels/enhancement>`_  |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Implementation
