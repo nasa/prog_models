@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use state limits. 
+Example demonstrating when and how to identify model state limits. 
 """
 
 from prog_models.models.thrown_object import ThrownObject

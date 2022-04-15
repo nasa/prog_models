@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of the model parameter estimation feature. 
+Example demonstrating the model parameter estimation feature. 
 """
 
 from prog_models.models.thrown_object import ThrownObject

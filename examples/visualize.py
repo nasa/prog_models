@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of Visualization Module. 
+Example demonstrating the Visualization Module. 
 """
 
 import matplotlib.pyplot as plt
