@@ -216,8 +216,22 @@ Cybersecurity
 Bi-Directional Traceability
 -------------------------------
 
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+| SWE # | Description                      | Compliance | Evidence                                                                       |
++=======+==================================+============+================================================================================+
+| 052   | Tracability                      | FC         | See Tracability Notes, below                                                   |
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+
 Requirements
 -------------------------------
+
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+| SWE # | Description                      | Compliance | Evidence                                                                       |
++=======+==================================+============+================================================================================+
+| 050   | Software Requirements            | FC         | `Enhancement Issues <https://github.com/nasa/prog_models/labels/enhancement>`_ |
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+| 0503  | Requirement Change Tracking      | FC         | `Tracked in Issues <https://github.com/nasa/prog_models/labels/enhancement>`_  |
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Implementation
 -------------------------------
@@ -255,3 +269,20 @@ Assessed, there are some existing prognostics tools but no general python packag
 Cybersecurity Assessment 
 ************************
 Assessed, no significant Cybersecurity concerns were identified- research software. 
+
+Requirement Tracking
+********************
+Requirements are tracked as issues with the "Enhancement" label (See `Enhancement Issues <https://github.com/nasa/prog_models/labels/enhancement>`_). An issue template is used to ensure that the requirement has the desired information. Issues are closed to indicate the requirement has been met. Closing a requirement issue is done with a pull request, which is linked to the relevant requirement, for tracability. Closing the requirement issue requires a code review (see above for details), and requires implementation of passing tests that test the requirement (i.e., verification tests). The tests are reviewed with the code implementing the requirement. Issues are assigned to a milestone (i.e., release) indicating the requirements for that release. Github automatically tracks any changes to the issues (i.e., requirements)
+
+Tracability Notes
+*****************
+Hazards and non-conformances are tracked as issues with the label `bug <https://github.com/nasa/prog_models/labels/bug>`_. In the template for a bug report, there is a section asking for relevant enhancement issues (i.e., requirements). This linking establishes tracability from hazards/non-conformances to the underlying requirement. These linkings are automatically marked by the github system in the requirement issue. Additionally, to close an enhancement issue (i.e., requirement), passing verification tests must be created and checked in. The PR where these tests are created and the implementation is completed is linked to the issue establishing tracability from requirement -> verification test. These tests run automatically at every change/PR. 
+
+Additionally, requirements are assigned to milestones/releases, establishing bi-directional tracability to these 
+
+Summary: The following tracabilities are maintained:
+* Hazard <-> Requirement
+* Non-conformance <-> Requirement
+* Requirement <-> Verification Test & Results 
+* Requirement <-> Implementation
+* Release/Milestone <-> Requirement 
