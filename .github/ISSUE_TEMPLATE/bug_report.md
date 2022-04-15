@@ -10,6 +10,9 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
+**Relevant Requirements**
+Indicate any enhancement issues (i.e., requirements) that are impacted by this issue.
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
