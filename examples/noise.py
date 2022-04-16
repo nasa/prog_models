@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example defining and testing a new model. 
+Example demonstrating approaches for adding and handling model noise
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt

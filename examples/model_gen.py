@@ -2,9 +2,9 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of generating a models from constituant parts. 
+Example generating models from constituent parts. 
 
-Model for this example is that of an object thrown into the air, predicting impact event
+The model used for this example is that of an object thrown into the air, predicting the impact event
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
