@@ -4,6 +4,11 @@
 from .. import PrognosticsModel
 import numpy as np
 
+def calc_lumped_param(params):
+    return {
+        'lumped_param': 0.5 * params['rho']* params['cd'] * params['A'] / params['m']
+    }
+
 
 class ThrownObject(PrognosticsModel):
     """
@@ -71,6 +76,13 @@ class ThrownObject(PrognosticsModel):
         'process_noise': 0.0  # amount of noise in each step
     }
 
+    param_callbacks = {
+        'rho': [calc_lumped_param],
+        'A': [calc_lumped_param],
+        'm': [calc_lumped_param],
+        'cd': [calc_lumped_param]
+    }
+
     def initialize(self, u=None, z=None):
         return self.StateContainer({
             'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
@@ -79,8 +91,8 @@ class ThrownObject(PrognosticsModel):
     
     def next_state(self, x, u, dt):
         next_x =  x['x'] + x['v']*dt
-        drag_force = 0.5 * self.parameters['rho']* self.parameters['cd'] * x['v']*x['v'] * self.parameters['A']
-        next_v = x['v'] + (self.parameters['g'] - drag_force/self.parameters['m']*np.sign(x['v']))*dt
+        drag_acc = self.parameters['lumped_param'] * x['v']*x['v']
+        next_v = x['v'] + (self.parameters['g'] - drag_acc*np.sign(x['v']))*dt
         return self.StateContainer(np.array([
             [next_x],
             [next_v]  # Acceleration of gravity
