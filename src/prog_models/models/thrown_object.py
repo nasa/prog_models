@@ -7,7 +7,7 @@ import numpy as np
 
 class ThrownObject(PrognosticsModel):
     """
-    Model that similates an object thrown into the air without air resistance
+    Simple Non-Linear Model that similates an object thrown into the air with air resistance
 
     Events (2)
         | falling: The object is falling
@@ -64,6 +64,10 @@ class ThrownObject(PrognosticsModel):
         'thrower_height': 1.83,  # m
         'throwing_speed': 40,  # m/s
         'g': -9.81,  # Acceleration due to gravity in m/s^2
+        'rho': 1.225, # Air density at sea level 1.225 kg/m^3
+        'A': 0.05, # m^2 - Cross sectional area 
+        'm': 0.145, # kg - Mass of thing  
+        'cd': 0.007, # Coefficient of drag
         'process_noise': 0.0  # amount of noise in each step
     }
 
@@ -75,9 +79,11 @@ class ThrownObject(PrognosticsModel):
     
     def next_state(self, x, u, dt):
         next_x =  x['x'] + x['v']*dt
+        drag_force = 0.5 * self.parameters['rho']* self.parameters['cd'] * x['v']*x['v'] * self.parameters['A']
+        next_v = x['v'] + (self.parameters['g'] - drag_force/self.parameters['m']*np.sign(x['v']))*dt
         return self.StateContainer(np.array([
             [next_x],
-            [x['v'] + self.parameters['g']*dt]  # Acceleration of gravity
+            [next_v]  # Acceleration of gravity
         ]))
 
     def output(self, x):
