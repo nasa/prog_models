@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a sensitivity analysis on a new model. 
+Example performing a sensitivity analysis on a new model. 
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt

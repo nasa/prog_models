@@ -19,7 +19,7 @@ class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
 
-    The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equations.
+    The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.
 
     A Model also has a parameters structure, which contains fields for various model parameters.
 
@@ -852,8 +852,10 @@ class PrognosticsModel(ABC):
        
         while t < horizon:
             dt = next_time(t, x)
-            t = t + dt
+            t = t + dt/2
+            # Use state at midpoint of step to best represent the load during the duration of the step
             u = future_loading_eqn(t, x)
+            t = t + dt/2
             x = next_state(x, u, dt)
 
             # Save if at appropriate time

@@ -71,7 +71,7 @@ class BatteryCircuit(PrognosticsModel):
     
     Note
     ----
-        This is quicker but also less accurate as the electrochemistry model. We recommend using the electrochemistry model, when possible.
+        This is quicker but also less accurate than the electrochemistry model. We recommend using the electrochemistry model, when possible.
     """
     events = ['EOD']
     inputs = ['i']
