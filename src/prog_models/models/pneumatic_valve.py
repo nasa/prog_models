@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-def calc_x(x, forces, Ls, new_x):
+def calc_x(x : np.float64, forces : np.float64, Ls : float, new_x : np.float64) -> np.float64:
     lower_wall = (x==0 and forces<0) or (new_x<0)
     upper_wall = (x==Ls and forces>0) or (new_x>Ls)
     if lower_wall:
@@ -15,7 +15,7 @@ def calc_x(x, forces, Ls, new_x):
         return Ls
     return new_x
 
-def calc_v(x, v, dv, forces, Ls, new_x):
+def calc_v(x : np.float64, v : np.float64, dv : np.float64, forces : np.float64, Ls : np.float64, new_x : np.float64) -> np.float64:
     lower_wall = (x==0 and forces<0) or (new_x<0)
     upper_wall = (x==Ls and forces>0) or (new_x>Ls)
     if lower_wall or upper_wall:
@@ -223,12 +223,12 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         'r': (0, np.inf)
     }
 
-    def initialize(self, u, z = None):
+    def initialize(self, u : dict, z = None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
         return self.StateContainer(x0)
 
-    def gas_flow(self, pIn, pOut, C, A):
+    def gas_flow(self, pIn : float, pOut : float, C : float, A : float) -> float: # values either int, np.float64, or float?
         # Step 1: If array- run for each element
         # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
         inputs = np.array([pIn, pOut, C, A])
@@ -258,7 +258,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
         return -C*A*pOut*np.sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt : float):
         params = self.parameters # optimization
         pInTop = params['pSupply'] if u['uTop'] else params['pAtm'] 
         springForce = x['k']*(params['offsetX']+x['x'])
@@ -310,7 +310,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             [dp]                                # pL - pR
         ]))
     
-    def output(self, x):
+    def output(self, x : dict):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
@@ -330,7 +330,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             [x['x']]                # x
         ]))
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": (params['AbMax'] - x['Aeb'])/(params['AbMax'] - params['x0']['Aeb']), 
@@ -340,7 +340,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             "Friction Failure": (params['rMax'] - x['r'])/(params['rMax'] - params['x0']['r'])
         }
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": x['Aeb'] > params['AbMax'], 
@@ -403,7 +403,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         'wt': [OverwrittenWarning]
     }
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt : float) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wb'] = x['wb']
