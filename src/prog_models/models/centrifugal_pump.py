@@ -184,14 +184,14 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'rRadial': (0, np.inf)
     }
 
-    def initialize(self, u, z = None):
+    def initialize(self, u : dict, z = None):
         x0 = self.parameters['x0']
         x0['QLeak'] = \
             self.parameters['cLeak']*self.parameters['ALeak']*\
                 np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
         return self.StateContainer(x0)
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt):
         params = self.parameters
         Todot = 1/params['mcOil'] * (params['HOil1']*(x['Tt']-x['To']) + params['HOil2']*(x['Tr']-x['To'])\
             + params['HOil3']*(u['Tamb']-x['To']))
@@ -232,7 +232,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             [QLeak]
         ]))
 
-    def output(self, x):
+    def output(self, x : dict):
         Qout = np.maximum(0,x['Q']-x['QLeak'])
 
         return self.OutputContainer({
@@ -243,7 +243,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'To':   x['To']
         })
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         return {
             'ImpellerWearFailure': (x['A'] - self.parameters['lim']['A'])/(self.parameters['x0']['A'] - self.parameters['lim']['A']),
             'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['lim']['Tt']- self.parameters['x0']['Tt']),
@@ -251,7 +251,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['lim']['To'] - self.parameters['x0']['To'])
         }
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         return {
             'ImpellerWearFailure': x['A'] <= self.parameters['lim']['A'],
             'ThrustBearingOverheat': x['Tt'] >= self.parameters['lim']['Tt'],
@@ -315,7 +315,7 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
         'wThrust': [OverwrittenWarning]
     }
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wA'] = x['wA']
