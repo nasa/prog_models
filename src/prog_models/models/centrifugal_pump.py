@@ -191,7 +191,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
                 np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
         return self.StateContainer(x0)
 
-    def next_state(self, x : dict, u : dict, dt):
+    def next_state(self, x : dict, u : dict, dt : float):
         params = self.parameters
         Todot = 1/params['mcOil'] * (params['HOil1']*(x['Tt']-x['To']) + params['HOil2']*(x['Tr']-x['To'])\
             + params['HOil3']*(u['Tamb']-x['To']))
@@ -315,7 +315,7 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
         'wThrust': [OverwrittenWarning]
     }
 
-    def next_state(self, x : dict, u : dict, dt) -> dict:
+    def next_state(self, x : dict, u : dict, dt : float) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wA'] = x['wA']
