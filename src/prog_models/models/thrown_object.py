@@ -89,7 +89,7 @@ class ThrownObject(PrognosticsModel):
             'v': self.parameters['throwing_speed']   # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
             })
     
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt : float):
         next_x =  x['x'] + x['v']*dt
         drag_acc = self.parameters['lumped_param'] * x['v']*x['v']
         next_v = x['v'] + (self.parameters['g'] - drag_acc*np.sign(x['v']))*dt
@@ -98,18 +98,18 @@ class ThrownObject(PrognosticsModel):
             [next_v]  # Acceleration of gravity
         ]))
 
-    def output(self, x):
+    def output(self, x : dict):
         return self.OutputContainer(np.array([[x['x']]]))
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         return {
             'falling': x['v'] < 0,
             'impact': x['x'] <= 0
         }
 
-    def event_state(self, x): 
+    def event_state(self, x : dict) -> dict: 
         x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
         x_max = np.where(x['v'] > 0, x['x'], x_max) # 1 until falling begins
         return {
