@@ -452,7 +452,7 @@ def set_ax_options(ax : plt.axis, opts : dict) -> None:
     if opts['yticks']:
         ax.set_yticklabels(opts['yticks'], rotation=opts['ytick_rotation'], fontsize=opts['ytick_fontsize'])
 
-def set_labels(ax : plt.axis, opt : dict, series_names : list[str], axis : str = 'all') -> None:
+def set_labels(ax : plt.axis, opt : dict, series_names : List[str], axis : str = 'all') -> None:
     """
     Set labels of axis "ax" according to figure options "opt" and the time series names "series_names."
     The function can set both x and y axis when input axis=='all' (default), or rather set only x or y axis (axis='x' or axis='y', respectively).
