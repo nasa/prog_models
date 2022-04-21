@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-def calc_x(x : np.float64, forces : np.float64, Ls : float, new_x : np.float64) -> np.float64:
+def calc_x(x : float, forces : float, Ls : float, new_x : float) -> float:
     lower_wall = (x==0 and forces<0) or (new_x<0)
     upper_wall = (x==Ls and forces>0) or (new_x>Ls)
     if lower_wall:
@@ -15,7 +15,7 @@ def calc_x(x : np.float64, forces : np.float64, Ls : float, new_x : np.float64) 
         return Ls
     return new_x
 
-def calc_v(x : np.float64, v : np.float64, dv : np.float64, forces : np.float64, Ls : np.float64, new_x : np.float64) -> np.float64:
+def calc_v(x : float, v : float, dv : float, forces : float, Ls : float, new_x : float) -> float:
     lower_wall = (x==0 and forces<0) or (new_x<0)
     upper_wall = (x==Ls and forces>0) or (new_x>Ls)
     if lower_wall or upper_wall:
@@ -228,7 +228,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         x0['pDiff'] = u['pL'] - u['pR']
         return self.StateContainer(x0)
 
-    def gas_flow(self, pIn : float, pOut : float, C : float, A : float) -> float: # values either int, np.float64, or float?
+    def gas_flow(self, pIn : float, pOut : float, C : float, A : float) -> float:
         # Step 1: If array- run for each element
         # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
         inputs = np.array([pIn, pOut, C, A])
