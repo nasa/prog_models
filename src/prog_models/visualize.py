@@ -268,7 +268,7 @@ def set_savefig_options(sfo : dict) -> dict:
         sfo_list['filename'] = 'timeseries_plot.pdf'
     return sfo
 
-def set_legend(ax : plt.axis, item : int, s_names : list[str], leg_opt : dict) -> plt.axis:
+def set_legend(ax : plt.axis, item : int, s_names : List[str], leg_opt : dict) -> plt.axis:
     """
     Set legend for axis 'ax' for the 'item-th' time series entry. All time series labels are defined in 's_names'.
     For a comprehensive explanation of all legend options, see the Matplotlib guide on their website.
