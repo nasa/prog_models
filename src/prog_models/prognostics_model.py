@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from typing import Callable
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
@@ -133,19 +134,19 @@ class PrognosticsModel(ABC):
 
         self.__setstate__(params)
 
-    def __eq__(self, other):
+    def __eq__(self, other : "PrognosticsModel") -> bool:
         """
         Check if two models are equal
         """
         return self.__class__ == other.__class__ and self.parameters == other.parameters
     
-    def __str__(self):
+    def __str__(self) -> str:
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         return self.parameters.data
 
-    def __setstate__(self, state):
+    def __setstate__(self, state : dict) -> None:
         self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
 
         self.n_inputs = len(self.inputs)
@@ -175,7 +176,7 @@ class PrognosticsModel(ABC):
         self.OutputContainer = OutputContainer
     
     @abstractmethod
-    def initialize(self, u = None, z = None) -> dict:
+    def initialize(self, u : dict = None, z :dict = None) -> dict:
         """
         Calculate initial state given inputs and outputs
 
@@ -203,7 +204,7 @@ class PrognosticsModel(ABC):
         """
         return {}
 
-    def apply_measurement_noise(self, z) -> dict:
+    def apply_measurement_noise(self, z : dict) -> dict:
         """
         Apply measurement noise to the measurement
 
@@ -235,7 +236,7 @@ class PrognosticsModel(ABC):
                 size=None if np.isscalar(z[key]) else len(z[key]))
                 for key in z.keys()})
         
-    def apply_process_noise(self, x, dt=1) -> dict:
+    def apply_process_noise(self, x : dict, dt : int =1) -> dict:
         """
         Apply process noise to the state
 
@@ -271,7 +272,7 @@ class PrognosticsModel(ABC):
                     size=None if np.isscalar(x[key]) else len(x[key]))
                     for key in x.keys()})
 
-    def dx(self, x, u):
+    def dx(self, x : dict, u : dict) -> dict:
         """
         Calculate the first derivative of state `x` at a specific time `t`, given state and input
 
@@ -309,7 +310,7 @@ class PrognosticsModel(ABC):
         """
         raise ProgModelException('dx not defined - please use next_state()')
         
-    def next_state(self, x, u, dt) -> dict: 
+    def next_state(self, x : dict, u : dict, dt : int) -> dict: 
         """
         State transition equation: Calculate next state
 
@@ -353,7 +354,7 @@ class PrognosticsModel(ABC):
         dx = self.dx(x, u)
         return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
-    def apply_limits(self, x):
+    def apply_limits(self, x : dict) -> dict:
         """
         Apply state bound limits. Any state outside of limits will be set to the closest limit.
 
@@ -379,7 +380,7 @@ class PrognosticsModel(ABC):
         return x
 
     
-    def __next_state(self, x, u, dt) -> dict:
+    def __next_state(self, x : dict, u : dict, dt : int) -> dict:
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
 
@@ -425,7 +426,7 @@ class PrognosticsModel(ABC):
         # Apply Limits
         return self.apply_limits(next_state)
 
-    def performance_metrics(self, x) -> dict:
+    def performance_metrics(self, x : dict) -> dict:
         """
         Calculate performance metrics where
 
@@ -454,7 +455,7 @@ class PrognosticsModel(ABC):
     observables = performance_metrics
 
     @abstractmethod
-    def output(self, x) -> dict:
+    def output(self, x : dict) -> dict:
         """
         Calculate outputs given state
 
@@ -480,7 +481,7 @@ class PrognosticsModel(ABC):
         """
         return {}
 
-    def __output(self, x) -> dict:
+    def __output(self, x : dict) -> dict:
         """
         Calls output, which calculates next state forward one timestep, and then adds noise
 
@@ -509,7 +510,7 @@ class PrognosticsModel(ABC):
         # Add measurement noise
         return self.apply_measurement_noise(z)
 
-    def event_state(self, x) -> dict:
+    def event_state(self, x : dict) -> dict:
         """
         Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
 
@@ -543,7 +544,7 @@ class PrognosticsModel(ABC):
         """
         return {}
     
-    def threshold_met(self, x) -> dict:
+    def threshold_met(self, x : dict) -> dict:
         """
         For each event threshold, calculate if it has been met
 
@@ -578,7 +579,7 @@ class PrognosticsModel(ABC):
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
-    def simulate_to(self, time, future_loading_eqn, first_output = None, **kwargs) -> namedtuple:
+    def simulate_to(self, time : float, future_loading_eqn : Callable, first_output : dict = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -642,7 +643,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn : Callable, first_output : dict = None, threshold_keys : list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -901,7 +902,7 @@ class PrognosticsModel(ABC):
         )
     
     @staticmethod
-    def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
+    def generate_model(keys : dict, initialize_eqn : Callable, output_eqn : Callable, next_state_eqn : Callable = None, dx_eqn : Callable = None, event_state_eqn : Callable = None, threshold_eqn : Callable = None, config : dict = {'process_noise': 0.1}) -> "PrognosticsModel":
         """
         Generate a new prognostics model from individual model functions
 
@@ -1009,7 +1010,7 @@ class PrognosticsModel(ABC):
 
         return m
 
-    def calc_error(self, times, inputs, outputs, **kwargs):
+    def calc_error(self, times : list[float], inputs : list[dict], outputs : list[dict], **kwargs) -> float:
         """Calculate error between simulated and observed
 
         Args:
@@ -1040,7 +1041,7 @@ class PrognosticsModel(ABC):
 
         return err_total
     
-    def estimate_params(self, runs, keys, **kwargs):
+    def estimate_params(self, runs : list[tuple], keys : list[str], **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Args:
