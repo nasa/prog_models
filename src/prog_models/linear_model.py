@@ -32,7 +32,7 @@ class LinearModel(PrognosticsModel, ABC):
         super().__init__(**kwargs)
         self.matrixCheck()
 
-    def matrixCheck(self):
+    def matrixCheck(self) -> None:
         """
         Public class method for checking matrices dimensions across all properties of the model.
         """
@@ -46,7 +46,7 @@ class LinearModel(PrognosticsModel, ABC):
         if self.F is not None:
             self._propertyCheck(self.n_events, self.n_states, ["F","events","states"])
 
-    def _propertyCheck(self, rowsCount, colsCount, notes):
+    def _propertyCheck(self, rowsCount : int, colsCount : int, notes : list) -> None:
         """
         matrix: Input matrix to check dimensions of (e.g. self.A, self.B, etc)
         rowsCount: Row count to check matrix against
@@ -99,6 +99,7 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((self.n_events, 1))
 
     def dx(self, x, u):
+        print("TYPE HINT: ",type(x), type(u))
         dx_array = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
         return self.StateContainer(dx_array)
         

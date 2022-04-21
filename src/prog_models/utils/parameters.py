@@ -7,10 +7,12 @@ from numbers import Number
 import types
 from typing import Callable
 
-from prog_models.prognostics_model import PrognosticsModel
 from .noise_functions import measurement_noise_functions, process_noise_functions
 from ..exceptions import ProgModelTypeError
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
+    from prog_models.prognostics_model import PrognosticsModel
 
 class PrognosticsModelParameters(UserDict):
     """
@@ -22,7 +24,7 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    def __init__(self, model : PrognosticsModel, dict_in : dict = {}, callbacks : dict = {}):
+    def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}):
         super().__init__()
         self.__m = model
         self.callbacks = {}
