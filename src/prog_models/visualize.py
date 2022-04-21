@@ -531,6 +531,9 @@ def plot_timeseries(t, s, legend=None, options=None):
     -------
     See new model example
     """
+
+    # ADD LEGENDS HERE W KEYS
+
     series_names = list(s[0].keys())
     m = len(series_names)
     n = len(s)
