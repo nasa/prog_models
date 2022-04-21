@@ -1,6 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
-from .visualize import plot_timeseries
+from .visualize import plot_timeseries, set_legend_options
 from copy import deepcopy
 
 
@@ -111,7 +111,8 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        return plot_timeseries(self.times, self.data, options=kwargs)  
+        legend = set_legend_options(None, self.times)
+        return plot_timeseries(self.times, self.data, legend = legend, options=kwargs)  
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
