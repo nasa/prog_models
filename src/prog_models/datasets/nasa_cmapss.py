@@ -75,7 +75,10 @@ def load_data(dataset_id):
     dataset_id = f"FD0{dataset_id:02d}"
     if cache is None:
         # Download data
-        response = requests.get(URL, allow_redirects=True)
+        try:
+            response = requests.get(URL, allow_redirects=True)
+        except:
+            raise ConnectionError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.")
 
         # Unzip response
         cache = zipfile.ZipFile(io.BytesIO(response.content))

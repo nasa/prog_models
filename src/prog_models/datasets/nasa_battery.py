@@ -69,7 +69,10 @@ def load_data(batt_id):
 
     if url not in cache:
         # Download data
-        response = requests.get(url, allow_redirects=True)
+        try:
+            response = requests.get(url, allow_redirects=True)
+        except:
+            raise ConnectionError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.")
 
         # Unzip response
         cache[url] = zipfile.ZipFile(io.BytesIO(response.content))
