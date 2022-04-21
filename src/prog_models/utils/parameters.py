@@ -5,6 +5,9 @@ from collections import UserDict
 from copy import deepcopy
 from numbers import Number
 import types
+from typing import Callable
+
+from prog_models.prognostics_model import PrognosticsModel
 from .noise_functions import measurement_noise_functions, process_noise_functions
 from ..exceptions import ProgModelTypeError
 
@@ -19,7 +22,7 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    def __init__(self, model, dict_in = {}, callbacks = {}):
+    def __init__(self, model : PrognosticsModel, dict_in : dict = {}, callbacks : dict = {}):
         super().__init__()
         self.__m = model
         self.callbacks = {}
@@ -37,7 +40,7 @@ class PrognosticsModelParameters(UserDict):
                     changes = callback(self)
                     self.update(changes)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key : str, value : float) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
@@ -100,7 +103,7 @@ class PrognosticsModelParameters(UserDict):
                 if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.outputs")
 
-    def register_derived_callback(self, key, callback):
+    def register_derived_callback(self, key : str, callback : Callable) -> None:
         """Register a new callback for derived parameters
 
         Args:
