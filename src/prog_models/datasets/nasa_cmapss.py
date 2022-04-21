@@ -9,7 +9,7 @@ cache = None
 URL = "https://ti.arc.nasa.gov/c/6/"
 
 
-def load_data(dataset_id):
+def load_data(dataset_id : int) -> tuple:
     """
     Loads data for one CMAPSS trajectory from NASA's PCoE Dataset
     https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/
@@ -96,7 +96,7 @@ def load_data(dataset_id):
     # Return results 
     return (test, train, rul)
 
-def clear_cache():
+def clear_cache() -> None:
     """
     Clears the cache of downloaded data
     """
