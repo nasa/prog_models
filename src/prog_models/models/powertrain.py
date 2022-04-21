@@ -27,6 +27,8 @@ class Powertrain(PrognosticsModel):
     George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
     Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
 
+    R.P. Palanisamy C. Kulkarni, M. Corbetta, P. Banerjee “Fault Detection and Performance Monitoring of Propellers in Electric UAV", 2022 IEEE Aerospace
+
     This model was developed by NASA's System Wide Safety (SWS) Project. https://www.nasa.gov/aeroresearch/programs/aosp/sws/
 
     Events: (0)
