@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from typing import Callable
+from typing import Callable, List
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
@@ -1010,7 +1010,7 @@ class PrognosticsModel(ABC):
 
         return m
 
-    def calc_error(self, times : list[float], inputs : list[dict], outputs : list[dict], **kwargs) -> float:
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate error between simulated and observed
 
         Args:
@@ -1041,7 +1041,7 @@ class PrognosticsModel(ABC):
 
         return err_total
     
-    def estimate_params(self, runs : list[tuple], keys : list[str], **kwargs) -> None:
+    def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Args:
