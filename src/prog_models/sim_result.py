@@ -1,6 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
-from typing import Callable
+from typing import Callable, List
 
 from matplotlib.pyplot import figure
 from .visualize import plot_timeseries
@@ -232,7 +232,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         return SimResult(self.times, self.data)
 
     @property
-    def data(self) -> list[dict]:
+    def data(self) -> List[dict]:
         """
         Get the data (elements of list). Only calculated on first request
 
