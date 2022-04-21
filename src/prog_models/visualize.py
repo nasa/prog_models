@@ -3,6 +3,7 @@
 
 # Import packages
 # ============
+from typing import List
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -166,7 +167,7 @@ def set_plot_options(opt : dict) -> dict:
 
     return opt
 
-def set_legend_options(leg_opt : dict, s_names : list[str]) -> dict:
+def set_legend_options(leg_opt : dict, s_names : List[str]) -> dict:
     """
     Set all remaining legend options given the legend options already specified by the users "leg_opt", 
     and the names of the time series in the plot "s_names."
@@ -323,7 +324,7 @@ def set_legend(ax : plt.axis, item : int, s_names : list[str], leg_opt : dict) -
                      framealpha=leg_opt['framealpha'], facecolor=leg_opt['facecolor'],
                      edgecolor=leg_opt['edgecolor'], title=leg_opt['title'])
 
-def display_labels(nrows : int, ncols : int, subplot_num : int, ax : plt.axis, opt : dict, series_names : list[str]) -> None:
+def display_labels(nrows : int, ncols : int, subplot_num : int, ax : plt.axis, opt : dict, series_names : List[str]) -> None:
     """
     Display label option for time series plot
 
@@ -365,7 +366,7 @@ def display_labels(nrows : int, ncols : int, subplot_num : int, ax : plt.axis, o
     elif 'all' in opt['display_labels']:    
         set_labels(ax, opt, series_names)
 
-def extract_option(opt : dict, idx : int, series_names : list[str]) -> str:
+def extract_option(opt : dict, idx : int, series_names : List[str]) -> str:
     """
     Extract option from either dictionary or list of plot options.
     The function takes the option "opt" and returns the option at index "idx" if opt is a list,
@@ -496,7 +497,7 @@ def set_labels(ax : plt.axis, opt : dict, series_names : list[str], axis : str =
             ytick_fs  = extract_option(opt['ytick_fontsize'], idx, series_names)
             ax.set_yticklabels(ytick, rotation=ytick_rot, fontsize=ytick_fs)
 
-def plot_timeseries(t : list[float], s : list[dict], legend : dict = None, options : dict = None) -> plt.figure:
+def plot_timeseries(t : List[float], s : List[dict], legend : dict = None, options : dict = None) -> plt.figure:
     """
     Plot time series 's' parametrized by time 't'.
     The function plot time series (in a single plot or subplots) contained in the array of dictionary s, produced by a prognostic model.
