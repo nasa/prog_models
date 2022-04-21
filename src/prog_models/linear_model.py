@@ -99,7 +99,6 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((self.n_events, 1))
 
     def dx(self, x, u):
-        print("TYPE HINT: ",type(x), type(u))
         dx_array = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
         return self.StateContainer(dx_array)
         
