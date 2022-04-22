@@ -93,3 +93,16 @@ Pneumatic Valve (With Wear)
 .. autoclass:: prog_models.models.PneumaticValve
 
 .. autoclass:: prog_models.models.PneumaticValveWithWear
+
+DC Motor
+-------------------------------------------------------------
+
+.. autoclass:: prog_models.models.DCMotor
+
+ESC
+-------------------------------------------------------------
+.. autoclass:: prog_models.models.ESC
+
+Powertrain
+-------------------------------------------------------------
+.. autoclass:: prog_models.models.Powertrain
