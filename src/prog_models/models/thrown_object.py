@@ -4,10 +4,15 @@
 from .. import PrognosticsModel
 import numpy as np
 
+def calc_lumped_param(params):
+    return {
+        'lumped_param': 0.5 * params['rho']* params['cd'] * params['A'] / params['m']
+    }
+
 
 class ThrownObject(PrognosticsModel):
     """
-    Model that similates an object thrown into the air without air resistance
+    Simple Non-Linear Model that similates an object thrown into the air with air resistance
 
     Events (2)
         | falling: The object is falling
@@ -64,7 +69,18 @@ class ThrownObject(PrognosticsModel):
         'thrower_height': 1.83,  # m
         'throwing_speed': 40,  # m/s
         'g': -9.81,  # Acceleration due to gravity in m/s^2
+        'rho': 1.225, # Air density at sea level 1.225 kg/m^3
+        'A': 0.05, # m^2 - Cross sectional area 
+        'm': 0.145, # kg - Mass of thing  
+        'cd': 0.007, # Coefficient of drag
         'process_noise': 0.0  # amount of noise in each step
+    }
+
+    param_callbacks = {
+        'rho': [calc_lumped_param],
+        'A': [calc_lumped_param],
+        'm': [calc_lumped_param],
+        'cd': [calc_lumped_param]
     }
 
     def initialize(self, u=None, z=None):
@@ -73,25 +89,27 @@ class ThrownObject(PrognosticsModel):
             'v': self.parameters['throwing_speed']   # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
             })
     
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt : float):
         next_x =  x['x'] + x['v']*dt
+        drag_acc = self.parameters['lumped_param'] * x['v']*x['v']
+        next_v = x['v'] + (self.parameters['g'] - drag_acc*np.sign(x['v']))*dt
         return self.StateContainer(np.array([
             [next_x],
-            [x['v'] + self.parameters['g']*dt]  # Acceleration of gravity
+            [next_v]  # Acceleration of gravity
         ]))
 
-    def output(self, x):
+    def output(self, x : dict):
         return self.OutputContainer(np.array([[x['x']]]))
 
     # This is actually optional. Leaving thresholds_met empty will use the event state to define thresholds.
     #  Threshold = Event State == 0. However, this implementation is more efficient, so we included it
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         return {
             'falling': x['v'] < 0,
             'impact': x['x'] <= 0
         }
 
-    def event_state(self, x): 
+    def event_state(self, x : dict) -> dict: 
         x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
         x_max = np.where(x['v'] > 0, x['x'], x_max) # 1 until falling begins
         return {
