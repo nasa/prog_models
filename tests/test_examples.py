@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pkgutil
 from importlib import import_module
 
-examples_skipped = ['dataset']
+examples_skipped = ['dataset', 'sim_battery_eol']
 
 def make_test_function(example):
     def test(self):

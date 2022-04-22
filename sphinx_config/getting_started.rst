@@ -109,6 +109,9 @@ Model-Specific Examples
 * :download:`examples.sim_valve <../examples/sim_valve.py>`
     .. automodule:: examples.sim_valve
     |
+* :download:`examples.sim_powertrain <../examples/sim_powertrain.py>`
+    .. automodule:: examples.sim_powertrain
+    |
 
 Extending
 ----------
