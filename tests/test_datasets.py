@@ -31,7 +31,7 @@ def main():
 
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
+    print("\n\nTesting Datasets")
     result = runner.run(l.loadTestsFromTestCase(TestDatasets)).wasSuccessful()
 
     if not result:
