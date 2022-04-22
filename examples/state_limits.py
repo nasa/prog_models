@@ -10,8 +10,8 @@ from math import inf
 
 def run_example():
     # Demo model
-    # Step 1: Create instance of model
-    m = ThrownObject()
+    # Step 1: Create instance of model (without drag)
+    m = ThrownObject( cd = 0 )
 
     # Step 2: Setup for simulation 
     def future_load(t, x=None):
