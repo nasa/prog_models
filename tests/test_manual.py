@@ -5,7 +5,6 @@ import unittest
 
 class TestManual(unittest.TestCase):
     # Test successful download of datasets
-    @unittest.skip
     def test_nasa_battery_download(self):
         from prog_models.datasets import nasa_battery
         (desc, data) = nasa_battery.load_data(1)

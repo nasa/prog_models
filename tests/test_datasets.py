@@ -16,7 +16,7 @@ class TestDatasets(unittest.TestCase):
         BAD_URL = "https://"+"BADURLTEST"
         nasa_cmapss.URL = BAD_URL
         with self.assertRaises(ConnectionError):
-            (desc, data) = nasa_cmapss.load_data(1)
+            (train, test, results) = nasa_cmapss.load_data(1)
 
 # This allows the module to be executed directly
 def run_tests():
