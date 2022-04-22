@@ -227,8 +227,6 @@ class TestSimResult(unittest.TestCase):
         m = MyBatt()
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = False)
         plot_test = event_states.plot() # Plot doesn't raise error
-        import matplotlib.pyplot as plt
-        plt.show()
 
     def test_namedtuple_access(self):
         # Testing model taken from events.py
