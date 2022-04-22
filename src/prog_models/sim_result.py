@@ -114,7 +114,7 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        return plot_timeseries(self.times, self.data, options=kwargs)  
+        return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)  
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
