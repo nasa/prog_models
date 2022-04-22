@@ -19,17 +19,19 @@ import time
 def run_example_Full(): 
     batt = BatteryElectroChemEOD()
     batt.parameters['process_noise'] = 0
+    batt.parameters['process_noise']['qpB'] = 0.25
+    batt.parameters['process_noise']['qpS'] = 0.25
 
     ## Define Loading Profile
     def future_loading(t, x=None):
-        if (t < 500):
+        if (t < 200):
             i = 1
+        elif (t < 800):
+            i = 3
         elif (t < 1000):
-            i = 1
-        elif (t < 2000):
-            i = 1
+            i = 5
         else:
-            i = 1
+            i = 4
         return {'i': i}
 
     # Simulation Options
@@ -39,7 +41,7 @@ def run_example_Full():
     }
     
     ## Simulate to Threshold 
-    # simulated_results = batt.simulate_to_threshold(future_loading, **options)
+    simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
     ## Simulate to specific time 
     simulated_results = batt.simulate_to(600, future_loading, **options)
@@ -130,21 +132,35 @@ def run_example_DMD_linear():
 
         states = BatteryElectroChemEOD.states + ['v','SOC']
         outputs = ['v']
+        inputs = ['i']
 
         def initialize(self, u=None, z=None):
-            x = BatteryElectroChemEOD.initialize(self)
-            x['v'] = BatteryElectroChemEOD.output(self, x)['v']
-            x['SOC'] = 1 # Arbitrary value necessary for consistency in matrix size 
-            x['SOC'] = BatteryElectroChemEOD.event_state(self,x)['EOD']
-
-            return x
+            # x = BatteryElectroChemEOD.initialize(self)
+            # x['v'] = BatteryElectroChemEOD.output(self, x)['v']
+            # x['SOC'] = 1 # Arbitrary value necessary for consistency in matrix size 
+            # x['SOC'] = BatteryElectroChemEOD.event_state(self,x)['EOD']
+            # return x
+            return self.StateContainer({
+                'tb': self.parameters['x0']['tb'],
+                'Vo': self.parameters['x0']['Vo'],
+                'Vsn': self.parameters['x0']['Vsn'],
+                'Vsp': self.parameters['x0']['Vsp'],
+                'qnB': self.parameters['x0']['qnB'],
+                'qnS': self.parameters['x0']['qnS'],
+                'qpB': self.parameters['x0']['qpB'],
+                'qpS': self.parameters['x0']['qpS'],
+                'v': 3.2,
+                'SOC': 1
+            })
 
         def next_state(self, x, u, dt):   
-            x_array = np.array([list(x.values())]).T
-            u_array = np.array([list(u.values())]).T
+            # x_array = np.array([list(x.values())]).T
+            # u_array = np.array([list(u.values())]).T
 
-            next_array = np.matmul(self.A, x_array) + np.matmul(self.B, u_array) + self.E
-            return {key: value[0] for key, value in zip(self.states, next_array)}
+            # next_array = np.matmul(self.A, x_array) + np.matmul(self.B, u_array) + self.E
+            # return {key: value[0] for key, value in zip(self.states, next_array)}
+            x.matrix = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
+            return x
 
     ### Simulate battery using DMD + LinearModel 
     # Generate class object 
@@ -181,10 +197,11 @@ def run_example_DMD_linear():
             i = 1
         else:
             i = 6
-        return {'i': i}
+        return batt.InputContainer({'i': i})
 
     # Simulate to threshold
-    # simulated_results = batt.simulate_to_threshold(future_loading,**options)
+    debug = 2
+    simulated_results = batt.simulate_to_threshold(future_loading,**options)
 
     # Simulate to a specific time 
     # simulated_results = batt.simulate_to(350,future_loading,**options)
