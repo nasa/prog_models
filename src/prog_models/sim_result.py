@@ -111,8 +111,8 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        legend = set_legend_options(None, self.times) # What goes in None for leg_opt?
-        return plot_timeseries(self.times, self.data, legend = legend, options=kwargs)  
+        # legend = set_legend_options(None, self.times) # What goes in None for leg_opt?
+        return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)  
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
