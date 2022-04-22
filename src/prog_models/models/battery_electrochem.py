@@ -190,7 +190,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     """
     events = ['EOD']
     inputs = ['i']
-    states = ['Vo', 'Vsn', 'Vsp', 'tb', 'qpS', 'qpB', 'qnS', 'qnB'] # Original order: ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
+    states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
     is_vectorized = True
 
