@@ -48,6 +48,11 @@ Notes for Developers
 * Legal stuff: All pages should have the following notice on them:
 "Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved."
 
+Project Roles
+--------------------
+* Project Lead/Software Assurance Officer: Christopher Teubert
+* Developers: See `here <https://github.com/nasa/prog_models/graphs/contributors>`_
+
 Branching Strategy
 ------------------
 Our project is following the git strategy described `here <https://nvie.com/posts/a-successful-git-branching-model/>`_. Release branches are not required. Details specific to each branch are described below. 
@@ -65,7 +70,8 @@ PR Checklist
 * Each PR adding a new feature should include a test verifying that feature
 * All tests must be passing.
 * All errors from static analysis must be resolved.
-* All warnings from static analysis must be reviewed and resolved - if deemed appropriate. 
+* All warnings from static analysis must be reviewed and resolved - if deemed appropriate.
+* Final merging can only be performed by the software assurance officer. 
 * For merging into master branch - see the Release Checklist below.
 
 Release Checklist
@@ -129,11 +135,33 @@ Life Cycle Management
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 013   | Maintain Software Plans          | FC         | This document                                                   |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 024   | Conformance with Project Plan    | NC         | Not required for Class-E                                        |
+| 024a  | Conformance with Project Plan    | NC         | Not required for Class-E                                        |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 024b  | Project Plan Configuration Mgmt  | FC         | Project plan is a tracked object in github                      |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 034   | Software Acceptance Criteria     | NC         | Not required for Class-E                                        |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 036   | Software Processes               | FC         | See notes below                                                 |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 037   | Document Milestones              | FC         | `Milestones <https://github.com/nasa/prog_models/milestones>`_  |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 039a  | Monitor integration              | FC         | Integration status visible on github pull requests              |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 039b  | Review Verification Activities   | FC         | Verification status and results visible on github actions       |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 039c  | Review Trade Studies             | FC         | Trade studies will be documented in github issues               |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 039d  | Audit Development Processes      | FC         | Development processes are visible in pull requests and commits  |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 039e  | Software Reviews                 | FC         | Software Assurance Officer gives final approval after reviews   |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 040a  | Products                         | FC         | Kept in `Repo <https://github.com/nasa/prog_models>`_           |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 040b  | Tracability                      | FC         | Maintained in PR and issue documentation                        |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 040c  | Non-conformances                 | FC         | See github issues                                               |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 040d  | Change tracking                  | FC         | See `Commits https://github.com/nasa/prog_models/commits/`_     |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 042   | Electronic Accesss to Source     | FC         | `Repo <https://github.com/nasa/prog_models>`_                   |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
@@ -145,6 +173,16 @@ Life Cycle Management
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 029   | Software Classification          | FC         | This document                                                   |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 027   | COTS/GOTS/MOTS/OSS               | NC         | Not Required for Class-E                                        |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+
+Note on software processes [SWE 034]:
+The project manager shall establish and maintain the software processes, software documentation plans, list of developed electronic products, deliverables, and list of tasks for the software development that are required for the project's software developers, as well as the action required (e.g., approval, review) of the Government upon receipt of each of the deliverables.
+* Processes are tracked in this document. 
+* Documentation, electronic products, and deliverables are tracked in GitHub
+* Tasks are tracked in GitHub issues
+* Actions required are listed in the checklists above
+
 
 Cost Estimation
 -------------------------------
@@ -152,6 +190,8 @@ Cost Estimation
 | SWE # | Description                      | Compliance | Evidence                                                        |
 +=======+==================================+============+=================================================================+
 | 015   | Maintain 1 cost estimate         | FC         | Costs associated are tracked by projects (e.g., SWS, ASO, DRF)  |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 151   | Cost Estimate Requirements       | NC         | Not required for Class-E                                        |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 174   | Submit Planning Parameters       | NA         | Specified Center measurement repo does not exist                |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
@@ -162,7 +202,9 @@ Schedules
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                        |
 +=======+==================================+============+=================================================================+
-| 037   | Maintain Schedule                | FC         | `Milestones <https://github.com/nasa/prog_models/milestones>`_  |
+| 016   | Schedule Requirements            | FC         | `Milestones <https://github.com/nasa/prog_models/milestones>`_  |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 046   | Maintain Schedule                | FC         | `Milestones <https://github.com/nasa/prog_models/milestones>`_  |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Classification
@@ -171,9 +213,9 @@ Classification
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                        |
 +=======+==================================+============+=================================================================+
-| 029   | Software Classification          | FC         | This document                                                   |
-+-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 020   | Software Classification          | FC         | This document                                                   |
++-------+----------------------------------+------------+-----------------------------------------------------------------+
+| 176   | Software Classification          | FC         | This document                                                   |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Software Assurance
@@ -214,20 +256,32 @@ Automatic Generation of Source Code
 Reuse
 -------------------------------
 
-+-------+----------------------------------+------------+---------------------+
-| SWE # | Description                      | Compliance | Evidence            |
-+=======+==================================+============+=====================+
-| 148   | Software Catalog                 | FC         | Will be added       |
-+-------+----------------------------------+------------+---------------------+
++-------+----------------------------------+------------+------------------------------------------------------------------+
+| SWE # | Description                      | Compliance | Evidence                                                         |
++=======+==================================+============+==================================================================+
+| 147   | Reusability Requirements         | NC         | Not required for Class-E                                         |
++-------+----------------------------------+------------+------------------------------------------------------------------+
+| 148   | Software Catalog                 | FC         | `prog_models <https://software.nasa.gov/software/ARC-18634-1>`_  |
++-------+----------------------------------+------------+------------------------------------------------------------------+
 
 Cybersecurity
 -------------------------------
 
-+-------+----------------------------------+------------+---------------------+
-| SWE # | Description                      | Compliance | Evidence            |
-+=======+==================================+============+=====================+
-| 156   | Perform CyberSecurity Assessment | FC         | See section below   |
-+-------+----------------------------------+------------+---------------------+
++-------+-------------------------------------+------------+-----------------------------------------------+
+| SWE # | Description                         | Compliance | Evidence                                      |
++=======+=====================================+============+===============================================+
+| 156   | Perform CyberSecurity Assessment    | FC         | See section below                             |
++-------+-------------------------------------+------------+-----------------------------------------------+
+| 154   | Perform CyberSecurity Risks         | NC         | Not Required for Class-E                      |
++-------+-------------------------------------+------------+-----------------------------------------------+
+| 157   | Protect Against Unauthorized Access | NC         | Not Required for Class-E                      |
++-------+-------------------------------------+------------+-----------------------------------------------+
+| 159   | Test CyberSecurity Mitigation       | NC         | Not Required for Class-E                      |
++-------+-------------------------------------+------------+-----------------------------------------------+
+| 207   | Secure Coding Practices             | NC         | Not Required for Class-E                      |
++-------+-------------------------------------+------------+-----------------------------------------------+
+| 185   | Static Analysis                     | FC         | See Static Analysis Notes under Implementation|
++-------+-------------------------------------+------------+-----------------------------------------------+
 
 Bi-Directional Traceability
 -------------------------------
@@ -248,6 +302,10 @@ Requirements
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | 053   | Requirement Change Tracking      | FC         | `Tracked in Issues <https://github.com/nasa/prog_models/labels/enhancement>`_  |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+| 054   | Track Inconsistencies            | FC         | `Tracked in Issues <https://github.com/nasa/prog_models/labels/enhancement>`_  |
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+| 055   | Requirement Validation           | NC         | Not Required for Class-E                                                       |
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Implementation
 -------------------------------
@@ -255,6 +313,8 @@ Implementation
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                       |
 +=======+==================================+============+================================================================================+
+| 061   | Coding Standards                 | NC         | Not Required for Class-E                                                       |
++-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | 135   | Static Analysis                  | FC         | See list of static analysis tools, below.                                      |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | 062   | Unit Testing                     | FC         | Unit tests are created with each enhancement, run automatically with each PR.  |

@@ -1,5 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 from collections import UserList
+from typing import Callable, List
+
+from matplotlib.pyplot import figure
 from .visualize import plot_timeseries
 from copy import deepcopy
 
@@ -15,11 +18,11 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times = [], data = []):
+    def __init__(self, times : list = [], data : list = []):
         self.times = deepcopy(times)
         self.data = deepcopy(data)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other : "SimResult") -> bool:
         """Compare 2 SimResults
 
         Args:
@@ -42,7 +45,7 @@ class SimResult(UserList):
         """
         return self.data.index(other, *args, **kwargs)
 
-    def extend(self, other) -> None:
+    def extend(self, other : "SimResult") -> None:
         """
         Extend the SimResult with another SimResult or LazySimResult object
 
@@ -68,7 +71,7 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, d = None, t = None) -> None:
+    def remove(self, d : float = None, t : float = None) -> None:
         """Remove an element
 
         Args:
@@ -101,7 +104,7 @@ class SimResult(UserList):
         """
         return self.times[index]
 
-    def plot(self, **kwargs):
+    def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
 
@@ -129,7 +132,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn, times = [], states = []):
+    def __init__(self, fcn : Callable, times : list = [], states : list = []) -> None:
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -144,14 +147,14 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     def __reduce__(self):
         return (self.__class__.__base__, (self.times, self.data))
 
-    def is_cached(self):
+    def is_cached(self) -> bool:
         """
         Returns:
             bool: If the value has been calculated
         """
         return self.__data is not None
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Clears the times, states, and data cache for a LazySimResult object
         """
@@ -159,7 +162,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
         self.states = []
 
-    def extend(self, other):
+    def extend(self, other : "LazySimResult") -> None:
         """
         Extend the LazySimResult with another LazySimResult object
         Raise ValueError if SimResult is passed
@@ -181,7 +184,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}.")
 
-    def pop(self, index : int = -1):
+    def pop(self, index : int = -1) -> dict:
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
@@ -196,7 +199,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             return self.__data.pop(index)
         return self.fcn(x)
 
-    def remove(self, d = None, t = None, s = None) -> None:
+    def remove(self, d : float = None, t : float = None, s = None) -> None:
         """Remove an element
          
         Args:
@@ -229,7 +232,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         return SimResult(self.times, self.data)
 
     @property
-    def data(self):
+    def data(self) -> List[dict]:
         """
         Get the data (elements of list). Only calculated on first request
 

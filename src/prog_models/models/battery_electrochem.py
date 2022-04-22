@@ -15,13 +15,13 @@ R_F = R / F    # Optimization - R / F
 mC = 37.04 # kg/m2/(K-s^2)
 tau = 100
 
-def update_qmax(params):
+def update_qmax(params : dict) -> dict:
     # note qMax = qn+qp
     return {
         'qMax': params['qMobile']/(params['xnMax']-params['xnMin'])
     }
 
-def update_vols(params):
+def update_vols(params : dict) -> dict:
     # Volumes (total volume is 2*P.Vol), assume volume at each electrode is the
     # same and the surface/bulk split is the same for both electrodes
     return {
@@ -30,31 +30,31 @@ def update_vols(params):
     }
 
 # set up charges (Li ions)
-def update_qpmin(params):
+def update_qpmin(params : dict) -> dict:
     # min charge at pos electrode
     return {
         'qpMin': params['qMax']*params['xpMin'] 
     }
 
-def update_qpmax(params):
+def update_qpmax(params : dict) -> dict:
     # max charge at pos electrode
     return {
         'qpMax': params['qMax']*params['xpMax'] 
     }
 
-def update_qnmin(params):
+def update_qnmin(params : dict) -> dict:
     # min charge at negative electrode
     return {
         'qnMin': params['qMax']*params['xnMin'] 
     }
 
-def update_qnmax(params):
+def update_qnmax(params : dict) -> dict:
     # max charge at negative electrode
     return {
         'qnMax': params['qMax']*params['xnMax'] 
     }
 
-def update_qpSBmin(params):
+def update_qpSBmin(params : dict) -> dict:
     # min charge at surface and bulk pos electrode
     return {
         'qpSMin': params['qMax']*params['xpMin']*params['VolSFraction'],
@@ -66,14 +66,14 @@ def update_qpSBmin(params):
         }
     }
 
-def update_qpSBmax(params):
+def update_qpSBmax(params : dict) -> dict:
     # max charge at surface and pos electrode
     return {
         'qpSMax': params['qMax']*params['xpMax']*params['VolSFraction'],
         'qpBMax': params['qMax']*params['xpMax']*(1.0-params['VolSFraction'])
     }
 
-def update_qnSBmin(params):
+def update_qnSBmin(params : dict) -> dict:
     # min charge at surface and bulk pos electrode
     return {
         'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
@@ -81,7 +81,7 @@ def update_qnSBmin(params):
 
     }
 
-def update_qnSBmax(params):
+def update_qnSBmax(params : dict) -> dict:
     # max charge at surface and pos electrode
     return {
         'qnSMax': params['qMax']*params['xnMax']*params['VolSFraction'],
@@ -93,7 +93,7 @@ def update_qnSBmax(params):
         }
     }
 
-def update_qSBmax(params):
+def update_qSBmax(params : dict) -> dict:
     # max charge at surface, bulk (pos and neg)
     return {
         'qSMax': params['qMax']*params['VolSFraction'],
@@ -261,7 +261,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     def initialize(self, u=None, z=None):
         return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def dx(self, x : dict, u : dict):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -315,7 +315,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             [qpSdot]
         ]))
         
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
         # since voltage decreases non-linearally. 
         # However, as voltage approaches VEOD, the charge-based approach no 
@@ -328,7 +328,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'EOD': min(charge_EOD, voltage_EOD)
         }
 
-    def output(self, x):
+    def output(self, x : dict):
         params = self.parameters
         An = params['An']
         # Negative Surface
@@ -379,7 +379,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             [Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']]
         ]))
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
@@ -457,7 +457,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
     def initialize(self, u=None, z=None):
         return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, _, u):
+    def dx(self, _, u : dict):
         params = self.parameters
 
         return self.StateContainer(np.array([
@@ -466,17 +466,17 @@ class BatteryElectroChemEOL(PrognosticsModel):
             [params['wd'] * abs(u['i'])]
         ]))
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
         return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
     def output(self, _):
         return self.OutputContainer(np.array([]))
 
-def merge_dicts(a : dict, b : dict):
+def merge_dicts(a : dict, b : dict) -> None:
     """Merge dict b into a"""
     for key in b:
         if key in a and isinstance(a[key], dict) and isinstance(b[key], dict):
@@ -542,10 +542,10 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__()
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u : dict = {}, z : dict = {}):
         return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def dx(self, x : dict, u : dict):
         # Set EOD Parameters (corresponding to health)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -559,18 +559,18 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
         return x_dot
 
-    def output(self, x):
+    def output(self, x : dict) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['qMobile'] = x['qMax']
         return BatteryElectroChemEOD.output(self, x)
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         e_state = BatteryElectroChemEOD.event_state(self, x)
         e_state.update(BatteryElectroChemEOL.event_state(self, x))
         return e_state
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         t_met = BatteryElectroChemEOD.threshold_met(self, x)
         t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
         return t_met
