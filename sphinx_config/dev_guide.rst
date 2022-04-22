@@ -92,6 +92,7 @@ Release Checklist
 * Check that each new feature has corresponding tests.
 * Confirm that all issues associated with the release have been closed (i.e., requirements have been met) or assigned to another release
 * Run unit tests `python -m tests`.
+* For prog_models: run manual tests `python -m tests.test_manual`
 * Review the template.
 * Test the tutorial.
 * Check documents- see if any updates are required.
