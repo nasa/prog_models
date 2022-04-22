@@ -3,6 +3,10 @@
 import sys
 import unittest
 
+"""
+This file includes tests that are too long to be run as part of the automated tests. Instead, these tests are run manually as part of the release process.
+"""
+
 class TestManual(unittest.TestCase):
     # Test successful download of datasets
     def test_nasa_battery_download(self):
