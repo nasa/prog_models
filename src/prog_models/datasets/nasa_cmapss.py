@@ -77,7 +77,7 @@ def load_data(dataset_id):
         # Download data
         try:
             response = requests.get(URL, allow_redirects=True)
-        except:
+        except requests.exceptions.RequestException as e: # handle chain of errors
             raise ConnectionError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.")
 
         # Unzip response
