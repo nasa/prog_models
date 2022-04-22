@@ -17,6 +17,7 @@ class TestDatasets(unittest.TestCase):
         nasa_cmapss.URL = BAD_URL
         with self.assertRaises(ConnectionError):
             (train, test, results) = nasa_cmapss.load_data(1)
+    # Testing for successful download located in manual testing files; test_manual.py
 
 # This allows the module to be executed directly
 def run_tests():
