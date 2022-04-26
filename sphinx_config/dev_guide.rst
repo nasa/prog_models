@@ -126,6 +126,15 @@ NASA software must comply with the requirements enumarated in `NPR 7150 <https:/
 
 * Software Classification: Class-E (Research Software)
 * Safety Criticality: Not Safety Critical 
+* Assessment done by Christopher Teubert in March 2021
+
+Intention is to expand the scope of use to also include its inclusion in Ground software tools that support mission planning or formulation; Ground software that operates a research, development, test, or evaluation laboratory (i.e., not a major engineering/research facility); or Ground software that provides decision support for non-mission-critical situations and airborn software whose anomalous behavior would cause or contribute to a failure of system function resulting in a minor failure condition for the airborne vehicle,
+or whose anomalous behavior would cause or contribute to a failure of system function with no effect on airborne vehicle operational capability or pilot workload. The classification for this increased scope is described below
+
+* Effective version: v1.4 (Est. Fall 2022)
+* [Future] Software Classification: Class-D (Basic Research and Technology Software)
+* [Future] Safety Criticality: Not Safety Critical 
+* Assessment done by Christopher Teubert in April 26 2022
 
 Compliance Notation Legend
 **************************
@@ -478,6 +487,15 @@ Non-Conformances
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
 | 201S  | Track non-conformances           | FC         | See `Github Issues <https://github.com/nasa/prog_server/issues>`_ |
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
+
+Transition to a Higher Class
+--------------------------------
++-------+----------------------------------+------------+-------------------------------------------------------------------+
+| SWE # | Description                      | Compliance | Evidence                                                          |
++=======+==================================+============+===================================================================+
+| 021   | Transition to a higher class     | FC         | Plans have been updated to reflect the updated classification     |
++-------+----------------------------------+------------+-------------------------------------------------------------------+
+
 
 Aquisition Options
 ******************
