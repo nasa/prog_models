@@ -1011,7 +1011,7 @@ class PrognosticsModel(ABC):
         return m
 
     def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
-        """Calculate error between simulated and observed
+        """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
             times ([double]): array of times for each sample

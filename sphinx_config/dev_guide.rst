@@ -79,7 +79,7 @@ PR Checklist
 *****************
 * Each PR into dev or master must be checked by someone on the team other than the author. 
    * Reviewer should look for bugs, efficiency, readability, testing, and coverage in examples (if relevant).
-* Each PR adding a new feature should include a test verifying that feature
+* Each PR adding a new feature should include a test verifying that feature.
 * All tests must be passing.
 * All errors from static analysis must be resolved.
 * All warnings from static analysis must be reviewed and resolved - if deemed appropriate.
@@ -90,6 +90,7 @@ Release Checklist
 *****************
 * Code review - all software must be checked by someone other than the author.
 * Check that each new feature has corresponding tests.
+* Confirm that every page has the copyright notice.
 * Confirm that all issues associated with the release have been closed (i.e., requirements have been met) or assigned to another release
 * Run unit tests `python -m tests`.
 * For prog_models: run manual tests `python -m tests.test_manual`
@@ -101,7 +102,6 @@ Release Checklist
 * Update version number in src/*/__init__.py and setup.py.
 * For releases adding new features- ensure that NASA release process has been followed.
 * For prog_server: Update openapi specs on `SwaggerHub <https://app.swaggerhub.com/apis/teubert/prog_server/1.0.0-oas3>`__
-
 
 Updating Documentation 
 ------------------------
