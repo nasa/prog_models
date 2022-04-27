@@ -12,91 +12,126 @@ from scipy.interpolate import interp1d
 import numpy as np
 
 def run_example(): 
-    # Step 1: Create a model object
+    ### Example 1: Standard DMD Application 
+    ## Step 1: Create a model object
     batt = Battery()
 
-    # Step 2: Define future loading function 
+    ## Step 2: Define future loading functions for training data 
+    # Here, we define two specific loading profiles. These could also be generated programmatically, for as many loading profiles as desired 
     def future_loading_1(t, x=None):
         # Variable (piece-wise) future loading scheme 
-        if (t < 1000):
+        if (t < 500):
             i = 3
+        elif (t < 1000):
+            i = 2
+        elif (t < 1500):
+            i = 0.5
         else:
-            i = 4
+            i = 4.5
         return batt.InputContainer({'i': i})
     
     def future_loading_2(t, x=None):
         # Variable (piece-wise) future loading scheme 
-        if (t < 2000):
+        if (t < 300):
             i = 2
+        elif (t < 800):
+            i = 3.5
+        elif (t < 1300):
+            i = 4
+        elif (t < 1600):
+            i = 1.5
         else:
             i = 5
         return batt.InputContainer({'i': i})
     
     load_functions = [future_loading_1, future_loading_2]
 
+    ## Step 3: generate surrogate model 
+    # Simulation options for training data and surrogate model generation
     options_surrogate = {
-        'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated, and therefore the dt imposed in simulate_to_threshold (via next_state, where dt is arbitrary)
-        'dt': 0.1, # For DMD, this value is the time step for the predictions that generate training data
-        'data_len': 0.67, # Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-        # 'states_dmd': ['qnB','qnS','qpB','qpS','Vo','Vsn','Vsp'],
-        'outputs_dmd': ['v']
+        'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
+        'dt': 0.1, # For DMD, this value is the time step of the training data
+        'data_len': 0.7, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
     }
 
-    # Set noise to 0
+    # Set noise in Prognostics Model, default for surrogate model is also this value
     batt.parameters['process_noise'] = 0
 
-    # Generate surrogate model function 
+    # Generate surrogate model  
     DMD_approx = batt.generate_surrogate_dmd(load_functions,**options_surrogate)
 
-    # Simulation Options
+    ## Step 4: Implement surrogate model 
+    # Simulation options for implementation of surrogate model
     options_sim = {
-        'save_freq': 1 # Frequency at which results are saved
-        # 'save_pts': [2],
+        'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
     }
 
-    # Define Loading Profile 
+    # Define loading profile 
     def future_loading(t, x=None):
-        # Adjust time to previous time step for DMD consistency
-            # simulate_to_threshold in PrognosticsModel calculates load at the next time point and uses this as input to next_state
-            # DMD, however, takes the state and load at a particular (same) time, and uses this to calculate the state at the next time 
-            # Thus, when calling future_loading with DMD + LinearModel, we need the load input for next_state to be at the previous time point to be consistent with the previous state, so we subtract dt from the input time 
-        # Note: this should be made more rigorous in the future 
- 
-        if (t < 1000):
+        if (t < 600):
             i = 3
-        elif (t < 2000):
+        elif (t < 1000):
             i = 2
+        elif (t < 1500):
+            i = 1.5
         else:
             i = 4
         return batt.InputContainer({'i': i})
 
-    # Simulate to threshold
+    # Simulate to threshold using DMD approximation
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
-    # simulated_results = DMD_approx.simulate_to_threshold(future_loading)
 
-    # Debugging - plot
-    time_vec = []
-    voltage_vec = []
-    voltage_vec2 = []
-    current_vec = []
-    SOC_vec = []
-    SOC_vec2 = []
-    ## Use if dmd_dt ~= user_dt 
-    # for iter in range(len(simulated_results)):
-    #     time_vec.append(simulated_results[iter]['time'])
-    #     voltage_vec.append(simulated_results[iter]['v'])
-    #     SOC_vec.append(simulated_results[iter]['EOD'])
+    # Plot results
+    simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 1 Input')
+    simulated_results.outputs.plot(ylabel = 'Predicted Outputs (temperature and voltage)',title='Example 1 Predicted Outputs')
+    simulated_results.event_states.plot(ylabel = 'Predicted State of Charge', title='Example 1 Predicted SOC')
 
-    ## Use if dmd_dt == user_dt 
-    for iter in range(len(simulated_results.times)):
-        time_vec.append(simulated_results.times[iter])
-        voltage_vec.append(simulated_results.states[iter]['v'])
-        voltage_vec2.append(simulated_results.outputs[iter]['v'])
-        SOC_vec.append(simulated_results.states[iter]['EOD'])
-        SOC_vec2.append(simulated_results.event_states[iter]['EOD'])
-        current_vec.append(simulated_results.inputs[iter]['i'])
+    ### Example 2: Add process_noise to the surrogate model 
+        # Without re-generating the surrogate model, we can re-define the process_noise to be higher than the high-fidelity model (since the surrogate model is less accurate)
+    DMD_approx.parameters['process_noise'] = 2e-03
 
+    # Simulate to threshold using DMD approximation 
+    simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
 
-    return simulated_results
+    # Plot results
+    simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 2 Input')
+    simulated_results.outputs.plot(ylabel = 'Predicted Outputs (temperature and voltage)', title='Example 2 Predicted Outputs')
+    simulated_results.event_states.plot(ylabel = 'Predicted State of Charge', title='Example 2 Predicted SOC')
 
-results = run_example() 
+    ### Example 3: Generate surrogate model with a subset of internal states, inputs, and/or outputs
+        # Note: we use the same loading profiles as defined in Ex. 1
+
+    ## Generate surrogate model 
+    # Simulation options for training data and surrogate model generation
+    options_surrogate = {
+        'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
+        'dt': 0.1, # For DMD, this value is the time step of the training data
+        'data_len': 1, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+        'states_dmd': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
+        'outputs_dmd': ['v'] # Define outputs to be included in surrogate model 
+    }
+
+    # Set noise in Prognostics Model, default for surrogate model is also this value
+    batt.parameters['process_noise'] = 0
+
+    # Generate surrogate model  
+    DMD_approx = batt.generate_surrogate_dmd(load_functions,**options_surrogate)
+
+    ## Implement surrogate model 
+    # Simulation options for implementation of surrogate model
+    options_sim = {
+        'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
+    }
+
+    # Simulate to threshold using DMD approximation
+    simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+
+    simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
+    simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
+    simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
+
+    debug = 1
+
+# This allows the module to be executed directly 
+if __name__ == '__main__':
+    run_example()

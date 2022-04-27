@@ -24,15 +24,19 @@ def run_example_Full():
 
     ## Define Loading Profile
     def future_loading(t, x=None):
-        if (t < 200):
-            i = 1
-        elif (t < 800):
-            i = 3
-        elif (t < 1000):
-            i = 5
+        if (t < 800):
+            i = 6
+        # elif (t < 1200):
+        #     i = 7.0
+        # elif (t < 1500):
+        #     i = 0.5
+        # elif (t < 2000):
+        #     i = 2
+        # elif (t < 2500):
+        #     i = 0.5
         else:
-            i = 4
-        return {'i': i}
+            i = 6
+        return batt.InputContainer({'i': i})
 
     # Simulation Options
     options = {

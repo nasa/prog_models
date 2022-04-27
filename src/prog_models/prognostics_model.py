@@ -1096,53 +1096,28 @@ class PrognosticsModel(ABC):
         Parameters
         ----------
         load_functions : list of callable functions
-            Each index is a callable loading functionof (t) -> z used to predict future loading (output) at a given time (t)
-        first_output : dict, optional
-            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
-        threshold_keys: List[str] or str, optional
-            Keys for events that will trigger the end of simulation.
-            If blank, simulation will occur if any event will be met ()
-        options: kwargs, optional
-            Configuration options for the simulation \n
-            Note: configuration of the model is set through model.parameters \n
-            Supported parameters: see `simulate_to_threshold`
+            Each index is a callable loading function of (t) -> z used to predict future loading (output) at a given time (t)
 
         Keyword Arguments
         -----------------
-        t0 : Number, optional
-            Starting time for simulation in seconds (default: 0.0) \n
+        Includes all keyword arguments from simulate_to_threshold (except save_pts), and the following additional keywords: 
+
         dt : Number or function, optional
-            time step (s), e.g. dt = 0.1 or function (t, x) -> dt
-            For DMD, this value is the time step for the predictions that generate training data\n
+            Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
         save_freq : Number, optional
-            Frequency at which output is saved (s), e.g., save_freq = 10
-            For DMD, this value is the time step for which the surrogate model is generated  \n
-        horizon : Number, optional
-            maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
-        first_output : dict, optional
-            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
-        threshold_keys: List[str] or str, optional
-            Keys for events that will trigger the end of simulation.
-            If blank, simulation will occur if any event will be met ()
-        x : dict, optional
-            initial state dict, e.g., x= {'x1': 10, 'x2': -5.3}\n
-        thresholds_met_eqn : function/lambda, optional
-            custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
-        print : bool, optional
-            toggle intermediate printing, e.g., print = True\n
-            e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
-        progress : bool, optional
-            toggle progress bar printing, e.g., progress = True\n
+            Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
         data_len: int, optional
-            Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model \n        
+            Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+            e.g. if data_len = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n        
         states_dmd: list, optional
-            List of state keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation
+            List of state keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n
         inputs_dmd: list, optional
-            List of input keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation
+            List of input keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n
         outputs_dmd: list, optional
-            List of output keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation
+            List of output keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n 
         events_dmd: list, optional
-            List of event state keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation            
+            List of event state keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n           
+        
         Returns
         -------
         SurrogateModel(): class
@@ -1160,7 +1135,7 @@ class PrognosticsModel(ABC):
         config = { # Defaults
             't0': 0.0,
             'dt': 1.0, 
-            'save_freq': 10.0, 
+            'save_freq': 1.0, 
             'horizon': 1e100, # Default horizon (in s), essentially inf
             'print': False,
             'progress': False,
@@ -1185,12 +1160,11 @@ class PrognosticsModel(ABC):
         # Initialize lists to hold individual matrices
         x_list = []
         xprime_list = []
-        t_end_list = []
         time_list = []
 
         for iter_load in range(len(load_functions)):
             # Print status
-            print('Simulating loading function {} of {}'.format(iter_load+1, len(load_functions)))
+            print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
 
             # Define current loading function 
             load_fcn_now = load_functions[iter_load]
@@ -1225,7 +1199,7 @@ class PrognosticsModel(ABC):
             outputs = LazySimResult(self.output, time_data_interp, states_data) 
             event_states = LazySimResult(self.event_state, time_data_interp, states_data)
 
-            # Only save values that the user designated as to be included in surrogate model
+            # Only save values that the user designated to be included in surrogate model
             if len(config['states_dmd']) is not len(self.states):
                 for key in self.states:
                     if key not in config['states_dmd']:
@@ -1256,16 +1230,14 @@ class PrognosticsModel(ABC):
                             del event_states[iter][key]      
 
             # Initialize DMD matrices
-            time_temp = np.array(times) 
-            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times))) 
-            xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times))) 
+            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
+            xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
 
             # Save DMD matrices
             for iter in range(len(times)-1): 
-                time_now = times[iter]
-                time_load = time_now + np.divide(config['save_freq'],2) #times[iter] + np.divide(times[iter+1] - times[iter],2)
-                load_now = load_fcn_now(time_load) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
-                if len(config['inputs_dmd']) is not len(self.inputs):
+                time_now = times[iter] + np.divide(config['save_freq'],2) 
+                load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
+                if len(config['inputs_dmd']) is not len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
                     for key in self.inputs:
                         if key not in config['inputs_dmd']:
                             del load_now[key]
@@ -1279,21 +1251,15 @@ class PrognosticsModel(ABC):
             # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
             x_list.append(x_mat_temp)
             xprime_list.append(xprime_mat_temp)
-            t_end_list.append(time_now)
-            time_list.append(time_temp)
+            time_list.append(times)
 
         # Format training data for DMD and solve for matrix A, in the form X' = AX 
         print('Generate DMD Surrogate Model')
-        
-        # Adjust for differences in length of datasets 
-            # Note 1: The model gives a best-fit if not trained on data too close to EOD. To adjust for this, we only keep the first 2/3 of the data traces 
-            # Note 2: The training dataset consists of a compliation of data from each user-defined loading function 
-            # If these datasets are of different lengths, they will have different influences on the resulting DMD linear approximation 
-            # To avoid this, we reduce all of the generated data to be of length equal to 2/3 the loading profile that reaches EOD first (see Note 1)
-        min_data_index = np.searchsorted(t_end_list,min(t_end_list))
-        min_index = round(len(time_list[min_data_index])*(config['data_len'])) 
 
-        for iter3 in range(len(load_functions)):
+        # Cut data to user-defined length 
+        if config['data_len'] != 1:
+            for iter3 in range(len(load_functions)):
+                min_index = round(len(time_list[iter3])*(config['data_len'])) 
                 x_list[iter3] = x_list[iter3][:,0:min_index]
                 xprime_list[iter3] = xprime_list[iter3][:,0:min_index]
      
@@ -1304,6 +1270,13 @@ class PrognosticsModel(ABC):
         # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
         dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))
 
+        # Check for stability of dmd_matrix
+        eig_val, eig_vec = np.linalg.eig(dmd_matrix[:,0:-1])
+        if sum(eig_val>1) != 0:
+            for check_stability in range(len(eig_val)):
+                if eig_val[check_stability]>1 and eig_val[check_stability]-1>1e-05:
+                    warn("The DMD matrix is unstable, may result in poor approximation.")
+
         # Save size of states, inputs, outputs, event_states, and current instance of PrognosticsModel
         num_states = len(states[0].matrix)
         num_inputs = len(inputs[0].matrix)
@@ -1311,7 +1284,7 @@ class PrognosticsModel(ABC):
         num_event_states = len(event_states[0])
         num_total = num_states + num_outputs + num_event_states 
         prog_model = self
-        dmd_dt = kwargs['save_freq']
+        dmd_dt = config['save_freq']
 
         from .linear_model import LinearModel
         
@@ -1337,6 +1310,9 @@ class PrognosticsModel(ABC):
 
                 next_state : 
                     State transition equation: Calculate next state with matrix multiplication (overrides 'dx' defined in LinearModel)
+
+                simulate_to_threshold:
+                    Simulate prognostics model until defined threshold is met, using simulate_to_threshold defined in PrognosticsModel, then interpolate results to be at user-defined times
             """
 
             # Default parameters: set process_noise and measurement_noise to be defined based on PrognosticsModel values
@@ -1381,8 +1357,10 @@ class PrognosticsModel(ABC):
                     'save_freq': dmd_dt,
                     'dt': dmd_dt
                 }
+                # Simulate to threshold at DMD time step
                 results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_temp)
-
+                
+                # Interpolate results to be at user-desired time step
                 # Default parameters 
                 config = {
                     'dt': None,
