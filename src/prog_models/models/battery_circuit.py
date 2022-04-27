@@ -152,10 +152,15 @@ class BatteryCircuit(PrognosticsModel):
     
     def event_state(self, x : dict) -> dict:
         parameters = self.parameters
-        z = self.output(x)
+        Vcs = x['qcs']/parameters['Cs']
+        Vcp = x['qcp']/parameters['Ccp']
+        SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
+        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
+        Vb = x['qb']/Cb
+        v = Vb - Vcp - Vcs
         charge_EOD = (parameters['CMax'] -
                       parameters['qMax'] + x['qb'])/parameters['CMax']
-        voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
+        voltage_EOD = (v - self.parameters['VEOD']) / \
             self.parameters['VDropoff']
         return {
             'EOD': np.minimum(charge_EOD, voltage_EOD)
