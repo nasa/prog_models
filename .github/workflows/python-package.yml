@@ -61,6 +61,7 @@ jobs:
         python -m pip install -e .
         python -m pip install notebook
         python -m pip install testbook
+        python -m pip install requests
     - name: Run tests
       run: python -m tests
   test_prog_algs_released:
@@ -80,6 +81,7 @@ jobs:
         python -m pip install -e .
         python -m pip install notebook
         python -m pip install testbook
+        python -m pip install requests
     - name: Clone prog_algs
       uses: actions/checkout@v2
       with:
@@ -110,6 +112,7 @@ jobs:
         python -m pip install -e .
         pip install notebook
         pip install testbook
+        pip install requests
     - name: Clone prog_algs
       uses: actions/checkout@v2
       with:
@@ -141,6 +144,7 @@ jobs:
         pip install coverage
         pip install notebook
         pip install testbook
+        pip install requests
     - name: Run coverage
       run: |
         coverage run -m tests

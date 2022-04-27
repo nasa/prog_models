@@ -8,6 +8,7 @@ from .test_centrifugal_pump import main as centrifugal_pump_main
 from .test_pneumatic_valve import main as pneumatic_valve_main
 from .test_battery import main as battery_main
 from .test_tutorials import main as tutorials_main
+from .test_datasets import main as datasets_main
 from .test_powertrain import main as powertrain_main
 
 from io import StringIO
@@ -79,6 +80,10 @@ if __name__ == '__main__':
     except Exception:
         was_successful = False
 
+    try:
+        datasets_main()
+    except Exception:
+        was_successful = False
     try:
         powertrain_main()
     except Exception:
