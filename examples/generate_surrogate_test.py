@@ -86,6 +86,24 @@ def run_example():
     simulated_results.outputs.plot(ylabel = 'Predicted Outputs (temperature and voltage)',title='Example 1 Predicted Outputs')
     simulated_results.event_states.plot(ylabel = 'Predicted State of Charge', title='Example 1 Predicted SOC')
 
+    # To visualize the accuracy of the approximation, run the high-fidelity model
+    options_hf = {
+        'dt': 0.1,
+        'save_freq': 1
+    }
+    high_fidelity_results = batt.simulate_to_threshold(future_loading,**options_hf)
+
+    # Save voltage results to compare
+    voltage_dmd = []
+    voltage_hf = []
+    for iter1 in range(len(simulated_results.times)):
+        voltage_dmd.append(simulated_results.outputs[iter1]['v'])
+    for iter2 in range(len(high_fidelity_results.times)):
+        voltage_hf.append(high_fidelity_results.outputs[iter2]['v'])
+
+    plt.plot(simulated_results.times,voltage_dmd,'-b',label='DMD approximation')
+    plt.plot(high_fidelity_results.times, voltage_hf,'--r',label='High fidelity result')
+
     ### Example 2: Add process_noise to the surrogate model 
         # Without re-generating the surrogate model, we can re-define the process_noise to be higher than the high-fidelity model (since the surrogate model is less accurate)
     DMD_approx.parameters['process_noise'] = 2e-03
@@ -95,7 +113,7 @@ def run_example():
 
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 2 Input')
-    simulated_results.outputs.plot(ylabel = 'Predicted Outputs (temperature and voltage)', title='Example 2 Predicted Outputs')
+    simulated_results.outputs.plot(keys=['v'],ylabel = 'Predicted Outputs (temperature and voltage)', title='Example 2 Predicted Outputs')
     simulated_results.event_states.plot(ylabel = 'Predicted State of Charge', title='Example 2 Predicted SOC')
 
     ### Example 3: Generate surrogate model with a subset of internal states, inputs, and/or outputs
