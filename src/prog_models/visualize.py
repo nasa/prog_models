@@ -90,6 +90,7 @@ def set_plot_options(opt : dict) -> dict:
           * 'ticklabel_fontsize' : string or float, tick label font sizes. Defaullt is 'small'
           * 'tight_layout' : Boolean, whether to use tight layout (minimize figure blank space around the graph)
           * 'display_labels' : string, whether to display x and y-labels in the figure.
+          * 'keys' : list of keys to plot. If not provided, all keys in the series are plotted.
 
     Returns
     -------
@@ -532,7 +533,9 @@ def plot_timeseries(t : List[float], s : List[dict], legend : dict = None, optio
     -------
     See new model example
     """
-    series_names = list(s[0].keys())
+
+    series_names = options.get('keys', list(s[0].keys()))
+
     m = len(series_names)
     n = len(s)
     
