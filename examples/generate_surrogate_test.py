@@ -8,8 +8,8 @@ Example of generating a Dynamic Mode Decomposition surrogate model using the bat
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
 from prog_models.models import BatteryElectroChemEOD as Battery
-from scipy.interpolate import interp1d
 import numpy as np
+import matplotlib.pyplot as plt
 
 def run_example(): 
     ### Example 1: Standard DMD Application 
@@ -101,8 +101,11 @@ def run_example():
     for iter2 in range(len(high_fidelity_results.times)):
         voltage_hf.append(high_fidelity_results.outputs[iter2]['v'])
 
+    plt.subplots()
     plt.plot(simulated_results.times,voltage_dmd,'-b',label='DMD approximation')
     plt.plot(high_fidelity_results.times, voltage_hf,'--r',label='High fidelity result')
+    plt.legend()
+    plt.title('Comparing DMD approximation to high-fidelity model results')
 
     ### Example 2: Add process_noise to the surrogate model 
         # Without re-generating the surrogate model, we can re-define the process_noise to be higher than the high-fidelity model (since the surrogate model is less accurate)
@@ -113,7 +116,7 @@ def run_example():
 
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 2 Input')
-    simulated_results.outputs.plot(keys=['v'],ylabel = 'Predicted Outputs (temperature and voltage)', title='Example 2 Predicted Outputs')
+    simulated_results.outputs.plot(keys=['v'],ylabel = 'Predicted Voltage (volts)', title='Example 2 Predicted Outputs')
     simulated_results.event_states.plot(ylabel = 'Predicted State of Charge', title='Example 2 Predicted SOC')
 
     ### Example 3: Generate surrogate model with a subset of internal states, inputs, and/or outputs
@@ -147,8 +150,6 @@ def run_example():
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
     simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
     simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
-
-    debug = 1
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
