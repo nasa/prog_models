@@ -23,12 +23,10 @@ Notes for Developers
 --------------------
 * Configuration-controlled items: source code, tests, test workflow, issues (requirements, non-conformances, bugs, etc.), milestones, examples, tutorial, templates, project plan (this document), and documentation
 * The package itself is stored in the src directory.
-* Limit introduction of new external dependencies, when possible. 
 * This is a research tool, so when making a design decision between operational efficiency and usability, generally choose the more usable option
 * When supplied by or to the user, values with names (e.g., inputs, states, outputs, event_states, event occurance, etc.) should be supplied as dictionaries (or dict-like objects) where they can be referred to by name. 
-* Visualize and metrics subpackages shall be independent (i.e., not have any dependencies with the wider package or other subpackages)
-* Whenever possible, design so a new feature can be used for any model, interchangably. 
-* Whenever possible, UncertainData types, state estimators, and predictors should be interchangable
+* Utils, Visualize, and metrics subpackages shall be independent (i.e., not have any dependencies with the wider package or other subpackages)
+* Whenever possible Models, UncertainData types, State Estimators, and Predictors should be interchangable with any other class of the same type (e.g., any model should be interchangable with any other model)
 * Demonstrate common use cases as an example. 
 * Every feature should be demonstrated in an example
   * The most commonly used features should be demonstrated in the tutorial
@@ -55,10 +53,7 @@ Notes for Developers
    * An empty template of a prognostics model is maintained at `prog_models/prog_model_template.py`.
    * An empty template of a state estimator and predictor is maintained at `prog_algs/state_estimator_template.py` and `prog_algs/predictor_template.py`.
    * Any changes to the basic model setup should be documented there.
-* Dependencies are listed in requirements.txt. In general avoid adding a new dependency.
 * A tutorial is included in tutorial.ipynb. This required Juypter Notebooks. All major features should be illustrated here. 
-* Legal stuff: All pages should have the following notice on them:
-"Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved."
 
 Project Roles
 --------------------
@@ -82,6 +77,9 @@ PR Checklist
 * Each PR adding a new feature should include a test verifying that feature.
 * All tests must be passing.
 * All errors from static analysis must be resolved.
+* Any added dependencies are included in requirements.txt
+* All new files have the following notice on them:
+"Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved."
 * All warnings from static analysis must be reviewed and resolved - if deemed appropriate.
 * Final merging can only be performed by the software assurance officer. 
 * For merging into master branch - see the Release Checklist below.
@@ -91,10 +89,11 @@ Release Checklist
 * Code review - all software must be checked by someone other than the author.
 * Check that each new feature has corresponding tests.
 * Confirm that every page has the copyright notice.
+* Confirm dependencies in requirements.txt
 * Confirm that all issues associated with the release have been closed (i.e., requirements have been met) or assigned to another release
 * Run unit tests `python -m tests`.
 * For prog_models: run manual tests `python -m tests.test_manual`
-* Review the template.
+* Review the template(s).
 * Test the tutorial.
 * Check documents- see if any updates are required.
 * Rebuild sphinx documents: `sphinx-build sphinx-config/ docs/`.
@@ -136,6 +135,19 @@ or whose anomalous behavior would cause or contribute to a failure of system fun
 * [Future] Safety Criticality: Not Safety Critical 
 * Assessment done by Christopher Teubert in April 26 2022
 
+Safety Criticality Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The safety criticality assessment was made based on the responses to the following questions:
+* Does the software reside in a safety-critical system? NO
+* The software causes or contributes to a hazard? NO
+* The software provides control or mitigation for hazards? NO
+* The software controls safety-critical functions? NO
+* The software processes safety-critical commands or data? NO
+* The software detects and reports, or takes corrective action, if the system reaches a specific hazardous state? NO
+* The software mitigates damage if a hazard occurs? NO
+* The software resides on the same system (processor) as safety-critical software? NO
+* Does the software process data or analyze trends that lead directly to safety decisions (e.g., determining when to turn power off to a wind tunnel to prevent system destruction)? NO
+
 Compliance Notation Legend
 **************************
 * FC: Fully Compliant
@@ -152,7 +164,7 @@ This matrix tracks the compliance of this software and the project's software en
 Note: for requirements with different evidence for the different softwares, they have a capital M (for ProgModels), A (for ProgAlgs) or S (for ProgServer) following the requirement.
 
 Life Cycle Management
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                        |
@@ -223,7 +235,8 @@ The project manager shall establish and maintain the software processes, softwar
 
 
 Cost Estimation
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                        |
 +=======+==================================+============+=================================================================+
@@ -235,7 +248,7 @@ Cost Estimation
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Schedules
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                        |
@@ -250,7 +263,7 @@ Schedules
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Classification
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                        |
@@ -261,7 +274,7 @@ Classification
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Software Assurance
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+---------------------+
 | SWE # | Description                      | Compliance | Evidence            |
@@ -270,7 +283,7 @@ Software Assurance
 +-------+----------------------------------+------------+---------------------+
 
 Safety Critical Software
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+---------------------+
 | SWE # | Description                      | Compliance | Evidence            |
@@ -287,7 +300,7 @@ Safety Critical Software
 +-------+----------------------------------+------------+---------------------+
 
 Automatic Generation of Source Code
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+---------------------+
 | SWE # | Description                      | Compliance | Evidence            |
@@ -296,7 +309,7 @@ Automatic Generation of Source Code
 +-------+----------------------------------+------------+---------------------+
 
 Reuse
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                         |
@@ -311,7 +324,7 @@ Reuse
 +-------+----------------------------------+------------+------------------------------------------------------------------+
 
 Cybersecurity
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+-------------------------------------+------------+-----------------------------------------------+
 | SWE # | Description                         | Compliance | Evidence                                      |
@@ -330,7 +343,7 @@ Cybersecurity
 +-------+-------------------------------------+------------+-----------------------------------------------+
 
 Bi-Directional Traceability
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                       |
@@ -339,7 +352,7 @@ Bi-Directional Traceability
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Requirements
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                       |
@@ -358,7 +371,7 @@ Requirements
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Implementation
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                       |
@@ -496,10 +509,9 @@ Transition to a Higher Class
 | 021   | Transition to a higher class     | FC         | Plans have been updated to reflect the updated classification     |
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
 
-
 Aquisition Options
 ******************
-Assessed, there are some existing prognostics tools but no general Python package that can support model-based prognostics like we need and no general python package that can support model-based prognostics is an Service Oriented Architecture (SOA) like we need (prog_server). 
+Assessed, there are some existing prognostics tools but no general Python package that can support model-based prognostics like we need and no general python package that can support model-based prognostics is an Service Oriented Architecture (SOA) like we need (prog_server).
 
 Cybersecurity Assessment 
 ************************

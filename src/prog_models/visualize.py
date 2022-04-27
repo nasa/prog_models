@@ -555,7 +555,7 @@ def plot_timeseries(t : List[float], s : List[dict], legend : dict = None, optio
         # Add plot
         # --------
         ax = fig.add_subplot()
-        ax.plot(t, [list(s_i.values()) for s_i in s])
+        ax.plot(t, [[s_i[key] for key in series_names] for s_i in s])
 
         # Add options: plot options, title, labels, and legend
         # ------------------------------------------------------
