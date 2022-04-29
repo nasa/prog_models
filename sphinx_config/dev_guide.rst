@@ -329,7 +329,7 @@ Cybersecurity
 +-------+-------------------------------------+------------+-----------------------------------------------+
 | SWE # | Description                         | Compliance | Evidence                                      |
 +=======+=====================================+============+===============================================+
-| 156   | Perform CyberSecurity Assessment    | FC         | See section below                             |
+| 156   | Perform CyberSecurity Assessment    | FC         | See below                                     |
 +-------+-------------------------------------+------------+-----------------------------------------------+
 | 154   | Perform CyberSecurity Risks         | NC         | Not Required for Class-E                      |
 +-------+-------------------------------------+------------+-----------------------------------------------+
@@ -341,6 +341,17 @@ Cybersecurity
 +-------+-------------------------------------+------------+-----------------------------------------------+
 | 185   | Static Analysis                     | FC         | See Static Analysis Notes under Implementation|
 +-------+-------------------------------------+------------+-----------------------------------------------+
+
+Cybersecurity risks were assessed, the identified cybersecurity threats and our mitigations are described below:
+ * Code injection
+   * Risk: insertion of hazardous code into an open-source project by malicious actor
+   * Mitigation: Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors.
+ * Dependencies
+   * Risk: Dependencies could introduce cybersecurity vulnerabilities
+   * Mitigation: GitHub “dependabot” alerts will identify any known issues with package decencies. Also, the project is actively trying to limit the number of dependencies, and only use well-known packages from trusted developers.
+ * Language
+   * Risk: Python itself may introduce cybersecurity vulnerabilities 
+   * Mitigation: Python is a well-known language, this risk is low. To mitigate this we only support actively maintained versions.
 
 Bi-Directional Traceability
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -513,9 +524,7 @@ Aquisition Options
 ******************
 Assessed, there are some existing prognostics tools but no general Python package that can support model-based prognostics like we need and no general python package that can support model-based prognostics is an Service Oriented Architecture (SOA) like we need (prog_server).
 
-Cybersecurity Assessment 
-************************
-Assessed, no significant cybersecurity concerns were identified- research software. 
+
 
 Requirement Tracking
 ********************
