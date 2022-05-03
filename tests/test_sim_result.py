@@ -9,7 +9,7 @@ class TestSimResult(unittest.TestCase):
     def test_sim_result(self):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
         self.assertListEqual(list(result), state)
         self.assertListEqual(result.times, time)
