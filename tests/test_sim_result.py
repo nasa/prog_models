@@ -42,20 +42,20 @@ class TestSimResult(unittest.TestCase):
     def test_extend(self):
         NUM_ELEMENTS = 5 # Creating two result objects
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
         NUM_ELEMENTS = 10
         time = list(range(NUM_ELEMENTS))
-        state = [i * 10.0 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result2 = SimResult(time, state)
         self.assertEqual(result.times, [0, 1, 2, 3, 4])
         self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0]) # Assert data is correct before extending
-        self.assertEqual(result2.data, [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5}, {'a': 10.0, 'b': 10.0}]) # Assert data is correct before extending
+        self.assertEqual(result2.data, [{'a': 0, 'b': 0}, {'a': 5, 'b': 5}, {'a': 10, 'b': 10}, {'a': 15, 'b': 15}, {'a': 20, 'b': 20}, {'a': 25, 'b': 25}, {'a': 30, 'b': 30}, {'a': 35, 'b': 35}, {'a': 40, 'b': 40}, {'a': 45, 'b': 45}])
         
         result.extend(result2) # Extend result with result2
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5}, {'a': 10.0, 'b': 10.0}, {'a': 0, 'b': 0}, {'a': 5, 'b': 5}, {'a': 10, 'b': 10}, {'a': 15, 'b': 15}, {'a': 20, 'b': 20}, {'a': 25, 'b': 25}, {'a': 30, 'b': 30}, {'a': 35, 'b': 35}, {'a': 40, 'b': 40}, {'a': 45, 'b': 45}])
 
         self.assertRaises(ValueError, result.extend, 0) # Passing non-LazySimResult types to extend method
         self.assertRaises(ValueError, result.extend, [0,1])
