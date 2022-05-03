@@ -82,6 +82,12 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         with self.assertRaises(ProgModelTypeError):
             DictLikeMatrixWrapper(['a', 'b'], [1, 2])
 
+    def test_pickle(self):
+        c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
+        import pickle
+        c2 = pickle.loads(pickle.dumps(c1))
+        self.assertTrue((c2.matrix == np.array([[1], [2]])).all())
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
