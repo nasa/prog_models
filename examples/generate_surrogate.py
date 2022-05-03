@@ -8,7 +8,6 @@ Example of generating a Dynamic Mode Decomposition surrogate model using the bat
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
 from prog_models.models import BatteryElectroChemEOD as Battery
-import numpy as np
 import matplotlib.pyplot as plt
 
 def run_example(): 
@@ -48,19 +47,22 @@ def run_example():
 
     ## Step 3: generate surrogate model 
     # Simulation options for training data and surrogate model generation
+    # Note: here dt is less than save_freq. This means the model will iterate forward multiple steps per saved point.
+    # This is commonly done to ensure accuracy. 
     options_surrogate = {
         'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
-        'data_len': 0.7, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+        'trim_data_to': 0.7, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+        'outputs': ['v']
     }
 
     # Set noise in Prognostics Model, default for surrogate model is also this value
     batt.parameters['process_noise'] = 0
 
     # Generate surrogate model  
-    DMD_approx = batt.generate_surrogate_dmd(load_functions,**options_surrogate)
+    DMD_approx = batt.generate_surrogate(load_functions,**options_surrogate)
 
-    ## Step 4: Implement surrogate model 
+    ## Step 4: Use surrogate model 
     # Simulation options for implementation of surrogate model
     options_sim = {
         'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
@@ -89,17 +91,13 @@ def run_example():
     # To visualize the accuracy of the approximation, run the high-fidelity model
     options_hf = {
         'dt': 0.1,
-        'save_freq': 1
+        'save_freq': 1,
     }
     high_fidelity_results = batt.simulate_to_threshold(future_loading,**options_hf)
 
     # Save voltage results to compare
-    voltage_dmd = []
-    voltage_hf = []
-    for iter1 in range(len(simulated_results.times)):
-        voltage_dmd.append(simulated_results.outputs[iter1]['v'])
-    for iter2 in range(len(high_fidelity_results.times)):
-        voltage_hf.append(high_fidelity_results.outputs[iter2]['v'])
+    voltage_dmd = [simulated_results.outputs[iter1]['v'] for iter1 in range(len(simulated_results.times))]
+    voltage_hf = [high_fidelity_results.outputs[iter2]['v'] for iter2 in range(len(high_fidelity_results.times))]
 
     plt.subplots()
     plt.plot(simulated_results.times,voltage_dmd,'-b',label='DMD approximation')
@@ -127,18 +125,21 @@ def run_example():
     options_surrogate = {
         'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
-        'data_len': 1, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-        'states_dmd': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
-        'outputs_dmd': ['v'] # Define outputs to be included in surrogate model 
+        'trim_data': 1, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+        'states': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
+        'outputs': ['v'] # Define outputs to be included in surrogate model 
     }
 
     # Set noise in Prognostics Model, default for surrogate model is also this value
     batt.parameters['process_noise'] = 0
 
     # Generate surrogate model  
-    DMD_approx = batt.generate_surrogate_dmd(load_functions,**options_surrogate)
+    DMD_approx = batt.generate_surrogate(load_functions,**options_surrogate)
 
-    ## Implement surrogate model 
+    ## Use surrogate model 
+    # The surrogate model can now be used anywhere the original model is used. It is interchangeable with the original model. 
+    # The surrogate model results will be faster but less accurate than the original model. 
+
     # Simulation options for implementation of surrogate model
     options_sim = {
         'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
@@ -150,6 +151,7 @@ def run_example():
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
     simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
     simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
+    plt.show()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
