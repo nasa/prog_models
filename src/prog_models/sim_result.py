@@ -1,8 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-from collections import UserList
-from typing import Callable, List
+from collections import UserList, defaultdict
+from typing import Callable, Dict, List
 
 from matplotlib.pyplot import figure
+from numpy import sign
 from .visualize import plot_timeseries
 from copy import deepcopy
 
@@ -243,3 +244,29 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             self.__data = [self.fcn(x) for x in self.states]
         return self.__data
     
+    def monotonicity(self) -> Dict[str, float]:
+        """Calculate monotonicty for a single prediction. 
+        Given a single simulation result, for each event: go through all predicted states and compare those to the next one.
+        Calculates monotonicity for each event key using its associated mean value in UncertainData.
+        
+        monotonoicity = |Σsign(i+1 - i) / N-1|
+        Where N is number of measurements and sign indicates sign of calculation.
+        Args:
+            None
+        Returns:
+            float: Value between [0, 1] indicating monotonicity of a given event for the Prediction.
+        """
+        # Collect and organize mean values for each event
+        by_event = defaultdict(list)
+        for uncertaindata in self.data:
+            for key,value in uncertaindata.mean.items():
+                by_event[key].append(value)
+
+        # For each event, calculate monotonicity using formula
+        result = {}
+        for key,l in by_event.items():
+            mono_sum = []
+            for i in range(len(l)-1): 
+                mono_sum.append((sign(l[i+1] - l[i])) / (len(l)-1))
+            result[key] = abs(sum(mono_sum))
+        return result
