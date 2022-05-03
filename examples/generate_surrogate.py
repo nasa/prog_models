@@ -52,8 +52,7 @@ def run_example():
     options_surrogate = {
         'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
-        'trim_data_to': 0.7, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-        'outputs': ['v']
+        'trim_data_to': 0.7 # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
     }
 
     # Set noise in Prognostics Model, default for surrogate model is also this value

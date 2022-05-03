@@ -1202,37 +1202,6 @@ class PrognosticsModel(ABC):
             outputs = LazySimResult(self.output, time_data_interp, states_data) 
             event_states = LazySimResult(self.event_state, time_data_interp, states_data)
             
-            """
-            # Only save values that the user designated to be included in surrogate model
-            if len(config['states']) is not len(self.states):
-                for key in self.states:
-                    if key not in config['states']:
-                        if iter_load == 0:
-                            states_dmd.remove(key)
-                        for iter in range(len(times)):
-                            del states[iter][key]
-            if len(config['inputs']) is not len(self.inputs):
-                for key in self.inputs:
-                    if key not in config['inputs']:
-                        if iter_load == 0:
-                            inputs_dmd.remove(key)
-                        for iter in range(len(times)):
-                            del inputs[iter][key]
-            if len(config['outputs']) is not len(self.outputs):
-                for key in self.outputs:
-                    if key not in config['outputs']:
-                        if iter_load == 0:
-                            outputs_dmd.remove(key)
-                        for iter in range(len(times)):
-                            del outputs[iter][key] 
-            if len(config['events']) is not len(self.events):
-                for key in self.events:
-                    if key not in config['events']:
-                        if iter_load == 0:  
-                            events_dmd.remove(key)
-                        for iter in range(len(times)):
-                            del event_states[iter][key] 
-            """
             def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
                 """Sub-function for performing check and removal for user designated values.
             
@@ -1253,13 +1222,13 @@ class PrognosticsModel(ABC):
                         for iter in range(len(times)):
                             del del_from[iter][key]
                            
-            if len(config['states']) is not len(self.states):
+            if len(config['states']) != len(self.states):
                 user_val_set(self.states,  'states', states_dmd, states)
-            if len(config['inputs']) is not len(self.inputs):
+            if len(config['inputs']) != len(self.inputs):
                 user_val_set(self.inputs,  'inputs', inputs_dmd, inputs)
-            if len(config['outputs']) is not len(self.outputs):
+            if len(config['outputs']) != len(self.outputs):
                 user_val_set(self.outputs,  'outputs', outputs_dmd, outputs) 
-            if len(config['events']) is not len(self.events):
+            if len(config['events']) != len(self.events):
                 user_val_set(self.events,  'events', events_dmd, event_states)  
 
             # Initialize DMD matrices
@@ -1270,7 +1239,7 @@ class PrognosticsModel(ABC):
             for iter in range(len(times)-1): 
                 time_now = times[iter] + np.divide(config['save_freq'],2) 
                 load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
-                if len(config['inputs']) is not len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
+                if len(config['inputs']) != len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
                     for key in self.inputs:
                         if key not in config['inputs']:
                             del load_now[key]
@@ -1410,7 +1379,7 @@ class PrognosticsModel(ABC):
                     'save_pts': []
                 }
                 config.update(kwargs)
-                if config['dt'] is not None:
+                if config['dt'] != None:
                     warn("dt is not used in DMD approximation")
 
                 if config['save_freq'] == dmd_dt and config['save_pts'] == []: 
