@@ -66,22 +66,22 @@ class TestSimResult(unittest.TestCase):
     def test_extended_by_lazy(self):
         NUM_ELEMENTS = 5 
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state) # Creating one SimResult object
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 10
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result2 = LazySimResult(f, time, state) # Creating one LazySimResult object
 
         self.assertEqual(result.times, [0, 1, 2, 3, 4])
         self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0]) # Assert data is correct before extending
-        self.assertEqual(result2.data, [0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5}, {'a': 10.0, 'b': 10.0}]) # Assert data is correct before extending
+        self.assertEqual(result2.data, [{'a': 0, 'b': 0}, {'a': 10, 'b': 10}, {'a': 20, 'b': 20}, {'a': 30, 'b': 30}, {'a': 40, 'b': 40}, {'a': 50, 'b': 50}, {'a': 60, 'b': 60}, {'a': 70, 'b': 70}, {'a': 80, 'b': 80}, {'a': 90, 'b': 90}])
         result.extend(result2) # Extend result with result2
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 2.5, 5.0, 7.5, 10.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5}, {'a': 10.0, 'b': 10.0}, {'a': 0, 'b': 0}, {'a': 10, 'b': 10}, {'a': 20, 'b': 20}, {'a': 30, 'b': 30}, {'a': 40, 'b': 40}, {'a': 50, 'b': 50}, {'a': 60, 'b': 60}, {'a': 70, 'b': 70}, {'a': 80, 'b': 80}, {'a': 90, 'b': 90}])
 
     def test_pickle_lazy(self):
         def f(x):
