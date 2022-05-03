@@ -251,6 +251,11 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         
         monotonoicity = |Σsign(i+1 - i) / N-1|
         Where N is number of measurements and sign indicates sign of calculation.
+        Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
+        http://www.papers.phmsociety.org/index.php/phmconf/article/view/1404
+        Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Aritifical Intelligence, Volume 306.
+        https://www.sciencedirect.com/science/article/pii/S0004370222000078
+
         Args:
             None
         Returns:
@@ -259,7 +264,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         # Collect and organize mean values for each event
         by_event = defaultdict(list)
         for uncertaindata in self.data:
-            for key,value in uncertaindata.mean.items():
+            for key,value in uncertaindata:
                 by_event[key].append(value)
 
         # For each event, calculate monotonicity using formula
@@ -267,6 +272,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         for key,l in by_event.items():
             mono_sum = []
             for i in range(len(l)-1): 
-                mono_sum.append((sign(l[i+1] - l[i])) / (len(l)-1))
-            result[key] = abs(sum(mono_sum))
+                mono_sum.append(sign(l[i+1] - l[i])) 
+            result[key] = abs(sum(mono_sum) / (len(l)-1))
         return result
