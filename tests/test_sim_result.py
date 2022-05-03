@@ -85,10 +85,10 @@ class TestSimResult(unittest.TestCase):
 
     def test_pickle_lazy(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(NUM_ELEMENTS)]
         lazy_result = LazySimResult(f, time, state) # Ordinary LazySimResult with f, time, state
         sim_result = SimResult(time, state) # Ordinary SimResult with time,state
 
