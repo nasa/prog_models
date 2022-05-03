@@ -15,7 +15,6 @@ from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
-# from .linear_model import LinearModel
 
 
 class PrognosticsModel(ABC):
@@ -1089,7 +1088,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise   
 
-    def generate_surrogate_dmd(self, load_functions, first_output = None, threshold_keys = None, **kwargs):
+    def generate_surrogate(self, load_functions, first_output = None, threshold_keys = None, method = 'dmd', **kwargs):
         """
         Generate a surrogate model to approximate the higher-fidelity model 
 
@@ -1106,17 +1105,17 @@ class PrognosticsModel(ABC):
             Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
         save_freq : Number, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
-        data_len: int, optional
+        trim_data_to: int, optional
             Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-            e.g. if data_len = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n        
-        states_dmd: list, optional
-            List of state keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n
-        inputs_dmd: list, optional
-            List of input keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n
-        outputs_dmd: list, optional
-            List of output keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n 
-        events_dmd: list, optional
-            List of event state keys (must match those defined in the PrognosticsModel) to be included in the surrogate model generation \n           
+            e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n        
+        states: list, optional
+            List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
+        inputs: list, optional
+            List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
+        output: list, optional
+            List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
+        events: list, optional
+            List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
         
         Returns
         -------
@@ -1126,6 +1125,13 @@ class PrognosticsModel(ABC):
         Example
         -------
         See examples/generate_surrogate
+
+        Note
+        -------
+        This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
+        DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
+        In general, the approximation is less accurate if the DMD matrix is unstable. \n
+        
         
         """
 
@@ -1139,11 +1145,11 @@ class PrognosticsModel(ABC):
             'horizon': 1e100, # Default horizon (in s), essentially inf
             'print': False,
             'progress': False,
-            'data_len': 1,
-            'states_dmd': self.states,
-            'inputs_dmd': self.inputs,
-            'outputs_dmd': self.outputs,
-            'events_dmd': self.events
+            'trim_data_to': 1,
+            'states': self.states,
+            'inputs': self.inputs,
+            'outputs': self.outputs,
+            'events': self.events
         }
         config.update(kwargs)
 
@@ -1153,21 +1159,20 @@ class PrognosticsModel(ABC):
         outputs_dmd = deepcopy(self.outputs)
         events_dmd = deepcopy(self.events)
 
-        # Check if user set save_pts, exception
+        # Validate user inputs 
         if 'save_pts' in config.keys():
             raise ProgModelInputException("'save_pts' is not a valid input for DMD Surrogate Model.")
+        if config['trim_data_to']>1 or config['trim_data_to']<=0:
+            raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
 
         # Initialize lists to hold individual matrices
         x_list = []
         xprime_list = []
         time_list = []
 
-        for iter_load in range(len(load_functions)):
+        for iter_load, load_fcn_now in enumerate(load_functions):
             # Print status
             print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
-
-            # Define current loading function 
-            load_fcn_now = load_functions[iter_load]
 
             # Simulate to threshold 
             (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **config)
@@ -1178,12 +1183,10 @@ class PrognosticsModel(ABC):
             states_data_interp = {}
             inputs_data_interp = {}
 
-            for iter_data in range(len(self.states)):
-                state_name = self.states[iter_data]
+            for state_name in self.states:
                 states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
                 states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
-            for iter_data3 in range(len(self.inputs)):
-                input_name = self.inputs[iter_data3]
+            for input_name in self.inputs:
                 inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
                 inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
 
@@ -1198,36 +1201,66 @@ class PrognosticsModel(ABC):
             inputs = SimResult(time_data_interp,inputs_data)
             outputs = LazySimResult(self.output, time_data_interp, states_data) 
             event_states = LazySimResult(self.event_state, time_data_interp, states_data)
-
+            
+            """
             # Only save values that the user designated to be included in surrogate model
-            if len(config['states_dmd']) is not len(self.states):
+            if len(config['states']) is not len(self.states):
                 for key in self.states:
-                    if key not in config['states_dmd']:
+                    if key not in config['states']:
                         if iter_load == 0:
                             states_dmd.remove(key)
                         for iter in range(len(times)):
                             del states[iter][key]
-            if len(config['inputs_dmd']) is not len(self.inputs):
+            if len(config['inputs']) is not len(self.inputs):
                 for key in self.inputs:
-                    if key not in config['inputs_dmd']:
+                    if key not in config['inputs']:
                         if iter_load == 0:
                             inputs_dmd.remove(key)
                         for iter in range(len(times)):
                             del inputs[iter][key]
-            if len(config['outputs_dmd']) is not len(self.outputs):
+            if len(config['outputs']) is not len(self.outputs):
                 for key in self.outputs:
-                    if key not in config['outputs_dmd']:
+                    if key not in config['outputs']:
                         if iter_load == 0:
                             outputs_dmd.remove(key)
                         for iter in range(len(times)):
                             del outputs[iter][key] 
-            if len(config['events_dmd']) is not len(self.events):
+            if len(config['events']) is not len(self.events):
                 for key in self.events:
-                    if key not in config['events_dmd']:
+                    if key not in config['events']:
                         if iter_load == 0:  
                             events_dmd.remove(key)
                         for iter in range(len(times)):
-                            del event_states[iter][key]      
+                            del event_states[iter][key] 
+            """
+            def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
+                """Sub-function for performing check and removal for user designated values.
+            
+                Args:
+                    iter_loop : list
+                        List of keys to iterate through.
+                    config_key : str
+                        String key to check keys against config
+                    remove_from : dict
+                        Dictionary dmd to remove key from
+                    del_from : list or dict
+                        Final data structure to remove key and data from 
+                """
+                for key in iter_loop:
+                    if key not in config[config_key]:
+                        if iter_load == 0:
+                            remove_from.remove(key)
+                        for iter in range(len(times)):
+                            del del_from[iter][key]
+                           
+            if len(config['states']) is not len(self.states):
+                user_val_set(self.states,  'states', states_dmd, states)
+            if len(config['inputs']) is not len(self.inputs):
+                user_val_set(self.inputs,  'inputs', inputs_dmd, inputs)
+            if len(config['outputs']) is not len(self.outputs):
+                user_val_set(self.outputs,  'outputs', outputs_dmd, outputs) 
+            if len(config['events']) is not len(self.events):
+                user_val_set(self.events,  'events', events_dmd, event_states)  
 
             # Initialize DMD matrices
             x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
@@ -1237,16 +1270,25 @@ class PrognosticsModel(ABC):
             for iter in range(len(times)-1): 
                 time_now = times[iter] + np.divide(config['save_freq'],2) 
                 load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
-                if len(config['inputs_dmd']) is not len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
+                if len(config['inputs']) is not len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
                     for key in self.inputs:
-                        if key not in config['inputs_dmd']:
+                        if key not in config['inputs']:
                             del load_now[key]
 
                 states_now = states[iter].matrix 
                 states_next = states[iter+1].matrix 
-
-                x_mat_temp[:,iter] = np.vstack((states_now,outputs[iter].matrix,np.array([list(event_states[iter].values())]).T,np.array([[load_now[key] for key in load_now.keys()]])))[:,0]  
-                xprime_mat_temp[:,iter] = np.vstack((states_next,outputs[iter+1].matrix,np.array([list(event_states[iter+1].values())]).T))[:,0] 
+  
+                x_mat_temp[:,iter] = np.vstack((
+                            states_now,
+                            outputs[iter].matrix,
+                            np.array([list(event_states[iter].values())]).T,
+                            np.array([[load_now[key] for key in load_now.keys()]]))
+                            )[:,0] 
+                xprime_mat_temp[:,iter] = np.vstack((
+                            states_next,
+                            outputs[iter+1].matrix,
+                            np.array([list(event_states[iter+1].values())]).T)
+                            )[:,0] 
                 
             # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
             x_list.append(x_mat_temp)
@@ -1257,9 +1299,9 @@ class PrognosticsModel(ABC):
         print('Generate DMD Surrogate Model')
 
         # Cut data to user-defined length 
-        if config['data_len'] != 1:
+        if config['trim_data_to'] != 1:
             for iter3 in range(len(load_functions)):
-                min_index = round(len(time_list[iter3])*(config['data_len'])) 
+                min_index = round(len(time_list[iter3])*(config['trim_data_to'])) 
                 x_list[iter3] = x_list[iter3][:,0:min_index]
                 xprime_list[iter3] = xprime_list[iter3][:,0:min_index]
      
