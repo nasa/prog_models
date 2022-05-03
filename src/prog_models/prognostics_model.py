@@ -1133,8 +1133,6 @@ class PrognosticsModel(ABC):
         In general, the approximation is less accurate if the DMD matrix is unstable. \n
         """
 
-        # Generate Data to train surrogate model: 
-
         # Configure
         config = { # Defaults
             'save_freq': 1.0, 
@@ -1163,8 +1161,8 @@ class PrognosticsModel(ABC):
         xprime_list = []
         time_list = []
 
+        # Generate Data to train surrogate model: 
         for iter_load, load_fcn_now in enumerate(load_functions):
-            # Print status
             print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
 
             # Simulate to threshold 
