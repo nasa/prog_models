@@ -1244,12 +1244,13 @@ class PrognosticsModel(ABC):
                         np.array([list(event_states[iter].values())]).T,
                         np.array([[load_now[key] for key in load_now.keys()]])
                     )
-                x_mat_temp[:,iter] = np.vstack((v for v in stack if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no input)
-                xprime_mat_temp[:,iter] = np.vstack((
-                            states_next,
-                            outputs[iter+1].matrix,
-                            np.array([list(event_states[iter+1].values())]).T)
-                            )[:,0] 
+                x_mat_temp[:,iter] = np.vstack(tuple(v for v in stack if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no input)
+                stack2 = (
+                    states_next,
+                    outputs[iter+1].matrix,
+                    np.array([list(event_states[iter+1].values())]).T
+                )
+                xprime_mat_temp[:,iter] = np.vstack(tuple(v for v in stack2 if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no output)
                 
             # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
             x_list.append(x_mat_temp)
