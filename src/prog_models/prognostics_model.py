@@ -1131,8 +1131,6 @@ class PrognosticsModel(ABC):
         This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
         DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
         In general, the approximation is less accurate if the DMD matrix is unstable. \n
-        
-        
         """
 
         # Generate Data to train surrogate model: 
@@ -1247,12 +1245,13 @@ class PrognosticsModel(ABC):
                 states_now = states[iter].matrix 
                 states_next = states[iter+1].matrix 
   
-                x_mat_temp[:,iter] = np.vstack((
-                            states_now,
-                            outputs[iter].matrix,
-                            np.array([list(event_states[iter].values())]).T,
-                            np.array([[load_now[key] for key in load_now.keys()]]))
-                            )[:,0] 
+                stack = (
+                        states_now,
+                        outputs[iter].matrix,
+                        np.array([list(event_states[iter].values())]).T,
+                        np.array([[load_now[key] for key in load_now.keys()]])
+                    )
+                x_mat_temp[:,iter] = np.vstack((v for v in stack if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no input)
                 xprime_mat_temp[:,iter] = np.vstack((
                             states_next,
                             outputs[iter+1].matrix,
@@ -1281,13 +1280,6 @@ class PrognosticsModel(ABC):
         # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
         dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))
 
-        # Check for stability of dmd_matrix
-        eig_val, eig_vec = np.linalg.eig(dmd_matrix[:,0:-1])
-        if sum(eig_val>1) != 0:
-            for check_stability in range(len(eig_val)):
-                if eig_val[check_stability]>1 and eig_val[check_stability]-1>1e-05:
-                    warn("The DMD matrix is unstable, may result in poor approximation.")
-
         # Save size of states, inputs, outputs, event_states, and current instance of PrognosticsModel
         num_states = len(states[0].matrix)
         num_inputs = len(inputs[0].matrix)
@@ -1297,7 +1289,16 @@ class PrognosticsModel(ABC):
         prog_model = self
         dmd_dt = config['save_freq']
 
+        # Check for stability of dmd_matrix
+        eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-num_inputs if num_inputs > 0 else None])            
+        
+        if sum(eig_val>1) != 0:
+            for check_stability in range(len(eig_val)):
+                if eig_val[check_stability]>1 and eig_val[check_stability]-1>1e-05:
+                    warn("The DMD matrix is unstable, may result in poor approximation.")
+
         from .linear_model import LinearModel
+        
         
         class SurrogateModelDMD(LinearModel):
 
