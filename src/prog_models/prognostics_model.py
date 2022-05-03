@@ -1342,7 +1342,6 @@ class PrognosticsModel(ABC):
             events = events_dmd
 
             def initialize(self, u=None, z=None):
-
                 x = prog_model.initialize(u,z)
                 x.update(prog_model.output(x))
                 x.update(prog_model.event_state(x))
@@ -1350,7 +1349,6 @@ class PrognosticsModel(ABC):
                 return self.StateContainer(x)
 
             def next_state(self, x, u, dt):   
-
                 x.matrix = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
                 
                 return x   
