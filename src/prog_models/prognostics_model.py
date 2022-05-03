@@ -1137,12 +1137,7 @@ class PrognosticsModel(ABC):
 
         # Configure
         config = { # Defaults
-            't0': 0.0,
-            'dt': 1.0, 
             'save_freq': 1.0, 
-            'horizon': 1e100, # Default horizon (in s), essentially inf
-            'print': False,
-            'progress': False,
             'trim_data_to': 1,
             'states': self.states,
             'inputs': self.inputs,
