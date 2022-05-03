@@ -525,11 +525,11 @@ class TestSimResult(unittest.TestCase):
     def test_monotonicity(self):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
-        result = SimResult(time, state)
 
-        print(result.times)
-        print(result.data)
+        # Test monotonically increasing
+        states = [{'a': 1+i/10, 'b': 2-i/5} for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, states)
+        self.assertDictEqual(result.monotonicity(), {'a': 1.0, 'b': 1.0})
         
 # This allows the module to be executed directly
 def run_tests():
