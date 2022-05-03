@@ -1281,6 +1281,7 @@ class PrognosticsModel(ABC):
         num_total = num_states + num_outputs + num_event_states 
         prog_model = self
         dmd_dt = config['save_freq']
+        process_noise_temp = {key: 0 for key in prog_model.events}  # Process noise for event states is zero
 
         # Check for stability of dmd_matrix
         eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-num_inputs if num_inputs > 0 else None])            
@@ -1321,7 +1322,6 @@ class PrognosticsModel(ABC):
             """
 
             # Default parameters: set process_noise and measurement_noise to be defined based on PrognosticsModel values
-            process_noise_temp = {key: 0 for key in prog_model.events}
             default_parameters = {
                 'process_noise': {**prog_model.parameters['process_noise'],**prog_model.parameters['measurement_noise'],**process_noise_temp},
                 'measurement_noise': prog_model.parameters['measurement_noise']
