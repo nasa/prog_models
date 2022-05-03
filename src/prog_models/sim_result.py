@@ -143,10 +143,10 @@ class SimResult(UserList):
         # For each event, calculate monotonicity using formula
         result = {}
         for key,l in by_event.items():
-            mono_sum = []
+            mono_sum = 0
             for i in range(len(l)-1): 
-                mono_sum.append(sign(l[i+1] - l[i])) 
-            result[key] = abs(sum(mono_sum) / (len(l)-1))
+                mono_sum += sign(l[i+1] - l[i])
+            result[key] = abs(mono_sum / (len(l)-1))
         return result
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
