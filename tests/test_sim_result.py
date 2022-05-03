@@ -530,6 +530,21 @@ class TestSimResult(unittest.TestCase):
         states = [{'a': 1+i/10, 'b': 2-i/5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, states)
         self.assertDictEqual(result.monotonicity(), {'a': 1.0, 'b': 1.0})
+
+        # Test monotonically decreasing
+        states = [{'a': i*(i%3-1), 'b': i*(i%3-1)} for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, states)
+        self.assertDictEqual(result.monotonicity(), {'a': 0.25, 'b': 0.25})
+
+        # # Test no monotonicity
+        states = [{'a': i*(i%2), 'b': i*(i%2)} for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, states)
+        self.assertDictEqual(result.monotonicity(), {'a': 0.0, 'b': 0.0})
+
+        # # Test monotonicity between range [0,1]
+        states = [{'a': i*(i%2+2), 'b': i*(i%3+2)} for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, states)
+        self.assertDictEqual(result.monotonicity(), {'a': 0.5, 'b': 0.5})
         
 # This allows the module to be executed directly
 def run_tests():
