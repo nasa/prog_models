@@ -494,10 +494,10 @@ class TestSimResult(unittest.TestCase):
     def test_lazy_not_implemented(self):
         # Not implemented functions, should raise errors
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
         self.assertRaises(NotImplementedError, result.append)
         self.assertRaises(NotImplementedError, result.count)
@@ -506,10 +506,10 @@ class TestSimResult(unittest.TestCase):
 
     def test_lazy_to_simresult(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
         converted_result = result.to_simresult()
@@ -517,7 +517,7 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(converted_result.times, result.times) # Compare to original LazySimResult
         self.assertEqual(converted_result.data, result.data)
         self.assertEqual(converted_result.times, [0, 1, 2, 3, 4]) # Compare to expected values
-        self.assertEqual(converted_result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
+        self.assertEqual(converted_result.data, [{'a': 0.0, 'b': 0}, {'a': 5.0, 'b': 10}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}])
         
 # This allows the module to be executed directly
 def run_tests():
