@@ -331,10 +331,10 @@ class TestSimResult(unittest.TestCase):
 
     def test_lazy_extend_cache(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result1 = LazySimResult(f, time, state)
         result2 = LazySimResult(f, time, state)
 
@@ -364,15 +364,11 @@ class TestSimResult(unittest.TestCase):
 
     def test_lazy_extend_error(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
-
-        NUM_ELEMENTS = 5
-        time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
         sim_result = SimResult(time, state)
 
         self.assertRaises(ValueError, result.extend, sim_result) # Passing a SimResult to LazySimResult's extend
