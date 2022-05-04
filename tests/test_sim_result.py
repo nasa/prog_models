@@ -267,7 +267,7 @@ class TestSimResult(unittest.TestCase):
         # Not implemented functions, should raise errors
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
         self.assertRaises(NotImplementedError, result.append)
         self.assertRaises(NotImplementedError, result.count)
@@ -277,25 +277,25 @@ class TestSimResult(unittest.TestCase):
     # Tests for LazySimResult
     def test_lazy_data_fcn(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
         self.assertFalse(result.is_cached())
-        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 5.0, 'b': 10}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}])
         self.assertTrue(result.is_cached())
 
     def test_lazy_clear(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
         self.assertEqual(result.times, [0, 1, 2, 3, 4])
-        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
-        self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 5.0, 'b': 10}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}])
+        self.assertEqual(result.states, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}])
         self.assertRaises(TypeError, result.clear, True)
 
         result.clear()
@@ -305,29 +305,29 @@ class TestSimResult(unittest.TestCase):
 
     def test_lazy_extend(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
         def f2(x):
-            return x * 5
+            return {k:v * 5 for k,v in x.items()}
         NUM_ELEMENTS = 10
         time2 = list(range(NUM_ELEMENTS))
-        state2 = [i * 5 for i in range(NUM_ELEMENTS)]
+        state2 = [{'a': i * 5, 'b': i * 10} for i in range(NUM_ELEMENTS)]
         result2 = LazySimResult(f2, time2, state2)
         self.assertEqual(result.times, [0, 1, 2, 3, 4]) # Assert data is correct before extending
-        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0])
-        self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 5.0, 'b': 10}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}])
+        self.assertEqual(result.states, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}])
         self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result2.data, [0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
-        self.assertEqual(result2.states, [0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
+        self.assertEqual(result2.data, [{'a': 0, 'b': 0}, {'a': 25, 'b': 50}, {'a': 50, 'b': 100}, {'a': 75, 'b': 150}, {'a': 100, 'b': 200}, {'a': 125, 'b': 250}, {'a': 150, 'b': 300}, {'a': 175, 'b': 350}, {'a': 200, 'b': 400}, {'a': 225, 'b': 450}])
+        self.assertEqual(result2.states, [{'a': 0, 'b': 0}, {'a': 5, 'b': 10}, {'a': 10, 'b': 20}, {'a': 15, 'b': 30}, {'a': 20, 'b': 40}, {'a': 25, 'b': 50}, {'a': 30, 'b': 60}, {'a': 35, 'b': 70}, {'a': 40, 'b': 80}, {'a': 45, 'b': 90}])
 
         result.extend(result2)
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) # Assert data is correct after extending
-        self.assertEqual(result.data, [0.0, 5.0, 10.0, 15.0, 20.0, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
-        self.assertEqual(result.states, [0.0, 2.5, 5.0, 7.5, 10.0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 5.0, 'b': 10}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 0, 'b': 0}, {'a': 25, 'b': 50}, {'a': 50, 'b': 100}, {'a': 75, 'b': 150}, {'a': 100, 'b': 200}, {'a': 125, 'b': 250}, {'a': 150, 'b': 300}, {'a': 175, 'b': 350}, {'a': 200, 'b': 400}, {'a': 225, 'b': 450}])
+        self.assertEqual(result.states, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}, {'a': 0, 'b': 0}, {'a': 5, 'b': 10}, {'a': 10, 'b': 20}, {'a': 15, 'b': 30}, {'a': 20, 'b': 40}, {'a': 25, 'b': 50}, {'a': 30, 'b': 60}, {'a': 35, 'b': 70}, {'a': 40, 'b': 80}, {'a': 45, 'b': 90}])
 
     def test_lazy_extend_cache(self):
         def f(x):
