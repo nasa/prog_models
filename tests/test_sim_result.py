@@ -451,28 +451,28 @@ class TestSimResult(unittest.TestCase):
 
     def test_lazy_remove(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 10
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
 
-        result.remove(5.0) # Unnamed default positional argument removal of data value
+        result.remove({'a': 5.0, 'b': 10}) # Unnamed default positional argument removal of data value
         self.assertEqual(result.times, [0, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [0.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0] )
-        self.assertEqual(result.states, [0.0, 5.0, 7.5, 10.0, 12.5, 15.0, 17.5, 20.0, 22.5])
-        result.remove(d = 0.0) # Named argument removal of data value
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 25.0, 'b': 50}, {'a': 30.0, 'b': 60}, {'a': 35.0, 'b': 70}, {'a': 40.0, 'b': 80}, {'a': 45.0, 'b': 90}])
+        self.assertEqual(result.states, [{'a': 0.0, 'b': 0}, {'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}, {'a': 12.5, 'b': 25}, {'a': 15.0, 'b': 30}, {'a': 17.5, 'b': 35}, {'a': 20.0, 'b': 40}, {'a': 22.5, 'b': 45}])
+        result.remove(d = {'a': 0.0, 'b': 0}) # Named argument removal of data value
         self.assertEqual(result.times, [2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data, [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0] )
-        self.assertEqual(result.states, [5.0, 7.5, 10.0, 12.5, 15.0, 17.5, 20.0, 22.5])
+        self.assertEqual(result.data, [{'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 25.0, 'b': 50}, {'a': 30.0, 'b': 60}, {'a': 35.0, 'b': 70}, {'a': 40.0, 'b': 80}, {'a': 45.0, 'b': 90}])
+        self.assertEqual(result.states, [{'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}, {'a': 12.5, 'b': 25}, {'a': 15.0, 'b': 30}, {'a': 17.5, 'b': 35}, {'a': 20.0, 'b': 40}, {'a': 22.5, 'b': 45}])
         result.remove(t = 7) # Named argument removal of times value
         self.assertEqual(result.times, [2, 3, 4, 5, 6, 8, 9])
-        self.assertEqual(result.data, [10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 45.0] )
-        self.assertEqual(result.states, [5.0, 7.5, 10.0, 12.5, 15.0, 20.0, 22.5])
-        result.remove(s = 12.5) # Named argument removal of states value
+        self.assertEqual(result.data, [{'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 25.0, 'b': 50}, {'a': 30.0, 'b': 60}, {'a': 40.0, 'b': 80}, {'a': 45.0, 'b': 90}])
+        self.assertEqual(result.states, [{'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}, {'a': 12.5, 'b': 25}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 22.5, 'b': 45}])
+        result.remove(s = {'a': 12.5, 'b': 25}) # Named argument removal of states value
         self.assertEqual(result.times, [2, 3, 4, 6, 8, 9])
-        self.assertEqual(result.data, [10.0, 15.0, 20.0, 30.0, 40.0, 45.0] )
-        self.assertEqual(result.states, [5.0, 7.5, 10.0, 15.0, 20.0, 22.5])
+        self.assertEqual(result.data, [{'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 30.0, 'b': 60}, {'a': 40.0, 'b': 80}, {'a': 45.0, 'b': 90}])
+        self.assertEqual(result.states, [{'a': 5.0, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}, {'a': 15.0, 'b': 30}, {'a': 20.0, 'b': 40}, {'a': 22.5, 'b': 45}])
 
         self.assertRaises(ValueError, result.remove, ) # Test no values specified
         self.assertRaises(ValueError, result.remove, 90.0, 2) # Test two values specified positionally
