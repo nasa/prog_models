@@ -1,8 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-from collections import UserList
-from typing import Callable, List
+from collections import UserList, defaultdict
+from typing import Callable, Dict, List
 
 from matplotlib.pyplot import figure
+from numpy import sign
 from .visualize import plot_timeseries
 from copy import deepcopy
 
@@ -114,7 +115,39 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)  
+        return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)
+
+    def monotonicity(self) -> Dict[str, float]:
+        """Calculate monotonicty for a single prediction. 
+        Given a single simulation result, for each event: go through all predicted states and compare those to the next one.
+        Calculates monotonicity for each event key using its associated mean value in UncertainData.
+        
+        monotonoicity = |Σsign(i+1 - i) / N-1|
+        Where N is number of measurements and sign indicates sign of calculation.
+        Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
+        http://www.papers.phmsociety.org/index.php/phmconf/article/view/1404
+        Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Aritifical Intelligence, Volume 306.
+        https://www.sciencedirect.com/science/article/pii/S0004370222000078
+
+        Args:
+            None
+        Returns:
+            float: Value between [0, 1] indicating monotonicity of a given event for the Prediction.
+        """
+        # Collect and organize mean values for each event
+        by_event = defaultdict(list)
+        for uncertaindata in self.data:
+            for key,value in uncertaindata.items():
+                by_event[key].append(value)
+
+        # For each event, calculate monotonicity using formula
+        result = {}
+        for key,l in by_event.items():
+            mono_sum = 0
+            for i in range(len(l)-1): 
+                mono_sum += sign(l[i+1] - l[i])
+            result[key] = abs(mono_sum / (len(l)-1))
+        return result
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")

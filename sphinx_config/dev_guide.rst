@@ -101,6 +101,7 @@ Release Checklist
 * Update version number in src/*/__init__.py and setup.py.
 * For releases adding new features- ensure that NASA release process has been followed.
 * For prog_server: Update openapi specs on `SwaggerHub <https://app.swaggerhub.com/apis/teubert/prog_server/1.0.0-oas3>`__
+* Send notes to Software Release Office (SRO) of updated version number
 
 Updating Documentation 
 ------------------------
