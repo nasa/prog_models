@@ -171,7 +171,7 @@ class TestSimResult(unittest.TestCase):
     def test_clear(self):
         NUM_ELEMENTS = 5 # Creating two result objects
         time = list(range(NUM_ELEMENTS))
-        state = state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
         self.assertEqual(result.times, [0, 1, 2, 3, 4])
         self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 5, 'b': 10}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}])
@@ -184,7 +184,7 @@ class TestSimResult(unittest.TestCase):
     def test_time(self):
         NUM_ELEMENTS = 5 # Creating two result objects
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
         self.assertEqual(result.time(0), result.times[0])
         self.assertEqual(result.time(1), result.times[1])
