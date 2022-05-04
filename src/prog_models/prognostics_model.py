@@ -1166,7 +1166,7 @@ class PrognosticsModel(ABC):
             print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
 
             # Simulate to threshold 
-            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **config)
+            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, first_output = first_output, threshold_keys = threshold_keys, **config)
         
             # Interpolate results to time step of save_freq
             time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
