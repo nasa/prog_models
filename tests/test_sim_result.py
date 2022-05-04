@@ -103,11 +103,12 @@ class TestSimResult(unittest.TestCase):
     def test_index(self):
         NUM_ELEMENTS = 5 # Creating two result objects
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
-        self.assertEqual(result.index(10.0), 4)
-        self.assertEqual(result.index(2.5), 1)
-        self.assertEqual(result.index(0.0), 0)
+
+        self.assertEqual(result.index({'a': 10, 'b': 20}), 4)
+        self.assertEqual(result.index({'a': 2.5, 'b': 5}), 1)
+        self.assertEqual(result.index({'a': 0, 'b': 0}), 0)
         self.assertRaises(ValueError, result.index, 6.0) # Other argument doesn't exist
         self.assertRaises(ValueError, result.index, -1) # Non-existent data value
         self.assertRaises(ValueError, result.index, "7.5") # Data specified incorrectly as string
@@ -119,17 +120,17 @@ class TestSimResult(unittest.TestCase):
     def test_pop(self):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
 
         result.pop(2) # Test specified index
-        self.assertEqual(result.data, [0.0, 2.5, 7.5, 10.0])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}])
         result.pop() # Test default index -1 (last element)
-        self.assertEqual(result.data, [0.0, 2.5, 7.5])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 7.5, 'b': 15}])
         result.pop(-1) # Test argument of index -1 (last element)
-        self.assertEqual(result.data, [0.0, 2.5])
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}])
         result.pop(0) # Test argument of 0
-        self.assertEqual(result.data, [2.5])
+        self.assertEqual(result.data, [{'a': 2.5, 'b': 5}])
         self.assertRaises(IndexError, result.pop, 5) # Test specifying an invalid index value
         self.assertRaises(IndexError, result.pop, 3)
         self.assertRaises(TypeError, result.pop, "5") # Test specifying an invalid index type
@@ -141,21 +142,21 @@ class TestSimResult(unittest.TestCase):
     def test_remove(self):
         NUM_ELEMENTS = 5 # Creating two result objects
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
 
-        result.remove(5.0) # Positional defaults to removing data
+        result.remove( {'a': 5.0, 'b': 10}) # Positional defaults to removing data
         self.assertEqual(result.times, [0, 1, 3, 4])
-        self.assertEqual(result.data, [0.0, 2.5, 7.5, 10.0])
-        result.remove(d = 0.0) # Testing named removal of data
+        self.assertEqual(result.data, [{'a': 0.0, 'b': 0}, {'a': 2.5, 'b': 5}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}])
+        result.remove(d = {'a': 0.0, 'b': 0}) # Testing named removal of data
         self.assertEqual(result.times, [1, 3, 4])
-        self.assertEqual(result.data, [2.5, 7.5, 10.0])
+        self.assertEqual(result.data, [{'a': 2.5, 'b': 5}, {'a': 7.5, 'b': 15}, {'a': 10.0, 'b': 20}])
         result.remove(t = 3) # Testing named removal of time
         self.assertEqual(result.times, [1, 4])
-        self.assertEqual(result.data, [2.5, 10.0])
+        self.assertEqual(result.data, [{'a': 2.5, 'b': 5}, {'a': 10.0, 'b': 20}])
         result.remove(t = 1) 
         self.assertEqual(result.times, [4])
-        self.assertEqual(result.data, [10.0])
+        self.assertEqual(result.data, [{'a': 10.0, 'b': 20}])
 
         self.assertRaises(ValueError, result.remove, ) # If nothing specified, raise ValueError
         self.assertRaises(ValueError, result.remove, None, None) # Passing both as None
