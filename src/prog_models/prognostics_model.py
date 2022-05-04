@@ -1349,7 +1349,7 @@ class PrognosticsModel(ABC):
 
                 return self.StateContainer(x)
 
-            def next_state(self, x, u, dt):   
+            def next_state(self, x, u, _):   
                 x.matrix = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
                 
                 return x   
