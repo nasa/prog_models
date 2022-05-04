@@ -415,16 +415,16 @@ class TestSimResult(unittest.TestCase):
 
     def test_cached_sim_result(self):
         def f(x):
-            return x * 2
+            return {k:v * 2 for k,v in x.items()}
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
-        state = [i * 2.5 for i in range(NUM_ELEMENTS)]
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = LazySimResult(f, time, state)
         self.assertFalse(result.is_cached())
         self.assertListEqual(result.times, time)
         for i in range(5):
             self.assertEqual(result.time(i), time[i])
-            self.assertEqual(result[i], state[i]*2)
+            self.assertEqual(result[i], {k:v*2 for k,v in state[i].items()})
         self.assertTrue(result.is_cached())
 
         try:
