@@ -1335,7 +1335,7 @@ class PrognosticsModel(ABC):
                 C[iter1,num_states+iter1] = 1 
             F = np.zeros((num_event_states,num_total))
             for iter2 in range(num_event_states):
-                F[0,num_states+num_outputs+iter2] = 1 
+                F[iter2,num_states+num_outputs+iter2] = 1 
 
             states = states_dmd + outputs_dmd + events_dmd
             inputs = inputs_dmd
