@@ -8,6 +8,7 @@ from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
 
+
 class MockModel():
     states = ['a', 'b', 'c', 't']
     inputs = ['i1', 'i2']
@@ -92,6 +93,7 @@ class TestModels(unittest.TestCase):
 
     def test_broken_models(self):
 
+
         class missing_states(prognostics_model.PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
@@ -103,6 +105,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class empty_states(prognostics_model.PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
@@ -115,6 +118,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_inputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -126,6 +130,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
@@ -137,6 +142,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_initiialize(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -147,6 +153,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_output(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -1330,10 +1337,12 @@ class TestModels(unittest.TestCase):
         # Test no drag simulated results different from default
         self.assertNotEqual(simulated_results_nd.times, simulated_results_df.times)
         self.assertNotEqual(simulated_results_nd.states, simulated_results_df.states)
+        self.assertGreater(simulated_results_nd.times[-1], simulated_results_df.times[-1])
 
         # Test high drag simulated results different from default
         self.assertNotEqual(simulated_results_hi.times, simulated_results_df.times)
         self.assertNotEqual(simulated_results_hi.states, simulated_results_df.states)
+        self.assertLess(simulated_results_hi.times[-1], simulated_results_df.times[-1])
 
         # Test high drag simulated results different from no drag
         self.assertNotEqual(simulated_results_hi.times, simulated_results_nd.times)
