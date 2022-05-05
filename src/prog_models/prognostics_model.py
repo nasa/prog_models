@@ -1371,6 +1371,8 @@ class PrognosticsModel(ABC):
             outputs = outputs_dmd 
             events = events_dmd
 
+            dt = dmd_dt  # Step size (so it can be accessed programmatically)
+
             def initialize(self, u=None, z=None):
                 x = prog_model.initialize(u,z)
                 x.update(prog_model.output(x))
