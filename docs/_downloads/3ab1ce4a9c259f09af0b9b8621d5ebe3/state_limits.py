@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example demonstrating ways to use state limits. 
+Example demonstrating when and how to identify model state limits. 
 """
 
 from prog_models.models.thrown_object import ThrownObject
@@ -10,8 +10,8 @@ from math import inf
 
 def run_example():
     # Demo model
-    # Step 1: Create instance of model
-    m = ThrownObject()
+    # Step 1: Create instance of model (without drag)
+    m = ThrownObject( cd = 0 )
 
     # Step 2: Setup for simulation 
     def future_load(t, x=None):
@@ -28,11 +28,11 @@ def run_example():
 
     # Step 3: Simulate to impact
     event = 'impact'
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
     
     # Print states
     print('Example 1')
-    for i, state in enumerate(states):
+    for i, state in enumerate(simulated_results.states):
         print('State ', i, ': ', state)
     print()
 
@@ -40,11 +40,11 @@ def run_example():
     x0 = m.initialize(u = {}, z = {})
     x0['x'] = -1
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1, x = x0)
 
     # Print states
     print('Example 2')
-    for i, state in enumerate(states):
+    for i, state in enumerate(simulated_results.states):
         print('State ', i, ': ', state)
     print()
 
@@ -55,7 +55,7 @@ def run_example():
     m.parameters['g'] = -50000000
     
     print('Example 3')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True)
+    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True, progress = False)
 
     # Note that the limits can also be applied manually using the apply_limits function
     print('limiting states')

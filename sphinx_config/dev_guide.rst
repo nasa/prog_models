@@ -95,8 +95,9 @@ Release Checklist
 * For prog_models: run manual tests `python -m tests.test_manual`
 * Review the template(s).
 * Test the tutorial.
+* Run the examples
 * Check documents- see if any updates are required.
-* Rebuild sphinx documents: `sphinx-build sphinx-config/ docs/`.
+* Rebuild sphinx documents: `sphinx-build sphinx_config/ docs/`.
 * Write release notes.
 * Update version number in src/*/__init__.py and setup.py.
 * For releases adding new features- ensure that NASA release process has been followed.
@@ -208,11 +209,11 @@ Life Cycle Management
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 040c  | Non-conformances                 | FC         | See github issues                                               |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 040dM | Change tracking                  | FC         | See `Commits https://github.com/nasa/prog_models/commits/`_     |
+| 040dM | Change tracking                  | FC         | See `Commits <https://github.com/nasa/prog_models/commits/>`_     |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 040dA | Change tracking                  | FC         | See `Commits https://github.com/nasa/prog_algs/commits/`_       |
+| 040dA | Change tracking                  | FC         | See `Commits <https://github.com/nasa/prog_algs/commits/>`_       |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 040dS | Change tracking                  | FC         | See `Commits https://github.com/nasa/prog_server/commits/`_     |
+| 040dS | Change tracking                  | FC         | See `Commits <https://github.com/nasa/prog_server/commits/>`_     |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 042   | Electronic Accesss to Source     | FC         | See respective github repository                                |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+

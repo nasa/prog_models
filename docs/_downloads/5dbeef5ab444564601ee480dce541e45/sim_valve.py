@@ -16,20 +16,20 @@ def run_example():
     def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
-                return {
+                return valv.InputContainer({
                     'pL': 3.5e5,
                     'pR': 2.0e5,
                     # Open Valve
                     'uTop': False,
                     'uBot': True
-                }
-            return {
+                })
+            return valv.InputContainer({
                 'pL': 3.5e5,
                 'pR': 2.0e5,
                 # Close Valve
                 'uTop': True,
                 'uBot': False
-            }
+            })
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -39,7 +39,9 @@ def run_example():
         'dt': 0.01,
         'horizon': 800,
         'save_freq': 60,
-        'print': True}
+        'print': True,
+        'progress': True,
+    }
     # Set wear parameter for spring to 1
     valv.parameters['x0']['wk'] = 1
 
@@ -56,7 +58,9 @@ def run_example():
         'dt': 0.01,
         'horizon': 800,
         'save_freq': 60,
-        'print': True}
+        'print': True,
+        'progress': True
+    }
     # Reset wear parameter for spring to 0, set wear parameter for friction to 1
     valv.parameters['x0']['wk'] = 0
     valv.parameters['x0']['wr'] = 1

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Getting Started &#8212; Prognostics Models Python Package 1.2.0 documentation</title>
+    <title>Getting Started &#8212; Prognostics Models Python Package 1.2.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -36,7 +36,7 @@
   <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/nasa/prog_models/HEAD"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" /></a>
-<p>The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods.</p>
+<p>The NASA Prognostics Center of Excellence (PCoE) Prognostics Models Package (prog_models) is a Python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems. It also provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components and can be used in conjunction with the Prognostics Algorithms Library to perform research in prognostics methods.</p>
 <p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>)</p>
 <section id="installing">
 <h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
@@ -48,7 +48,7 @@
 </div>
 </section>
 <section id="installing-pre-release-versions-with-github">
-<h3>Installing pre-release versions with GitHub<a class="headerlink" href="#installing-pre-release-versions-with-github" title="Permalink to this headline">¶</a></h3>
+<h3>Installing Pre-Release Versions with GitHub<a class="headerlink" href="#installing-pre-release-versions-with-github" title="Permalink to this headline">¶</a></h3>
 <p>For users who would like to contribute to <cite>prog_models</cite> or would like to use pre-release features can do so using the ‘dev’ branch (or a feature branch) on the <a class="reference external" href="https://github.com/nasa/prog_models">prog_models GitHub repo</a>. This isn’t recommended for most users as this version may be unstable. To use this version, use the following commands:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/nasa/prog_models
 <span class="gp">$ </span><span class="nb">cd</span> prog_algs
@@ -62,19 +62,19 @@
 <h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
 <p>A few definitions to get started:</p>
 <ul class="simple">
-<li><p><strong>events</strong>: something that can be predicted (e.g., system failure). An event has either occurred or not.</p></li>
-<li><p><strong>event state</strong>: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called “State of Health”</p></li>
-<li><p><strong>inputs</strong>: control applied to the system being modeled (e.g., current drawn from a battery)</p></li>
-<li><p><strong>outputs</strong>: measured sensor values from a system (e.g., voltage and temperature of a battery)</p></li>
+<li><p><strong>events</strong>: something that can be predicted (e.g., system failure). An event has either occurred or not occurred.</p></li>
+<li><p><strong>event state</strong>: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called “State of Health” or “SOH”.</p></li>
+<li><p><strong>inputs</strong>: control applied to the system being modeled (e.g., current drawn from a battery).</p></li>
+<li><p><strong>outputs</strong>: measured sensor values from a system (e.g., voltage and temperature of a battery).</p></li>
 <li><p><strong>observables</strong>: performance characteristics of a system that are a function of system state, but are not directly measured.</p></li>
 <li><p><strong>states</strong>: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be.</p></li>
 <li><p><strong>process noise</strong>: stochastic process representing uncertainty in the model transition.</p></li>
-<li><p><strong>measurement noise</strong>: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects</p></li>
+<li><p><strong>measurement noise</strong>: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects.</p></li>
 </ul>
 </section>
 <section id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
-<p>The best way to learn how to use <cite>prog_models</cite> is through the <a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">tutorial</a>. There are also a number of examples which show different aspects of the package, summarized and linked below:</p>
+<p>The best way to learn how to use <cite>prog_models</cite> is through the <a class="reference external" href="https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb">tutorial</a>. There are also a number of examples that show different aspects of the package, summarized and linked below:</p>
 <ul>
 <li><dl>
 <dt><a class="reference download internal" download="" href="_downloads/2573c3db18f7a8b99d347500726179ab/sim.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim</span></code></a></dt><dd><span class="target" id="module-examples.sim"></span><p>Example of a battery being simulated for a set period of time and then till threshold is met.</p>
@@ -85,8 +85,8 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a></dt><dd><span class="target" id="module-examples.model_gen"></span><p>Example of generating a models from constituant parts.</p>
-<p>Model for this example is that of an object thrown into the air, predicting impact event</p>
+<dt><a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a></dt><dd><span class="target" id="module-examples.model_gen"></span><p>Example generating models from constituent parts.</p>
+<p>The model used for this example is that of an object thrown into the air, predicting the impact event</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -94,7 +94,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/c5f01fb79e30655f6d28daf756382ba2/benchmarking.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.benchmarking</span></code></a></dt><dd><span class="target" id="module-examples.benchmarking"></span><p>Example of benchmarking models.</p>
+<dt><a class="reference download internal" download="" href="_downloads/c5f01fb79e30655f6d28daf756382ba2/benchmarking.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.benchmarking</span></code></a></dt><dd><span class="target" id="module-examples.benchmarking"></span><p>Example benchmarking the computational efficiency of models.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -110,7 +110,7 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/1e173741004c18e2e2f97234d3eb4521/sensitivity.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sensitivity</span></code></a></dt><dd><span class="target" id="module-examples.sensitivity"></span><p>Example of a sensitivity analysis on a new model.</p>
+<dt><a class="reference download internal" download="" href="_downloads/1e173741004c18e2e2f97234d3eb4521/sensitivity.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sensitivity</span></code></a></dt><dd><span class="target" id="module-examples.sensitivity"></span><p>Example performing a sensitivity analysis on a new model.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -118,12 +118,12 @@
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/7bdd7d73bab579719a189b79acfa685c/events.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.events</span></code></a></dt><dd><span class="target" id="module-examples.events"></span><p>Example further illustrating the concept of ‘events’ which generalizes the idea of EOL.</p>
+<dt><a class="reference download internal" download="" href="_downloads/7bdd7d73bab579719a189b79acfa685c/events.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.events</span></code></a></dt><dd><span class="target" id="module-examples.events"></span><p>Example further illustrating the concept of ‘events’ which generalizes EOL.</p>
 <p>‘Events’ is the term used to describe something to be predicted.
 Generally in the PHM community these are referred to as End of Life (EOL).
 However, they can be much more.</p>
-<p>In the implementation from the prog_models package, events can be anything that needs to be predicted.
-Events can represent end of life (EOL), end of mission (EOM), warning thresholds, or any event of interest (EOI).</p>
+<p>In the prog_models package, events can be anything that needs to be predicted.
+Events can represent End of Life (EOL), End of Mission (EOM), warning thresholds, or any Event of Interest (EOI).</p>
 <p>This example demonstrates how events can be used in your applications.</p>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -132,7 +132,7 @@ Events can represent end of life (EOL), end of mission (EOM), warning thresholds
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/3dbddda7f577417b5e7a6a8ec6c72695/noise.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.noise</span></code></a></dt><dd><span class="target" id="module-examples.noise"></span><p>Example defining and testing a new model.</p>
+<dt><a class="reference download internal" download="" href="_downloads/3dbddda7f577417b5e7a6a8ec6c72695/noise.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.noise</span></code></a></dt><dd><span class="target" id="module-examples.noise"></span><p>Example demonstrating approaches for adding and handling model noise</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -140,7 +140,16 @@ Events can represent end of life (EOL), end of mission (EOM), warning thresholds
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/e3c96fc1e21c9f4f92da1c6f0d5aa6b1/visualize.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.visualize</span></code></a></dt><dd><span class="target" id="module-examples.visualize"></span><p>Example of Visualization Module.</p>
+<dt><a class="reference download internal" download="" href="_downloads/1b9c2fb843346c9087fbd3fb7ca4c46b/dataset.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.dataset</span></code></a></dt><dd><span class="target" id="module-examples.dataset"></span><p>Example downloading and using a NASA prognostics dataset.</p>
+<p>In this example, a battery dataset is downloaded from the NASA PCoE data repository. This dataset is then accessed and plotted.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference download internal" download="" href="_downloads/e3c96fc1e21c9f4f92da1c6f0d5aa6b1/visualize.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.visualize</span></code></a></dt><dd><span class="target" id="module-examples.visualize"></span><p>Example demonstrating the Visualization Module.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -156,7 +165,7 @@ Events can represent end of life (EOL), end of mission (EOM), warning thresholds
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/53c56dafff5ac24df6f52b033faa7c70/param_est.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.param_est</span></code></a></dt><dd><span class="target" id="module-examples.param_est"></span><p>Example of the model parameter estimation feature.</p>
+<dt><a class="reference download internal" download="" href="_downloads/53c56dafff5ac24df6f52b033faa7c70/param_est.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.param_est</span></code></a></dt><dd><span class="target" id="module-examples.param_est"></span><p>Example demonstrating the model parameter estimation feature.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -172,7 +181,7 @@ Events can represent end of life (EOL), end of mission (EOM), warning thresholds
 </dl>
 </li>
 <li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/3ab1ce4a9c259f09af0b9b8621d5ebe3/state_limits.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.state_limits</span></code></a></dt><dd><span class="target" id="module-examples.state_limits"></span><p>Example demonstrating ways to use state limits.</p>
+<dt><a class="reference download internal" download="" href="_downloads/3ab1ce4a9c259f09af0b9b8621d5ebe3/state_limits.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.state_limits</span></code></a></dt><dd><span class="target" id="module-examples.state_limits"></span><p>Example demonstrating when and how to identify model state limits.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -197,7 +206,7 @@ Events can represent end of life (EOL), end of mission (EOM), warning thresholds
 </ul>
 </section>
 <section id="model-specific-examples">
-<h2>Model Specific examples<a class="headerlink" href="#model-specific-examples" title="Permalink to this headline">¶</a></h2>
+<h2>Model-Specific Examples<a class="headerlink" href="#model-specific-examples" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><dl>
 <dt><a class="reference download internal" download="" href="_downloads/04d44be63878c426c67e43fe15b5b6e7/sim_battery_eol.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_battery_eol</span></code></a></dt><dd><span class="target" id="module-examples.sim_battery_eol"></span><p>Example of a battery being simulated for a set period of time and then till threshold is met.</p>
@@ -223,19 +232,24 @@ Events can represent end of life (EOL), end of mission (EOM), warning thresholds
 </dd>
 </dl>
 </li>
+<li><dl>
+<dt><a class="reference download internal" download="" href="_downloads/a91a8b7d0eec6e8ab4f00ef2efcc2900/sim_powertrain.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim_powertrain</span></code></a></dt><dd><span class="target" id="module-examples.sim_powertrain"></span><p>Example of a powertrain being simulated for a set amount of time.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</dd>
+</dl>
+</li>
 </ul>
 </section>
 <section id="extending">
 <h2>Extending<a class="headerlink" href="#extending" title="Permalink to this headline">¶</a></h2>
-<p>There are two methods for creating new models: 1. Implementing a new subclass of the base model class (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>) or 2. use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>). These methods are described more below.</p>
-<section id="subclass-method">
-<h3>1. Subclass Method<a class="headerlink" href="#subclass-method" title="Permalink to this headline">¶</a></h3>
-<p>The first method for creating a new prog_model is by creating a new subclass of <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> is described below:</p>
+<p>You can create new models by creating a new subclass of <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> is described below:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">prog_models.</span></span><span class="sig-name descname"><span class="pre">PrognosticsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prog_models.</span></span><span class="sig-name descname"><span class="pre">PrognosticsModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.PrognosticsModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general time-variant state space model of system degradation behavior.</p>
-<p>The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equations.</p>
+<p>The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.</p>
 <p>A Model also has a parameters structure, which contains fields for various model parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Keyword Arguments</dt>
@@ -252,11 +266,11 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#prog_models.ProgModelTypeError" title="prog_models.ProgModelTypeError"><strong>ProgModelTypeError</strong></a><strong>, </strong><a class="reference internal" href="exceptions.html#prog_models.ProgModelInputException" title="prog_models.ProgModelInputException"><strong>ProgModelInputException</strong></a><strong>, </strong><a class="reference internal" href="exceptions.html#prog_models.ProgModelException" title="prog_models.ProgModelException"><strong>ProgModelException</strong></a> – </p>
+<dd class="field-even"><p><strong>ProgModelTypeError</strong><strong>, </strong><strong>ProgModelInputException</strong><strong>, </strong><strong>ProgModelException</strong> – </p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p>m = PrognosticsModel({‘process_noise’: 3.2})</p>
+<p>m = PrognosticsModel(process_noise = 3.2)</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.is_vectorized">
 <span class="sig-name descname"><span class="pre">is_vectorized</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.is_vectorized" title="Permalink to this definition">¶</a></dt>
@@ -346,9 +360,9 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="prog_models.PrognosticsModel.observables_keys">
-<span class="sig-name descname"><span class="pre">observables_keys</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.observables_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>Identifiers for each observable</p>
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.performance_metric_keys">
+<span class="sig-name descname"><span class="pre">performance_metric_keys</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.performance_metric_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifiers for each performance metric</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>List[str], optional</p>
@@ -367,17 +381,44 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.StateContainer">
+<span class="sig-name descname"><span class="pre">StateContainer</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.StateContainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for state container - used for representing state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DictLikeMatrixWrapper</p>
+</dd>
+</dl>
 </dd></dl>
 
-<p>To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code>, replacing the methods with logic defining your specific model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.OutputContainer">
+<span class="sig-name descname"><span class="pre">OutputContainer</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.OutputContainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for output container - used for representing output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DictLikeMatrixWrapper</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prog_models.PrognosticsModel.InputContainer">
+<span class="sig-name descname"><span class="pre">InputContainer</span></span><a class="headerlink" href="#prog_models.PrognosticsModel.InputContainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for input container - used for representing input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DictLikeMatrixWrapper</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>To generate a new model, create a new class for your model that inherits from this class. Alternatively, you can copy the template <a class="reference download internal" download="" href="_downloads/322a9249992e6c1d385f3a49efd66300/prog_model_template.py"><code class="xref download docutils literal notranslate"><span class="pre">prog_model_template.ProgModelTemplate</span></code></a>, replacing the methods with logic defining your specific model.</p>
 <p>The analysis and simulation tools defined in <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> will then work with your new model.</p>
 <p>See <a class="reference download internal" download="" href="_downloads/e4947713746e05efe1e55cf84e8ac3f8/new_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model</span></code></a> for an example of this approach.</p>
-</section>
-<section id="model-generator-method">
-<h3>2. Model Generator Method<a class="headerlink" href="#model-generator-method" title="Permalink to this headline">¶</a></h3>
-<p>The second way to generate a new model is using the model generator method, <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a> for more detail.</p>
-<p>See <a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a> for an example of this approach.</p>
-</section>
 </section>
 <section id="updates-in-v1-2-mini-release">
 <h2>Updates in V1.2 (Mini-Release)<a class="headerlink" href="#updates-in-v1-2-mini-release" title="Permalink to this headline">¶</a></h2>
@@ -506,10 +547,10 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 <section id="tips">
 <h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., ‘SOH_50’) override the event_state and threshold_met equations to also predict that additional state</p></li>
+<li><p>To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., ‘SOH_50’) override the event_state and threshold_met equations to also predict that additional state.</p></li>
 <li><p>If you’re only doing diagnostics without prognostics- just define a next_state equation with no change of state and don’t perform prediction. The state estimator can still be used to estimate if any of the events have occured.</p></li>
-<li><p>Sudden events use a binary event_state (1=healthy, 0=failed)</p></li>
-<li><p>You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 (‘event 2’: event_1 and [OTHER LOGIC])</p></li>
+<li><p>Sudden events use a binary event_state (1=healthy, 0=failed).</p></li>
+<li><p>You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 (‘event 2’: event_1 and [OTHER LOGIC]).</p></li>
 </ul>
 </section>
 </section>
@@ -537,7 +578,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 <li class="toctree-l2"><a class="reference internal" href="#installing">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#model-specific-examples">Model Specific examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-specific-examples">Model-Specific Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-2-mini-release">Updates in V1.2 (Mini-Release)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-1">Updates in V1.1</a></li>
@@ -547,9 +588,10 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_server">ProgServer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide &amp; Project Plan</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/nasa/prog_models">GitHub</a></li>
 </ul>
 

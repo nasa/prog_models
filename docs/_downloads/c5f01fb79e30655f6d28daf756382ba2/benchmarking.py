@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of benchmarking models. 
+Example benchmarking the computational efficiency of models. 
 """
 
 from timeit import timeit
@@ -25,7 +25,7 @@ def run_example():
             i = 2
         else:
             i = 3
-        return {'i': i}
+        return batt.InputContainer({'i': i})
 
     # Step 3: Benchmark simulation for 600 seconds
     print('Benchmarking:')
