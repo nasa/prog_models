@@ -1136,6 +1136,9 @@ class PrognosticsModel(ABC):
         Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). \n
         """
 
+        if method != 'dmd':
+            raise ProgModelInputException(f"Method {method} is not supported. DMD is currently the only method available.")
+
         # Configure
         config = { # Defaults
             'save_freq': 1.0, 
@@ -1185,11 +1188,16 @@ class PrognosticsModel(ABC):
                 inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
                 inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
 
-            states_data = []
-            inputs_data = [] 
-            for iter_dataT in range(len(time_data_interp)):
-                states_data.append(self.StateContainer({key: states_data_interp[key][iter_dataT] for key in states_data_interp.keys()}))
-                inputs_data.append(self.InputContainer({key: inputs_data_interp[key][iter_dataT] for key in inputs_data_interp.keys()}))
+            states_data = [
+                self.StateContainer({
+                    key: value[iter_dataT] for key, value in states_data_interp.items()
+                }) for iter_dataT in range(len(time_data_interp))
+                ]
+            inputs_data = [
+                self.InputContainer({
+                    key: value[iter_dataT] for key, value in inputs_data_interp.items()
+                }) for iter_dataT in range(len(time_data_interp))
+                ]
 
             times = time_data_interp.tolist()
             states = SimResult(time_data_interp,states_data)
@@ -1267,9 +1275,9 @@ class PrognosticsModel(ABC):
         # Cut data to user-defined length 
         if config['trim_data_to'] != 1:
             for iter3 in range(len(load_functions)):
-                min_index = round(len(time_list[iter3])*(config['trim_data_to'])) 
-                x_list[iter3] = x_list[iter3][:,0:min_index]
-                xprime_list[iter3] = xprime_list[iter3][:,0:min_index]
+                trim_index = round(len(time_list[iter3])*(config['trim_data_to'])) 
+                x_list[iter3] = x_list[iter3][:,0:trim_index]
+                xprime_list[iter3] = xprime_list[iter3][:,0:trim_index]
      
         # Convert lists of datasets into arrays, sequentially stacking data in the horizontal direction
         x_mat = np.hstack((x_list[:]))
