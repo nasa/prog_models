@@ -1116,7 +1116,9 @@ class PrognosticsModel(ABC):
             List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
         events: list, optional
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
-        
+        stability_tol: int, optional
+            Value that determines the tolerance for DMD matrix stability\n
+
         Returns
         -------
         SurrogateModel(): class
@@ -1130,7 +1132,8 @@ class PrognosticsModel(ABC):
         -------
         This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
         DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
-        In general, the approximation is less accurate if the DMD matrix is unstable. \n
+        In general, the approximation is less accurate if the DMD matrix is unstable. 
+        Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). \n
         """
 
         # Configure
@@ -1140,7 +1143,8 @@ class PrognosticsModel(ABC):
             'states': self.states,
             'inputs': self.inputs,
             'outputs': self.outputs,
-            'events': self.events
+            'events': self.events,
+            'stability_tol': 1e-05
         }
         config.update(kwargs)
 
@@ -1227,8 +1231,8 @@ class PrognosticsModel(ABC):
             xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
 
             # Save DMD matrices
-            for iter in range(len(times)-1): 
-                time_now = times[iter] + np.divide(config['save_freq'],2) 
+            for iter, time in enumerate(times[:-1]): 
+                time_now = time + np.divide(config['save_freq'],2) 
                 load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
                 if len(config['inputs']) != len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
                     for key in self.inputs:
@@ -1289,7 +1293,7 @@ class PrognosticsModel(ABC):
         
         if sum(eig_val>1) != 0:
             for check_stability in range(len(eig_val)):
-                if eig_val[check_stability]>1 and eig_val[check_stability]-1>1e-05:
+                if eig_val[check_stability]>1 and eig_val[check_stability]-1>config['stability_tol']:
                     warn("The DMD matrix is unstable, may result in poor approximation.")
 
         from .linear_model import LinearModel
