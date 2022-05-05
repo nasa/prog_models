@@ -1314,13 +1314,30 @@ class TestModels(unittest.TestCase):
         def future_load(t, x=None):
             return {}
         event = 'impact'
-        m = ThrownObject(process_noise_dist = 'none')
-        # Testing drag of 0
-        m.parameters['cd'] = 0
-        simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+        m_nd = ThrownObject(process_noise_dist = 'none')
+        
+        # Create no drag model ('cd' = 0)
+        m_nd.parameters['cd'] = 0
+        simulated_results_nd = m_nd.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+        # Create default drag model ('cd' = 0.007)
+        m_df = ThrownObject(process_noise_dist = 'none')
+        simulated_results_df = m_df.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+        # Create high drag model ('cd' = 1.0)
+        m_hi = ThrownObject(process_noise_dist = 'none')
+        m_hi.parameters['cd'] = 1
+        simulated_results_hi = m_hi.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
 
-        self.assertEqual(simulated_results.times, [0.0, 1.0049999999999897, 2.0049999999999684, 3.004999999999947, 4.004999999999926, 5.000000000000082, 6.000000000000238, 7.000000000000394, 8.00000000000055, 8.210000000000509])
-        self.assertEqual(simulated_results.states, [{'x': 1.83, 'v': 40.0}, {'x': 37.10047499999988, 'v': 30.14094999999977}, {'x': 62.36094999999954, 'v': 20.33094999999954}, {'x': 77.81142499999903, 'v': 10.520949999999509}, {'x': 83.45189999999856, 'v': 0.7109499999995263}, {'x': 79.32762499999808, 'v': -9.050000000000475}, {'x': 65.39714999999765, 'v': -18.860000000000454}, {'x': 41.65667499999709, 'v': -28.670000000000684}, {'x': 8.106199999996281, 'v': -38.48000000000091}, {'x': -0.1857602500039149, 'v': -40.54010000000096}])
+        # Test no drag simulated results different from default
+        self.assertNotEqual(simulated_results_nd.times, simulated_results_df.times)
+        self.assertNotEqual(simulated_results_nd.states, simulated_results_df.states)
+
+        # Test high drag simulated results different from default
+        self.assertNotEqual(simulated_results_hi.times, simulated_results_df.times)
+        self.assertNotEqual(simulated_results_hi.states, simulated_results_df.states)
+
+        # Test high drag simulated results different from no drag
+        self.assertNotEqual(simulated_results_hi.times, simulated_results_nd.times)
+        self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
 
 # This allows the module to be executed directly
 def run_tests():
