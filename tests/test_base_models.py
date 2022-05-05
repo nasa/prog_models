@@ -1310,6 +1310,18 @@ class TestModels(unittest.TestCase):
         self.assertEqual(output_c1, output_c2)
         self.assertListEqual(list(output_c1.keys()), m.outputs)
 
+    def test_thrown_object_drag(self):
+        def future_load(t, x=None):
+            return {}
+        event = 'impact'
+        m = ThrownObject(process_noise_dist = 'none')
+        # Testing drag of 0
+        m.parameters['cd'] = 0
+        simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+
+        self.assertEqual(simulated_results.times, [0.0, 1.0049999999999897, 2.0049999999999684, 3.004999999999947, 4.004999999999926, 5.000000000000082, 6.000000000000238, 7.000000000000394, 8.00000000000055, 8.210000000000509])
+        self.assertEqual(simulated_results.states, [{'x': 1.83, 'v': 40.0}, {'x': 37.10047499999988, 'v': 30.14094999999977}, {'x': 62.36094999999954, 'v': 20.33094999999954}, {'x': 77.81142499999903, 'v': 10.520949999999509}, {'x': 83.45189999999856, 'v': 0.7109499999995263}, {'x': 79.32762499999808, 'v': -9.050000000000475}, {'x': 65.39714999999765, 'v': -18.860000000000454}, {'x': 41.65667499999709, 'v': -28.670000000000684}, {'x': 8.106199999996281, 'v': -38.48000000000091}, {'x': -0.1857602500039149, 'v': -40.54010000000096}])
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
