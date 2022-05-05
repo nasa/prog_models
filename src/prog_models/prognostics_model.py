@@ -1134,20 +1134,11 @@ class PrognosticsModel(ABC):
         DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
         In general, the approximation is less accurate if the DMD matrix is unstable. 
         Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). \n
-        
-        
         """
-
-        # Generate Data to train surrogate model: 
 
         # Configure
         config = { # Defaults
-            't0': 0.0,
-            'dt': 1.0, 
             'save_freq': 1.0, 
-            'horizon': 1e100, # Default horizon (in s), essentially inf
-            'print': False,
-            'progress': False,
             'trim_data_to': 1,
             'states': self.states,
             'inputs': self.inputs,
@@ -1174,12 +1165,12 @@ class PrognosticsModel(ABC):
         xprime_list = []
         time_list = []
 
+        # Generate Data to train surrogate model: 
         for iter_load, load_fcn_now in enumerate(load_functions):
-            # Print status
             print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
 
             # Simulate to threshold 
-            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **config)
+            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, first_output = first_output, threshold_keys = threshold_keys, **config)
         
             # Interpolate results to time step of save_freq
             time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
@@ -1251,17 +1242,19 @@ class PrognosticsModel(ABC):
                 states_now = states[iter].matrix 
                 states_next = states[iter+1].matrix 
   
-                x_mat_temp[:,iter] = np.vstack((
-                            states_now,
-                            outputs[iter].matrix,
-                            np.array([list(event_states[iter].values())]).T,
-                            np.array([[load_now[key] for key in load_now.keys()]]))
-                            )[:,0] 
-                xprime_mat_temp[:,iter] = np.vstack((
-                            states_next,
-                            outputs[iter+1].matrix,
-                            np.array([list(event_states[iter+1].values())]).T)
-                            )[:,0] 
+                stack = (
+                        states_now,
+                        outputs[iter].matrix,
+                        np.array([list(event_states[iter].values())]).T,
+                        np.array([[load_now[key] for key in load_now.keys()]])
+                    )
+                x_mat_temp[:,iter] = np.vstack(tuple(v for v in stack if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no input)
+                stack2 = (
+                    states_next,
+                    outputs[iter+1].matrix,
+                    np.array([list(event_states[iter+1].values())]).T
+                )
+                xprime_mat_temp[:,iter] = np.vstack(tuple(v for v in stack2 if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no output)
                 
             # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
             x_list.append(x_mat_temp)
@@ -1285,13 +1278,6 @@ class PrognosticsModel(ABC):
         # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
         dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))
 
-        # Check for stability of dmd_matrix
-        eig_val, eig_vec = np.linalg.eig(dmd_matrix[:,0:-1])
-        if sum(eig_val>1) != 0:
-            for check_stability in range(len(eig_val)):
-                if eig_val[check_stability]>1 and eig_val[check_stability]-1>config['stability_tol']:
-                    warn("The DMD matrix is unstable, may result in poor approximation.")
-
         # Save size of states, inputs, outputs, event_states, and current instance of PrognosticsModel
         num_states = len(states[0].matrix)
         num_inputs = len(inputs[0].matrix)
@@ -1300,11 +1286,20 @@ class PrognosticsModel(ABC):
         num_total = num_states + num_outputs + num_event_states 
         prog_model = self
         dmd_dt = config['save_freq']
+        process_noise_temp = {key: 0 for key in prog_model.events}  # Process noise for event states is zero
+
+        # Check for stability of dmd_matrix
+        eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-num_inputs if num_inputs > 0 else None])            
+        
+        if sum(eig_val>1) != 0:
+            for check_stability in range(len(eig_val)):
+                if eig_val[check_stability]>1 and eig_val[check_stability]-1>config['stability_tol']:
+                    warn("The DMD matrix is unstable, may result in poor approximation.")
 
         from .linear_model import LinearModel
         
-        class SurrogateModelDMD(LinearModel):
 
+        class SurrogateModelDMD(LinearModel):
             """
             A subclass of LinearModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
             
@@ -1331,7 +1326,6 @@ class PrognosticsModel(ABC):
             """
 
             # Default parameters: set process_noise and measurement_noise to be defined based on PrognosticsModel values
-            process_noise_temp = {key: 0 for key in prog_model.events}
             default_parameters = {
                 'process_noise': {**prog_model.parameters['process_noise'],**prog_model.parameters['measurement_noise'],**process_noise_temp},
                 'measurement_noise': prog_model.parameters['measurement_noise']
@@ -1345,7 +1339,7 @@ class PrognosticsModel(ABC):
                 C[iter1,num_states+iter1] = 1 
             F = np.zeros((num_event_states,num_total))
             for iter2 in range(num_event_states):
-                F[0,num_states+num_outputs+iter2] = 1 
+                F[iter2,num_states+num_outputs+iter2] = 1 
 
             states = states_dmd + outputs_dmd + events_dmd
             inputs = inputs_dmd
@@ -1353,15 +1347,13 @@ class PrognosticsModel(ABC):
             events = events_dmd
 
             def initialize(self, u=None, z=None):
-
                 x = prog_model.initialize(u,z)
                 x.update(prog_model.output(x))
                 x.update(prog_model.event_state(x))
 
                 return self.StateContainer(x)
 
-            def next_state(self, x, u, dt):   
-
+            def next_state(self, x, u, _):   
                 x.matrix = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
                 
                 return x   
@@ -1388,58 +1380,48 @@ class PrognosticsModel(ABC):
 
                 if config['save_freq'] == dmd_dt and config['save_pts'] == []: 
                     # In this case, the user wants what the DMD approximation returns 
-                    results_interp = results
+                    return results
                 else: 
                     # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
                     # Define time vector based on user specifications
                     time_basic = [results.times[0], results.times[-1]]
-                    if config['save_freq'] == [] and config['save_pts'] == []:
-                        time_interp = time_basic
-                    elif config['save_freq'] == [] and config['save_pts'] != []:
-                        time_basic.extend(config['save_pts'])
-                        time_interp = sorted(time_basic)
-                    elif config['save_freq'] != [] and config['save_pts'] == []:
+                    time_basic.extend(config['save_pts'])                       
+                    if config['save_freq'] != None:
+                        # Add Save Frequency
                         time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
                         time_basic.extend(time_array.tolist())
-                        time_interp = sorted(time_basic)
-                    else: 
-                        time_basic.extend(config['save_pts'])
-                        time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
-                        time_basic.extend(time_array.tolist())
-                        time_interp = sorted(time_basic)
+                    time_interp = sorted(time_basic)
 
-                    # Interpolate: 
+                    # Interpolate States
                     states_dict_temp = {}
-                    inputs_dict_temp = {}
-                    for iter_interp in range(len(self.states)):
-                        states_name = self.states[iter_interp]
+                    for states_name in self.states:
                         states_list_temp = [results.states[iter1a][states_name] for iter1a in range(len(results.states))]
                         states_dict_temp[states_name] = interp1d(results.times,states_list_temp)(time_interp)
+                    states_interp = [
+                        self.StateContainer({key: state[i] for key, state in states_dict_temp.items()})
+                        for i in range(len(time_interp))
+                    ]
                         
-                    for iter_interp2 in range(len(self.inputs)):
-                        inputs_name = self.inputs[iter_interp2]
+                    # Interpolate Inputs
+                    inputs_dict_temp = {}
+                    for inputs_name in self.inputs:
                         inputs_list_temp = [results.inputs[iter1a][inputs_name] for iter1a in range(len(results.inputs))]
                         inputs_dict_temp[inputs_name] = interp1d(results.times,inputs_list_temp)(time_interp)
-
-                    states_interp = []
-                    inputs_interp = []
-                    for iter2 in range(len(time_interp)):
-                        states_interp.append(self.StateContainer({key: states_dict_temp[key][iter2] for key in states_dict_temp.keys()}))
-                        inputs_interp.append(self.InputContainer({key: inputs_dict_temp[key][iter2] for key in inputs_dict_temp.keys()}))
+                    inputs_interp = [
+                        self.InputContainer({key: input[i] for key, input in inputs_dict_temp.items()}) for i in range(len(time_interp))
+                    ]
 
                     states = SimResult(time_interp,states_interp)
                     inputs = SimResult(time_interp,inputs_interp)
-                    outputs = LazySimResult(self.output, time_interp, states_interp) # SimResult(time_interp,outputs_interp)
-                    event_states = LazySimResult(self.event_state, time_interp, states_interp) #SimResult(time_interp,events_interp)
+                    outputs = LazySimResult(self.output, time_interp, states_interp)
+                    event_states = LazySimResult(self.event_state, time_interp, states_interp)
 
-                    results_interp = self.SimulationResults(
+                    return self.SimulationResults(
                         time_interp,
                         inputs,
                         states,
                         outputs,
                         event_states
                     )
-
-                return results_interp
                 
         return SurrogateModelDMD()
