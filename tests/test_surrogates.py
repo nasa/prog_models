@@ -52,7 +52,23 @@ class TestSurrogate(unittest.TestCase):
         self.assertListEqual(surrogate.outputs, m.outputs)
         self.assertListEqual(surrogate.events, m.events)
 
-        result = m.simulate_to_threshold(load_eqn)
+        options = {
+            'threshold_keys': 'impact',
+            'save_freq': 0.25,
+            'dt': 0.25
+        }
+        result = m.simulate_to_threshold(load_eqn, **options)
+        surrogate_results = surrogate.simulate_to_threshold(load_eqn, **options)
+        self.assertAlmostEqual(surrogate_results.times[-1], result.times[-1], delta=0.26)
+        for i in range(min(len(result.times), len(surrogate_results.times))):
+            self.assertDictEqual(surrogate_results.inputs[i], surrogate_results.inputs[i])
+            self.assertAlmostEqual(surrogate_results.states[i]['x'], result.states[i]['x'], delta=8)
+            self.assertEqual(surrogate_results.states[i]['x'], surrogate_results.outputs[i]['x'])
+            self.assertAlmostEqual(surrogate_results.states[i]['v'], result.states[i]['v'], delta=1)
+            self.assertAlmostEqual(surrogate_results.states[i]['falling'], result.event_states[i]['falling'], delta=0.1)
+            self.assertEqual(surrogate_results.states[i]['falling'], surrogate_results.event_states[i]['falling'])
+            self.assertAlmostEqual(surrogate_results.states[i]['impact'], result.event_states[i]['impact'], delta=0.1)
+            self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
     def test_surrogate_use_error_cases(self):
         m = ThrownObject()
