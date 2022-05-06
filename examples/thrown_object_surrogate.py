@@ -11,6 +11,7 @@ def run_example():
     ### Example 1: Standard DMD Application 
     ## Step 1: Create a model object
     m = ThrownObject(process_noise = 0, measurement_noise = 0)
+    m.parameters['cd'] = 0.01
 
     ## Step 2: Define future loading functions for training data 
     # Here, we define two specific loading profiles. These could also be generated programmatically, for as many loading profiles as desired 
@@ -24,7 +25,7 @@ def run_example():
     # Note: here dt is less than save_freq. This means the model will iterate forward multiple steps per saved point.
     # This is commonly done to ensure accuracy. 
     options_surrogate = {
-        'save_freq': 0.1, # For DMD, this value is the time step for which the surrogate model is generated
+        'save_freq': 0.25, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
         'threshold_keys': 'impact',
         'states': ['v']
@@ -36,8 +37,9 @@ def run_example():
     ## Step 4: Use surrogate model 
     # Simulation options for implementation of surrogate model
     options_sim = {
-        'save_freq': 0.1, # Frequency at which results are saved, or equivalently time step in results    
-        'threshold_keys': 'impact'
+        'save_freq': 0.25, # Frequency at which results are saved, or equivalently time step in results    
+        'threshold_keys': 'impact',
+        'dt': 0.25
     }
     options_hf = {
         'dt': 0.1,
@@ -51,7 +53,8 @@ def run_example():
 
     # Simulate to threshold using DMD approximation
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
-    high_fidelity_results = m.simulate_to_threshold(future_loading, **options_hf)
+    # high_fidelity_results = m.simulate_to_threshold(future_loading, **options_hf)
+    high_fidelity_results = m.simulate_to_threshold(future_loading, **options_sim)
 
     # Plot results
     simulated_results.event_states.plot(title='Surrogate Model Event States')
