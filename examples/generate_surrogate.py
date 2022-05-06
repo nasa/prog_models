@@ -4,10 +4,11 @@
 """
 Example of generating a Dynamic Mode Decomposition surrogate model using the battery model 
 """
-# from prog_models.models import BatteryCircuit as Battery
-# VVV Uncomment this to use Electro Chemistry Model VVV
-# from prog_models.models import BatteryElectroChem as Battery
-from prog_models.models import BatteryElectroChemEOD as Battery
+
+from prog_models.models import BatteryElectroChem as Battery
+# VVV Uncomment this to use Battery Circuit Model VVV
+# from prog_models.models import Battery Circuit as Battery
+
 import matplotlib.pyplot as plt
 
 def run_example(): 
@@ -82,6 +83,11 @@ def run_example():
     # Simulate to threshold using DMD approximation
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
 
+    # Calculate Error
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)/len(simulated_results.times)
+    print('Example 1 MSE:',MSE)
+    # Not a very good approximation
+
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 1 Input')
     simulated_results.outputs.plot(ylabel = 'Predicted Outputs (temperature and voltage)',title='Example 1 Predicted Outputs')
@@ -110,6 +116,10 @@ def run_example():
 
     # Simulate to threshold using DMD approximation 
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+
+    # Calculate Error
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)/len(simulated_results.times)
+    print('Example 2 MSE:',MSE)
 
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 2 Input')
@@ -147,6 +157,11 @@ def run_example():
     # Simulate to threshold using DMD approximation
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
 
+    # Calculate Error
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)/len(simulated_results.times)
+    print('Example 3 MSE:',MSE)
+
+    # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
     simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
     simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
