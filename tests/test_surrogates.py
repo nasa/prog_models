@@ -62,7 +62,7 @@ class TestSurrogate(unittest.TestCase):
         surrogate_results = surrogate.simulate_to_threshold(load_eqn, **options)
         self.assertAlmostEqual(surrogate_results.times[-1], result.times[-1], delta=0.26)
         for i in range(min(len(result.times), len(surrogate_results.times))):
-            self.assertDictEqual(surrogate_results.inputs[i], surrogate_results.inputs[i])
+            self.assertEqual(surrogate_results.inputs[i], surrogate_results.inputs[i])
             self.assertAlmostEqual(surrogate_results.states[i]['x'], result.states[i]['x'], delta=8)
             self.assertEqual(surrogate_results.states[i]['x'], surrogate_results.outputs[i]['x'])
             self.assertAlmostEqual(surrogate_results.states[i]['v'], result.states[i]['v'], delta=1)
