@@ -84,7 +84,7 @@ def run_example():
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
 
     # Calculate Error
-    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)/len(simulated_results.times)
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)
     print('Example 1 MSE:',MSE)
     # Not a very good approximation
 
@@ -116,10 +116,6 @@ def run_example():
 
     # Simulate to threshold using DMD approximation 
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
-
-    # Calculate Error
-    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)/len(simulated_results.times)
-    print('Example 2 MSE:',MSE)
 
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 2 Input')
@@ -158,7 +154,7 @@ def run_example():
     simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
 
     # Calculate Error
-    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)/len(simulated_results.times)
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)
     print('Example 3 MSE:',MSE)
 
     # Plot results
