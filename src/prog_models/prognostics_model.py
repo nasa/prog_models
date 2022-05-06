@@ -1040,7 +1040,7 @@ class PrognosticsModel(ABC):
             z_obs = self.output(x)
             err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
 
-        return err_total
+        return err_total/len(times)
     
     def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
