@@ -46,6 +46,7 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({})
         
         surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact')
+        self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, m.states + m.outputs + m.events + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
