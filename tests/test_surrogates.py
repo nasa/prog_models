@@ -148,7 +148,7 @@ class TestSurrogate(unittest.TestCase):
                 self.assertAlmostEqual(surrogate_results.states[i][state], result.states[i][state], delta=max(result.states[i][state]*STATE_DELTA_PERCENT, 0.25))
             for event in m.events:
                 self.assertAlmostEqual(surrogate_results.event_states[i][event], result.event_states[i][event], delta=0.1)
-            self.assertAlmostEqual(surrogate_results.outputs[i]['v'], result.outputs[i]['v'], delta=0.75)
+            self.assertAlmostEqual(surrogate_results.outputs[i]['v'], result.outputs[i]['v'], delta=1)
     
     def test_surrogate_subsets(self):
         m = ThrownObject()
