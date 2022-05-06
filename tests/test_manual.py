@@ -58,6 +58,10 @@ class TestManual(unittest.TestCase):
        136.,  28.,  38.,  20.,  85.,  55., 128., 137.,  82.,  59., 117.,
         20.]))
 
+    def test_dataset_example(self):
+        from examples import dataset
+        dataset.run_example()
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
