@@ -1169,16 +1169,28 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'save_pts' is not a valid input for DMD Surrogate Model.")
         if not isinstance(config['trim_data_to'], Number) or config['trim_data_to']>1 or config['trim_data_to']<=0:
             raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
-        if not all([x in self.inputs for x in config['inputs']]):
-            raise ProgModelInputException(f"Invalid 'inputs' input value ({config['inputs']}), must be a subset of the model's inputs ({self.inputs}).")
-        if not all([x in self.states for x in config['states']]):
-            raise ProgModelInputException(f"Invalid 'states' input value ({config['states']}), must be a subset of the model's states ({self.states}).")
-        if not all([x in self.outputs for x in config['outputs']]):
-            raise ProgModelInputException(f"Invalid 'outputs' input value ({config['outputs']}), must be a subset of the model's states ({self.outputs}).")
-        if not all([x in self.events for x in config['events']]):
-            raise ProgModelInputException(f"Invalid 'events' input value ({config['events']}), must be a subset of the model's states ({self.events}).")
         if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
             raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
+
+        if isinstance(config['inputs'], str):
+            config['inputs'] = [config['inputs']]
+        if not all([x in self.inputs for x in config['inputs']]):
+            raise ProgModelInputException(f"Invalid 'inputs' input value ({config['inputs']}), must be a subset of the model's inputs ({self.inputs}).")
+        
+        if isinstance(config['states'], str):
+            config['states'] = [config['states']]
+        if not all([x in self.states for x in config['states']]):
+            raise ProgModelInputException(f"Invalid 'states' input value ({config['states']}), must be a subset of the model's states ({self.states}).")
+
+        if isinstance(config['outputs'], str):
+            config['outputs'] = [config['outputs']]
+        if not all([x in self.outputs for x in config['outputs']]):
+            raise ProgModelInputException(f"Invalid 'outputs' input value ({config['outputs']}), must be a subset of the model's states ({self.outputs}).")
+
+        if isinstance(config['events'], str):
+            config['events'] = [config['events']]
+        if not all([x in self.events for x in config['events']]):
+            raise ProgModelInputException(f"Invalid 'events' input value ({config['events']}), must be a subset of the model's states ({self.events}).")
 
         # Initialize lists to hold individual matrices
         x_list = []
