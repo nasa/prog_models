@@ -62,6 +62,10 @@ class TestManual(unittest.TestCase):
         from examples import dataset
         dataset.run_example()
 
+    def test_sim_battery_eol_example(self):
+        from examples import sim_battery_eol
+        sim_battery_eol.run_example()
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
