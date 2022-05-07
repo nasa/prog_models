@@ -1019,16 +1019,18 @@ class PrognosticsModel(ABC):
             inputs ([dict]): array of input dictionaries where input[x] corresponds to time[x]
             outputs ([dict]): array of output dictionaries where output[x] corresponds to time[x]
             kwargs: Configuration parameters, such as:\n
+             | x0 [dict]: Initial state
              | dt [double] : time step
 
         Returns:
             double: Total error
         """
         params = {
+            'x0': self.initialize(inputs[0], outputs[0]),
             'dt': 1e99
         }
         params.update(kwargs)
-        x = self.initialize(inputs[0], outputs[0])
+        x = params['x0']
         t_last = times[0]
         err_total = 0
 
@@ -1038,6 +1040,9 @@ class PrognosticsModel(ABC):
                 x = self.next_state(x, u, t_new-t_last)
                 t_last = t_new
             z_obs = self.output(x)
+            if any([np.isnan(z_i) for z_i in z_obs.values()]):
+                warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                break
             err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
 
         return err_total/len(times)
@@ -1107,7 +1112,8 @@ class PrognosticsModel(ABC):
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
         trim_data_to: int, optional
             Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-            e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n        
+            e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n   
+            Note: To trim data to a set time, use the 'horizon' parameter\n   
         states: list, optional
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
         inputs: list, optional

@@ -77,6 +77,9 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
 * :download:`examples.dataset <../examples/dataset.py>`
     .. automodule:: examples.dataset
     |
+* :download:`examples.generate_surrogate <../examples/generate_surrogate.py>`
+    .. automodule:: examples.generate_surrogate
+    |
 * :download:`examples.visualize <../examples/visualize.py>`
     .. automodule:: examples.visualize
     |

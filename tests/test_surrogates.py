@@ -81,7 +81,7 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
     def test_surrogate_basic_battery(self):
-        m = BatteryElectroChem(process_noise = 0, measurement_noise = 0)
+        m = BatteryElectroChemEOD(process_noise = 0)
         def future_loading_1(t, x=None):
             # Variable (piece-wise) future loading scheme 
             if (t < 500):
@@ -112,17 +112,20 @@ class TestSurrogate(unittest.TestCase):
         options_surrogate = {
             'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
             'dt': 0.1, # For DMD, this value is the time step of the training data
-            'trim_data_to': 0.7, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+            'states': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
+            'trim_data_to': 0.7, # Trim data to this fraction of the time series
+            'outputs': ['v'], # Define outputs to be included in surrogate model 
         }
 
-        surrogate = m.generate_surrogate(load_functions,**options_surrogate)
-        self.assertListEqual(surrogate.states, m.states + m.outputs + m.events)
+        surrogate = m.generate_surrogate(load_functions, **options_surrogate)
+        self.assertListEqual(surrogate.states, ['tb', 'Vsn', 'Vsp'] + options_surrogate['outputs'] + m.events)
         self.assertListEqual(surrogate.inputs, m.inputs)
-        self.assertListEqual(surrogate.outputs, m.outputs)
+        self.assertListEqual(surrogate.outputs, options_surrogate['outputs'])
         self.assertListEqual(surrogate.events, m.events)
 
         options_sim = {
-            'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
+            'save_freq': 1, # Frequency at which results are saved, or equivalently time step in results
+            'dt': 0.1,
         }
 
         # Define loading profile 
@@ -138,13 +141,11 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({'i': i})
 
         result = m.simulate_to_threshold(future_loading, **options_sim)
-        surrogate_results = surrogate.simulate_to_threshold(future_loading,**options_sim)
+        surrogate_results = surrogate.simulate_to_threshold(future_loading, **options_sim)
 
-        self.assertAlmostEqual(surrogate_results.times[-1], result.times[-1], delta=50)
+        self.assertAlmostEqual(surrogate_results.times[-1], result.times[-1], delta=250)
         MSE = m.calc_error(surrogate_results.times, surrogate_results.inputs, surrogate_results.outputs)
-        self.assertLess(MSE, 300000)
-
-        # Intermediate states dont match very well - skip tests
+        self.assertLess(MSE, 0.02) # Pretty good approx
     
     def test_surrogate_subsets(self):
         m = ThrownObject()
