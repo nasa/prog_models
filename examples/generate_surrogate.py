@@ -5,9 +5,9 @@
 Example of generating a Dynamic Mode Decomposition surrogate model using the battery model 
 """
 
-from prog_models.models import BatteryElectroChem as Battery
+from prog_models.models import BatteryElectroChemEOD as Battery
 # VVV Uncomment this to use Battery Circuit Model VVV
-# from prog_models.models import Battery Circuit as Battery
+# from prog_models.models import BatteryCircuit as Battery
 
 import matplotlib.pyplot as plt
 
