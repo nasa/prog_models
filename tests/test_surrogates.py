@@ -33,6 +33,10 @@ class TestSurrogate(unittest.TestCase):
         with self.assertRaises(ProgModelInputException):
             m.generate_surrogate([load_eqn], inputs = ['invalid'])
         with self.assertRaises(ProgModelInputException):
+            m.generate_surrogate([load_eqn], outputs = ['invalid'])
+        with self.assertRaises(ProgModelInputException):
+            m.generate_surrogate([load_eqn], outputs = ['invalid', 'x'])    
+        with self.assertRaises(ProgModelInputException):
             m.generate_surrogate([load_eqn], events = ['invalid'])
         with self.assertRaises(ProgModelInputException):
             m.generate_surrogate([load_eqn], events = ['falling', 'impact', 'invalid'])
