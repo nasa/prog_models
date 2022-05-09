@@ -121,4 +121,3 @@ class PrognosticsModelParameters(UserDict):
         if key in self:
             updates = callback(self[key])
             self.update(updates)
-
