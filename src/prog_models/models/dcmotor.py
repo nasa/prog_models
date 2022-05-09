@@ -25,13 +25,13 @@ def backemf(theta):
     theta *= RAD_TO_DEG # convert rad to deg
     if 0. <= theta <= 60:
         return (1, -1, -(1/30)*theta+1)
-    elif 60 < theta <= 120:
+    if 60 < theta <= 120:
         return (1, (1/30)*(theta-60)-1, -1)
-    elif 120 < theta <= 180:
+    if 120 < theta <= 180:
         return (-(1/30)*(theta-120)+1, 1, -1)
-    elif 180 < theta <= 240:
+    if 180 < theta <= 240:
         return (-1, 1, (1/30)*(theta-180)-1)
-    elif 240 < theta <= 300:
+    if 240 < theta <= 300:
         return (-1, -(1/30)*(theta-240)+1, 1)
     return ((1/30)*(theta-300)-1, -1, 1)
 
