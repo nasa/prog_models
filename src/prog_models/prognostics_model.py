@@ -1409,8 +1409,11 @@ class PrognosticsModel(ABC):
                     'save_freq': dmd_dt,
                     'dt': dmd_dt
                 }
+                kwargs_sim = kwargs.copy()
+                kwargs_sim.update(kwargs_temp)
+
                 # Simulate to threshold at DMD time step
-                results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_temp)
+                results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_sim)
                 
                 # Interpolate results to be at user-desired time step
                 # Default parameters 
