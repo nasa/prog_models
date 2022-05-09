@@ -1289,7 +1289,7 @@ class PrognosticsModel(ABC):
                         states_now,
                         outputs[i].matrix,
                         np.array([list(event_states[i].values())]).T,
-                        np.array([[load_now[key] for key in load_now.keys()]])
+                        np.array([[load_now[key]] for key in load_now.keys()])
                     )
                 x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no input)
                 stack2 = (
