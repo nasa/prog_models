@@ -12,7 +12,7 @@ def run_example():
     ### Example 1: Standard DMD Application 
     ## Step 1: Create a model object
     m = ThrownObject(process_noise = 0, measurement_noise = 0)
-    m.parameters['cd'] = 1.5
+    m.parameters['cd'] = 0.1
 
     ## Step 2: Define future loading functions for training data 
     # Here, we define two specific loading profiles. These could also be generated programmatically, for as many loading profiles as desired 
@@ -106,7 +106,7 @@ def run_example():
 
 def run_comparison(): 
     
-    drag_vec = [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1]
+    drag_vec = [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.145, 0.25, 0.5, 0.75, 1, 1.3, 1.5, 1.8, 2, 2.3, 2.5, 2.8, 3]
     rmse_impact = []
     rmse_falling = []
     rmse_position = []
