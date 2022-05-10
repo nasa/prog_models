@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Datasets &#8212; Prognostics Models Python Package 1.2.2 documentation</title>
+    <title>Datasets &#8212; Prognostics Models Python Package 1.3.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -59,20 +59,23 @@
 <dd class="field-odd"><p><strong>batt_id</strong> (<em>str</em>) – Battery name from dataset (RW1-28)</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Battery not in dataset (should be RW1-28)</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – Battery not in dataset (should be RW1-28)</p></li>
+<li><p><strong>ValueError</strong> – Battery id must be a string or int</p></li>
+<li><p><strong>ConnectionError</strong> – Failed to download data. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you’re using the latest version of prog_models.</p></li>
+</ul>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>(description, data)</dt><dd><p>0: description of the data.
-1: List of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are (‘relativeTime’, ‘current’ (amps), ‘voltage’, ‘temperature’ (°C)) in that order.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-odd"><p>Data and description as a tuple (description, data), where the data is a list of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are (‘relativeTime’, ‘current’ (amps), ‘voltage’, ‘temperature’ (°C)) in that order.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>tuple[dict, list[np.array]]</p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.</p>
+</div>
 </dd></dl>
 
 </section>
@@ -83,43 +86,66 @@
 <span class="sig-prename descclassname"><span class="pre">prog_models.datasets.nasa_cmapss.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#prog_models.datasets.nasa_cmapss.load_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads data for one CMAPSS trajectory from NASA’s PCoE Dataset
 <a class="reference external" href="https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/">https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/</a></p>
-<dl class="simple">
-<dt>Data Set: 1</dt><dd><p>Train trjectories: 100
-Test trajectories: 100
-Conditions: ONE (Sea Level)
-Fault Modes: ONE (HPC Degradation)</p>
+<dl>
+<dt>Data Set: 1</dt><dd><div class="line-block">
+<div class="line">Train trajectories: 100</div>
+<div class="line">Test trajectories: 100</div>
+<div class="line">Conditions: ONE (Sea Level)</div>
+<div class="line">Fault Modes: ONE (HPC Degradation)</div>
+</div>
 </dd>
-<dt>Data Set: 2</dt><dd><p>Train trjectories: 260
-Test trajectories: 259
-Conditions: SIX
-Fault Modes: ONE (HPC Degradation)</p>
+<dt>Data Set: 2</dt><dd><div class="line-block">
+<div class="line">Train trajectories: 260</div>
+<div class="line">Test trajectories: 259</div>
+<div class="line">Conditions: SIX</div>
+<div class="line">Fault Modes: ONE (HPC Degradation)</div>
+</div>
 </dd>
-<dt>Data Set: 3</dt><dd><p>Train trjectories: 100
-Test trajectories: 100
-Conditions: ONE (Sea Level)
-Fault Modes: TWO (HPC Degradation, Fan Degradation)</p>
+<dt>Data Set: 3</dt><dd><div class="line-block">
+<div class="line">Train trajectories: 100</div>
+<div class="line">Test trajectories: 100</div>
+<div class="line">Conditions: ONE (Sea Level)</div>
+<div class="line">Fault Modes: TWO (HPC Degradation, Fan Degradation)</div>
+</div>
 </dd>
-<dt>Data Set: 4</dt><dd><p>Train trjectories: 248
-Test trajectories: 249
-Conditions: SIX
-Fault Modes: TWO (HPC Degradation, Fan Degradation)</p>
+<dt>Data Set: 4</dt><dd><div class="line-block">
+<div class="line">Train trajectories: 248</div>
+<div class="line">Test trajectories: 249</div>
+<div class="line">Conditions: SIX</div>
+<div class="line">Fault Modes: TWO (HPC Degradation, Fan Degradation)</div>
+</div>
 </dd>
 </dl>
-<p>DAta sets consists of multiple multivariate time series. Each data set is further divided into training and test subsets. Each time series is from a different engine ñ i.e., the data can be considered to be from a fleet of engines of the same type. Each engine starts with different degrees of initial wear and manufacturing variation which is unknown to the user. This wear and variation is considered normal, i.e., it is not considered a fault condition. There are three operational settings that have a substantial effect on engine performance. These settings are also included in the data. The data is contaminated with sensor noise.</p>
+<p>Data sets consists of multiple multivariate time series. Each data set is further divided into training and test subsets. Each time series is from a different engine i.e., the data can be considered to be from a fleet of engines of the same type. Each engine starts with different degrees of initial wear and manufacturing variation which is unknown to the user. This wear and variation is considered normal, i.e., it is not considered a fault condition. There are three operational settings that have a substantial effect on engine performance. These settings are also included in the data. The data is contaminated with sensor noise.</p>
 <p>The engine is operating normally at the start of each time series, and develops a fault at some point during the series. In the training set, the fault grows in magnitude until system failure. In the test set, the time series ends some time prior to system failure. The objective of the competition is to predict the number of remaining operational cycles before failure in the test set, i.e., the number of operational cycles after the last cycle that the engine will continue to operate. Also provided a vector of true Remaining Useful Life (RUL) values for the test data.</p>
-<p>Reference: A. Saxena, K. Goebel, D. Simon, and N. Eklund, ìDamage Propagation Modeling for Aircraft Engine Run-to-Failure Simulationî, in the Proceedings of the Ist International Conference on Prognostics and Health Management (PHM08), Denver CO, Oct 2008.</p>
+<p>Reference: A. Saxena, K. Goebel, D. Simon, and N. Eklund, Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation, in the Proceedings of the Ist International Conference on Prognostics and Health Management (PHM08), Denver CO, Oct 2008.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>dataset_id</strong> (<em>int</em>) – Dataset id</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Data not in dataset (should be 1-4)</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – Data not in dataset (should be 1-4)</p></li>
+<li><p><strong>ValueError</strong> – Data not in dataset (should be 1-4)</p></li>
+<li><p><strong>ConnectionError</strong> – Failed to download data. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you’re using the latest version of prog_models.</p></li>
+</ul>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>(train, test, results)</dt><dd><p>0: Training data from dataset,
-1: Testing data from dataset
-2: Time of end of life</p>
+<dd class="field-odd"><p><p>Tuple of data: training data, testing data, time of end of life)</p>
+<dl>
+<dt>Each row of the training and testing data is a snapshot of data taken during a single operational cycle, each column is a different variable. The columns correspond to:</dt><dd><ol class="arabic simple">
+<li><p>unit number</p></li>
+<li><p>time, in cycles</p></li>
+<li><p>operational setting 1</p></li>
+<li><p>operational setting 2</p></li>
+<li><p>operational setting 3</p></li>
+<li><p>sensor measurement  1</p></li>
+<li><p>sensor measurement  2</p></li>
+</ol>
+<p>…</p>
+<ol class="arabic simple" start="26">
+<li><p>sensor measurement  21</p></li>
+</ol>
 </dd>
 </dl>
 </p>
@@ -128,20 +154,10 @@ Fault Modes: TWO (HPC Degradation, Fan Degradation)</p>
 <dd class="field-even"><p>tuple[np.array, np.array, np.array]</p>
 </dd>
 </dl>
-<dl>
-<dt>The data are provided as a zip-compressed text file with 26 columns of numbers, separated by spaces. Each row is a snapshot of data taken during a single operational cycle, each column is a different variable. The columns correspond to:</dt><dd><ol class="arabic simple">
-<li><p>unit number</p></li>
-<li><p>time, in cycles</p></li>
-<li><p>operational setting 1</p></li>
-<li><p>operational setting 2</p></li>
-<li><p>operational setting 3</p></li>
-<li><p>sensor measurement  1</p></li>
-</ol>
-<p>7)      sensor measurement  2
-…
-26)     sensor measurement  26</p>
-</dd>
-</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.</p>
+</div>
 </dd></dl>
 
 </section>

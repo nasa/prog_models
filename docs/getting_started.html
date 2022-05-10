@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Getting Started &#8212; Prognostics Models Python Package 1.2.2 documentation</title>
+    <title>Getting Started &#8212; Prognostics Models Python Package 1.3.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -37,7 +37,7 @@
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/nasa/prog_models/HEAD"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" /></a>
 <p>The NASA Prognostics Center of Excellence (PCoE) Prognostics Models Package (prog_models) is a Python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems. It also provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components and can be used in conjunction with the Prognostics Algorithms Library to perform research in prognostics methods.</p>
-<p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (<a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel.generate_model" title="prog_models.PrognosticsModel.generate_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel.generate_model()</span></code></a>)</p>
+<p>The foundation of this package is the class <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a>. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model.</p>
 <section id="installing">
 <h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
 <section id="installing-from-pip-recommended">
@@ -51,7 +51,7 @@
 <h3>Installing Pre-Release Versions with GitHub<a class="headerlink" href="#installing-pre-release-versions-with-github" title="Permalink to this headline">¶</a></h3>
 <p>For users who would like to contribute to <cite>prog_models</cite> or would like to use pre-release features can do so using the ‘dev’ branch (or a feature branch) on the <a class="reference external" href="https://github.com/nasa/prog_models">prog_models GitHub repo</a>. This isn’t recommended for most users as this version may be unstable. To use this version, use the following commands:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/nasa/prog_models
-<span class="gp">$ </span><span class="nb">cd</span> prog_algs
+<span class="gp">$ </span><span class="nb">cd</span> prog_models
 <span class="gp">$ </span>git checkout dev
 <span class="gp">$ </span>pip install -e .
 </pre></div>
@@ -66,10 +66,10 @@
 <li><p><strong>event state</strong>: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called “State of Health” or “SOH”.</p></li>
 <li><p><strong>inputs</strong>: control applied to the system being modeled (e.g., current drawn from a battery).</p></li>
 <li><p><strong>outputs</strong>: measured sensor values from a system (e.g., voltage and temperature of a battery).</p></li>
-<li><p><strong>observables</strong>: performance characteristics of a system that are a function of system state, but are not directly measured.</p></li>
+<li><p><strong>performance metrics</strong>: performance characteristics of a system that are a function of system state, but are not directly measured.</p></li>
 <li><p><strong>states</strong>: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be.</p></li>
-<li><p><strong>process noise</strong>: stochastic process representing uncertainty in the model transition.</p></li>
-<li><p><strong>measurement noise</strong>: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects.</p></li>
+<li><p><strong>process noise</strong>: representing uncertainty in the model transition (e.g., model uncertainty).</p></li>
+<li><p><strong>measurement noise</strong>: representing uncertainty in the measurement process (e.g., sensor sensitivity, sensor misalignements, environmental effects).</p></li>
 </ul>
 </section>
 <section id="use">
@@ -78,15 +78,6 @@
 <ul>
 <li><dl>
 <dt><a class="reference download internal" download="" href="_downloads/2573c3db18f7a8b99d347500726179ab/sim.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.sim</span></code></a></dt><dd><span class="target" id="module-examples.sim"></span><p>Example of a battery being simulated for a set period of time and then till threshold is met.</p>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><a class="reference download internal" download="" href="_downloads/953db29c2e7f8e84bc7f8d74b9eb1c5a/model_gen.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.model_gen</span></code></a></dt><dd><span class="target" id="module-examples.model_gen"></span><p>Example generating models from constituent parts.</p>
-<p>The model used for this example is that of an object thrown into the air, predicting the impact event</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -143,6 +134,21 @@ Events can represent End of Life (EOL), End of Mission (EOM), warning thresholds
 <dt><a class="reference download internal" download="" href="_downloads/1b9c2fb843346c9087fbd3fb7ca4c46b/dataset.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.dataset</span></code></a></dt><dd><span class="target" id="module-examples.dataset"></span><p>Example downloading and using a NASA prognostics dataset.</p>
 <p>In this example, a battery dataset is downloaded from the NASA PCoE data repository. This dataset is then accessed and plotted.</p>
 <div class="line-block">
+<div class="line"><br /></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference download internal" download="" href="_downloads/b7b9435143e35d3d4e55cfd759cffb5a/generate_surrogate.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.generate_surrogate</span></code></a></dt><dd><span class="target" id="module-examples.generate_surrogate"></span><p>Example of generating a Dynamic Mode Decomposition surrogate model using the battery model</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference download internal" download="" href="_downloads/49fc06220b67092fe306464f6d6a16c9/linear_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.linear_model</span></code></a></dt><dd><span class="target" id="module-examples.linear_model"></span><div class="line-block">
 <div class="line"><br /></div>
 </div>
 </dd>
@@ -420,6 +426,31 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 <p>The analysis and simulation tools defined in <a class="reference internal" href="prognostics_model.html#prog_models.PrognosticsModel" title="prog_models.PrognosticsModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.PrognosticsModel</span></code></a> will then work with your new model.</p>
 <p>See <a class="reference download internal" download="" href="_downloads/e4947713746e05efe1e55cf84e8ac3f8/new_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.new_model</span></code></a> for an example of this approach.</p>
 </section>
+<section id="updates-in-v1-3">
+<h2>Updates in V1.3<a class="headerlink" href="#updates-in-v1-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Surrogate Models</strong> Added new feature to generate surrogate models automatically from prog_models. (See <a class="reference download internal" download="" href="_downloads/b7b9435143e35d3d4e55cfd759cffb5a/generate_surrogate.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.generate_surrogate</span></code></a> example)</p></li>
+<li><p><strong>New Example Models</strong> Added new <a class="reference internal" href="models.html#prog_models.models.DCMotor" title="prog_models.models.DCMotor"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.models.DCMotor</span></code></a>, <a class="reference internal" href="models.html#prog_models.models.ESC" title="prog_models.models.ESC"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.models.ESC</span></code></a>, and <a class="reference internal" href="models.html#prog_models.models.Powertrain" title="prog_models.models.Powertrain"><code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.models.Powertrain</span></code></a> models [Developed by NASA’s SWS Project]</p></li>
+<li><p><strong>Datasets</strong> Added new feature that allows users to access prognostic datasets programmatically (See <a class="reference download internal" download="" href="_downloads/1b9c2fb843346c9087fbd3fb7ca4c46b/dataset.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.dataset</span></code></a>)</p></li>
+<li><p>Added new <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.LinearModel</span></code> class - Linear Prognostics Models can be represented by a Linear Model. Similar to PrognosticsModels, LinearModels are created by subclassing the LinearModel class. Some algorithms will only work with Linear Models. See <a class="reference download internal" download="" href="_downloads/49fc06220b67092fe306464f6d6a16c9/linear_model.py"><code class="xref download docutils literal notranslate"><span class="pre">examples.linear_model</span></code></a> example for detail</p></li>
+<li><p>Added new StateContainer/InputContainer/OutputContainer objects for classes which allow for data access in matrix form and enforce expected keys.</p></li>
+<li><p>Added new metric for SimResult: <a href="#id1"><span class="problematic" id="id2">:function:`prog_models.sim_result.SimResult.monotonicity`</span></a>.</p></li>
+<li><p><a href="#id3"><span class="problematic" id="id4">:function:`prog_models.sim_result.SimResult.plot`</span></a> now automatically shows legends</p></li>
+<li><p>Added drag to <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.models.ThrownObject</span></code> model, making the model slightly non-linear</p></li>
+<li><p><cite>observables</cite> from previous releases are now called <cite>performance_metrics</cite></p></li>
+<li><p>model.simulate_to* now returns named tuple, allowing for access by property name (e.g., result.states)</p></li>
+<li><p>Updates to <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.sim_result.SimResult`</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">prog_models.sim_result.LazySimResult</span></code> for robustness</p></li>
+<li><p>Various performance improvements and bug fixes</p></li>
+</ul>
+<section id="note">
+<h3>Note<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h3>
+<p>Now input, states, and output should be represented by model.InputContainer, StateContainer, and OutputContainer, respectively</p>
+</section>
+<section id="id5">
+<h3>Note<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>Python 3.6 is no longer supported.</p>
+</section>
+</section>
 <section id="updates-in-v1-2-mini-release">
 <h2>Updates in V1.2 (Mini-Release)<a class="headerlink" href="#updates-in-v1-2-mini-release" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -580,6 +611,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
 <li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#model-specific-examples">Model-Specific Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extending">Extending</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-3">Updates in V1.3</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-2-mini-release">Updates in V1.2 (Mini-Release)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#updates-in-v1-1">Updates in V1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tips">Tips</a></li>

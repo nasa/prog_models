@@ -5,7 +5,7 @@ Getting Started
 
 The NASA Prognostics Center of Excellence (PCoE) Prognostics Models Package (prog_models) is a Python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems. It also provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components and can be used in conjunction with the Prognostics Algorithms Library to perform research in prognostics methods. 
 
-The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (:py:meth:`prog_models.PrognosticsModel.generate_model`)
+The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model.
 
 Installing
 -----------------------
@@ -25,7 +25,7 @@ For users who would like to contribute to `prog_models` or would like to use pre
 .. code-block:: console
 
     $ git clone https://github.com/nasa/prog_models
-    $ cd prog_algs
+    $ cd prog_models
     $ git checkout dev 
     $ pip install -e .
 
@@ -41,13 +41,13 @@ A few definitions to get started:
 
 * **outputs**: measured sensor values from a system (e.g., voltage and temperature of a battery).
 
-* **observables**: performance characteristics of a system that are a function of system state, but are not directly measured.
+* **performance metrics**: performance characteristics of a system that are a function of system state, but are not directly measured.
 
 * **states**: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be. 
 
-* **process noise**: stochastic process representing uncertainty in the model transition. 
+* **process noise**: representing uncertainty in the model transition (e.g., model uncertainty). 
 
-* **measurement noise**: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects.
+* **measurement noise**: representing uncertainty in the measurement process (e.g., sensor sensitivity, sensor misalignements, environmental effects).
 
 Use 
 ---
@@ -55,9 +55,6 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
 
 * :download:`examples.sim <../examples/sim.py>`
     .. automodule:: examples.sim
-    |
-* :download:`examples.model_gen <../examples/model_gen.py>`
-    .. automodule:: examples.model_gen
     |
 * :download:`examples.benchmarking <../examples/benchmarking.py>`
     .. automodule:: examples.benchmarking
@@ -76,6 +73,12 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
     |
 * :download:`examples.dataset <../examples/dataset.py>`
     .. automodule:: examples.dataset
+    |
+* :download:`examples.generate_surrogate <../examples/generate_surrogate.py>`
+    .. automodule:: examples.generate_surrogate
+    |
+* :download:`examples.linear_model <../examples/linear_model.py>`
+    .. automodule:: examples.linear_model
     |
 * :download:`examples.visualize <../examples/visualize.py>`
     .. automodule:: examples.visualize
@@ -124,6 +127,29 @@ To generate a new model, create a new class for your model that inherits from th
 The analysis and simulation tools defined in :class:`prog_models.PrognosticsModel` will then work with your new model. 
 
 See :download:`examples.new_model <../examples/new_model.py>` for an example of this approach.
+
+Updates in V1.3
+-----------------------
+* **Surrogate Models** Added new feature to generate surrogate models automatically from prog_models. (See :download:`examples.generate_surrogate <../examples/generate_surrogate.py>` example)
+* **New Example Models** Added new :class:`prog_models.models.DCMotor`, :class:`prog_models.models.ESC`, and :class:`prog_models.models.Powertrain` models [Developed by NASA's SWS Project]
+* **Datasets** Added new feature that allows users to access prognostic datasets programmatically (See :download:`examples.dataset <../examples/dataset.py>`)
+* Added new :class:`prog_models.LinearModel` class - Linear Prognostics Models can be represented by a Linear Model. Similar to PrognosticsModels, LinearModels are created by subclassing the LinearModel class. Some algorithms will only work with Linear Models. See :download:`examples.linear_model <../examples/linear_model.py>` example for detail
+* Added new StateContainer/InputContainer/OutputContainer objects for classes which allow for data access in matrix form and enforce expected keys. 
+* Added new metric for SimResult: :function:`prog_models.sim_result.SimResult.monotonicity`.
+* :function:`prog_models.sim_result.SimResult.plot` now automatically shows legends
+* Added drag to :class:`prog_models.models.ThrownObject` model, making the model slightly non-linear
+* `observables` from previous releases are now called `performance_metrics`
+* model.simulate_to* now returns named tuple, allowing for access by property name (e.g., result.states)
+* Updates to :class:`prog_models.sim_result.SimResult`` and :class:`prog_models.sim_result.LazySimResult` for robustness
+* Various performance improvements and bug fixes
+
+Note
+*****
+Now input, states, and output should be represented by model.InputContainer, StateContainer, and OutputContainer, respectively
+
+Note
+*****
+Python 3.6 is no longer supported.
 
 Updates in V1.2 (Mini-Release)
 ------------------------------
