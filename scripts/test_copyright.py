@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 import os
-COPYRIGHT_TAG = "Copyright ©" # String to check file lines for
+COPYRIGHT_TAG = "Copyright © 2021 United States Government as represented by the Administrator" # String to check file lines for
 
 def check_copyright(directory : str, invalid_files : list) -> bool:
     result = True
