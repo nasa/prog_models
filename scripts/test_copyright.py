@@ -2,6 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 import os
+COPYRIGHT_TAG = "Copyright ©" # String to check file lines for
 
 def check_copyright(directory : str, invalid_files : list) -> bool:
     result = True
@@ -16,8 +17,9 @@ def check_copyright(directory : str, invalid_files : list) -> bool:
         elif os.path.isfile(path) and path[-2:] == "py":
             file = open(path, 'r')
             copyright_met = False
+            # Iterate over lines in file, check each line against COPYRIGHT_TAG
             for line in file:
-                if "Copyright ©" in line: # File contains copyright, skip rest of lines
+                if COPYRIGHT_TAG in line: # File contains copyright, skip rest of lines
                     file.close()
                     copyright_met = True
                 if copyright_met:
@@ -30,7 +32,7 @@ def check_copyright(directory : str, invalid_files : list) -> bool:
     return result
 
 def main():
-    print("\n\nTesting Files for Copyright")
+    print("\n\nTesting Files for Copyright Information")
 
     root = '../prog_models'
     invalid_files = []
