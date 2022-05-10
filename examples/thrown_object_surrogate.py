@@ -29,7 +29,9 @@ def run_example():
         'save_freq': 0.1, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
         'threshold_keys': 'impact',
-        'states': ['v']
+        'states': ['v'],
+        'data_add_noise': True,
+        'data_noise_magnitude': 0.07 #1e-01
     }
 
     # Generate surrogate model  
@@ -106,7 +108,7 @@ def run_example():
 
 def run_comparison(): 
     
-    drag_vec = [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.145, 0.25, 0.5, 0.75, 1, 1.3, 1.5, 1.8, 2, 2.3, 2.5, 2.8, 3]
+    drag_vec = [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.145, 0.25, 0.5, 0.75, 1, 1.3, 1.5] #, 1.8, 2, 2.3, 2.5, 2.8, 3]
     rmse_impact = []
     rmse_falling = []
     rmse_position = []
@@ -131,7 +133,9 @@ def run_comparison():
             'save_freq': 0.1, # For DMD, this value is the time step for which the surrogate model is generated
             'dt': 0.1, # For DMD, this value is the time step of the training data
             'threshold_keys': 'impact',
-            'states': ['v']
+            'states': ['v'],
+            'data_add_noise': False,
+            'data_noise_magnitude': 0.07 #1e-01
         }
 
         # Generate surrogate model  

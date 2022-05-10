@@ -1118,6 +1118,10 @@ class PrognosticsModel(ABC):
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
         stability_tol: int, optional
             Value that determines the tolerance for DMD matrix stability\n
+        data_add_noise: bool, optional
+            True if noise is to be added to the training data to adjust for any linear dependence amoung states, False if not \n
+        data_noise_magnitude: int, optional
+            Noise added to training data is sampled from a standard normal distribution with magnitude data_noise_magnitude 
 
         Returns
         -------
