@@ -1118,6 +1118,8 @@ class PrognosticsModel(ABC):
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
         stability_tol: int, optional
             Value that determines the tolerance for DMD matrix stability\n
+        training_noise: int, optional
+            Noise added to the training data sampled from a standard normal distribution with magnitude training_noise \n
 
         Returns
         -------
@@ -1148,8 +1150,7 @@ class PrognosticsModel(ABC):
             'outputs': self.outputs,
             'events': self.events,
             'stability_tol': 1e-05,
-            'data_add_noise': True,
-            'data_noise_magnitude': 1e-02
+            'training_noise': 1e-05
         }
         config.update(kwargs)
 
@@ -1186,13 +1187,13 @@ class PrognosticsModel(ABC):
             for state_name in self.states:
                 states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
                 states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
-                if config['data_add_noise'] is True:
-                    states_data_interp[state_name] = states_data_interp[state_name] + np.random.randn(len(states_data_interp[state_name]))*config['data_noise_magnitude']
+                if config['training_noise'] != 0:
+                    states_data_interp[state_name] += np.random.randn(len(states_data_interp[state_name]))*config['training_noise']
             for input_name in self.inputs:
                 inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
                 inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
-                if config['data_add_noise'] is True:
-                    inputs_data_interp[input_name] = inputs_data_interp[input_name] + np.random.randn(len(inputs_data_interp[input_name]))*config['data_noise_magnitude']
+                if config['training_noise'] != 0:
+                    inputs_data_interp[input_name] += np.random.randn(len(inputs_data_interp[input_name]))*config['training_noise']
 
             states_data = [
                 self.StateContainer({
