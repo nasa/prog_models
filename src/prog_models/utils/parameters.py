@@ -123,7 +123,7 @@ class PrognosticsModelParameters(UserDict):
             self.update(updates)
 
     def compare(self, *args):
-        """Generate a table to compare the configuration of multiple models of the same type.
+        """Generate a table to compare the configuration of multiple models of the same type. Table is defined by each parameter per row, and each model per column.
         
         Args:
             *args (PrognosticsModelParameters):
