@@ -1374,7 +1374,8 @@ class PrognosticsModel(ABC):
             default_parameters = {
                 'process_noise': {**prog_model.parameters['process_noise'],**prog_model.parameters['measurement_noise'],**process_noise_temp},
                 'measurement_noise': prog_model.parameters['measurement_noise'],
-                'process_noise_dist': prog_model.parameters.get('process_noise_dist', 'normal')
+                'process_noise_dist': prog_model.parameters.get('process_noise_dist', 'normal'),
+                'measurement_noise_dist': prog_model.parameters.get('measurement_noise_dist', 'normal')
             }
 
             # Define appropriate matrices for LinearModel
