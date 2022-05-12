@@ -716,6 +716,14 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 </div>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This model is known to be sensitive to noise. The process noise and measurement noise should be set to low values.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Powertrain is added on top of any noise in the underlying esc and motor models. To update the esc or motor parameters, access m.esc.parameters and m.motor.paramters, respectively.</p>
+</div>
 </dd></dl>
 
 </section>
@@ -840,7 +848,7 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li
       <div class="clearer"></div>
     </div>
 
-Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
   </body>
 </html>

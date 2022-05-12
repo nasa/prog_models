@@ -7,7 +7,7 @@ Release Notes
 Updates in V1.3
 -----------------------
 * **Surrogate Models** Added initial draft of new feature to generate surrogate models automatically from :class:`prog_models.PrognosticsModel`. (See :download:`examples.generate_surrogate <../examples/generate_surrogate.py>` example). Initial implementation uses Dynamic Mode Decomposition. Additional Surrogate Model Generation approaches will be explored for future releases. [Developed by NASA's DRF Project]
-* **New Example Models** Added new :class:`prog_models.models.DCMotor`, :class:`prog_models.models.ESC`, and :class:`prog_models.models.Powertrain` models [Developed by NASA's SWS Project]
+* **New Example Models** Added new :class:`prog_models.models.DCMotor`, :class:`prog_models.models.ESC`, and :class:`prog_models.models.Powertrain` models (See :download:`examples.powertrain <../examples/powertrain.py>` example) [Developed by NASA's SWS Project]
 * **Datasets** Added new feature that allows users to access prognostic datasets programmatically (See :download:`examples.dataset <../examples/dataset.py>`)
 * Added new :class:`prog_models.LinearModel` class - Linear Prognostics Models can be represented by a Linear Model. Similar to PrognosticsModels, LinearModels are created by subclassing the LinearModel class. Some algorithms will only work with Linear Models. See :download:`examples.linear_model <../examples/linear_model.py>` example for detail
 * Added new StateContainer/InputContainer/OutputContainer objects for classes which allow for data access in matrix form and enforce expected keys. 
@@ -16,7 +16,7 @@ Updates in V1.3
 * Added drag to :class:`prog_models.models.ThrownObject` model, making the model non-linear. Degree of nonlinearity can be effected using the model parameters (e.g., coefficient of drag cd).
 * `observables` from previous releases are now called `performance_metrics`
 * model.simulate_to* now returns named tuple, allowing for access by property name (e.g., result.states)
-* Updates to :class:`prog_models.sim_result.SimResult`` and :class:`prog_models.sim_result.LazySimResult` for robustness
+* Updates to :class:`prog_models.sim_result.SimResult` and :class:`prog_models.sim_result.LazySimResult` for robustness
 * Various performance improvements and bug fixes
 
 Note
