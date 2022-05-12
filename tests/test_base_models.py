@@ -1310,6 +1310,41 @@ class TestModels(unittest.TestCase):
         self.assertEqual(output_c1, output_c2)
         self.assertListEqual(list(output_c1.keys()), m.outputs)
 
+    def test_config_table(self):
+        keys = {
+            'states': ['a', 'b', 'c', 't'],
+            'inputs': ['i1', 'i2'],
+            'outputs': ['o1'],
+            'events': ['e1']
+        }
+
+        def initialize(u, z):
+            return {'a': 1, 'b': 3, 'c': -3.2, 't': 0}
+
+        def next_state(x, u, dt):
+            x['a']+= u['i1']*dt
+            x['c']-= u['i2']
+            x['t']+= dt
+            return x
+
+        def dx(x, u):
+            return {'a': u['i1'], 'b': 0, 'c': u['i2'], 't':1}
+
+        def output(x):
+            return {'o1': x['a'] + x['b'] + x['c']}
+
+        def event_state(x):
+            t = x['t']
+            return {'e1': max(1-t/5.0,0)}
+
+        def threshold_met(x):
+            t = x['t']
+            return {'e1': max(1-t/5.0,0) < 1e-6}
+
+        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn = next_state, event_state_eqn = event_state, threshold_eqn = threshold_met)
+        
+        m.parameters.compare()
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
