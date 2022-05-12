@@ -122,12 +122,20 @@ class PrognosticsModelParameters(UserDict):
             updates = callback(self[key])
             self.update(updates)
 
-    def compare(self, *args):
+    def compare(self, print_bool : bool = True, *args):
         """Generate a table to compare the configuration of multiple models of the same type. Table is defined by each parameter per row, and each model per column.
         
         Args:
             *args (PrognosticsModelParameters):
                 Additional model parameters to compare this PrognosticsModelParameters against.
         """
-        from .table import print_table_recursive
-        print_table_recursive(self.items())
+        # from .table import print_table_recursive
+        # print_table_recursive(self, 'TEST')
+        table = []
+        for k,v in self.items():
+            row = f'| {k} | {v} |'
+            for other in args:
+                row += f' {other[k]} |'
+            table.append(row)
+        if print_bool:
+            print(*table, sep='\n')
