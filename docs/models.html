@@ -64,6 +64,7 @@
 <li><p><a class="reference internal" href="#dc-motor" id="id13">DC Motor</a></p></li>
 <li><p><a class="reference internal" href="#esc" id="id14">ESC</a></p></li>
 <li><p><a class="reference internal" href="#powertrain" id="id15">Powertrain</a></p></li>
+<li><p><a class="reference internal" href="#thrownobject" id="id16">ThrownObject</a></p></li>
 </ul>
 </li>
 </ul>
@@ -718,6 +719,51 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 </dd></dl>
 
 </section>
+<section id="thrownobject">
+<h2><a class="toc-backref" href="#contents">ThrownObject</a><a class="headerlink" href="#thrownobject" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prog_models.models.ThrownObject">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prog_models.models.</span></span><span class="sig-name descname"><span class="pre">ThrownObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prog_models.models.ThrownObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple Non-Linear Model that similates an object thrown into the air with air resistance</p>
+<dl>
+<dt>Events (2)</dt><dd><div class="line-block">
+<div class="line">falling: The object is falling</div>
+<div class="line">impact: The object has hit the ground</div>
+</div>
+</dd>
+</dl>
+<p>Inputs/Loading: (0)</p>
+<dl>
+<dt>States: (2)</dt><dd><div class="line-block">
+<div class="line">x: Position in space (m)</div>
+<div class="line">v: Velocity in space (m/s)</div>
+</div>
+</dd>
+<dt>Outputs/Measurements: (1)</dt><dd><div class="line-block">
+<div class="line">x: Position in space (m)</div>
+</div>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Keyword Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>process_noise</strong> (<em>Optional</em><em>, </em><em>float</em><em> or </em><em>Dict</em><em>[</em><em>Srt</em><em>, </em><em>float</em><em>]</em>) – Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</p></li>
+<li><p><strong>process_noise_dist</strong> (<em>Optional</em><em>, </em><em>String</em>) – distribution for process noise (e.g., normal, uniform, triangular)</p></li>
+<li><p><strong>measurement_noise</strong> (<em>Optional</em><em>, </em><em>float</em><em> or </em><em>Dict</em><em>[</em><em>Srt</em><em>, </em><em>float</em><em>]</em>) – Measurement noise (applied in output eqn).
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</p></li>
+<li><p><strong>measurement_noise_dist</strong> (<em>Optional</em><em>, </em><em>String</em>) – distribution for measurement noise (e.g., normal, uniform, triangular)</p></li>
+<li><p><strong>g</strong> (<em>Optional</em><em>, </em><em>float</em>) – Acceleration due to gravity (m/s^2). Default is 9.81 m/s^2 (standard gravity)</p></li>
+<li><p><strong>thrower_height</strong> (<em>Optional</em><em>, </em><em>float</em>) – Height of the thrower (m). Default is 1.83 m</p></li>
+<li><p><strong>throwing_speed</strong> (<em>Optional</em><em>, </em><em>float</em>) – Speed at which the ball is thrown (m/s). Default is 40 m/s</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -748,15 +794,18 @@ output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
 <li class="toctree-l2"><a class="reference internal" href="#dc-motor">DC Motor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#esc">ESC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#powertrain">Powertrain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#thrownobject">ThrownObject</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="prognostics_model.html">Prognostics Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linear_model.html">Linear Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simresult.html">Simulation Result Data Structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_algs">ProgAlgs</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://nasa.github.io/prog_server">ProgServer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Developers Guide &amp; Project Plan</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/nasa/prog_models">GitHub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release.html">Release Notes</a></li>
 </ul>
 
 <div class="relations">

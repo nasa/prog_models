@@ -79,3 +79,7 @@ ESC
 Powertrain
 -------------------------------------------------------------
 .. autoclass:: prog_models.models.Powertrain
+
+ThrownObject
+-------------------------------------------------------------
+.. autoclass:: prog_models.models.ThrownObject
