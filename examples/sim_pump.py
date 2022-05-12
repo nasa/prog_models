@@ -41,6 +41,7 @@ def run_example():
         'print': True
     }
     simulated_results = pump.simulate_to_threshold(future_loading, first_output, **config)
+    simulated_monotonicity = simulated_results.states.monotonicity()
 
     # Step 4: Plot Results
     from prog_models.visualize import plot_timeseries

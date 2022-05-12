@@ -111,6 +111,9 @@ def run_example():
     print('\nThis event that occured first: ', event_occured)
     # It falls before it hits the gorund, obviously
 
+    # Metrics can be analyzed from the simulation results.
+    print('\nMonotonicity: ', simulated_results.states.monotonicity())
+
 # This allows the module to be executed directly 
 if __name__=='__main__':
     run_example()

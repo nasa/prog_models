@@ -30,7 +30,8 @@ def run_example():
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, print = True, progress = True)
+    simulated_results = batt.simulate_to(200, future_loading, print = True, progress = True)
+    simulated_monotonicity = simulated_results.states.monotonicity()
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -41,7 +42,8 @@ def run_example():
         'print': True,
         'progress': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
+    simulated_results = batt.simulate_to_threshold(future_loading, **options)
+    simulated_monotonicity = simulated_results.states.monotonicity()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
