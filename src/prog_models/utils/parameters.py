@@ -122,3 +122,12 @@ class PrognosticsModelParameters(UserDict):
             updates = callback(self[key])
             self.update(updates)
 
+    def compare(self, *args):
+        """Generate a table to compare the configuration of multiple models of the same type.
+        
+        Args:
+            *args (PrognosticsModelParameters):
+                Additional model parameters to compare this PrognosticsModelParameters against.
+        """
+        pass
+
