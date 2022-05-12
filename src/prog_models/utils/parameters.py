@@ -129,5 +129,5 @@ class PrognosticsModelParameters(UserDict):
             *args (PrognosticsModelParameters):
                 Additional model parameters to compare this PrognosticsModelParameters against.
         """
-        pass
-
+        from .table import print_table_recursive
+        print_table_recursive(self.items())
