@@ -85,7 +85,7 @@ def load_data(dataset_id : int) -> tuple:
         try:
             response = requests.get(URL, allow_redirects=True)
         except requests.exceptions.RequestException as e: # handle chain of errors
-            raise ConnectionError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.")
+            raise ConnectionError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
         # Unzip response
         cache = zipfile.ZipFile(io.BytesIO(response.content))
