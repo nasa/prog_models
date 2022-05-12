@@ -59,7 +59,7 @@ class ESC(PrognosticsModel):
 
     Model Configuration Parameters:
         | sawtooth_freq :       Frequency of PWM signal [Hz], default value in default_parameters.
-        | x0 :                  Initial state-vector containing v_a, v_b, v_c and t.
+        | x0 :                  Initial state containing v_a, v_b, v_c and t.
     """
     default_parameters = {
         'sawtooth_freq': 16000, # Hz
