@@ -66,15 +66,16 @@
 </ul>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Data and description as a tuple (description, data), where the data is a list of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are (‘relativeTime’, ‘current’ (amps), ‘voltage’, ‘temperature’ (°C)) in that order.</p>
+<dd class="field-odd"><p>Data and description as a tuple (description, data), where the data is a list of pandas DataFrames such that data[i] is the data for run i, corresponding with details[i], above. The columns of the dataframe are (‘relativeTime’, ‘current’ (amps), ‘voltage’, ‘temperature’ (°C)) in that order.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>tuple[dict, list[np.array]]</p>
+<dd class="field-even"><p>tuple[dict, list[pd.DataFrame]]</p>
 </dd>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.</p>
+<p>In all other instances of connection error or failed downloading, please submit an issue on the repository page (<a class="reference external" href="https://github.com/nasa/prog_models/issues">https://github.com/nasa/prog_models/issues</a>) for our team to look into.</p>
 </div>
 </dd></dl>
 
@@ -133,7 +134,7 @@
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><p>Tuple of data: training data, testing data, time of end of life)</p>
 <dl>
-<dt>Each row of the training and testing data is a snapshot of data taken during a single operational cycle, each column is a different variable. The columns correspond to:</dt><dd><ol class="arabic simple">
+<dt>Each row of the training and testing data is a snapshot of data taken during a single operational cycle, each column is a different variable. The columns in the pandas dataframe correspond to:</dt><dd><ol class="arabic simple">
 <li><p>unit number</p></li>
 <li><p>time, in cycles</p></li>
 <li><p>operational setting 1</p></li>
@@ -151,12 +152,13 @@
 </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>tuple[np.array, np.array, np.array]</p>
+<dd class="field-even"><p>tuple[pd.DataFrame, pd.DataFrame, np.array]</p>
 </dd>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.</p>
+<p>In all other instances of connection error or failed downloading, please submit an issue on the repository page (<a class="reference external" href="https://github.com/nasa/prog_models/issues">https://github.com/nasa/prog_models/issues</a>) for our team to look into.</p>
 </div>
 </dd></dl>
 

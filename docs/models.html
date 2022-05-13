@@ -648,7 +648,15 @@ Asia Pacific Conference of the Prognostics and Health Management Society, 2017. 
 </dd>
 <dt>Model Configuration Parameters:</dt><dd><div class="line-block">
 <div class="line">sawtooth_freq :       Frequency of PWM signal [Hz], default value in default_parameters.</div>
-<div class="line">x0 :                  Initial state-vector containing v_a, v_b, v_c and t.</div>
+<div class="line">x0 :                  Initial state containing v_a, v_b, v_c and t.</div>
+<div class="line">process_noise :       Process noise (applied at dx/next_state).
+Can be number (e.g., .2) applied to every state, a dictionary of values for each
+state (e.g., {‘x1’: 0.2, ‘x2’: 0.3}), or a function (x) -&gt; x</div>
+<div class="line">process_noise_dist :  Optional, distribution for process noise (e.g., normal, uniform, triangular)</div>
+<div class="line">measurement_noise :   Measurement noise (applied in output eqn)
+Can be number (e.g., .2) applied to every output, a dictionary of values for each
+output (e.g., {‘z1’: 0.2, ‘z2’: 0.3}), or a function (z) -&gt; z</div>
+<div class="line">measurement_noise_dist :  Optional, distribution for measurement noise (e.g., normal, uniform, triangular)</div>
 </div>
 </dd>
 </dl>

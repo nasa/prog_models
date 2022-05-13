@@ -518,7 +518,10 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dd><p>Generate a surrogate model to approximate the higher-fidelity model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>load_functions</strong> (<em>list of callable functions</em>) – Each index is a callable loading function of (t, x = None) -&gt; z used to predict future loading (output) at a given time (t) and state (x)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>load_functions</strong> (<em>list of callable functions</em>) – Each index is a callable loading function of (t, x = None) -&gt; z used to predict future loading (output) at a given time (t) and state (x)</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – String indicating surrogate modeling method to be used</p></li>
+</ul>
 </dd>
 <dt class="field-even">Keyword Arguments</dt>
 <dd class="field-even"><ul class="simple">
@@ -531,7 +534,7 @@ e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the s
 </p></li>
 <li><p><strong>states</strong> (<em>list</em><em>, </em><em>optional</em>) – List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
 <li><p><strong>inputs</strong> (<em>list</em><em>, </em><em>optional</em>) – List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
-<li><p><strong>output</strong> (<em>list</em><em>, </em><em>optional</em>) – List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
+<li><p><strong>outputs</strong> (<em>list</em><em>, </em><em>optional</em>) – List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
 <li><p><strong>events</strong> (<em>list</em><em>, </em><em>optional</em>) – List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
 <li><p><strong>stability_tol</strong> (<em>int</em><em>, </em><em>optional</em>) – Value that determines the tolerance for DMD matrix stability</p></li>
 </ul>
@@ -550,7 +553,7 @@ e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the s
 <p>This is a first draft of a surrogate model generation using Dynamic Mode Decomposition.
 DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step.
 In general, the approximation is less accurate if the DMD matrix is unstable.
-Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system’s dimensions through SVD).</p>
+Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system’s dimensions through SVD). Further functionalities will be included in future releases.</p>
 </div>
 </dd></dl>
 
