@@ -33,7 +33,8 @@ def run_example():
     # Print states
     print('Example 1')
     for i, state in enumerate(simulated_results.states):
-        print('State ', i, ': ', state)
+        print(f'State {i}: {state}')
+    print(f'Monotonicity: {simulated_results.states.monotonicity()}')
     print()
 
     # Let's try setting x to a number outside of its bounds
@@ -46,6 +47,7 @@ def run_example():
     print('Example 2')
     for i, state in enumerate(simulated_results.states):
         print('State ', i, ': ', state)
+    print(f'Monotonicity: {simulated_results.states.monotonicity()}')
     print()
 
     # Let's see what happens when the objects speed aproaches its limit
@@ -55,7 +57,8 @@ def run_example():
     m.parameters['g'] = -50000000
     
     print('Example 3')
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True, progress = False)
+    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=0.3, x = x0, print = True, progress = False)
+    simulated_results_monotoncity = simulated_results.states.monotonicity()
 
     # Note that the limits can also be applied manually using the apply_limits function
     print('limiting states')

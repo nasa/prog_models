@@ -39,7 +39,14 @@ def run_example():
         'threshold_keys': ['InsufficientCapacity'],  # Simulate to InsufficientCapacity
         'print': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
+    simulated_results = batt.simulate_to_threshold(future_loading, **options)
+
+    # Step 3: Evaluate results from simulation
+    # Results and calculatable metrics are available for further analysis
+    print('\n\n------------------------------------------------')
+    print('Results and Metrics\n\n')
+    states_monotonicity = simulated_results.states.monotonicity()
+    print(states_monotonicity)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

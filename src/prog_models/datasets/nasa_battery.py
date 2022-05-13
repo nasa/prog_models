@@ -61,6 +61,8 @@ def load_data(batt_id : str) -> tuple:
 
     Note:
         Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.
+    
+        In all other instances of connection error or failed downloading, please submit an issue on the repository page (https://github.com/nasa/prog_models/issues) for our team to look into.
     """
     if isinstance(batt_id, int):
         # Convert to string
@@ -78,7 +80,7 @@ def load_data(batt_id : str) -> tuple:
         try:
             response = requests.get(url, allow_redirects=True)
         except requests.exceptions.RequestException as e: # handle chain of errors
-            raise ConnectionRefusedError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.")
+            raise ConnectionRefusedError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
         # Unzip response
         cache[url] = zipfile.ZipFile(io.BytesIO(response.content))
