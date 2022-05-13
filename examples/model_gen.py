@@ -76,7 +76,7 @@ def run_example():
     event = 'impact'
     simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
     
-    # Step 9: Analyze metrics
+    # Step 9: Analyze results using metrics
     simulated_monotonicity = simulated_results.event_states.monotonicity()
     print(f'Event state monotonicity: {simulated_monotonicity}')
 
