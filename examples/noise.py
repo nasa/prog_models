@@ -85,18 +85,6 @@ def run_example():
     print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
     print('\t- impact time: {}s'.format(simulated_results.times[-1]))
 
-    # Ex8: Performing the above examples, but calculating monotonicity for the simulation results.
-    def apply_proportional_process_noise(self, x, dt = 1):
-        x['v'] -= dt*0.5*x['v']
-        return x
-    model_config = {'process_noise': apply_proportional_process_noise}
-    m = ThrownObject(**model_config)
-    print('\nExample with monotonicity')
-    simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
-    print('\t- states: {}'.format(['{}s: {}'.format(round(t,2), x) for (t,x) in zip(simulated_results.times, simulated_results.states)])) 
-    print('\t- impact time: {}s'.format(simulated_results.times[-1]))
-    print('\t- monotonicity: {}'.format(simulated_results.states.monotonicity()))
-
 # This allows the module to be executed directly 
 if __name__=='__main__':
     run_example()
