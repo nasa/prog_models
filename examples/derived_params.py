@@ -22,9 +22,9 @@ def run_example():
     # Note: one or more parameters can be changed in these functions, whatever parameters are changed are returned in the dictionary
 
     # Step 2: Define the param callbacks
-    ThrownObject.param_callbacks = {
+    ThrownObject.param_callbacks.update({
             'thrower_height': [update_thrown_speed]
-        }  # Tell the derived callbacks feature to call this function when thrower_height changes.
+        })  # Tell the derived callbacks feature to call this function when thrower_height changes.
     # Note: Usually we would define this method within the class
     #  for this example, we're doing it separately to improve readability
     # Note2: You can also have more than one function be called when a single parameter is changed.

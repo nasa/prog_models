@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a sensitivity analysis on a new model. 
+Example performing a sensitivity analysis on a new model. 
 """
 
 # Deriv prog model was selected because the model can be described as x' = x + dx*dt
@@ -16,7 +16,7 @@ def run_example():
 
     # Step 2: Setup for simulation 
     def future_load(t, x=None):
-        return {}
+        return m.InputContainer({})
 
     # Step 3: Setup range on parameters considered
     thrower_height_range = np.arange(1.2, 2.1, 0.1)
@@ -26,8 +26,8 @@ def run_example():
     eods = np.empty(len(thrower_height_range))
     for (i, thrower_height) in zip(range(len(thrower_height_range)), thrower_height_range):
         m.parameters['thrower_height'] = thrower_height
-        (times, _, _, _, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], dt =1e-3, save_freq =10)
-        eods[i] = times[-1]
+        simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt =1e-3, save_freq =10)
+        eods[i] = simulated_results.times[-1]
 
     # Step 5: Analysis
     print('For a reasonable range of heights, impact time is between {} and {}'.format(round(eods[0],3), round(eods[-1],3)))
@@ -40,8 +40,8 @@ def run_example():
     eods = np.empty(len(throw_speed_range))
     for (i, throw_speed) in zip(range(len(throw_speed_range)), throw_speed_range):
         m.parameters['throwing_speed'] = throw_speed
-        (times, _, _, _, _) = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':1e-3, 'save_freq':10})
-        eods[i] = times[-1]
+        simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':1e-3, 'save_freq':10})
+        eods[i] = simulated_results.times[-1]
 
     print('\nFor a reasonable range of throwing speeds, impact time is between {} and {}'.format(round(eods[0],3), round(eods[-1],3)))
     sensitivity = (eods[-1]-eods[0])/(throw_speed_range[-1] - throw_speed_range[0])

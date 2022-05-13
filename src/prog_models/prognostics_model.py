@@ -1,145 +1,27 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from typing import Callable, List
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
 import numpy as np
+from scipy.interpolate import interp1d
 from copy import deepcopy
+import itertools
 from warnings import warn
-from collections import UserDict, abc
-import types
-from array import array
+from collections import abc, namedtuple
 from .sim_result import SimResult, LazySimResult
-
-
-class PrognosticsModelParameters(UserDict):
-    """
-    Prognostics Model Parameters - this class replaces a standard dictionary.
-    It includes the extra logic to process the different supported manners of defining noise.
-
-    Args:
-        model: PrognosticsModel for which the params correspond
-        dict_in: Initial parameters
-        callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
-    """
-    def __init__(self, model, dict_in = {}, callbacks = {}):
-        super().__init__()
-        self.__m = model
-        self.callbacks = {}
-        # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
-        for (key, value) in dict_in.items():
-            # Deepcopy is needed here to force copying when value is an object (e.g., dict)
-            self[key] = deepcopy(value)
-
-        # Add and run callbacks
-        # Has to be done here so the base parameters are all set 
-        self.callbacks = callbacks
-        for key in callbacks:
-            if key in self:
-                for callback in callbacks[key]:
-                    changes = callback(self)
-                    self.update(changes)
-
-    def __setitem__(self, key, value):
-        """Set model configuration, overrides dict.__setitem__()
-
-        Args:
-            key (string): configuration key to set
-            value: value to set that configuration value to
-
-        Raises:
-            ProgModelTypeError: Improper configuration for a model
-        """
-        super().__setitem__(key, value)
-
-        if key in self.callbacks:
-            for callback in self.callbacks[key]:
-                changes = callback(self)
-                self.update(changes) # Merge in changes
-        
-        if key == 'process_noise':
-            if callable(self['process_noise']):  # Provided a function
-                self.__m.apply_process_noise = types.MethodType(self['process_noise'], self.__m)
-            else:  # Not a function
-                # Process noise is single number - convert to dict
-                if isinstance(self['process_noise'], Number):
-                    self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
-                
-                # Process distribution type
-                if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update process noise distribution to custom
-                    if self['process_noise_dist'].lower() == "uniform":
-                        def uniform_process_noise(self, x, dt=1):
-                            return {key: x[key] + \
-                                dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states}
-                        self.__m.apply_process_noise = types.MethodType(uniform_process_noise, self.__m)
-                    elif self['process_noise_dist'].lower() == "triangular":
-                        def triangular_process_noise(self, x, dt=1):
-                            return {key: x[key] + \
-                                dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.states}
-                        self.__m.apply_process_noise = types.MethodType(triangular_process_noise, self.__m)
-                    else:
-                        raise ProgModelTypeError("Unsupported process noise distribution")
-                
-                # Make sure every key is present (single value already handled above)
-                if not all([key in self['process_noise'] for key in self.__m.states]):
-                    raise ProgModelTypeError("Process noise must have every key in model.states")
-        elif key == 'measurement_noise':
-            if callable(self['measurement_noise']):
-                self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
-            else:
-                # Process noise is single number - convert to dict
-                if isinstance(self['measurement_noise'], Number):
-                    self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
-                
-                # Process distribution type
-                if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in ["gaussian", "normal"]:
-                    # Update measurement noise distribution to custom
-                    if self['measurement_noise_dist'].lower() == "uniform":
-                        def uniform_noise(self, x):
-                            return {key: x[key] + \
-                                np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs}
-                        self.__m.apply_measurement_noise = types.MethodType(uniform_noise, self.__m)
-                    elif self['measurement_noise_dist'].lower() == "triangular":
-                        def triangular_noise(self, x):
-                            return {key: x[key] + \
-                                np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-                                    for key in self.outputs}
-                        self.__m.apply_measurement_noise = types.MethodType(triangular_noise, self.__m)
-                    else:
-                        raise ProgModelTypeError("Unsupported measurement noise distribution")
-                
-                # Make sure every key is present (single value already handled above)
-                if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
-                    raise ProgModelTypeError("Measurement noise must have ever key in model.states")
-
-    def register_derived_callback(self, key, callback):
-        """Register a new callback for derived parameters
-
-        Args:
-            key (string): key for which the callback is triggered
-            callback (function): callback function f(parameters) -> updates (dict)
-        """
-        if key in self.callbacks:
-            self.callbacks[key].append(callback)
-        else:
-            self.callbacks[key] = [callback]
-
-        # Run new callback
-        if key in self:
-            updates = callback(self[key])
-            self.update(updates)
+from .utils import ProgressBar
+from .utils.containers import DictLikeMatrixWrapper
+from .utils.parameters import PrognosticsModelParameters
 
 
 class PrognosticsModel(ABC):
     """
     A general time-variant state space model of system degradation behavior.
 
-    The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equations.
+    The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.
 
     A Model also has a parameters structure, which contains fields for various model parameters.
 
@@ -165,7 +47,7 @@ class PrognosticsModel(ABC):
 
     Example
     -------
-        m = PrognosticsModel({'process_noise': 3.2})
+        m = PrognosticsModel(process_noise = 3.2)
 
     Attributes
     ----------
@@ -185,10 +67,16 @@ class PrognosticsModel(ABC):
             Identifiers for each state
         outputs: List[str]
             Identifiers for each output
-        observables_keys: List[str], optional
-            Identifiers for each observable
+        performance_metric_keys: List[str], optional
+            Identifiers for each performance metric
         events: List[str], optional
             Identifiers for each event predicted 
+        StateContainer : DictLikeMatrixWrapper
+            Class for state container - used for representing state
+        OutputContainer : DictLikeMatrixWrapper
+            Class for output container - used for representing output
+        InputContainer : DictLikeMatrixWrapper
+            Class for input container - used for representing input
     """
     is_vectorized = False
 
@@ -206,9 +94,12 @@ class PrognosticsModel(ABC):
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
-    observables_keys = []  # Identifies for each observable
+    performance_metric_keys = []  # Identifies for each performance metric
     events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
+
+    observables_keys = performance_metric_keys # for backwards compatability        
+    SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
         if not hasattr(self, 'inputs'):
@@ -229,37 +120,64 @@ class PrognosticsModel(ABC):
             iter(self.outputs)
         except TypeError:
             raise ProgModelTypeError('model.outputs must be iterable')
+        
+        # Default params for any model
+        params = PrognosticsModel.default_parameters.copy()
 
-        self.parameters = PrognosticsModelParameters(self, self.__class__.default_parameters, self.param_callbacks)
+        # Add params specific to the model
+        params.update(self.__class__.default_parameters) 
+
+        # Add params specific passed via command line arguments
         try:
-            self.parameters.update(kwargs)
+            params.update(kwargs)
         except TypeError:
-            raise ProgModelTypeError("couldn't update parameters. `options` must be type dict (was {})".format(type(kwargs)))
+            raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
 
-        try:
-            if 'process_noise' not in self.parameters:
-                self.parameters['process_noise'] = 0.1
-            else:
-                self.parameters['process_noise'] = self.parameters['process_noise']         # To force  __setitem__
+        self.__setstate__(params)
 
-            if 'measurement_noise' not in self.parameters:
-                self.parameters['measurement_noise'] = 0.0
-            else:
-                self.parameters['measurement_noise'] = self.parameters['measurement_noise'] # To force  __setitem__
-        except Exception:
-            raise ProgModelTypeError('Model noise poorly configured')
-
-    def __eq__(self, other):
+    def __eq__(self, other : "PrognosticsModel") -> bool:
         """
         Check if two models are equal
         """
         return self.__class__ == other.__class__ and self.parameters == other.parameters
     
-    def __str__(self):
+    def __str__(self) -> str:
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
+
+    def __getstate__(self) -> dict:
+        return self.parameters.data
+
+    def __setstate__(self, state : dict) -> None:
+        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
+
+        self.n_inputs = len(self.inputs)
+        self.n_states = len(self.states)
+        self.n_events = len(self.events)
+        self.n_outputs = len(self.outputs)
+        self.n_performance = len(self.performance_metric_keys)
+
+        # Setup Containers 
+        # These containers should be used instead of dictionaries for models that use the internal matrix state
+        states = self.states
+        class StateContainer(DictLikeMatrixWrapper):
+            def __init__(self, data):
+                super().__init__(states, data)
+        self.StateContainer = StateContainer
+
+        inputs = self.inputs
+        class InputContainer(DictLikeMatrixWrapper):
+            def __init__(self, data):
+                super().__init__(inputs, data)
+        self.InputContainer = InputContainer
+
+        outputs = self.outputs
+        class OutputContainer(DictLikeMatrixWrapper):
+            def __init__(self, data):
+                super().__init__(outputs, data)
+        self.OutputContainer = OutputContainer
     
     @abstractmethod
-    def initialize(self, u = None, z = None) -> dict:
+    def initialize(self, u : dict = None, z :dict = None) -> dict:
         """
         Calculate initial state given inputs and outputs
 
@@ -287,7 +205,7 @@ class PrognosticsModel(ABC):
         """
         return {}
 
-    def apply_measurement_noise(self, z) -> dict:
+    def apply_measurement_noise(self, z : dict) -> dict:
         """
         Apply measurement noise to the measurement
 
@@ -313,13 +231,13 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return {key: z[key] \
+        return self.OutputContainer({key: z[key] \
             + np.random.normal(
                 0, self.parameters['measurement_noise'][key],
                 size=None if np.isscalar(z[key]) else len(z[key]))
-                for key in z.keys()}
+                for key in z.keys()})
         
-    def apply_process_noise(self, x, dt=1) -> dict:
+    def apply_process_noise(self, x : dict, dt : int =1) -> dict:
         """
         Apply process noise to the state
 
@@ -349,13 +267,13 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return {key: x[key] +
+        return self.StateContainer({key: x[key] +
                 dt*np.random.normal(
                     0, self.parameters['process_noise'][key],
                     size=None if np.isscalar(x[key]) else len(x[key]))
-                    for key in x.keys()}
+                    for key in x.keys()})
 
-    def dx(self, x, u):
+    def dx(self, x : dict, u : dict) -> dict:
         """
         Calculate the first derivative of state `x` at a specific time `t`, given state and input
 
@@ -393,7 +311,7 @@ class PrognosticsModel(ABC):
         """
         raise ProgModelException('dx not defined - please use next_state()')
         
-    def next_state(self, x, u, dt) -> dict: 
+    def next_state(self, x : dict, u : dict, dt : int) -> dict: 
         """
         State transition equation: Calculate next state
 
@@ -435,9 +353,9 @@ class PrognosticsModel(ABC):
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        return {key: x[key] + dx[key]*dt for key in dx.keys()}
+        return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
-    def apply_limits(self, x):
+    def apply_limits(self, x : dict) -> dict:
         """
         Apply state bound limits. Any state outside of limits will be set to the closest limit.
 
@@ -463,7 +381,7 @@ class PrognosticsModel(ABC):
         return x
 
     
-    def __next_state(self, x, u, dt) -> dict:
+    def __next_state(self, x : dict, u : dict, dt : int) -> dict:
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
 
@@ -504,14 +422,14 @@ class PrognosticsModel(ABC):
         """
         
         # Calculate next state and add process noise
-        next_state = self.apply_process_noise(self.next_state(x, u, dt))
+        next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
 
         # Apply Limits
         return self.apply_limits(next_state)
 
-    def observables(self, x) -> dict:
+    def performance_metrics(self, x : dict) -> dict:
         """
-        Calculate observables where
+        Calculate performance metrics where
 
         Parameters
         ----------
@@ -521,9 +439,9 @@ class PrognosticsModel(ABC):
         
         Returns
         -------
-        obs : dict
-            Observables, with keys defined by model.observables. \n
-            e.g., obs = {'tMax':33, 'iMax':19} given observables = ['tMax', 'iMax']
+        pm : dict
+            Performance Metrics, with keys defined by model.performance_metric_keys. \n
+            e.g., pm = {'tMax':33, 'iMax':19} given performance_metric_keys = ['tMax', 'iMax']
 
         Example
         -------
@@ -531,14 +449,16 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | obs = m.observables(3.0, x) # Returns {'tMax':33, 'iMax':19}
+        | pm = m.performance_metrics(x) # Returns {'tMax':33, 'iMax':19}
         """
         return {}
+    
+    observables = performance_metrics
 
     @abstractmethod
-    def output(self, x) -> dict:
+    def output(self, x : dict) -> dict:
         """
-        Calculate next state, forward one timestep
+        Calculate outputs given state
 
         Parameters
         ----------
@@ -558,11 +478,11 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | z = m.output(3.0, x) # Returns {'o1': 1.2}
+        | z = m.output(x) # Returns {'o1': 1.2}
         """
         return {}
 
-    def __output(self, x) -> dict:
+    def __output(self, x : dict) -> dict:
         """
         Calls output, which calculates next state forward one timestep, and then adds noise
 
@@ -581,9 +501,7 @@ class PrognosticsModel(ABC):
         Example
         -------
         | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = {'u1': 3.2}
-        | z = {'z1': 2.2}
-        | x = m.initialize(u, z) # Initialize first state
+        | z = {'o1': 1.2}
         | z = m.__output(3.0, x) # Returns {'o1': 1.2} with noise added
         """
 
@@ -593,7 +511,7 @@ class PrognosticsModel(ABC):
         # Add measurement noise
         return self.apply_measurement_noise(z)
 
-    def event_state(self, x) -> dict:
+    def event_state(self, x : dict) -> dict:
         """
         Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
 
@@ -627,7 +545,7 @@ class PrognosticsModel(ABC):
         """
         return {}
     
-    def threshold_met(self, x) -> dict:
+    def threshold_met(self, x : dict) -> dict:
         """
         For each event threshold, calculate if it has been met
 
@@ -640,7 +558,7 @@ class PrognosticsModel(ABC):
         Returns
         -------
         thresholds_met : dict
-            If each threshold has been met (bool), with deys defined by prognostics_model.events\n
+            If each threshold has been met (bool), with keys defined by prognostics_model.events\n
             e.g., thresholds_met = {'EOL': False} given events = ['EOL']
 
         Example
@@ -662,7 +580,7 @@ class PrognosticsModel(ABC):
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
-    def simulate_to(self, time, future_loading_eqn, first_output = None, **kwargs) -> tuple:
+    def simulate_to(self, time : float, future_loading_eqn : Callable, first_output : dict = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -726,7 +644,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs) -> tuple:
+    def simulate_to_threshold(self, future_loading_eqn : Callable, first_output : dict = None, threshold_keys : list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -759,6 +677,8 @@ class PrognosticsModel(ABC):
         print : bool, optional
             toggle intermediate printing, e.g., print = True\n
             e.g., m.simulate_to_threshold(eqn, z, dt=0.1, save_pts=[1, 2])
+        progress : bool, optional
+            toggle progress bar printing, e.g., progress = True\n
     
         Returns
         -------
@@ -785,9 +705,9 @@ class PrognosticsModel(ABC):
         -------
         | def future_load_eqn(t):
         |     if t< 5.0: # Load is 3.0 for first 5 seconds
-        |         return 3.0
+        |         return {'load': 3.0}
         |     else:
-        |         return 5.0
+        |         return {'load': 5.0}
         | first_output = {'o1': 3.2, 'o2': 1.2}
         | m = PrognosticsModel() # Replace with specific model being simulated
         | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
@@ -817,7 +737,8 @@ class PrognosticsModel(ABC):
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
-            'print': False
+            'print': False,
+            'progress': False
         }
         config.update(kwargs)
         
@@ -826,9 +747,10 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
-        if not isinstance(config['save_freq'], Number):
+        if not isinstance(config['save_freq'], Number) and not isinstance(config['save_freq'], tuple):
             raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
-        if config['save_freq'] <= 0:
+        if (isinstance(config['save_freq'], Number) and config['save_freq'] <= 0) or \
+            (isinstance(config['save_freq'], tuple) and config['save_freq'][1] <= 0):
             raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
         if not isinstance(config['save_pts'], abc.Iterable):
             raise ProgModelInputException("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
@@ -858,31 +780,39 @@ class PrognosticsModel(ABC):
         output = self.__output
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
+        progress = config['progress']
+        def check_thresholds(thresholds_met):
+            t_met = [thresholds_met[key] for key in threshold_keys]
+            if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
+                return np.any(t_met)
+            return any(t_met)
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
+            threshold_keys = []
         elif threshold_keys is None: 
-            # Note: Dont use implicit boolean in this check- it would then activate for an empty array
-            def check_thresholds(thresholds_met):
-                t_met = thresholds_met.values()
-                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                    return np.any(t_met)
-                return any(t_met)
-        else:
-            def check_thresholds(thresholds_met):
-                t_met = [thresholds_met[key] for key in threshold_keys]
-                if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
-                    return np.any(t_met)
-                return any(t_met)
+            # Note: Setting threshold_keys to be all events if it is None
+            threshold_keys = self.events
 
         # Initialization of save arrays
-        times = array('d')
-        inputs = []
-        states = []  
+        saved_times = []
+        saved_inputs = []
+        saved_states = []  
         saved_outputs = []
         saved_event_states = []
-        save_freq = config['save_freq']
         horizon = t+config['horizon']
-        next_save = t+save_freq
+        if isinstance(config['save_freq'], tuple):
+            # Tuple used to specify start and frequency
+            t_step = config['save_freq'][1]
+            # Use starting time or the next multiple
+            t_start = config['save_freq'][0]
+            start = max(t_start, t - (t-t_start)%t_step)
+            iterator = itertools.count(start, t_step)
+        else:
+            # Otherwise - start is t0
+            t_step = config['save_freq']
+            iterator = itertools.count(t, t_step)
+        next(iterator) # Skip current time
+        next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
         save_pts.append(1e99)  # Add last endpoint
@@ -890,23 +820,23 @@ class PrognosticsModel(ABC):
         # confgure optional intermediate printing
         if config['print']:
             def update_all():
-                times.append(t)
-                inputs.append(u)
-                states.append(deepcopy(x))  # Avoid optimization where x is not copied
+                saved_times.append(t)
+                saved_inputs.append(u)
+                saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
                 saved_outputs.append(output(x))
                 saved_event_states.append(event_state(x))
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
-                        times[len(times) - 1],
-                        inputs[len(inputs) - 1],
-                        states[len(states) - 1],
-                        saved_outputs[len(saved_outputs) - 1],
-                        saved_event_states[len(saved_event_states) - 1]))  
+                        saved_times[-1],
+                        saved_inputs[-1],
+                        saved_states[-1],
+                        saved_outputs[-1],
+                        saved_event_states[-1]))  
         else:
             def update_all():
-                times.append(t)
-                inputs.append(u)
-                states.append(deepcopy(x))  # Avoid optimization where x is not copied
+                saved_times.append(t)
+                saved_inputs.append(u)
+                saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
 
         # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
@@ -918,43 +848,62 @@ class PrognosticsModel(ABC):
         
         # Simulate
         update_all()
+        if progress:
+            simulate_progress = ProgressBar(100, "Progress")
+            last_percentage = 0
+       
         while t < horizon:
             dt = next_time(t, x)
-            t = t + dt
+            t = t + dt/2
+            # Use state at midpoint of step to best represent the load during the duration of the step
             u = future_loading_eqn(t, x)
+            t = t + dt/2
             x = next_state(x, u, dt)
+
+            # Save if at appropriate time
             if (t >= next_save):
-                next_save += save_freq
+                next_save = next(iterator)
                 update_all()
             if (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
+
+            # Update progress bar
+            if config['progress']:
+                percentages = [1-val for val in event_state(x).values()]
+                percentages.append((t/horizon))
+                converted_iteration = int(max(min(100, max(percentages)*100), 0))
+                if converted_iteration - last_percentage > 1:
+                    simulate_progress(converted_iteration)
+                    last_percentage = converted_iteration
+
+            # Check thresholds
             if check_thresholds(thresthold_met_eqn(x)):
                 break
-
+        
         # Save final state
-        if times[-1] != t:
+        if saved_times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
             update_all()
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(self.output, times, states) 
-            saved_event_states = LazySimResult(self.event_state, times, states)
+            saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
+            saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
-            saved_outputs = SimResult(times, saved_outputs)
-            saved_event_states = SimResult(times, saved_event_states)
+            saved_outputs = SimResult(saved_times, saved_outputs)
+            saved_event_states = SimResult(saved_times, saved_event_states)
         
-        return (
-            times, 
-            SimResult(times, inputs), 
-            SimResult(times, states), 
+        return self.SimulationResults(
+            saved_times, 
+            SimResult(saved_times, saved_inputs), 
+            SimResult(saved_times, saved_states), 
             saved_outputs, 
             saved_event_states
         )
     
     @staticmethod
-    def generate_model(keys, initialize_eqn, output_eqn, next_state_eqn = None, dx_eqn = None, event_state_eqn = None, threshold_eqn = None, config = {'process_noise': 0.1}):
+    def generate_model(keys : dict, initialize_eqn : Callable, output_eqn : Callable, next_state_eqn : Callable = None, dx_eqn : Callable = None, event_state_eqn : Callable = None, threshold_eqn : Callable = None, config : dict = {'process_noise': 0.1}) -> "PrognosticsModel":
         """
         Generate a new prognostics model from individual model functions
 
@@ -1062,24 +1011,26 @@ class PrognosticsModel(ABC):
 
         return m
 
-    def calc_error(self, times, inputs, outputs, **kwargs):
-        """Calculate error between simulated and observed
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
+        """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
             times ([double]): array of times for each sample
             inputs ([dict]): array of input dictionaries where input[x] corresponds to time[x]
             outputs ([dict]): array of output dictionaries where output[x] corresponds to time[x]
             kwargs: Configuration parameters, such as:\n
+             | x0 [dict]: Initial state
              | dt [double] : time step
 
         Returns:
             double: Total error
         """
         params = {
+            'x0': self.initialize(inputs[0], outputs[0]),
             'dt': 1e99
         }
         params.update(kwargs)
-        x = self.initialize(inputs[0], outputs[0])
+        x = params['x0']
         t_last = times[0]
         err_total = 0
 
@@ -1089,11 +1040,14 @@ class PrognosticsModel(ABC):
                 x = self.next_state(x, u, t_new-t_last)
                 t_last = t_new
             z_obs = self.output(x)
+            if any([np.isnan(z_i) for z_i in z_obs.values()]):
+                warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                break
             err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
 
-        return err_total
+        return err_total/len(times)
     
-    def estimate_params(self, runs, keys, **kwargs):
+    def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Args:
@@ -1137,4 +1091,389 @@ class PrognosticsModel(ABC):
 
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
-        self.parameters['process_noise'] = p_noise                
+        self.parameters['process_noise'] = p_noise   
+
+    def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
+        """
+        Generate a surrogate model to approximate the higher-fidelity model 
+
+        Parameters
+        ----------
+        load_functions : list of callable functions
+            Each index is a callable loading function of (t, x = None) -> z used to predict future loading (output) at a given time (t) and state (x)
+        method : str, optional
+            String indicating surrogate modeling method to be used 
+
+        Keyword Arguments
+        -----------------
+        Includes all keyword arguments from simulate_to_threshold (except save_pts), and the following additional keywords: 
+
+        dt : Number or function, optional
+            Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
+        save_freq : Number, optional
+            Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
+        trim_data_to: int, optional
+            Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+            e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n   
+            Note: To trim data to a set time, use the 'horizon' parameter\n   
+        states: list, optional
+            List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
+        inputs: list, optional
+            List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
+        outputs: list, optional
+            List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
+        events: list, optional
+            List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
+        stability_tol: int, optional
+            Value that determines the tolerance for DMD matrix stability\n
+
+        Returns
+        -------
+        SurrogateModel(): class
+            Instance of SurrogateModel class
+
+        Example
+        -------
+        See examples/generate_surrogate
+
+        Note
+        -------
+        This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
+        DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
+        In general, the approximation is less accurate if the DMD matrix is unstable. 
+        Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). Further functionalities will be included in future releases. \n
+        """
+
+        if method != 'dmd':
+            raise ProgModelInputException(f"Method {method} is not supported. DMD is currently the only method available.")
+
+        # Configure
+        config = { # Defaults
+            'save_freq': 1.0, 
+            'trim_data_to': 1,
+            'states': self.states,
+            'inputs': self.inputs,
+            'outputs': self.outputs,
+            'events': self.events,
+            'stability_tol': 1e-05
+        }
+        config.update(kwargs)
+
+        # List of user-define values to include in surrogate model: 
+        states_dmd = deepcopy(self.states)
+        inputs_dmd = deepcopy(self.inputs)
+        outputs_dmd = deepcopy(self.outputs)
+        events_dmd = deepcopy(self.events)
+
+        # Validate user inputs 
+        try:
+            # Check if load_functions is list-like (i.e., iterable)
+            iter(load_functions)
+        except TypeError:
+            raise ProgModelInputException(f"load_functions must be a list or list-like object, was {type(load_functions)}")
+        if len(load_functions) <= 0:
+            raise ProgModelInputException("load_functions must contain at least one element")
+        if 'save_pts' in config.keys():
+            raise ProgModelInputException("'save_pts' is not a valid input for DMD Surrogate Model.")
+        if not isinstance(config['trim_data_to'], Number) or config['trim_data_to']>1 or config['trim_data_to']<=0:
+            raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
+        if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
+            raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
+
+        if isinstance(config['inputs'], str):
+            config['inputs'] = [config['inputs']]
+        if not all([x in self.inputs for x in config['inputs']]):
+            raise ProgModelInputException(f"Invalid 'inputs' input value ({config['inputs']}), must be a subset of the model's inputs ({self.inputs}).")
+        
+        if isinstance(config['states'], str):
+            config['states'] = [config['states']]
+        if not all([x in self.states for x in config['states']]):
+            raise ProgModelInputException(f"Invalid 'states' input value ({config['states']}), must be a subset of the model's states ({self.states}).")
+
+        if isinstance(config['outputs'], str):
+            config['outputs'] = [config['outputs']]
+        if not all([x in self.outputs for x in config['outputs']]):
+            raise ProgModelInputException(f"Invalid 'outputs' input value ({config['outputs']}), must be a subset of the model's states ({self.outputs}).")
+
+        if isinstance(config['events'], str):
+            config['events'] = [config['events']]
+        if not all([x in self.events for x in config['events']]):
+            raise ProgModelInputException(f"Invalid 'events' input value ({config['events']}), must be a subset of the model's states ({self.events}).")
+
+        # Initialize lists to hold individual matrices
+        x_list = []
+        xprime_list = []
+        time_list = []
+
+        # Generate Data to train surrogate model: 
+        for iter_load, load_fcn_now in enumerate(load_functions):
+            print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
+
+            # Simulate to threshold 
+            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **config)
+        
+            # Interpolate results to time step of save_freq
+            time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
+
+            states_data_interp = {}
+            inputs_data_interp = {}
+
+            for state_name in self.states:
+                states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
+                states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
+            for input_name in self.inputs:
+                inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
+                inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
+
+            states_data = [
+                self.StateContainer({
+                    key: value[iter_dataT] for key, value in states_data_interp.items()
+                }) for iter_dataT in range(len(time_data_interp))
+                ]
+            inputs_data = [
+                self.InputContainer({
+                    key: value[iter_dataT] for key, value in inputs_data_interp.items()
+                }) for iter_dataT in range(len(time_data_interp))
+                ]
+
+            times = time_data_interp.tolist()
+            states = SimResult(time_data_interp,states_data)
+            inputs = SimResult(time_data_interp,inputs_data)
+            outputs = LazySimResult(self.output, time_data_interp, states_data) 
+            event_states = LazySimResult(self.event_state, time_data_interp, states_data)
+            
+            def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
+                """Sub-function for performing check and removal for user designated values.
+            
+                Args:
+                    iter_loop : list
+                        List of keys to iterate through.
+                    config_key : str
+                        String key to check keys against config
+                    remove_from : dict
+                        Dictionary dmd to remove key from
+                    del_from : list or dict
+                        Final data structure to remove key and data from 
+                """
+                for key in iter_loop:
+                    if key not in config[config_key]:
+                        if iter_load == 0:
+                            remove_from.remove(key)
+                        for i in range(len(times)):
+                            del del_from[i][key]
+                           
+            if len(config['states']) != len(self.states):
+                user_val_set(self.states,  'states', states_dmd, states)
+            if len(config['inputs']) != len(self.inputs):
+                user_val_set(self.inputs,  'inputs', inputs_dmd, inputs)
+            if len(config['outputs']) != len(self.outputs):
+                user_val_set(self.outputs,  'outputs', outputs_dmd, outputs) 
+            if len(config['events']) != len(self.events):
+                user_val_set(self.events,  'events', events_dmd, event_states)  
+
+            # Initialize DMD matrices
+            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
+            xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
+
+            # Save DMD matrices
+            for i, time in enumerate(times[:-1]): 
+                time_now = time + np.divide(config['save_freq'],2) 
+                load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
+                if len(config['inputs']) != len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
+                    for key in self.inputs:
+                        if key not in config['inputs']:
+                            del load_now[key]
+
+                states_now = states[i].matrix 
+                states_next = states[i+1].matrix 
+  
+                stack = (
+                        states_now,
+                        outputs[i].matrix,
+                        np.array([list(event_states[i].values())]).T,
+                        np.array([[load_now[key]] for key in load_now.keys()])
+                    )
+                x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (0, )))[:,0]  # Filter out empty values (e.g., if there is no input)
+                stack2 = (
+                    states_next,
+                    outputs[i+1].matrix,
+                    np.array([list(event_states[i+1].values())]).T
+                )
+                xprime_mat_temp[:,i] = np.vstack(tuple(v for v in stack2 if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no output)
+                
+            # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
+            x_list.append(x_mat_temp)
+            xprime_list.append(xprime_mat_temp)
+            time_list.append(times)
+
+        # Format training data for DMD and solve for matrix A, in the form X' = AX 
+        print('Generate DMD Surrogate Model')
+
+        # Cut data to user-defined length 
+        if config['trim_data_to'] != 1:
+            for iter3 in range(len(load_functions)):
+                trim_index = round(len(time_list[iter3])*(config['trim_data_to'])) 
+                x_list[iter3] = x_list[iter3][:,0:trim_index]
+                xprime_list[iter3] = xprime_list[iter3][:,0:trim_index]
+     
+        # Convert lists of datasets into arrays, sequentially stacking data in the horizontal direction
+        x_mat = np.hstack((x_list[:]))
+        xprime_mat = np.hstack((xprime_list[:]))
+
+        # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
+        dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))
+
+        # Save size of states, inputs, outputs, event_states, and current instance of PrognosticsModel
+        num_states = len(states[0].matrix)
+        num_inputs = len(inputs[0].matrix)
+        num_outputs = len(outputs[0].matrix)
+        num_event_states = len(event_states[0])
+        num_total = num_states + num_outputs + num_event_states 
+        prog_model = self
+        dmd_dt = config['save_freq']
+        process_noise_temp = {key: 0 for key in prog_model.events}  # Process noise for event states is zero
+
+        # Check for stability of dmd_matrix
+        eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-num_inputs if num_inputs > 0 else None])            
+        
+        if sum(eig_val>1) != 0:
+            for eig_val_i in eig_val:
+                if eig_val_i>1 and eig_val_i-1>config['stability_tol']:
+                    warn("The DMD matrix is unstable, may result in poor approximation.")
+
+        from .linear_model import LinearModel
+        
+
+        class SurrogateModelDMD(LinearModel):
+            """
+            A subclass of LinearModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
+            
+            Given an initial state of the system (including internal states, outputs, and event_states), and the expected inputs throuhgout time, this class defines a surrogate model that can approximate the internal states, outputs, and event_states throughout time until threshold is met.
+
+            Keyword Args
+            ------------
+                process_noise : Optional, float or Dict[Srt, float]
+
+            See Also
+            ------
+                LinearModel
+
+            Attributes
+            ----------
+                initialize : 
+                    Calculate initial state, augmented with outputs and event_states
+
+                next_state : 
+                    State transition equation: Calculate next state with matrix multiplication (overrides 'dx' defined in LinearModel)
+
+                simulate_to_threshold:
+                    Simulate prognostics model until defined threshold is met, using simulate_to_threshold defined in PrognosticsModel, then interpolate results to be at user-defined times
+            """
+
+            # Default parameters: set process_noise and measurement_noise to be defined based on PrognosticsModel values
+            default_parameters = {
+                'process_noise': {**prog_model.parameters['process_noise'],**prog_model.parameters['measurement_noise'],**process_noise_temp},
+                'measurement_noise': prog_model.parameters['measurement_noise'],
+                'process_noise_dist': prog_model.parameters.get('process_noise_dist', 'normal'),
+                'measurement_noise_dist': prog_model.parameters.get('measurement_noise_dist', 'normal')
+            }
+
+            # Define appropriate matrices for LinearModel
+            A = dmd_matrix[:,0:num_total]
+            B = np.vstack(dmd_matrix[:,num_total:num_total+num_inputs]) 
+            C = np.zeros((num_outputs,num_total))
+            for iter1 in range(num_outputs):
+                C[iter1,num_states+iter1] = 1 
+            F = np.zeros((num_event_states,num_total))
+            for iter2 in range(num_event_states):
+                F[iter2,num_states+num_outputs+iter2] = 1 
+
+            states = states_dmd + outputs_dmd + events_dmd
+            inputs = inputs_dmd
+            outputs = outputs_dmd 
+            events = events_dmd
+
+            dt = dmd_dt  # Step size (so it can be accessed programmatically)
+
+            def initialize(self, u=None, z=None):
+                x = prog_model.initialize(u,z)
+                x.update(prog_model.output(x))
+                x.update(prog_model.event_state(x))
+
+                return self.StateContainer(x)
+
+            def next_state(self, x, u, _):   
+                x.matrix = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
+                
+                return x   
+
+            def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+                # Save keyword arguments same as DMD training for approximation 
+                kwargs_temp = {
+                    'save_freq': dmd_dt,
+                    'dt': dmd_dt
+                }
+                kwargs_sim = kwargs.copy()
+                kwargs_sim.update(kwargs_temp)
+
+                # Simulate to threshold at DMD time step
+                results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_sim)
+                
+                # Interpolate results to be at user-desired time step
+                # Default parameters 
+                config = {
+                    'dt': None,
+                    'save_freq': None,
+                    'save_pts': []
+                }
+                config.update(kwargs)
+                if config['dt'] != None:
+                    warn("dt is not used in DMD approximation")
+
+                if config['save_freq'] == dmd_dt and config['save_pts'] == []: 
+                    # In this case, the user wants what the DMD approximation returns 
+                    return results 
+                
+                # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
+                # Define time vector based on user specifications
+                time_basic = [results.times[0], results.times[-1]]
+                time_basic.extend(config['save_pts'])                       
+                if config['save_freq'] != None:
+                    # Add Save Frequency
+                    time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
+                    time_basic.extend(time_array.tolist())
+                time_interp = sorted(time_basic)
+
+                # Interpolate States
+                states_dict_temp = {}
+                for states_name in self.states:
+                    states_list_temp = [results.states[iter1a][states_name] for iter1a in range(len(results.states))]
+                    states_dict_temp[states_name] = interp1d(results.times,states_list_temp)(time_interp)
+                states_interp = [
+                    self.StateContainer({key: state[i] for key, state in states_dict_temp.items()})
+                    for i in range(len(time_interp))
+                ]
+                    
+                # Interpolate Inputs
+                inputs_dict_temp = {}
+                for inputs_name in self.inputs:
+                    inputs_list_temp = [results.inputs[iter1a][inputs_name] for iter1a in range(len(results.inputs))]
+                    inputs_dict_temp[inputs_name] = interp1d(results.times,inputs_list_temp)(time_interp)
+                inputs_interp = [
+                    self.InputContainer({key: input[i] for key, input in inputs_dict_temp.items()}) for i in range(len(time_interp))
+                ]
+
+                states = SimResult(time_interp,states_interp)
+                inputs = SimResult(time_interp,inputs_interp)
+                outputs = LazySimResult(self.output, time_interp, states_interp)
+                event_states = LazySimResult(self.event_state, time_interp, states_interp)
+
+                return self.SimulationResults(
+                    time_interp,
+                    inputs,
+                    states,
+                    outputs,
+                    event_states
+                )
+                
+        return SurrogateModelDMD()

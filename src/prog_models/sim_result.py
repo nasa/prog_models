@@ -1,5 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
-from collections import UserList
+from collections import UserList, defaultdict
+from typing import Callable, Dict, List
+
+from matplotlib.pyplot import figure
+from numpy import sign
 from .visualize import plot_timeseries
 from copy import deepcopy
 
@@ -15,11 +19,11 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times = [], data = []):
+    def __init__(self, times : list = [], data : list = []):
         self.times = deepcopy(times)
         self.data = deepcopy(data)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other : "SimResult") -> bool:
         """Compare 2 SimResults
 
         Args:
@@ -42,16 +46,19 @@ class SimResult(UserList):
         """
         return self.data.index(other, *args, **kwargs)
 
-    def extend(self, other) -> None:
+    def extend(self, other : "SimResult") -> None:
         """
-        Extend the SimResult with another SimResult
+        Extend the SimResult with another SimResult or LazySimResult object
 
         Args:
-            other (SimResult)
+            other (SimResult/LazySimResult)
 
         """
-        self.times.extend(other.times)
-        self.data.extend(other.data)
+        if other.__class__ in [SimResult, LazySimResult]:
+            self.times.extend(other.times)
+            self.data.extend(other.data)
+        else:
+            raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
 
     def pop(self, index : int = -1) -> dict:
         """Remove and return an element
@@ -65,15 +72,23 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
     
-    def remove(self, index : int) -> None:
+    def remove(self, d : float = None, t : float = None) -> None:
         """Remove an element
 
         Args:
-            index (int): Index of element to be removed.
+            d: Data value to be removed.
+            t: Time value to be removed.
         """
-        self.times.remove(index)
-        self.data.remove(index)
-
+        if sum([i is None for i in (d, t)]) != 1:
+            raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
+       
+        if (t is not None):
+            self.data.pop(self.times.index(t))
+            self.times.remove(t)
+        else:
+            self.times.pop(self.data.index(d))
+            self.data.remove(d)
+        
     def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
@@ -90,7 +105,7 @@ class SimResult(UserList):
         """
         return self.times[index]
 
-    def plot(self, **kwargs):
+    def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
 
@@ -100,7 +115,40 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        return plot_timeseries(self.times, self.data, options=kwargs)  
+        return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)
+
+    def monotonicity(self) -> Dict[str, float]:
+        """Calculate monotonicty for a single prediction. 
+        Given a single simulation result, for each event: go through all predicted states and compare those to the next one.
+        Calculates monotonicity for each event key using its associated mean value in UncertainData.
+        
+        monotonoicity = |Σsign(i+1 - i) / N-1|
+        Where N is number of measurements and sign indicates sign of calculation.
+        
+        Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
+        http://www.papers.phmsociety.org/index.php/phmconf/article/view/1404
+        Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Aritifical Intelligence, Volume 306.
+        https://www.sciencedirect.com/science/article/pii/S0004370222000078
+
+        Args:
+            None
+        Returns:
+            float: Value between [0, 1] indicating monotonicity of a given event for the Prediction.
+        """
+        # Collect and organize mean values for each event
+        by_event = defaultdict(list)
+        for uncertaindata in self.data:
+            for key,value in uncertaindata.items():
+                by_event[key].append(value)
+
+        # For each event, calculate monotonicity using formula
+        result = {}
+        for key,l in by_event.items():
+            mono_sum = 0
+            for i in range(len(l)-1): 
+                mono_sum += sign(l[i+1] - l[i])
+            result[key] = abs(mono_sum / (len(l)-1))
+        return result
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
@@ -118,7 +166,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn, times = [], states = []):
+    def __init__(self, fcn : Callable, times : list = [], states : list = []) -> None:
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -130,24 +178,47 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.states = deepcopy(states)
         self.__data = None
 
-    def is_cached(self):
+    def __reduce__(self):
+        return (self.__class__.__base__, (self.times, self.data))
+
+    def is_cached(self) -> bool:
         """
         Returns:
             bool: If the value has been calculated
         """
         return self.__data is not None
 
-    def clear(self):
+    def clear(self) -> None:
+        """
+        Clears the times, states, and data cache for a LazySimResult object
+        """
         self.times = []
         self.__data = None
         self.states = []
 
-    def extend(self, other):
-        self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
-        self.__data = None
-        self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+    def extend(self, other : "LazySimResult") -> None:
+        """
+        Extend the LazySimResult with another LazySimResult object
+        Raise ValueError if SimResult is passed
+        Function fcn of other LazySimResult MUST match function fcn of LazySimResult object to be extended
 
-    def pop(self, index = -1):
+        Args:
+            other (LazySimResult)
+
+        """
+        if (isinstance(other, self.__class__)):
+            self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
+            self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+            if self.__data is None or not other.is_cached():
+                self.__data = None
+            else:
+                self.__data.extend(other.data)
+        elif (isinstance(other, SimResult)):
+            raise ValueError(f"ValueError: {self.__class__} cannot be extended by SimResult. First convert to SimResult using to_simresult() method.")
+        else:
+            raise ValueError(f"ValueError: Argument must be of type {self.__class__}.")
+
+    def pop(self, index : int = -1) -> dict:
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
@@ -162,8 +233,40 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             return self.__data.pop(index)
         return self.fcn(x)
 
+    def remove(self, d : float = None, t : float = None, s = None) -> None:
+        """Remove an element
+         
+        Args:
+            d: Data value to be removed.
+            t: Time value to be removed.
+            s: State value to be removed.
+        """ 
+        if sum([i is None for i in (d, t, s)]) != 2:
+            raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
+       
+        if (t is not None):
+            target_index = self.times.index(t)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
+        elif (s is not None):
+            target_index = self.states.index(s)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            if self.__data is not None:
+                self.__data.pop(target_index)
+        else:
+            target_index = self.data.index(d)
+            self.times.pop(target_index)
+            self.states.pop(target_index)
+            self.__data.pop(target_index)
+
+    def to_simresult(self) -> SimResult:
+        return SimResult(self.times, self.data)
+
     @property
-    def data(self):
+    def data(self) -> List[dict]:
         """
         Get the data (elements of list). Only calculated on first request
 

@@ -18,8 +18,7 @@ def run_example():
     # For this example we are saying there are 4 throwers of various strengths and heights
     first_state = {
         'x': array([1.75, 1.8, 1.85, 1.9]),
-        'v': array([35, 39, 22, 47]),
-        'max_x': array([1.75, 1.8, 1.85, 1.9])
+        'v': array([35, 39, 22, 47])
     }
 
     # Step 3: Simulate to threshold
@@ -30,7 +29,7 @@ def run_example():
     def thresholds_met_eqn(thresholds_met):
         return all(thresholds_met['impact'])  # Stop when all impact ground
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, x = first_state, thresholds_met_eqn=thresholds_met_eqn, print = True, dt=0.1, save_freq=2)
+    simulated_results = m.simulate_to_threshold(future_load, x = first_state, thresholds_met_eqn=thresholds_met_eqn, print = True, dt=0.1, save_freq=2)
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

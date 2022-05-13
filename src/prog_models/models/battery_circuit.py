@@ -4,7 +4,7 @@
 from .. import PrognosticsModel
 
 from math import inf
-from numpy import exp, minimum
+import numpy as np
 
 
 class BatteryCircuit(PrognosticsModel):
@@ -71,7 +71,7 @@ class BatteryCircuit(PrognosticsModel):
     
     Note
     ----
-        This is quicker but also less accurate as the electrochemistry model. We recommend using the electrochemistry model, when possible.
+        This is quicker but also less accurate than the electrochemistry model. We recommend using the electrochemistry model, when possible.
     """
     events = ['EOD']
     inputs = ['i']
@@ -120,9 +120,9 @@ class BatteryCircuit(PrognosticsModel):
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def dx(self, x : dict, u : dict):
         # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         parameters = self.parameters
         Rs = parameters['Rs']
@@ -133,7 +133,7 @@ class BatteryCircuit(PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1'] * \
             SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Rcp = parameters['Rcp0'] + parameters['Rcp1'] * \
-            exp(parameters['Rcp2']*(-SOC + 1))
+            np.exp(parameters['Rcp2']*(-SOC + 1))
         Vb = x['qb']/Cb
         Tbdot = (Rcp*Rs*parameters['ha']*(parameters['Ta'] - x['tb']) + Rcp*Vcs**2*parameters['hcs'] + Rs*Vcp**2*parameters['hcp']) \
             / (parameters['Jt']*Rcp*Rs)
@@ -143,25 +143,30 @@ class BatteryCircuit(PrognosticsModel):
         icp = ib - Vcp/Rcp
         ics = ib - Vcs/Rs
 
-        return {
-            'tb': Tbdot,
-            'qb': -ib,
-            'qcp': icp,
-            'qcs': ics
-        }
+        return self.StateContainer(np.array([
+            [Tbdot],  # tb
+            [-ib],    # qb
+            [icp],    # qcp
+            [ics]     # qcs
+        ]))
     
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         parameters = self.parameters
-        z = self.output(x)
+        Vcs = x['qcs']/parameters['Cs']
+        Vcp = x['qcp']/parameters['Ccp']
+        SOC = (parameters['CMax'] - parameters['qMax'] + x['qb'])/parameters['CMax']
+        Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
+        Vb = x['qb']/Cb
+        v = Vb - Vcp - Vcs
         charge_EOD = (parameters['CMax'] -
                       parameters['qMax'] + x['qb'])/parameters['CMax']
-        voltage_EOD = (z['v'] - self.parameters['VEOD']) / \
+        voltage_EOD = (v - self.parameters['VEOD']) / \
             self.parameters['VDropoff']
         return {
-            'EOD': minimum(charge_EOD, voltage_EOD)
+            'EOD': np.minimum(charge_EOD, voltage_EOD)
         }
 
-    def output(self, x):
+    def output(self, x : dict):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -169,12 +174,11 @@ class BatteryCircuit(PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
-        return {
-            't': x['tb'],
-            'v': Vb - Vcp - Vcs
-        }
+        return self.OutputContainer(np.array([
+            [x['tb']],            # t
+            [Vb - Vcp - Vcs]]))   # v
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

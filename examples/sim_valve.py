@@ -16,20 +16,20 @@ def run_example():
     def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
-                return {
+                return valv.InputContainer({
                     'pL': 3.5e5,
                     'pR': 2.0e5,
                     # Open Valve
                     'uTop': False,
                     'uBot': True
-                }
-            return {
+                })
+            return valv.InputContainer({
                 'pL': 3.5e5,
                 'pR': 2.0e5,
                 # Close Valve
                 'uTop': True,
                 'uBot': False
-            }
+            })
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -39,14 +39,16 @@ def run_example():
         'dt': 0.01,
         'horizon': 800,
         'save_freq': 60,
-        'print': True}
+        'print': True,
+        'progress': True,
+    }
     # Set wear parameter for spring to 1
     valv.parameters['x0']['wk'] = 1
 
     # Define first measured output. This is needed by the simulat_to_threshold method to initialize state
     first_output = valv.output(valv.initialize(future_loading(0)))
     # Simulate
-    (times, inputs, states, outputs, event_states) = valv.simulate_to_threshold(future_loading, first_output, **config)
+    simulated_results = valv.simulate_to_threshold(future_loading, first_output, **config)
 
     # Simulate to threshold again but with a different wear mode
     print('\n\n------------------------------------------------')
@@ -56,7 +58,9 @@ def run_example():
         'dt': 0.01,
         'horizon': 800,
         'save_freq': 60,
-        'print': True}
+        'print': True,
+        'progress': True
+    }
     # Reset wear parameter for spring to 0, set wear parameter for friction to 1
     valv.parameters['x0']['wk'] = 0
     valv.parameters['x0']['wr'] = 1
@@ -64,7 +68,7 @@ def run_example():
     # Define first measured output. This is needed by the simulat_to_threshold method to initialize state
     first_output = valv.output(valv.initialize(future_loading(0)))
     # Simulate
-    (times, inputs, states, outputs, event_states) = valv.simulate_to_threshold(future_loading, first_output, **config)
+    simulated_results = valv.simulate_to_threshold(future_loading, first_output, **config)
 
 # This allows the module to be executed directly
 if __name__ == '__main__':

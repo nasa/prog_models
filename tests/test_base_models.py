@@ -1,6 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+import io
+import sys
 import unittest
+import numpy as np
 from prog_models import *
 from prog_models.models import *
 from copy import deepcopy
@@ -90,6 +93,7 @@ class TestModels(unittest.TestCase):
 
     def test_broken_models(self):
 
+
         class missing_states(prognostics_model.PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
@@ -101,6 +105,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class empty_states(prognostics_model.PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
@@ -113,6 +118,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_inputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -124,6 +130,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_outputs(prognostics_model.PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
@@ -135,6 +142,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_initiialize(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -145,6 +153,7 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
+
         class missing_output(prognostics_model.PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
@@ -577,6 +586,18 @@ class TestModels(unittest.TestCase):
 
         (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 6.0, 5)
+
+    def test_sim_namedtuple_access(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        named_results = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertEquals(times, named_results.times)
+        self.assertEquals(inputs, named_results.inputs)
+        self.assertEquals(states, named_results.states)
+        self.assertEquals(outputs, named_results.outputs)
+        self.assertEquals(event_states, named_results.event_states)
         
     def test_next_time_fcn(self):
         m = MockProgModel(process_noise = 0.0)
@@ -872,6 +893,460 @@ class TestModels(unittest.TestCase):
         except Exception:
             pass
 
+    def test_linear_model(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = np.array([[0, 1], [0, 0]])
+            E = np.array([[0], [-9.81]])
+            C = np.array([[1, 0]])
+            F = None # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return self.StateContainer({
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    })
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+
+            def event_state(self, x): 
+                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+                return {
+                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+                }
+
+        m = ThrownObject()
+        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
+        # len() = events states inputs outputs
+        #         1      2      0      1
+
+        # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
+        # when matrix is not of type NumPy ndarray or standard list
+        # @A
+        with self.assertRaises(TypeError):
+            m.A = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.A = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.A = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.A = True # boolean
+            m.matrixCheck()
+        # @C
+        with self.assertRaises(TypeError):
+            m.C = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.C = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.C = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.C = True # boolean
+            m.matrixCheck()
+        # @E
+        with self.assertRaises(TypeError):
+            m.E = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.E = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.E = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.E = True # boolean
+            m.matrixCheck()
+        # @F
+        with self.assertRaises(TypeError):
+            m.F = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.F = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.F = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.F = True # boolean
+            m.matrixCheck()
+        
+        # Matrix Dimension Checking
+        # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)
+        # @A 2x2
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1]]) # 1-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1], [0, 0], [1, 0]]) # 3-D array
+            m.matrixCheck()
+        # @B 2x0
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[]]) # 1-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[], [], []]) # 3-D array
+            m.matrixCheck()
+        # @C 1x2
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[]]) # 0-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[0, 0], [1, 1]]) # 2-D array
+            m.matrixCheck()
+        # @D 1x1
+        with self.assertRaises(AttributeError):
+            m.D = np.array([]) # 0-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[0], [1]]) # 2-D array
+            m.matrixCheck()
+        # E 2x1
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[0]]) # 1-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[0], [1], [2]]) # 3-D array
+            m.matrixCheck()
+        
+        # when matrix is improperly shaped
+        # @A 2x2
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0, 1, 2, 3], [0, 0, 1, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.A = np.array([[0], [0]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.A = np.array([[0, 1]]) # less row
+            m.matrixCheck()
+        # @B 2x0
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[0, 1 ,2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[0]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 1], [1, 1], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 1]]) # less row
+            m.matrixCheck()
+        # @C 1x2
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[1, 0, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.C = np.array([[1]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.C = np.array([[0, 0], [1, 1], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.C = np.array([[]]) # less row
+            m.matrixCheck()
+        # @D 1x1
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[1, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.D = np.array([[0], [1]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.D = np.array([[]]) # less row
+            m.matrixCheck()
+        # @E 2x1
+        with self.assertRaises(TypeError):
+            m.E = np.array([0,0], [-9.81, -1]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[], []]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.E = np.array([[0, 1, 2], [0]]) # one row has more columns than another
+            m.matrixCheck() 
+        with self.assertRaises(AttributeError): 
+            m.E = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.E = np.array([[0, 1]]) # less row
+            m.matrixCheck()
+        # @G 1x1
+        with self.assertRaises(AttributeError):
+            m.G = np.array([0, 1]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.G = np.array([[]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.G = np.array([[0], [1]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.G = np.array([[]]) # less row
+            m.matrixCheck()
+
+    def test_F_property_not_none(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = np.array([[0, 1], [0, 0]])
+            E = np.array([[0], [-9.81]])
+            C = np.array([[1, 0]])
+            F = np.array([[1, 0]]) # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return self.StateContainer({
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    })
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+
+            def event_state(self, x): 
+                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+                return {
+                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+                }
+
+        m = ThrownObject()
+        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
+        m.matrixCheck()
+        self.assertIsInstance(m.F, np.ndarray)
+        self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
+
+    def test_init_matrix_as_list(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = [[0, 1], [0, 0]]
+            E = [[0], [-9.81]]
+            C = [[1, 0]]
+            F = None # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return self.StateContainer({
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    })
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+
+            def event_state(self, x): 
+                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+                return {
+                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+                }
+
+        m = ThrownObject()
+        m.matrixCheck()
+        self.assertIsInstance(m.A, np.ndarray)
+        self.assertTrue(np.array_equal(m.A, np.array([[0, 1], [0, 0]])))
+        self.assertIsInstance(m.E, np.ndarray)
+        self.assertTrue(np.array_equal(m.E, np.array([[0], [-9.81]])))
+        self.assertIsInstance(m.C, np.ndarray)
+        self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
+
+    def test_event_state_function(self):
+        class ThrownObject(LinearModel):
+            inputs = [] 
+            states = ['x', 'v']
+            outputs = ['x']
+            events = ['impact']
+
+            A = [[0, 1], [0, 0]]
+            E = [[0], [-9.81]]
+            C = [[1, 0]]
+            F = None # Will override method
+
+            default_parameters = {
+                'thrower_height': 1.83,  # m
+                'throwing_speed': 40,  # m/s
+                'g': -9.81  # Acceleration due to gravity in m/s^2
+            }
+
+            def initialize(self, u=None, z=None):
+                return self.StateContainer({
+                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+                    })
+            
+            def threshold_met(self, x):
+                return {
+                    'falling': x['v'] < 0,
+                    'impact': x['x'] <= 0
+                }
+        # test coverage needs testing of event_state not overridden
+
+    def test_progress_bar(self):
+        m = MockProgModel(process_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # Define output redirection
+        capturedOutput = io.StringIO()
+        sys.stdout = capturedOutput
+
+        # Test progress bar matching
+        simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
+        sys.stdout = sys.__stdout__
+        capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l][:11]
+        percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
+        for i in range(len(capture_split)):
+            actual = '%s |%s| %s%% %s' % ("Progress", "█" * percentage_vals[i] + '-' * (100 - percentage_vals[i]), str(percentage_vals[i])+".0","")
+            self.assertEqual(capture_split[i].strip(), actual.strip())
+        
+    def test_containers(self):
+        m = ThrownObject()
+        c1 = m.StateContainer({'x': 1.7, 'v': 40})
+        c2 = m.StateContainer(np.array([[1.7], [40]]))
+        self.assertEqual(c1, c2)
+        self.assertListEqual(list(c1.keys()), m.states)
+
+        input_c1 = m.InputContainer({})
+        input_c2 = m.InputContainer(np.array([]))
+        self.assertEqual(input_c1, input_c2)
+        self.assertListEqual(list(input_c1.keys()), m.inputs)
+
+        output_c1 = m.OutputContainer({'x': 1.7})
+        output_c2 = m.OutputContainer(np.array([[1.7]]))
+        self.assertEqual(output_c1, output_c2)
+        self.assertListEqual(list(output_c1.keys()), m.outputs)
+
+    def test_thrown_object_drag(self):
+        def future_load(t, x=None):
+            return {}
+        event = 'impact'
+        m_nd = ThrownObject(process_noise_dist = 'none')
+        
+        # Create no drag model ('cd' = 0)
+        m_nd.parameters['cd'] = 0
+        simulated_results_nd = m_nd.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+        # Create default drag model ('cd' = 0.007)
+        m_df = ThrownObject(process_noise_dist = 'none')
+        simulated_results_df = m_df.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+        # Create high drag model ('cd' = 1.0)
+        m_hi = ThrownObject(process_noise_dist = 'none')
+        m_hi.parameters['cd'] = 1
+        simulated_results_hi = m_hi.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
+
+        # Test no drag simulated results different from default
+        self.assertNotEqual(simulated_results_nd.times, simulated_results_df.times)
+        self.assertNotEqual(simulated_results_nd.states, simulated_results_df.states)
+        self.assertGreater(simulated_results_nd.times[-1], simulated_results_df.times[-1])
+
+        # Test high drag simulated results different from default
+        self.assertNotEqual(simulated_results_hi.times, simulated_results_df.times)
+        self.assertNotEqual(simulated_results_hi.states, simulated_results_df.states)
+        self.assertLess(simulated_results_hi.times[-1], simulated_results_df.times[-1])
+
+        # Test high drag simulated results different from no drag
+        self.assertNotEqual(simulated_results_hi.times, simulated_results_nd.times)
+        self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
 
 # This allows the module to be executed directly
 def run_tests():
@@ -879,7 +1354,6 @@ def run_tests():
     
 def main():
     # This ensures that the directory containing ProgModelTemplate is in the python search directory
-    import sys
     from os.path import dirname, join
     sys.path.append(join(dirname(__file__), ".."))
 

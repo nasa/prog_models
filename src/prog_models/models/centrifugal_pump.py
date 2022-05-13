@@ -3,10 +3,9 @@
 
 from .. import prognostics_model
 
-import math
-from math import inf
 from copy import deepcopy
-from numpy import array, maximum, minimum, ndarray, sqrt, sign
+import numpy as np
+import warnings
 
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
@@ -177,22 +176,22 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     }
 
     state_limits = {
-        'To': (0, inf),  # Limited by absolute zero (0 K)
-        'Tr': (0, inf),  # Limited by absolute zero (0 K)
-        'Tt': (0, inf),  # Limited by absolute zero (0 K)
-        'A': (0, inf),
-        'rThrust': (0, inf),
-        'rRadial': (0, inf)
+        'To': (0, np.inf),  # Limited by absolute zero (0 K)
+        'Tr': (0, np.inf),  # Limited by absolute zero (0 K)
+        'Tt': (0, np.inf),  # Limited by absolute zero (0 K)
+        'A': (0, np.inf),
+        'rThrust': (0, np.inf),
+        'rRadial': (0, np.inf)
     }
 
-    def initialize(self, u, z = None):
+    def initialize(self, u : dict, z = None):
         x0 = self.parameters['x0']
-        x0['QLeak'] = math.copysign(\
+        x0['QLeak'] = \
             self.parameters['cLeak']*self.parameters['ALeak']*\
-                math.sqrt(abs(u['psuc']-u['pdisch'])), u['psuc']-u['pdisch'])
-        return x0
+                np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
+        return self.StateContainer(x0)
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x : dict, u : dict, dt : float):
         params = self.parameters
         Todot = 1/params['mcOil'] * (params['HOil1']*(x['Tt']-x['To']) + params['HOil2']*(x['Tr']-x['To'])\
             + params['HOil3']*(u['Tamb']-x['To']))
@@ -202,49 +201,49 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         rRadialdot = params['wRadial']*x['rRadial']*x['w']*x['w']
         rThrustdot = params['wThrust']*x['rThrust']*x['w']*x['w']
         friction = (params['r']+x['rThrust']+x['rRadial'])*x['w']
-        if type(x['A']) == ndarray:
-            QLeak = array([params['cLeak']*params['ALeak'] *
-                           sqrt(abs(u['psuc']-u['pdisch'])) * sign(u['psuc']-u['pdisch'])]*len(x['A']))
+        if type(x['A']) == np.ndarray:
+            QLeak = np.array([params['cLeak']*params['ALeak'] *
+                           np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])]*len(x['A']))
         else:
             QLeak = params['cLeak']*params['ALeak'] * \
-                sqrt(abs(u['psuc']-u['pdisch'])) * sign(u['psuc']-u['pdisch'])
+                np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
         Trdot = 1/params['mcRadial'] * (x['rRadial']*x['w']*x['w'] - params['HRadial1']*(x['Tr']-u['Tamb']) - params['HRadial2']*(x['Tr']-x['To']))
         slipn = (u['wsync']-x['w'])/(u['wsync'])
         ppump = x['A']*x['w']*x['w'] + params['b']*x['w']*x['Q']
-        Qout = maximum(0,x['Q']-x['QLeak'])
-        slip = maximum(-1,(minimum(1,slipn)))
+        Qout = np.maximum(0,x['Q']-x['QLeak'])
+        slip = np.maximum(-1,(np.minimum(1,slipn)))
         deltaP = ppump+u['psuc']-u['pdisch']
         Te = params['n']*params['p']*params['R2']/(slip*(u['wsync']+0.00001)) * u['V']**2 \
             /((params['R1']+params['R2']/slip)**2+(u['wsync']*params['L1'])**2)
         backTorque = -params['a2']*Qout**2 + params['a1']*x['w']*Qout + params['a0']*x['w']**2
-        Qo = params['c']*sqrt(abs(deltaP)) * sign(deltaP)
+        Qo = params['c']*np.sqrt(abs(deltaP)) * np.sign(deltaP)
         wdot = (Te-friction-backTorque)/params['I']
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
-        return {
-            'w': x['w'] + wdot * dt,
-            'Q': x['Q'] + Qdot * dt,
-            'Tt': x['Tt'] + Ttdot * dt,
-            'Tr': x['Tr'] + Trdot * dt,
-            'To': x['To'] + Todot * dt,
-            'A': x['A'] + Adot * dt,
-            'rRadial': x['rRadial'] + rRadialdot * dt,
-            'rThrust': x['rThrust'] + rThrustdot * dt,
-            'QLeak': QLeak
-        }
+        return self.StateContainer(np.array([
+            [x['w'] + wdot * dt],
+            [x['Q'] + Qdot * dt],
+            [x['Tt'] + Ttdot * dt],
+            [x['Tr'] + Trdot * dt],
+            [x['To'] + Todot * dt],
+            [x['A'] + Adot * dt],
+            [x['rRadial'] + rRadialdot * dt],
+            [x['rThrust'] + rThrustdot * dt],
+            [QLeak]
+        ]))
 
-    def output(self, x):
-        Qout = maximum(0,x['Q']-x['QLeak'])
+    def output(self, x : dict):
+        Qout = np.maximum(0,x['Q']-x['QLeak'])
 
-        return {
+        return self.OutputContainer({
             'w':    x['w'],
             'Qout': Qout,
             'Tt':   x['Tt'],
             'Tr':   x['Tr'],
             'To':   x['To']
-        }
+        })
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         return {
             'ImpellerWearFailure': (x['A'] - self.parameters['lim']['A'])/(self.parameters['x0']['A'] - self.parameters['lim']['A']),
             'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['lim']['Tt']- self.parameters['x0']['Tt']),
@@ -252,13 +251,20 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['lim']['To'] - self.parameters['x0']['To'])
         }
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         return {
             'ImpellerWearFailure': x['A'] <= self.parameters['lim']['A'],
             'ThrustBearingOverheat': x['Tt'] >= self.parameters['lim']['Tt'],
             'RadialBearingOverheat': x['Tr'] >= self.parameters['lim']['Tr'],
             'PumpOilOverheat': x['To'] >= self.parameters['lim']['To']
         }
+
+def OverwrittenWarning(params):
+    """
+    Function to warn if overwritten changes
+    """
+    warnings.warn("wA, wRadial, and wThrust will be overwritten within the model, since the wear rates are part of the state. Use CentrifugalPumpBase to remove this behavior.")
+    return {}
 
 
 class CentrifugalPumpWithWear(CentrifugalPumpBase):
@@ -303,16 +309,25 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
 
     state_limits = deepcopy(CentrifugalPumpBase.state_limits)
 
-    def next_state(self, x, u, dt):
-        self.parameters['wA'] = x['wA']
-        self.parameters['wRadial'] = x['wRadial']
-        self.parameters['wThrust'] = x['wThrust']
+    param_callbacks = {
+        'wA': [OverwrittenWarning],
+        'wRadial': [OverwrittenWarning],
+        'wThrust': [OverwrittenWarning]
+    }
+
+    def next_state(self, x : dict, u : dict, dt : float) -> dict:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['wA'] = x['wA']
+            self.parameters['wRadial'] = x['wRadial']
+            self.parameters['wThrust'] = x['wThrust']
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
-        next_x.update({
-            'wA': x['wA'],
-            'wRadial': x['wRadial'],
-            'wThrust': x['wThrust'],
-        })
+
+        next_x.matrix = np.vstack((next_x.matrix, np.array([
+            [x['wA']],
+            [x['wRadial']],
+            [x['wThrust']]
+        ])))
         return next_x
 
 CentrifugalPump = CentrifugalPumpWithWear

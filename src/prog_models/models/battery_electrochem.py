@@ -3,9 +3,10 @@
 
 from .. import PrognosticsModel
 
-from math import inf
 from copy import deepcopy
-from numpy import arcsinh, log
+import numpy as np
+import warnings
+
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -14,13 +15,13 @@ R_F = R / F    # Optimization - R / F
 mC = 37.04 # kg/m2/(K-s^2)
 tau = 100
 
-def update_qmax(params):
+def update_qmax(params : dict) -> dict:
     # note qMax = qn+qp
     return {
         'qMax': params['qMobile']/(params['xnMax']-params['xnMin'])
     }
 
-def update_vols(params):
+def update_vols(params : dict) -> dict:
     # Volumes (total volume is 2*P.Vol), assume volume at each electrode is the
     # same and the surface/bulk split is the same for both electrodes
     return {
@@ -29,31 +30,31 @@ def update_vols(params):
     }
 
 # set up charges (Li ions)
-def update_qpmin(params):
+def update_qpmin(params : dict) -> dict:
     # min charge at pos electrode
     return {
         'qpMin': params['qMax']*params['xpMin'] 
     }
 
-def update_qpmax(params):
+def update_qpmax(params : dict) -> dict:
     # max charge at pos electrode
     return {
         'qpMax': params['qMax']*params['xpMax'] 
     }
 
-def update_qnmin(params):
+def update_qnmin(params : dict) -> dict:
     # min charge at negative electrode
     return {
         'qnMin': params['qMax']*params['xnMin'] 
     }
 
-def update_qnmax(params):
+def update_qnmax(params : dict) -> dict:
     # max charge at negative electrode
     return {
         'qnMax': params['qMax']*params['xnMax'] 
     }
 
-def update_qpSBmin(params):
+def update_qpSBmin(params : dict) -> dict:
     # min charge at surface and bulk pos electrode
     return {
         'qpSMin': params['qMax']*params['xpMin']*params['VolSFraction'],
@@ -65,14 +66,14 @@ def update_qpSBmin(params):
         }
     }
 
-def update_qpSBmax(params):
+def update_qpSBmax(params : dict) -> dict:
     # max charge at surface and pos electrode
     return {
         'qpSMax': params['qMax']*params['xpMax']*params['VolSFraction'],
         'qpBMax': params['qMax']*params['xpMax']*(1.0-params['VolSFraction'])
     }
 
-def update_qnSBmin(params):
+def update_qnSBmin(params : dict) -> dict:
     # min charge at surface and bulk pos electrode
     return {
         'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
@@ -80,7 +81,7 @@ def update_qnSBmin(params):
 
     }
 
-def update_qnSBmax(params):
+def update_qnSBmax(params : dict) -> dict:
     # max charge at surface and pos electrode
     return {
         'qnSMax': params['qMax']*params['xnMax']*params['VolSFraction'],
@@ -92,7 +93,7 @@ def update_qnSBmax(params):
         }
     }
 
-def update_qSBmax(params):
+def update_qSBmax(params : dict) -> dict:
     # max charge at surface, bulk (pos and neg)
     return {
         'qSMax': params['qMax']*params['VolSFraction'],
@@ -239,11 +240,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (0, inf),  # Limited by Absolute Zero (0 K)
-        'qnB': (0, inf),
-        'qnS': (0, inf),
-        'qpB': (0, inf),
-        'qpS': (0, inf)
+        'tb': (0, np.inf),  # Limited by Absolute Zero (0 K)
+        'qnB': (0, np.inf),
+        'qnS': (0, np.inf),
+        'qpB': (0, np.inf),
+        'qpS': (0, np.inf)
     }
 
     param_callbacks = {  # Callbacks for derived parameters
@@ -258,9 +259,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def dx(self, x : dict, u : dict):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -276,7 +277,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         v_part = R_F*x['tb']/params['alpha']
 
-        VsnNominal = v_part*arcsinh(Jn/(Jn0 + Jn0))
+        VsnNominal = v_part*np.arcsinh(Jn/(Jn0 + Jn0))
         Vsndot = (VsnNominal-x['Vsn'])/params['tsn']
 
         # Positive Surface
@@ -291,7 +292,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Jp = u['i']/params['Sp']
         Jp0 = params['kp']*((1-xpS)*xpS)**params['alpha']
 
-        VspNominal = v_part*arcsinh(Jp/(Jp0+Jp0))
+        VspNominal = v_part*np.arcsinh(Jp/(Jp0+Jp0))
         Vspdot = (VspNominal-x['Vsp'])/params['tsp']
 
         # Combined
@@ -303,31 +304,23 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
-        return {
-            'Vo': Vodot,
-            'Vsn': Vsndot,
-            'Vsp': Vspdot,
-            'tb': Tbdot,
-            'qnB': qnBdot,
-            'qnS': qnSdot,
-            'qpB': qpBdot,
-            'qpS': qpSdot
-        }
+        return self.StateContainer(np.array([
+            [Tbdot],
+            [Vodot],
+            [Vsndot],
+            [Vspdot],
+            [qnBdot],
+            [qnSdot],
+            [qpBdot],
+            [qpSdot]
+        ]))
         
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
         # since voltage decreases non-linearally. 
         # However, as voltage approaches VEOD, the charge-based approach no 
         # longer accurately captures this behavior, so voltage_EOD takes over as 
         # the driving factor. 
-        z = self.output(x)
-        charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
-        voltage_EOD = (z['v'] - self.parameters['VEOD'])/self.parameters['VDropoff'] 
-        return {
-            'EOD': min(charge_EOD, voltage_EOD)
-        }
-
-    def output(self, x):
         params = self.parameters
         An = params['An']
         # Negative Surface
@@ -350,7 +343,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
             An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
         ]
-        Ven = params['U0n'] + R*x['tb']/F*log(one_minus_xnS/xnS) + sum(VenParts)
+        Ven = params['U0n'] + R*x['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
 
         # Positive Surface
         Ap = params['Ap']
@@ -371,14 +364,67 @@ class BatteryElectroChemEOD(PrognosticsModel):
             Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
             Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
         ]
-        Vep = params['U0p'] + R*x['tb']/F*log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+        v = Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
 
+        charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
+        voltage_EOD = (v - self.parameters['VEOD'])/self.parameters['VDropoff'] 
         return {
-            't': x['tb'] - 273.15,
-            'v': Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
+            'EOD': min(charge_EOD, voltage_EOD)
         }
 
-    def threshold_met(self, x):
+    def output(self, x : dict):
+        params = self.parameters
+        An = params['An']
+        # Negative Surface
+        xnS = x['qnS']/params['qSMax']
+        xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+        one_minus_xnS = 1 - xnS
+        xnS2_minus_1 = xnS2 - 1
+        VenParts = [
+            An[0] *xnS2_minus_1/F,  # Ven0
+            An[1] *(xnS2_minus_1**2  - (xnS2*one_minus_xnS))/F,  # Ven1
+            An[2] *(xnS2_minus_1**3  - (4 *xnS*one_minus_xnS)*xnS2_minus_1)/F,  #Ven2
+            An[3] *(xnS2_minus_1**4  - (6 *xnS*one_minus_xnS)*xnS2_minus_1**2) /F,  #Ven3
+            An[4] *(xnS2_minus_1**5  - (8 *xnS*one_minus_xnS)*xnS2_minus_1**3) /F,  #Ven4
+            An[5] *(xnS2_minus_1**6  - (10*xnS*one_minus_xnS)*xnS2_minus_1**4) /F,  #Ven5
+            An[6] *(xnS2_minus_1**7  - (12*xnS*one_minus_xnS)*xnS2_minus_1**5) /F,  #Ven6
+            An[7] *(xnS2_minus_1**8  - (14*xnS*one_minus_xnS)*xnS2_minus_1**6) /F,  #Ven7
+            An[8] *(xnS2_minus_1**9  - (16*xnS*one_minus_xnS)*xnS2_minus_1**7) /F,  #Ven8
+            An[9] *(xnS2_minus_1**10 - (18*xnS*one_minus_xnS)*xnS2_minus_1**8) /F,  #Ven9
+            An[10]*(xnS2_minus_1**11 - (20*xnS*one_minus_xnS)*xnS2_minus_1**9) /F,  #Ven10
+            An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
+            An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
+        ]
+        Ven = params['U0n'] + R*x['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
+
+        # Positive Surface
+        Ap = params['Ap']
+        xpS = x['qpS']/params['qSMax']
+        xpS2 = xpS + xpS
+        VepParts = [
+            Ap[0] *(xpS2-1)/F,  #Vep0
+            Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
+            Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
+            Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
+            Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
+            Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
+            Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
+            Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
+            Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
+            Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
+            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
+            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
+            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+        ]
+        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+
+        return self.OutputContainer(np.array([
+            [x['tb'] - 273.15],
+            [Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']]
+        ]))
+
+    def threshold_met(self, x : dict) -> dict:
         z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
@@ -450,38 +496,45 @@ class BatteryElectroChemEOL(PrognosticsModel):
     }
 
     state_limits = {
-        'qMax': (0, inf)
+        'qMax': (0, np.inf)
     }
 
     def initialize(self, u=None, z=None):
-        return self.parameters['x0']
+        return self.StateContainer(self.parameters['x0'])
 
-    def dx(self, x, u):
+    def dx(self, _, u : dict):
         params = self.parameters
 
-        return {
-            'qMax': params['wq'] * abs(u['i']),
-            'Ro': params['wr'] * abs(u['i']),
-            'D': params['wd'] * abs(u['i'])
-        }
+        return self.StateContainer(np.array([
+            [params['wq'] * abs(u['i'])],
+            [params['wr'] * abs(u['i'])],
+            [params['wd'] * abs(u['i'])]
+        ]))
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
         return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
-    def output(self, x):
-        return {}
+    def output(self, _):
+        return self.OutputContainer(np.array([]))
 
-def merge_dicts(a : dict, b : dict):
+def merge_dicts(a : dict, b : dict) -> None:
     """Merge dict b into a"""
     for key in b:
         if key in a and isinstance(a[key], dict) and isinstance(b[key], dict):
             merge_dicts(a[key], b[key])
         else:
             a[key] = b[key]
+
+def OverwrittenWarning(params):
+    """
+    Function to warn if overwritten changes
+    """
+    warnings.warn("Ro, qMobile, and tDiffusion will be overwritten within the model as part of battery aging modeling. Use BatteryElectroChemEOD to remove this behavior.")
+    return {}
 
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
@@ -521,6 +574,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     states = BatteryElectroChemEOD.states + BatteryElectroChemEOL.states
     events = BatteryElectroChemEOD.events + BatteryElectroChemEOL.events
 
+    is_vectorized = False
+
     default_parameters = deepcopy(BatteryElectroChemEOD.default_parameters)
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)
@@ -528,35 +583,41 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     state_limits = deepcopy(BatteryElectroChemEOD.state_limits)
     state_limits.update(BatteryElectroChemEOL.state_limits)
 
-    def initialize(self, u = {}, z = {}):
-        return self.parameters['x0']
+    def __init__(self, **kwargs):
+        self.param_callbacks['qMobile'].append(OverwrittenWarning)
+        self.param_callbacks['tDiffusion'] = [OverwrittenWarning]
+        self.param_callbacks['Ro'] = [OverwrittenWarning]
+        super().__init__(**kwargs)
 
-    def dx(self, x, u):
+    def initialize(self, u : dict = {}, z : dict = {}):
+        return self.StateContainer(self.parameters['x0'])
+
+    def dx(self, x : dict, u : dict):
         # Set EOD Parameters (corresponding to health)
-        self.parameters['qMobile'] = x['qMax']
-        self.parameters['Ro'] = x['Ro']
-        self.parameters['tDiffusion'] = x['D']
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['qMobile'] = x['qMax']
+            self.parameters['Ro'] = x['Ro']
+            self.parameters['tDiffusion'] = x['D']
         
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
-        x_dot.update(BatteryElectroChemEOL.dx(self, x, u))
+        x_dot2 = BatteryElectroChemEOL.dx(self, x, u)
+        x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
         return x_dot
 
-    def output(self, x):
-        # Set EOD Parameters (corresponding to health)
-        self.parameters['qMobile'] = x['qMax']
-        self.parameters['Ro'] = x['Ro']
-        self.parameters['tDiffusion'] = x['D']
-        
-        # Calculate
+    def output(self, x : dict) -> dict:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.parameters['qMobile'] = x['qMax']
         return BatteryElectroChemEOD.output(self, x)
 
-    def event_state(self, x):
+    def event_state(self, x : dict) -> dict:
         e_state = BatteryElectroChemEOD.event_state(self, x)
         e_state.update(BatteryElectroChemEOL.event_state(self, x))
         return e_state
 
-    def threshold_met(self, x):
+    def threshold_met(self, x : dict) -> dict:
         t_met = BatteryElectroChemEOD.threshold_met(self, x)
         t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
         return t_met

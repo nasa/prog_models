@@ -100,3 +100,9 @@ cython_debug/
 ex.pickle
 
 .vscode/
+.DS_Store
+model_test.pkl
+
+battery123.cfg
+
+dataset_1.pkl
