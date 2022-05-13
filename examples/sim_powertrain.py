@@ -24,8 +24,6 @@ def run_example():
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
     simulated_results = powertrain.simulate_to(2, future_loading, dt=2e-5, save_freq=0.1, print=True)
-    simulated_monotonicity = simulated_results.event_states.monotonicity()
-    print(f'Event state monotonicity: {simulated_monotonicity}')
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

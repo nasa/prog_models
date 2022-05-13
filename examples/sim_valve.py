@@ -49,7 +49,6 @@ def run_example():
     first_output = valv.output(valv.initialize(future_loading(0)))
     # Simulate
     simulated_results = valv.simulate_to_threshold(future_loading, first_output, **config)
-    states_monotonicity = simulated_results.states.monotonicity()
 
     # Simulate to threshold again but with a different wear mode
     print('\n\n------------------------------------------------')
@@ -70,7 +69,6 @@ def run_example():
     first_output = valv.output(valv.initialize(future_loading(0)))
     # Simulate
     simulated_results = valv.simulate_to_threshold(future_loading, first_output, **config)
-    states_monotonicity = simulated_results.states.monotonicity()
 
 # This allows the module to be executed directly
 if __name__ == '__main__':

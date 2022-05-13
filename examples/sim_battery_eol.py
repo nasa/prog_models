@@ -41,13 +41,6 @@ def run_example():
     }
     simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
-    # Step 3: Evaluate results from simulation
-    # Results and calculatable metrics are available for further analysis
-    print('\n\n------------------------------------------------')
-    print('Results and Metrics\n\n')
-    states_monotonicity = simulated_results.states.monotonicity()
-    print(states_monotonicity)
-
 # This allows the module to be executed directly 
 if __name__ == '__main__':
     run_example()
