@@ -1101,6 +1101,8 @@ class PrognosticsModel(ABC):
         ----------
         load_functions : list of callable functions
             Each index is a callable loading function of (t, x = None) -> z used to predict future loading (output) at a given time (t) and state (x)
+        method : str, optional
+            String indicating surrogate modeling method to be used 
 
         Keyword Arguments
         -----------------
@@ -1118,7 +1120,7 @@ class PrognosticsModel(ABC):
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
         inputs: list, optional
             List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        output: list, optional
+        outputs: list, optional
             List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
         events: list, optional
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
@@ -1139,7 +1141,7 @@ class PrognosticsModel(ABC):
         This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
         DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
         In general, the approximation is less accurate if the DMD matrix is unstable. 
-        Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). \n
+        Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). Further functionalities will be included in future releases. \n
         """
 
         if method != 'dmd':
@@ -1371,7 +1373,9 @@ class PrognosticsModel(ABC):
             # Default parameters: set process_noise and measurement_noise to be defined based on PrognosticsModel values
             default_parameters = {
                 'process_noise': {**prog_model.parameters['process_noise'],**prog_model.parameters['measurement_noise'],**process_noise_temp},
-                'measurement_noise': prog_model.parameters['measurement_noise']
+                'measurement_noise': prog_model.parameters['measurement_noise'],
+                'process_noise_dist': prog_model.parameters.get('process_noise_dist', 'normal'),
+                'measurement_noise_dist': prog_model.parameters.get('measurement_noise_dist', 'normal')
             }
 
             # Define appropriate matrices for LinearModel

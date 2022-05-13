@@ -574,6 +574,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     states = BatteryElectroChemEOD.states + BatteryElectroChemEOL.states
     events = BatteryElectroChemEOD.events + BatteryElectroChemEOL.events
 
+    is_vectorized = False
+
     default_parameters = deepcopy(BatteryElectroChemEOD.default_parameters)
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)

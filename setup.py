@@ -40,6 +40,7 @@ setup(
     python_requires='>=3.7, <3.11',
     install_requires = [
         'scipy',
+        'pandas',
         'matplotlib'
     ],
     license = 'NOSA',

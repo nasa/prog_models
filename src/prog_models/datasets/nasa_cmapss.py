@@ -2,6 +2,7 @@
 
 import io
 import numpy as np
+import pandas as pd
 import requests
 import zipfile
 
@@ -51,9 +52,9 @@ def load_data(dataset_id : int) -> tuple:
         ValueError: Data not in dataset (should be 1-4)
 
     Returns:
-        tuple[np.array, np.array, np.array]: Tuple of data: training data, testing data, time of end of life)
+        tuple[pd.DataFrame, pd.DataFrame, np.array]: Tuple of data: training data, testing data, time of end of life)
         
-        Each row of the training and testing data is a snapshot of data taken during a single operational cycle, each column is a different variable. The columns correspond to:
+        Each row of the training and testing data is a snapshot of data taken during a single operational cycle, each column is a different variable. The columns in the pandas dataframe correspond to:
             1)	unit number
             2)	time, in cycles
             3)	operational setting 1
@@ -65,10 +66,11 @@ def load_data(dataset_id : int) -> tuple:
             ...
 
             26)	sensor measurement  21
+    
     Raises:
         ValueError: Data not in dataset (should be 1-4)
         ConnectionError: Failed to download data. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.
-
+    
     Note:
         Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.
 
@@ -94,10 +96,12 @@ def load_data(dataset_id : int) -> tuple:
     with cache.open(f'test_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
             test = np.loadtxt(f2)
+            test = pd.DataFrame(test, columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1,22)])
 
     with cache.open(f'train_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
             train = np.loadtxt(f2)
+            train = pd.DataFrame(train, columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1,22)])
 
     with cache.open(f'RUL_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
