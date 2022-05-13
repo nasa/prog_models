@@ -3,6 +3,7 @@
 import io
 import requests
 import numpy as np
+import pandas as pd
 from scipy.io import loadmat
 import zipfile
 
@@ -52,7 +53,7 @@ def load_data(batt_id : str) -> tuple:
         ValueError: Battery not in dataset (should be RW1-28)
 
     Returns:
-        tuple[dict, list[np.array]]: Data and description as a tuple (description, data), where the data is a list of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are ('relativeTime', 'current' (amps), 'voltage', 'temperature' (°C)) in that order.
+        tuple[dict, list[pd.DataFrame]]: Data and description as a tuple (description, data), where the data is a list of pandas DataFrames such that data[i] is the data for run i, corresponding with details[i], above. The columns of the dataframe are ('relativeTime', 'current' (amps), 'voltage', 'temperature' (°C)) in that order.
 
     Raises:
         ValueError: Battery id must be a string or int
@@ -103,10 +104,12 @@ def load_data(batt_id : str) -> tuple:
 
     result = result['step'][0,0]
     result = [
-        np.array([
+        pd.DataFrame(np.array([
             result[key][0, i][0] for key in ('relativeTime', 'current', 'voltage', 'temperature')
-        ], np.float64).T for i in range(result.shape[1])
+        ], np.float64).T, columns = ('relativeTime', 'current', 'voltage', 'temperature')) for i in range(result.shape[1])
     ]
+    for r in result:
+        r.set_index('relativeTime')
 
     return desc, result
 
