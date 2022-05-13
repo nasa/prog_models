@@ -7,12 +7,13 @@ Example of generating a Dynamic Mode Decomposition surrogate model using the bat
 from prog_models.models import ThrownObject
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 def run_example(): 
     ### Example 1: Standard DMD Application 
     ## Step 1: Create a model object
     m = ThrownObject(process_noise = 0, measurement_noise = 0)
-    m.parameters['cd'] = 0.1
+    m.parameters['cd'] = 0.3
 
     ## Step 2: Define future loading functions for training data 
     # Here, we define two specific loading profiles. These could also be generated programmatically, for as many loading profiles as desired 
@@ -30,8 +31,7 @@ def run_example():
         'dt': 0.1, # For DMD, this value is the time step of the training data
         'threshold_keys': 'impact',
         'states': ['v'],
-        'data_add_noise': True,
-        'data_noise_magnitude': 0.07 #1e-01
+        'training_noise': 0.08 # 0.06
     }
 
     # Generate surrogate model  
@@ -108,7 +108,7 @@ def run_example():
 
 def run_comparison(): 
     
-    drag_vec = [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.145, 0.25, 0.5, 0.75, 1, 1.3, 1.5] #, 1.8, 2, 2.3, 2.5, 2.8, 3]
+    drag_vec = np.arange(0.001, 1, 0.01) # [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.145, 0.25, 0.5, 0.75, 1, 1.3, 1.5] #, 1.8, 2, 2.3, 2.5, 2.8, 3]
     rmse_impact = []
     rmse_falling = []
     rmse_position = []
@@ -134,8 +134,7 @@ def run_comparison():
             'dt': 0.1, # For DMD, this value is the time step of the training data
             'threshold_keys': 'impact',
             'states': ['v'],
-            'data_add_noise': False,
-            'data_noise_magnitude': 0.07 #1e-01
+            'training_noise': 0.15 # 0.06
         }
 
         # Generate surrogate model  
@@ -214,5 +213,5 @@ def run_comparison():
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
-    run_example()
-    # run_comparison()
+    # run_example()
+    run_comparison()
