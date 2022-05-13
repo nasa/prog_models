@@ -77,7 +77,8 @@ def run_example():
     simulated_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt = 0.005, save_freq=1, print = True)
     
     # Step 9: Analyze metrics
-    simulated_monotonicity = simulated_results.states.monotonicity()
+    simulated_monotonicity = simulated_results.event_states.monotonicity()
+    print(f'Event state monotonicity: {simulated_monotonicity}')
 
     # Print flight time
     print('The object hit the ground in {} seconds'.format(round(simulated_results.times[-1],2)))
