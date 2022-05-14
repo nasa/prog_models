@@ -16,12 +16,14 @@ If you are new to this package, see `<getting_started.html>`__.
    getting_started
    models
    prognostics_model
+   linear_model
    simresult
    datasets
    ProgAlgs <https://nasa.github.io/prog_algs>
    ProgServer <https://nasa.github.io/prog_server>
    dev_guide
    GitHub <https://github.com/nasa/prog_models>
+   release
 
 Citing This Repository
 -----------------------

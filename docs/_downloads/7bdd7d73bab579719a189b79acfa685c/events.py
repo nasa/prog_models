@@ -2,14 +2,14 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example further illustrating the concept of 'events' which generalizes the idea of EOL. 
+Example further illustrating the concept of 'events' which generalizes EOL. 
 
 'Events' is the term used to describe something to be predicted. 
 Generally in the PHM community these are referred to as End of Life (EOL). 
 However, they can be much more.
 
-In the implementation from the prog_models package, events can be anything that needs to be predicted. 
-Events can represent end of life (EOL), end of mission (EOM), warning thresholds, or any event of interest (EOI). 
+In the prog_models package, events can be anything that needs to be predicted. 
+Events can represent End of Life (EOL), End of Mission (EOM), warning thresholds, or any Event of Interest (EOI). 
 
 This example demonstrates how events can be used in your applications. 
 """
@@ -60,6 +60,8 @@ def run_example():
             return t_met
 
     # Step 2: Use it
+    m = MyBatt()
+
     # 2a: Setup model
     def future_loading(t, x=None):
         # Variable (piece-wise) future loading scheme 
@@ -74,15 +76,13 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': i}
+        return m.InputContainer({'i': i})
     
-    m = MyBatt()
-
     # 2b: Simulate to threshold
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = True)
+    simulated_results = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = True)
 
     # 2c: Plot results
-    event_states.plot()
+    simulated_results.event_states.plot()
     import matplotlib.pyplot as plt
     plt.show()
 

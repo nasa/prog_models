@@ -1,9 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 import unittest
-from prog_models import sim_result
 
 from prog_models.sim_result import SimResult, LazySimResult
+
 
 class TestSimResult(unittest.TestCase):
     def test_sim_result(self):
