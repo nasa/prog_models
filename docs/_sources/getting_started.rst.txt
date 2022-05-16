@@ -3,9 +3,9 @@ Getting Started
 .. image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/nasa/prog_models/HEAD
 
-The NASA Prognostics Models Package is a python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components. It can be used in conjunction for the Prognostics Algorithms Library to perform research in prognostics methods. 
+The NASA Prognostics Center of Excellence (PCoE) Prognostics Models Package (prog_models) is a Python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems. It also provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components and can be used in conjunction with the Prognostics Algorithms Library to perform research in prognostics methods. 
 
-The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (:py:meth:`prog_models.PrognosticsModel.generate_model`)
+The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model.
 
 Installing
 -----------------------
@@ -18,14 +18,14 @@ The latest stable release of `prog_models` is hosted on PyPi. For most users (un
 
     $ pip install prog_models
 
-Installing pre-release versions with GitHub
+Installing Pre-Release Versions with GitHub
 ********************************************
 For users who would like to contribute to `prog_models` or would like to use pre-release features can do so using the 'dev' branch (or a feature branch) on the `prog_models GitHub repo <https://github.com/nasa/prog_models>`__. This isn't recommended for most users as this version may be unstable. To use this version, use the following commands:
 
 .. code-block:: console
 
     $ git clone https://github.com/nasa/prog_models
-    $ cd prog_algs
+    $ cd prog_models
     $ git checkout dev 
     $ pip install -e .
 
@@ -33,31 +33,28 @@ Summary
 ---------
 A few definitions to get started:
 
-* **events**: something that can be predicted (e.g., system failure). An event has either occurred or not. 
+* **events**: something that can be predicted (e.g., system failure). An event has either occurred or not occurred.
 
-* **event state**: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called "State of Health"
+* **event state**: progress towards event occurring. Defined as a number where an event state of 0 indicates the event has occurred and 1 indicates no progress towards the event (i.e., fully healthy operation for a failure event). For gradually occurring events (e.g., discharge) the number will progress from 1 to 0 as the event nears. In prognostics, event state is frequently called "State of Health" or "SOH". 
 
-* **inputs**: control applied to the system being modeled (e.g., current drawn from a battery)
+* **inputs**: control applied to the system being modeled (e.g., current drawn from a battery).
 
-* **outputs**: measured sensor values from a system (e.g., voltage and temperature of a battery)
+* **outputs**: measured sensor values from a system (e.g., voltage and temperature of a battery).
 
-* **observables**: performance characteristics of a system that are a function of system state, but are not directly measured.
+* **performance metrics**: performance characteristics of a system that are a function of system state, but are not directly measured.
 
 * **states**: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be. 
 
-* **process noise**: stochastic process representing uncertainty in the model transition. 
+* **process noise**: representing uncertainty in the model transition (e.g., model uncertainty). 
 
-* **measurement noise**: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects 
+* **measurement noise**: representing uncertainty in the measurement process (e.g., sensor sensitivity, sensor misalignements, environmental effects).
 
 Use 
-----
-The best way to learn how to use `prog_models` is through the `tutorial <https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb>`__. There are also a number of examples which show different aspects of the package, summarized and linked below:
+---
+The best way to learn how to use `prog_models` is through the `tutorial <https://mybinder.org/v2/gh/nasa/prog_models/master?labpath=tutorial.ipynb>`__. There are also a number of examples that show different aspects of the package, summarized and linked below:
 
 * :download:`examples.sim <../examples/sim.py>`
     .. automodule:: examples.sim
-    |
-* :download:`examples.model_gen <../examples/model_gen.py>`
-    .. automodule:: examples.model_gen
     |
 * :download:`examples.benchmarking <../examples/benchmarking.py>`
     .. automodule:: examples.benchmarking
@@ -73,6 +70,15 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
     |
 * :download:`examples.noise <../examples/noise.py>`
     .. automodule:: examples.noise
+    |
+* :download:`examples.dataset <../examples/dataset.py>`
+    .. automodule:: examples.dataset
+    |
+* :download:`examples.generate_surrogate <../examples/generate_surrogate.py>`
+    .. automodule:: examples.generate_surrogate
+    |
+* :download:`examples.linear_model <../examples/linear_model.py>`
+    .. automodule:: examples.linear_model
     |
 * :download:`examples.visualize <../examples/visualize.py>`
     .. automodule:: examples.visualize
@@ -95,7 +101,7 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
 * :download:`tutorial <../tutorial.ipynb>`
     |
 
-Model Specific examples
+Model-Specific Examples
 ------------------------
 * :download:`examples.sim_battery_eol <../examples/sim_battery_eol.py>`
     .. automodule:: examples.sim_battery_eol
@@ -106,91 +112,23 @@ Model Specific examples
 * :download:`examples.sim_valve <../examples/sim_valve.py>`
     .. automodule:: examples.sim_valve
     |
+* :download:`examples.sim_powertrain <../examples/sim_powertrain.py>`
+    .. automodule:: examples.sim_powertrain
+    |
 
 Extending
 ----------
-There are two methods for creating new models: 1. Implementing a new subclass of the base model class (:class:`prog_models.PrognosticsModel`) or 2. use the model generator method (:py:meth:`prog_models.PrognosticsModel.generate_model`). These methods are described more below.
+You can create new models by creating a new subclass of :class:`prog_models.PrognosticsModel` or :class:`prog_models.LinearModel` (for simple linear models).
 
-1. Subclass Method
-********************
-The first method for creating a new prog_model is by creating a new subclass of :class:`prog_models.PrognosticsModel`. :class:`prog_models.PrognosticsModel` is described below:
-
-.. autoclass:: prog_models.PrognosticsModel
-
-To generate a new model create a new class for your model that inherits from this class. Alternatively, you can copy the template :class:`prog_model_template.ProgModelTemplate`, replacing the methods with logic defining your specific model.
+To generate a new model, create a new class for your model that inherits from this class. Alternatively, you can copy the template :download:`prog_model_template.ProgModelTemplate <../prog_model_template.py>`, replacing the methods with logic defining your specific model.
 
 The analysis and simulation tools defined in :class:`prog_models.PrognosticsModel` will then work with your new model. 
 
 See :download:`examples.new_model <../examples/new_model.py>` for an example of this approach.
 
-2. Model Generator Method
-*************************
-The second way to generate a new model is using the model generator method, :py:meth:`prog_models.PrognosticsModel.generate_model`. Pass a dictionary of the keys for input, state, output, events (optional), and the required transition into the method, and it will return a constructed model. See :py:meth:`prog_models.PrognosticsModel.generate_model` for more detail.
-
-See :download:`examples.model_gen <../examples/model_gen.py>` for an example of this approach.
-
-Updates in V1.2 (Mini-Release)
-------------------------------
-* New Feature: Vectorized Models
-    * Distributed models were vectorized to support vectorized sample-based prognostics approaches
-* New Feature: Dynamic Step Sizes
-    * Now step size can be a function of time or state
-    * See `examples.dynamic_step_size` for more information
-* New Feature: New method model.apply_bounds
-    * This method allows for other classes to use applied bound limits
-* Simulate_to* methods can now specify initial time. Also, outputs are now optional
-* Various bug fixes
-
-Updates in V1.1
----------------
-* New Feature: Derived Parameters
-    * Users can specify callbacks for parameters that are defined from others. These callbacks will be called when the dependency parameter is updated.
-    * See `examples.derived_params` for more information.
-* New Feature: Parameter Estimation
-    * Users can use the estimate_parameters method to estimate all or select parameters. 
-    * see `examples.param_est`
-* New Feature: Automatic Noise Generation
-    * Now noise is automatically generated when next_state/dx (process_noise) and output (measurement_noise). This removed the need to explicitly call apply_*_noise functions in these methods. 
-    * See `examples.noise` for more details in setting noise
-    * For any classes users created using V1.0.*, you should remove any call to apply_*_noise functions to prevent double noise application. 
-* New Feature: Configurable State Bounds
-    * Users can specify the range of valid values for each state (e.g., a temperature in celcius would have to be greater than -273.15 - absolute zero)
-* New Feature: Simulation Result Class
-    * Simulations now return a simulation result object for each value (e.g., output, input, state, etc) 
-    * These simulation result objects can be used just like the previous lists. 
-    * Output and Event State are now "Lazily Evaluated". This speeds up simulation when intermediate states are not printed and these properties are not used
-    * A plot method has been added directly to the class (e.g., `event_states.plot()`)
-* New Feature: Intermediate Result Printing
-    * Use the print parameter to enable printing intermediate results during a simulation 
-    * e.g., `model.simulate_to_threshold(..., print=True)`
-    * Note: This slows down simulation performance
-* Added support for python 3.9
-* Various bug fixes
-
-ElectroChemistry Model Updates
-************************************
-* New Feature: Added thermal effects. Now the model include how the temperature is effected by use. Previous implementation only included effects of temperature on performance.
-* New Feature: Added `degraded_capacity` (i.e., EOL) event to model. There are now three different models: BatteryElectroChemEOL (degraded_capacity only), BatteryElectroChemEOD (discharge only), and BatteryElectroChemEODEOL (combined). BatteryElectroChem is an alias for BatteryElectroChemEODEOL. 
-* New Feature: Updated SOC (EOD Event State) calculation to include voltage when near V_EOD. This prevents a situation where the voltage is below lower bound but SOC > 0. 
-
-CentrifugalPump Model Updates
-************************************
-* New Feature: Added CentrifugalPumpBase class where wear rates are parameters instead of part of the state vector. 
-    * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
-* Bugfix: Fixed bug where some event states were returned as negative
-* Bugfix: Fixed bug where some states were saved as parameters instead of part of the state. 
-* Added example on use of CentrifugalPump Model (see `examples.sim_pump`)
-* Performance improvements
-
-PneumaticValve Model Updates
-************************************
-* New Feature: Added PneumaticValveBase class where wear rates are parameters instead of part of the state vector. 
-    * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
-* Added example on use of PneumaticValve Model (see `examples.sim_valve`)
-
 Tips
 ----
-* To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., 'SOH_50') override the event_state and threshold_met equations to also predict that additional state
-* If you're only doing diagnostics without prognostics- just define a next_state equation with no change of state and don't perform prediction. The state estimator can still be used to estimate if any of the events have occured. 
-* Sudden events use a binary event_state (1=healthy, 0=failed)
-* You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 ('event 2': event_1 and [OTHER LOGIC])
+* To predict a certain partial state (e.g., 50% SOH), create a new event (e.g., 'SOH_50') override the event_state and threshold_met equations to also predict that additional state.
+* If you're only doing diagnostics without prognostics- just define a next_state equation with no change of state and don't perform prediction. The state estimator can still be used to estimate if any of the events have occured.
+* Sudden events use a binary event_state (1=healthy, 0=failed).
+* You can predict as many events as you would like, sometimes one event must happen before another, in this case the event occurance for event 1 can be a part of the equation for event 2 ('event 2': event_1 and [OTHER LOGIC]).

@@ -26,11 +26,11 @@ def run_example():
             i = 2     
         else:
             i = 3
-        return {'i': i}
+        return batt.InputContainer({'i': i})
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
-    (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, print = True)
+    simulated_results = batt.simulate_to(200, future_loading, print = True, progress = True)
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -38,9 +38,10 @@ def run_example():
     options = {
         'save_freq': 100, # Frequency at which results are saved
         'dt': 2, # Timestep
-        'print': True
+        'print': True,
+        'progress': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
+    simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
