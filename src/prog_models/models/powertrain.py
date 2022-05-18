@@ -66,6 +66,11 @@ class Powertrain(PrognosticsModel):
         | rho :                 Air density [Kg/m^3].
         | D:                    Propeller diameter [m].
 
+    Note:
+        This model is known to be sensitive to noise. The process noise and measurement noise should be set to low values.
+        
+    Note: 
+        Powertrain is added on top of any noise in the underlying esc and motor models. To update the esc or motor parameters, access m.esc.parameters and m.motor.paramters, respectively.
     """
     inputs = ['duty', 'v']
     states = ['v_a', 'v_b', 'v_c', 't', 'i_a', 'i_b', 'i_c', 'v_rot', 'theta']

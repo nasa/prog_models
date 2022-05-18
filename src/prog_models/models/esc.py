@@ -59,7 +59,15 @@ class ESC(PrognosticsModel):
 
     Model Configuration Parameters:
         | sawtooth_freq :       Frequency of PWM signal [Hz], default value in default_parameters.
-        | x0 :                  Initial state-vector containing v_a, v_b, v_c and t.
+        | x0 :                  Initial state containing v_a, v_b, v_c and t.
+        | process_noise :       Process noise (applied at dx/next_state). 
+                                Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+                                state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        | process_noise_dist :  Optional, distribution for process noise (e.g., normal, uniform, triangular)
+        | measurement_noise :   Measurement noise (applied in output eqn)
+                                Can be number (e.g., .2) applied to every output, a dictionary of values for each 
+                                output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        | measurement_noise_dist :  Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
     """
     default_parameters = {
         'sawtooth_freq': 16000, # Hz

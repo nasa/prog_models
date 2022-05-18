@@ -29,7 +29,7 @@ def run_example():
     def thresholds_met_eqn(thresholds_met):
         return all(thresholds_met['impact'])  # Stop when all impact ground
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load, x = first_state, thresholds_met_eqn=thresholds_met_eqn, print = True, dt=0.1, save_freq=2)
+    simulated_results = m.simulate_to_threshold(future_load, x = first_state, thresholds_met_eqn=thresholds_met_eqn, print = True, dt=0.1, save_freq=2)
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

@@ -4,10 +4,9 @@
 """
 Example of generating a Dynamic Mode Decomposition surrogate model using the battery model 
 """
-# from prog_models.models import BatteryCircuit as Battery
-# VVV Uncomment this to use Electro Chemistry Model VVV
-# from prog_models.models import BatteryElectroChem as Battery
+
 from prog_models.models import BatteryElectroChemEOD as Battery
+
 import matplotlib.pyplot as plt
 
 def run_example(): 
@@ -59,7 +58,7 @@ def run_example():
     batt.parameters['process_noise'] = 0
 
     # Generate surrogate model  
-    DMD_approx = batt.generate_surrogate(load_functions,**options_surrogate)
+    surrogate = batt.generate_surrogate(load_functions,**options_surrogate)
 
     ## Step 4: Use surrogate model 
     # Simulation options for implementation of surrogate model
@@ -80,7 +79,12 @@ def run_example():
         return batt.InputContainer({'i': i})
 
     # Simulate to threshold using DMD approximation
-    simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+    simulated_results = surrogate.simulate_to_threshold(future_loading,**options_sim)
+
+    # Calculate Error
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)
+    print('Example 1 MSE:',MSE)
+    # Not a very good approximation
 
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 1 Input')
@@ -106,10 +110,11 @@ def run_example():
 
     ### Example 2: Add process_noise to the surrogate model 
         # Without re-generating the surrogate model, we can re-define the process_noise to be higher than the high-fidelity model (since the surrogate model is less accurate)
-    DMD_approx.parameters['process_noise'] = 2e-03
+    surrogate.parameters['process_noise'] = 1e-04
+    surrogate.parameters['process_noise_dist'] = 'normal'
 
     # Simulate to threshold using DMD approximation 
-    simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+    simulated_results = surrogate.simulate_to_threshold(future_loading,**options_sim)
 
     # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 2 Input')
@@ -133,7 +138,7 @@ def run_example():
     batt.parameters['process_noise'] = 0
 
     # Generate surrogate model  
-    DMD_approx = batt.generate_surrogate(load_functions,**options_surrogate)
+    surrogate = batt.generate_surrogate(load_functions,**options_surrogate)
 
     ## Use surrogate model 
     # The surrogate model can now be used anywhere the original model is used. It is interchangeable with the original model. 
@@ -145,8 +150,13 @@ def run_example():
     }
 
     # Simulate to threshold using DMD approximation
-    simulated_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+    simulated_results = surrogate.simulate_to_threshold(future_loading,**options_sim)
 
+    # Calculate Error
+    MSE = batt.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs)
+    print('Example 3 MSE:',MSE)
+
+    # Plot results
     simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
     simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
     simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
