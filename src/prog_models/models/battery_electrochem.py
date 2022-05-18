@@ -574,6 +574,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     states = BatteryElectroChemEOD.states + BatteryElectroChemEOL.states
     events = BatteryElectroChemEOD.events + BatteryElectroChemEOL.events
 
+    is_vectorized = False
+
     default_parameters = deepcopy(BatteryElectroChemEOD.default_parameters)
     merge_dicts(default_parameters,
         BatteryElectroChemEOL.default_parameters)
@@ -581,11 +583,11 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     state_limits = deepcopy(BatteryElectroChemEOD.state_limits)
     state_limits.update(BatteryElectroChemEOL.state_limits)
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.param_callbacks['qMobile'].append(OverwrittenWarning)
         self.param_callbacks['tDiffusion'] = [OverwrittenWarning]
         self.param_callbacks['Ro'] = [OverwrittenWarning]
-        super().__init__()
+        super().__init__(**kwargs)
 
     def initialize(self, u : dict = {}, z : dict = {}):
         return self.StateContainer(self.parameters['x0'])

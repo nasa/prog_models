@@ -28,7 +28,7 @@ def run_example():
             elif event_state["EOD"] < 0.05:
                 load = -1  # Charge
         # Rule for loading at initialization
-        return {'i': load}
+        return batt.InputContainer({'i': load})
 
     # Simulate to EOL Threshold
     print('\n\n------------------------------------------------')
@@ -39,7 +39,7 @@ def run_example():
         'threshold_keys': ['InsufficientCapacity'],  # Simulate to InsufficientCapacity
         'print': True
     }
-    (times, inputs, states, outputs, event_states) = batt.simulate_to_threshold(future_loading, **options)
+    simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

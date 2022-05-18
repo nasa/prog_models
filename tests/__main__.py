@@ -1,4 +1,4 @@
-# Copyright © 2020 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+# Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .test_base_models import main as base_models_main
 from .test_sim_result import main as sim_result_main
@@ -10,6 +10,7 @@ from .test_battery import main as battery_main
 from .test_tutorials import main as tutorials_main
 from .test_datasets import main as datasets_main
 from .test_powertrain import main as powertrain_main
+from .test_surrogates import main as surrogates_main
 
 from io import StringIO
 import sys
@@ -84,8 +85,14 @@ if __name__ == '__main__':
         datasets_main()
     except Exception:
         was_successful = False
+        
     try:
         powertrain_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        surrogates_main()
     except Exception:
         was_successful = False
 

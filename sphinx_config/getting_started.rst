@@ -5,7 +5,7 @@ Getting Started
 
 The NASA Prognostics Center of Excellence (PCoE) Prognostics Models Package (prog_models) is a Python framework for defining, building, using, and testing models for prognostics (computation of remaining useful life) of engineering systems. It also provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components and can be used in conjunction with the Prognostics Algorithms Library to perform research in prognostics methods. 
 
-The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model or use the model generator method (:py:meth:`prog_models.PrognosticsModel.generate_model`)
+The foundation of this package is the class :class:`prog_models.PrognosticsModel`. This class defines the model interface and provides tools for analysis and simulation. New models must either be a subclass of this model.
 
 Installing
 -----------------------
@@ -25,7 +25,7 @@ For users who would like to contribute to `prog_models` or would like to use pre
 .. code-block:: console
 
     $ git clone https://github.com/nasa/prog_models
-    $ cd prog_algs
+    $ cd prog_models
     $ git checkout dev 
     $ pip install -e .
 
@@ -41,13 +41,13 @@ A few definitions to get started:
 
 * **outputs**: measured sensor values from a system (e.g., voltage and temperature of a battery).
 
-* **observables**: performance characteristics of a system that are a function of system state, but are not directly measured.
+* **performance metrics**: performance characteristics of a system that are a function of system state, but are not directly measured.
 
 * **states**: Internal parameters (typically hidden states) used to represent the state of the system- can be same as inputs/outputs but do not have to be. 
 
-* **process noise**: stochastic process representing uncertainty in the model transition. 
+* **process noise**: representing uncertainty in the model transition (e.g., model uncertainty). 
 
-* **measurement noise**: stochastic process representing uncertainty in the measurement process; e.g., sensor sensitivity, sensor misalignements, environmental effects.
+* **measurement noise**: representing uncertainty in the measurement process (e.g., sensor sensitivity, sensor misalignements, environmental effects).
 
 Use 
 ---
@@ -55,9 +55,6 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
 
 * :download:`examples.sim <../examples/sim.py>`
     .. automodule:: examples.sim
-    |
-* :download:`examples.model_gen <../examples/model_gen.py>`
-    .. automodule:: examples.model_gen
     |
 * :download:`examples.benchmarking <../examples/benchmarking.py>`
     .. automodule:: examples.benchmarking
@@ -76,6 +73,12 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
     |
 * :download:`examples.dataset <../examples/dataset.py>`
     .. automodule:: examples.dataset
+    |
+* :download:`examples.generate_surrogate <../examples/generate_surrogate.py>`
+    .. automodule:: examples.generate_surrogate
+    |
+* :download:`examples.linear_model <../examples/linear_model.py>`
+    .. automodule:: examples.linear_model
     |
 * :download:`examples.visualize <../examples/visualize.py>`
     .. automodule:: examples.visualize
@@ -115,74 +118,13 @@ Model-Specific Examples
 
 Extending
 ----------
-You can create new models by creating a new subclass of :class:`prog_models.PrognosticsModel`. :class:`prog_models.PrognosticsModel` is described below:
-
-.. autoclass:: prog_models.PrognosticsModel
+You can create new models by creating a new subclass of :class:`prog_models.PrognosticsModel` or :class:`prog_models.LinearModel` (for simple linear models).
 
 To generate a new model, create a new class for your model that inherits from this class. Alternatively, you can copy the template :download:`prog_model_template.ProgModelTemplate <../prog_model_template.py>`, replacing the methods with logic defining your specific model.
 
 The analysis and simulation tools defined in :class:`prog_models.PrognosticsModel` will then work with your new model. 
 
 See :download:`examples.new_model <../examples/new_model.py>` for an example of this approach.
-
-Updates in V1.2 (Mini-Release)
-------------------------------
-* New Feature: Vectorized Models
-    * Distributed models were vectorized to support vectorized sample-based prognostics approaches
-* New Feature: Dynamic Step Sizes
-    * Now step size can be a function of time or state
-    * See `examples.dynamic_step_size` for more information
-* New Feature: New method model.apply_bounds
-    * This method allows for other classes to use applied bound limits
-* Simulate_to* methods can now specify initial time. Also, outputs are now optional
-* Various bug fixes
-
-Updates in V1.1
----------------
-* New Feature: Derived Parameters
-    * Users can specify callbacks for parameters that are defined from others. These callbacks will be called when the dependency parameter is updated.
-    * See `examples.derived_params` for more information.
-* New Feature: Parameter Estimation
-    * Users can use the estimate_parameters method to estimate all or select parameters. 
-    * see `examples.param_est`
-* New Feature: Automatic Noise Generation
-    * Now noise is automatically generated when next_state/dx (process_noise) and output (measurement_noise). This removed the need to explicitly call apply_*_noise functions in these methods. 
-    * See `examples.noise` for more details in setting noise
-    * For any classes users created using V1.0.*, you should remove any call to apply_*_noise functions to prevent double noise application. 
-* New Feature: Configurable State Bounds
-    * Users can specify the range of valid values for each state (e.g., a temperature in celcius would have to be greater than -273.15 - absolute zero)
-* New Feature: Simulation Result Class
-    * Simulations now return a simulation result object for each value (e.g., output, input, state, etc) 
-    * These simulation result objects can be used just like the previous lists. 
-    * Output and Event State are now "Lazily Evaluated". This speeds up simulation when intermediate states are not printed and these properties are not used
-    * A plot method has been added directly to the class (e.g., `event_states.plot()`)
-* New Feature: Intermediate Result Printing
-    * Use the print parameter to enable printing intermediate results during a simulation 
-    * e.g., `model.simulate_to_threshold(..., print=True)`
-    * Note: This slows down simulation performance
-* Added support for python 3.9
-* Various bug fixes
-
-ElectroChemistry Model Updates
-************************************
-* New Feature: Added thermal effects. Now the model include how the temperature is effected by use. Previous implementation only included effects of temperature on performance.
-* New Feature: Added `degraded_capacity` (i.e., EOL) event to model. There are now three different models: BatteryElectroChemEOL (degraded_capacity only), BatteryElectroChemEOD (discharge only), and BatteryElectroChemEODEOL (combined). BatteryElectroChem is an alias for BatteryElectroChemEODEOL. 
-* New Feature: Updated SOC (EOD Event State) calculation to include voltage when near V_EOD. This prevents a situation where the voltage is below lower bound but SOC > 0. 
-
-CentrifugalPump Model Updates
-************************************
-* New Feature: Added CentrifugalPumpBase class where wear rates are parameters instead of part of the state vector. 
-    * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
-* Bugfix: Fixed bug where some event states were returned as negative
-* Bugfix: Fixed bug where some states were saved as parameters instead of part of the state. 
-* Added example on use of CentrifugalPump Model (see `examples.sim_pump`)
-* Performance improvements
-
-PneumaticValve Model Updates
-************************************
-* New Feature: Added PneumaticValveBase class where wear rates are parameters instead of part of the state vector. 
-    * Some users may use this class for prognostics, then use the parameter estimation tool occasionally to update the wear rates, which change very slowly.
-* Added example on use of PneumaticValve Model (see `examples.sim_valve`)
 
 Tips
 ----

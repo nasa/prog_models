@@ -3,6 +3,7 @@
 import io
 import requests
 import numpy as np
+import pandas as pd
 from scipy.io import loadmat
 import zipfile
 
@@ -42,7 +43,7 @@ cache = {}  # Cache for downloaded data
 # Cache is used to prevent files from being downloaded twice
 
 def load_data(batt_id : str) -> tuple:
-    """Loads data for one or more batteries from NASA's PCoE Dataset
+    """Loads data for one or more batteries from NASA's PCoE Dataset, '11. Randomized Battery Usage Data Set'
     https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/
 
     Args:
@@ -52,9 +53,16 @@ def load_data(batt_id : str) -> tuple:
         ValueError: Battery not in dataset (should be RW1-28)
 
     Returns:
-        tuple[dict, list[np.array]]: (description, data)
-            0: description of the data. 
-            1: List of numpy arrays (order 2 tensors) such that data[i] is the data for run i, corresponding with details[i], above. Each element is in the format [time_index][value] where values are ('relativeTime', 'current' (amps), 'voltage', 'temperature' (°C)) in that order.
+        tuple[dict, list[pd.DataFrame]]: Data and description as a tuple (description, data), where the data is a list of pandas DataFrames such that data[i] is the data for run i, corresponding with details[i], above. The columns of the dataframe are ('relativeTime', 'current' (amps), 'voltage', 'temperature' (°C)) in that order.
+
+    Raises:
+        ValueError: Battery id must be a string or int
+        ConnectionError: Failed to download data. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.
+
+    Note:
+        Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.
+    
+        In all other instances of connection error or failed downloading, please submit an issue on the repository page (https://github.com/nasa/prog_models/issues) for our team to look into.
     """
     if isinstance(batt_id, int):
         # Convert to string
@@ -72,7 +80,7 @@ def load_data(batt_id : str) -> tuple:
         try:
             response = requests.get(url, allow_redirects=True)
         except requests.exceptions.RequestException as e: # handle chain of errors
-            raise ConnectionRefusedError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.")
+            raise ConnectionRefusedError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
         # Unzip response
         cache[url] = zipfile.ZipFile(io.BytesIO(response.content))
@@ -98,10 +106,12 @@ def load_data(batt_id : str) -> tuple:
 
     result = result['step'][0,0]
     result = [
-        np.array([
+        pd.DataFrame(np.array([
             result[key][0, i][0] for key in ('relativeTime', 'current', 'voltage', 'temperature')
-        ], np.float64).T for i in range(result.shape[1])
+        ], np.float64).T, columns = ('relativeTime', 'current', 'voltage', 'temperature')) for i in range(result.shape[1])
     ]
+    for r in result:
+        r.set_index('relativeTime')
 
     return desc, result
 

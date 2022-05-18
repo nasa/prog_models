@@ -25,13 +25,13 @@ def run_example():
         else:
             V = 471.2398 - (t-cycle_time)
 
-        return {
+        return pump.InputContainer({
             'Tamb': 290,
             'V': V,
             'pdisch': 928654, 
             'psuc': 239179, 
             'wsync': V * 0.8
-        }
+        })
 
     # Step 3: Sim
     first_output = pump.output(pump.initialize(future_loading(0),{}))
@@ -40,17 +40,17 @@ def run_example():
         'save_freq': 1e3,
         'print': True
     }
-    (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, first_output, **config)
+    simulated_results = pump.simulate_to_threshold(future_loading, first_output, **config)
 
     # Step 4: Plot Results
     from prog_models.visualize import plot_timeseries
-    plot_timeseries(times, inputs, options={'compact': False, 'title': 'Inputs',
+    plot_timeseries(simulated_results.times, simulated_results.inputs, options={'compact': False, 'title': 'Inputs',
                                                     'xlabel': 'time', 'ylabel':{lbl: lbl for lbl in pump.inputs}})
-    plot_timeseries(times, states, options={'compact': False, 'title': 'States', 'xlabel': 'time', 'ylabel': ''})
-    plot_timeseries(times, outputs, options={'compact': False, 'title': 'Outputs', 'xlabel': 'time', 'ylabel': ''})
-    plot_timeseries(times, event_states, options={'compact': False, 'title': 'Events', 'xlabel': 'time', 'ylabel': ''})
-    thresholds_met = [pump.threshold_met(x) for x in states]
-    plot_timeseries(times, thresholds_met, options={'compact': True, 'title': 'Events', 'xlabel': 'time', 'ylabel': ''}, legend = {'display': True})
+    plot_timeseries(simulated_results.times, simulated_results.states, options={'compact': False, 'title': 'States', 'xlabel': 'time', 'ylabel': ''})
+    plot_timeseries(simulated_results.times, simulated_results.outputs, options={'compact': False, 'title': 'Outputs', 'xlabel': 'time', 'ylabel': ''})
+    plot_timeseries(simulated_results.times, simulated_results.event_states, options={'compact': False, 'title': 'Events', 'xlabel': 'time', 'ylabel': ''})
+    thresholds_met = [pump.threshold_met(x) for x in simulated_results.states]
+    plot_timeseries(simulated_results.times, thresholds_met, options={'compact': True, 'title': 'Events', 'xlabel': 'time', 'ylabel': ''}, legend = {'display': True})
 
     import matplotlib.pyplot as plt    
     plt.show()
