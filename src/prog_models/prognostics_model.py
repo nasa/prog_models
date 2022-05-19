@@ -1219,36 +1219,45 @@ class PrognosticsModel(ABC):
             time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
 
             states_data_interp = {}
-            inputs_data_interp = {}
+            outputs_data_interp = {}
+            es_data_interp = {}
 
             for state_name in self.states:
                 states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
                 states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
                 if config['training_noise'] != 0:
                     states_data_interp[state_name] += np.random.randn(len(states_data_interp[state_name]))*config['training_noise']
-            for input_name in self.inputs:
-                inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
-                inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
+            for output_name in self.outputs:
+                outputs_data_temp = [outputs[iter_data3][output_name] for iter_data3 in range(len(outputs))]
+                outputs_data_interp[output_name] = interp1d(times,outputs_data_temp)(time_data_interp)
                 if config['training_noise'] != 0:
-                    inputs_data_interp[input_name] += np.random.randn(len(inputs_data_interp[input_name]))*config['training_noise']
+                    outputs_data_interp[output_name] += np.random.randn(len(outputs_data_interp[output_name]))*config['training_noise']
+            for es_name in self.events:
+                es_data_temp = [event_states[iter_data2][es_name] for iter_data2 in range(len(event_states))]
+                es_data_interp[es_name] = interp1d(times,es_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    es_data_interp[es_name] += np.random.randn(len(es_data_interp[es_name]))*config['training_noise']
 
             states_data = [
                 self.StateContainer({
                     key: value[iter_dataT] for key, value in states_data_interp.items()
                 }) for iter_dataT in range(len(time_data_interp))
                 ]
-            inputs_data = [
-                self.InputContainer({
-                    key: value[iter_dataT] for key, value in inputs_data_interp.items()
+            outputs_data = [
+                self.OutputContainer({
+                    key: value[iter_dataT] for key, value in outputs_data_interp.items()
                 }) for iter_dataT in range(len(time_data_interp))
                 ]
+            event_states_data = [
+                {key: value[iter_dataT] for key, value in es_data_interp.items()} for iter_dataT in range(len(time_data_interp))
+                ]
+            
 
             times = time_data_interp.tolist()
             states = SimResult(time_data_interp,states_data)
-            inputs = SimResult(time_data_interp,inputs_data)
-            outputs = LazySimResult(self.output, time_data_interp, states_data) 
-            event_states = LazySimResult(self.event_state, time_data_interp, states_data)
-            
+            outputs = SimResult(time_data_interp,outputs_data)
+            event_states = SimResult(time_data_interp,event_states_data)
+
             def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
                 """Sub-function for performing check and removal for user designated values.
             
@@ -1271,15 +1280,13 @@ class PrognosticsModel(ABC):
                            
             if len(config['states']) != len(self.states):
                 user_val_set(self.states,  'states', states_dmd, states)
-            if len(config['inputs']) != len(self.inputs):
-                user_val_set(self.inputs,  'inputs', inputs_dmd, inputs)
             if len(config['outputs']) != len(self.outputs):
                 user_val_set(self.outputs,  'outputs', outputs_dmd, outputs) 
             if len(config['events']) != len(self.events):
                 user_val_set(self.events,  'events', events_dmd, event_states)  
 
             # Initialize DMD matrices
-            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
+            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(config['inputs']),len(times)-1)) 
             xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
 
             # Save DMD matrices
@@ -1298,7 +1305,7 @@ class PrognosticsModel(ABC):
                         states_now,
                         outputs[i].matrix,
                         np.array([list(event_states[i].values())]).T,
-                        np.array([[load_now[key]] for key in load_now.keys()])
+                        np.array([[load_now[key]+ np.random.randn()*config['training_noise']] for key in load_now.keys()])
                     )
                 x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (0, )))[:,0]  # Filter out empty values (e.g., if there is no input)
                 stack2 = (
