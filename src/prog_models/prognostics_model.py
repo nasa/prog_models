@@ -1430,17 +1430,30 @@ class PrognosticsModel(ABC):
                 if config['dt'] != None:
                     warn("dt is not used in DMD approximation")
 
-                if config['save_freq'] == dmd_dt and config['save_pts'] == []: 
+                if (
+                    config['save_freq'] == dmd_dt or
+                    (
+                        isinstance(config['save_freq'], tuple) and
+                        config['save_freq'][0]%dmd_dt < 1e-9 and
+                        config['save_freq'][1] == dmd_dt
+                    )
+                ) and config['save_pts'] == []:
                     # In this case, the user wants what the DMD approximation returns 
                     return results 
-                
                 # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
                 # Define time vector based on user specifications
                 time_basic = [results.times[0], results.times[-1]]
                 time_basic.extend(config['save_pts'])                       
                 if config['save_freq'] != None:
-                    # Add Save Frequency
-                    time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
+                    if isinstance(config['save_freq'], tuple):
+                        # Tuple used to specify start and frequency
+                        t_step = config['save_freq'][1]
+                        # Use starting time or the next multiple
+                        t_start = config['save_freq'][0]
+                        start = max(t_start, results.times[0] - (results.times[0]-t_start)%t_step)
+                        time_array = np.arange(start+t_step,results.times[-1],t_step)
+                    else: 
+                        time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
                     time_basic.extend(time_array.tolist())
                 time_interp = sorted(time_basic)
 
