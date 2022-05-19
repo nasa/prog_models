@@ -1126,6 +1126,8 @@ class PrognosticsModel(ABC):
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
         stability_tol: int, optional
             Value that determines the tolerance for DMD matrix stability\n
+        training_noise: int, optional
+            Noise added to the training data sampled from a standard normal distribution with magnitude training_noise \n
 
         Returns
         -------
@@ -1155,15 +1157,16 @@ class PrognosticsModel(ABC):
             'inputs': self.inputs,
             'outputs': self.outputs,
             'events': self.events,
-            'stability_tol': 1e-05
+            'stability_tol': 1e-05,
+            'training_noise': 1e-05
         }
         config.update(kwargs)
 
         # List of user-define values to include in surrogate model: 
-        states_dmd = deepcopy(self.states)
-        inputs_dmd = deepcopy(self.inputs)
-        outputs_dmd = deepcopy(self.outputs)
-        events_dmd = deepcopy(self.events)
+        states_dmd = self.states.copy()
+        inputs_dmd = self.inputs.copy()
+        outputs_dmd = self.outputs.copy()
+        events_dmd = self.events.copy()
 
         # Validate user inputs 
         try:
@@ -1216,32 +1219,45 @@ class PrognosticsModel(ABC):
             time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
 
             states_data_interp = {}
-            inputs_data_interp = {}
+            outputs_data_interp = {}
+            es_data_interp = {}
 
             for state_name in self.states:
                 states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
                 states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
-            for input_name in self.inputs:
-                inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
-                inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    states_data_interp[state_name] += np.random.randn(len(states_data_interp[state_name]))*config['training_noise']
+            for output_name in self.outputs:
+                outputs_data_temp = [outputs[iter_data3][output_name] for iter_data3 in range(len(outputs))]
+                outputs_data_interp[output_name] = interp1d(times,outputs_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    outputs_data_interp[output_name] += np.random.randn(len(outputs_data_interp[output_name]))*config['training_noise']
+            for es_name in self.events:
+                es_data_temp = [event_states[iter_data2][es_name] for iter_data2 in range(len(event_states))]
+                es_data_interp[es_name] = interp1d(times,es_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    es_data_interp[es_name] += np.random.randn(len(es_data_interp[es_name]))*config['training_noise']
 
             states_data = [
                 self.StateContainer({
                     key: value[iter_dataT] for key, value in states_data_interp.items()
                 }) for iter_dataT in range(len(time_data_interp))
                 ]
-            inputs_data = [
-                self.InputContainer({
-                    key: value[iter_dataT] for key, value in inputs_data_interp.items()
+            outputs_data = [
+                self.OutputContainer({
+                    key: value[iter_dataT] for key, value in outputs_data_interp.items()
                 }) for iter_dataT in range(len(time_data_interp))
                 ]
+            event_states_data = [
+                {key: value[iter_dataT] for key, value in es_data_interp.items()} for iter_dataT in range(len(time_data_interp))
+                ]
+            
 
             times = time_data_interp.tolist()
             states = SimResult(time_data_interp,states_data)
-            inputs = SimResult(time_data_interp,inputs_data)
-            outputs = LazySimResult(self.output, time_data_interp, states_data) 
-            event_states = LazySimResult(self.event_state, time_data_interp, states_data)
-            
+            outputs = SimResult(time_data_interp,outputs_data)
+            event_states = SimResult(time_data_interp,event_states_data)
+
             def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
                 """Sub-function for performing check and removal for user designated values.
             
@@ -1264,15 +1280,13 @@ class PrognosticsModel(ABC):
                            
             if len(config['states']) != len(self.states):
                 user_val_set(self.states,  'states', states_dmd, states)
-            if len(config['inputs']) != len(self.inputs):
-                user_val_set(self.inputs,  'inputs', inputs_dmd, inputs)
             if len(config['outputs']) != len(self.outputs):
                 user_val_set(self.outputs,  'outputs', outputs_dmd, outputs) 
             if len(config['events']) != len(self.events):
                 user_val_set(self.events,  'events', events_dmd, event_states)  
 
             # Initialize DMD matrices
-            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
+            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(config['inputs']),len(times)-1)) 
             xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
 
             # Save DMD matrices
@@ -1291,7 +1305,7 @@ class PrognosticsModel(ABC):
                         states_now,
                         outputs[i].matrix,
                         np.array([list(event_states[i].values())]).T,
-                        np.array([[load_now[key]] for key in load_now.keys()])
+                        np.array([[load_now[key]+ np.random.randn()*config['training_noise']] for key in load_now.keys()])
                     )
                 x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (0, )))[:,0]  # Filter out empty values (e.g., if there is no input)
                 stack2 = (
@@ -1430,7 +1444,14 @@ class PrognosticsModel(ABC):
                 if config['dt'] != None:
                     warn("dt is not used in DMD approximation")
 
-                if config['save_freq'] == dmd_dt and config['save_pts'] == []: 
+                if (
+                    config['save_freq'] == dmd_dt or
+                    (
+                        isinstance(config['save_freq'], tuple) and
+                        config['save_freq'][0]%dmd_dt < 1e-9 and
+                        config['save_freq'][1] == dmd_dt
+                    )
+                ) and config['save_pts'] == []:
                     # In this case, the user wants what the DMD approximation returns 
                     return results 
                 
@@ -1439,8 +1460,15 @@ class PrognosticsModel(ABC):
                 time_basic = [results.times[0], results.times[-1]]
                 time_basic.extend(config['save_pts'])                       
                 if config['save_freq'] != None:
-                    # Add Save Frequency
-                    time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
+                    if isinstance(config['save_freq'], tuple):
+                        # Tuple used to specify start and frequency
+                        t_step = config['save_freq'][1]
+                        # Use starting time or the next multiple
+                        t_start = config['save_freq'][0]
+                        start = max(t_start, results.times[0] - (results.times[0]-t_start)%t_step)
+                        time_array = np.arange(start+t_step,results.times[-1],t_step)
+                    else: 
+                        time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
                     time_basic.extend(time_array.tolist())
                 time_interp = sorted(time_basic)
 

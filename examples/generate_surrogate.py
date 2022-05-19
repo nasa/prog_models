@@ -18,14 +18,14 @@ def run_example():
     # Here, we define two specific loading profiles. These could also be generated programmatically, for as many loading profiles as desired 
     def future_loading_1(t, x=None):
         # Variable (piece-wise) future loading scheme 
-        if (t < 500):
-            i = 3
-        elif (t < 1000):
+        if (t < 600):
             i = 2
-        elif (t < 1500):
-            i = 0.5
+        elif (t < 900):
+            i = 1
+        elif (t < 1800):
+            i = 4
         else:
-            i = 4.5
+            i = 2
         return batt.InputContainer({'i': i})
     
     def future_loading_2(t, x=None):
