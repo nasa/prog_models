@@ -1160,10 +1160,10 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
 
         # List of user-define values to include in surrogate model: 
-        states_dmd = deepcopy(self.states)
-        inputs_dmd = deepcopy(self.inputs)
-        outputs_dmd = deepcopy(self.outputs)
-        events_dmd = deepcopy(self.events)
+        states_dmd = self.states.copy()
+        inputs_dmd = self.inputs.copy()
+        outputs_dmd = self.outputs.copy()
+        events_dmd = self.events.copy()
 
         # Validate user inputs 
         try:
