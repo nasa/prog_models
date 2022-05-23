@@ -1454,7 +1454,6 @@ class PrognosticsModel(ABC):
                 ) and config['save_pts'] == []:
                     # In this case, the user wants what the DMD approximation returns 
                     return results 
-                
                 # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
                 # Define time vector based on user specifications
                 time_basic = [results.times[0], results.times[-1]]

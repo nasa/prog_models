@@ -52,13 +52,18 @@ class DictLikeMatrixWrapper():
         return len(self._keys)
 
     def __eq__(self, other : "DictLikeMatrixWrapper") -> bool:
-        return self._keys == other._keys and (self.matrix == other.matrix).all()
+        if isinstance(other, dict):
+            return list(self.keys()) == list(other.keys()) and (self.matrix == np.array([[other[key]] for key in self._keys])).all()
+        return self.keys() == other.keys() and (self.matrix == other.matrix).all()
 
     def __hash__(self):
         return hash(self.keys) + hash(self.matrix)
     
     def __str__(self) -> str:
         return self.__repr__()
+
+    def copy(self) -> "DictLikeMatrixWrapper":
+        return DictLikeMatrixWrapper(self._keys, self.matrix.copy())
 
     def keys(self) -> list:
         return self._keys
