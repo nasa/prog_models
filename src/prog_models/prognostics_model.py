@@ -1409,17 +1409,17 @@ class PrognosticsModel(ABC):
 
             def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
                 # Save keyword arguments same as DMD training for approximation 
-                kwargs_temp = {
-                    'save_freq': dmd_dt,
-                    'dt': dmd_dt
-                }
                 kwargs_sim = kwargs.copy()
-                kwargs_sim.update(kwargs_temp)
+                kwargs_sim['save_freq'] = dmd_dt
+                kwargs_sim['dt'] = dmd_dt
 
                 # Simulate to threshold at DMD time step
                 results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_sim)
                 
                 # Interpolate results to be at user-desired time step
+                if 'dt' in kwargs:
+                    warn("dt is not used in DMD approximation")
+
                 # Default parameters 
                 config = {
                     'dt': None,
@@ -1427,19 +1427,15 @@ class PrognosticsModel(ABC):
                     'save_pts': []
                 }
                 config.update(kwargs)
-                if config['dt'] != None:
-                    warn("dt is not used in DMD approximation")
 
-                if (
-                    config['save_freq'] == dmd_dt or
-                    (
-                        isinstance(config['save_freq'], tuple) and
-                        config['save_freq'][0]%dmd_dt < 1e-9 and
-                        config['save_freq'][1] == dmd_dt
-                    )
-                ) and config['save_pts'] == []:
+                if (kwargs['save_freq'] == dmd_dt or
+                    (isinstance(kwargs['save_freq'], tuple) and
+                        kwargs['save_freq'][0]%dmd_dt < 1e-9 and
+                        kwargs['save_freq'][1] == dmd_dt)
+                    ) and ('save_pts' not in kwargs or kwargs['save_pts'] == []):
                     # In this case, the user wants what the DMD approximation returns 
                     return results 
+
                 # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
                 # Define time vector based on user specifications
                 time_basic = [results.times[0], results.times[-1]]
