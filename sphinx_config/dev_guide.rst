@@ -150,6 +150,7 @@ or whose anomalous behavior would cause or contribute to a failure of system fun
 Safety Criticality Analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The safety criticality assessment was made based on the responses to the following questions:
+
 * Does the software reside in a safety-critical system? NO
 * The software causes or contributes to a hazard? NO
 * The software provides control or mitigation for hazards? NO

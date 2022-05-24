@@ -20,7 +20,7 @@ class SimResult(UserList):
     __slots__ = ['times', 'data']  # Optimization 
     
     def __init__(self, times : list = [], data : list = []):
-        self.times = deepcopy(times)
+        self.times = times.copy()
         self.data = deepcopy(data)
 
     def __eq__(self, other : "SimResult") -> bool:
@@ -174,7 +174,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
         self.fcn = fcn
-        self.times = deepcopy(times)
+        self.times = times.copy()
         self.states = deepcopy(states)
         self.__data = None
 
@@ -207,7 +207,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
         """
         if (isinstance(other, self.__class__)):
-            self.times.extend(deepcopy(other.times))  # lgtm [py/modification-of-default-value]
+            self.times.extend(other.times)  # lgtm [py/modification-of-default-value]
             self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
             if self.__data is None or not other.is_cached():
                 self.__data = None
