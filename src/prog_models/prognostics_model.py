@@ -771,7 +771,7 @@ class PrognosticsModel(ABC):
         t = config['t0']
         u = future_loading_eqn(t)
         if 'x' in config:
-            x = config['x']
+            x = deepcopy(config['x'])
         else:
             x = self.initialize(u, first_output)
         
