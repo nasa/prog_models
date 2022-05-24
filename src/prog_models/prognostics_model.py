@@ -1428,11 +1428,11 @@ class PrognosticsModel(ABC):
                 }
                 config.update(kwargs)
 
-                if (kwargs['save_freq'] == dmd_dt or
-                    (isinstance(kwargs['save_freq'], tuple) and
-                        kwargs['save_freq'][0]%dmd_dt < 1e-9 and
-                        kwargs['save_freq'][1] == dmd_dt)
-                    ) and ('save_pts' not in kwargs or kwargs['save_pts'] == []):
+                if (config['save_freq'] == dmd_dt or
+                    (isinstance(config['save_freq'], tuple) and
+                        config['save_freq'][0]%dmd_dt < 1e-9 and
+                        config['save_freq'][1] == dmd_dt)
+                    ) and config['save_pts'] == []:
                     # In this case, the user wants what the DMD approximation returns 
                     return results 
 
