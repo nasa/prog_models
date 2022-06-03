@@ -799,23 +799,23 @@ class TestModels(unittest.TestCase):
 
         # Default mode should be auto
         result = m.simulate_to_threshold(load, save_freq = 0.75, save_pts = [1.5, 2.5])
-        self.assertListEqual(result.times, [0, 0.75, 1.5, 1.5, 2.25, 2.5, 3, 3.75])  
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
 
         # Auto step size
         result = m.simulate_to_threshold(load, dt = 'auto', save_freq = 0.75, save_pts = [1.5, 2.5])
-        self.assertListEqual(result.times, [0, 0.75, 1.5, 1.5, 2.25, 2.5, 3, 3.75])  
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
 
         # Auto step size with a max of 2
         result = m.simulate_to_threshold(load, dt = ('auto', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
-        self.assertListEqual(result.times, [0, 0.75, 1.5, 1.5, 2.25, 2.5, 3, 3.75])  
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
 
         # Constant step size of 2
         result = m.simulate_to_threshold(load, dt = ('constant', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
-        self.assertListEqual(result.times, [0, 2, 2, 4, 4])  
+        self.assertListEqual(result.times, [0, 2, 4])  
 
         # Constant step size of 2
         result = m.simulate_to_threshold(load, dt = 2, save_freq = 0.75, save_pts = [1.5, 2.5])
-        self.assertListEqual(result.times, [0, 2, 2, 4, 4])  
+        self.assertListEqual(result.times, [0, 2, 4])  
 
         result = m.simulate_to_threshold(load, dt = 2, save_pts = [2.5])
         self.assertListEqual(result.times, [0, 4])  

@@ -886,7 +886,10 @@ class PrognosticsModel(ABC):
             if (t >= next_save):
                 next_save = next(iterator)
                 update_all()
-            if (t >= save_pts[save_pt_index]):
+                if (t >= save_pts[save_pt_index]):
+                    # Prevent double saving when save_pt and save_freq align
+                    save_pt_index += 1
+            elif (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
 
