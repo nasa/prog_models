@@ -927,7 +927,7 @@ class PrognosticsModel(ABC):
     @staticmethod
     def generate_model(keys : dict, initialize_eqn : Callable, output_eqn : Callable, next_state_eqn : Callable = None, dx_eqn : Callable = None, event_state_eqn : Callable = None, threshold_eqn : Callable = None, config : dict = {'process_noise': 0.1}) -> "PrognosticsModel":
         """
-        Generate a new prognostics model from individual model functions
+        [DEPRECIATED] Generate a new prognostics model from individual model functions
 
         Parameters
         ----------
@@ -970,6 +970,8 @@ class PrognosticsModel(ABC):
         |
         | m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)
         """
+        warn("PrognosticsModel.generate_model is deprecated and will be removed in v1.5. Subclass PrognosticsModel instead", DeprecationWarning)
+
         # Input validation
         if not callable(initialize_eqn):
             raise ProgModelTypeError("Initialize Function must be callable")
