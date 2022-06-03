@@ -880,6 +880,12 @@ class PrognosticsModel(ABC):
         if config['method'] == 'rk4':
             # Using RK4 Method
             dx = self.dx
+
+            try:
+                dx(x, future_loading_eqn(t, x))
+            except ProgModelException:
+                raise ProgModelException("dx(x, u) must be defined to use RK4 method")
+                
             apply_limits = self.apply_limits
             apply_process_noise = self.apply_process_noise
             StateContainer = self.StateContainer
