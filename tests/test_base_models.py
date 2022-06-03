@@ -865,7 +865,7 @@ class TestModels(unittest.TestCase):
             m.simulate_to_threshold(load, method='rk4')
 
         # With linear model
-        m = LinearThrownObject()
+        m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
 
         result = m.simulate_to_threshold(load, dt = 0.1, method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
