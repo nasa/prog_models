@@ -662,6 +662,8 @@ class PrognosticsModel(ABC):
             function (t, x) -> dt\n
             Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
             string: mode - 'auto' or 'constant'\n
+        method: String, optional
+            Integration method, e.g. 'rk4' or 'euler' (default: 'euler')
         save_freq : Number, optional
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : List[Number], optional
@@ -737,6 +739,7 @@ class PrognosticsModel(ABC):
         config = { # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
+            'method': 'euler',
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
@@ -873,6 +876,29 @@ class PrognosticsModel(ABC):
         if progress:
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
+
+        if config['method'] == 'rk4':
+            # Using RK4 Method
+            dx = self.dx
+            apply_limits = self.apply_limits
+            apply_process_noise = self.apply_process_noise
+            StateContainer = self.StateContainer
+            def next_state(x, u, dt):
+                dx1 = StateContainer(dx(x, u))
+                
+                x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
+                dx2 = dx(x2, u)
+
+                x3 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx2.items()})
+                dx3 = dx(x3, u)
+                
+                x4 = StateContainer({key: x[key] + dt*dx_i for key, dx_i in dx3.items()})   
+                dx4 = dx(x4, u)
+
+                x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
+                return apply_limits(apply_process_noise(x))
+        elif config['method'] != 'euler':
+            raise ProgModelInputException(f"'method' mode {config['method']} not supported. Must be 'euler' or 'rk4'")
        
         while t < horizon:
             dt = next_time(t, x)

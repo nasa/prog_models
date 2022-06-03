@@ -50,6 +50,10 @@ def run_example():
     simulated_results = batt.simulate_to_threshold(future_loading, **options)
     # Note that even though the step size is 2, the odd points in the save frequency are met perfectly, dt is adjusted automatically to capture the save points
 
+    # You can also change the integration method. For example:
+    options['method'] = 'rk4'  # Using Runge-Kutta 4th order
+    simulated_results_rk4 = batt.simulate_to_threshold(future_loading, **options)
+
 # This allows the module to be executed directly 
 if __name__ == '__main__':
     run_example()
