@@ -48,7 +48,7 @@ def run_example():
     options['save_freq'] = 201  # Save every 201 seconds
     options['save_pts'] = [250, 772, 1023]  # Special points we sould like to see reported
     simulated_results = batt.simulate_to_threshold(future_loading, **options)
-    # Note that event though the step size is 2, the odd points in the save frequency are met perfectly, dt is adjusted automatically to capture the save points
+    # Note that even though the step size is 2, the odd points in the save frequency are met perfectly, dt is adjusted automatically to capture the save points
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
