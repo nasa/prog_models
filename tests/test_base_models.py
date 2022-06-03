@@ -792,6 +792,34 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
+    def test_sim_modes(self):
+        m = ThrownObject(process_noise = 0, measurement_noise = 0)
+        def load(t, x=None):
+            return m.InputContainer({})
+
+        # Default mode should be auto
+        result = m.simulate_to_threshold(load, save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 1.5, 2.25, 2.5, 3, 3.75])  
+
+        # Auto step size
+        result = m.simulate_to_threshold(load, dt = 'auto', save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 1.5, 2.25, 2.5, 3, 3.75])  
+
+        # Auto step size with a max of 2
+        result = m.simulate_to_threshold(load, dt = ('auto', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 1.5, 2.25, 2.5, 3, 3.75])  
+
+        # Constant step size of 2
+        result = m.simulate_to_threshold(load, dt = ('constant', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 2, 4])  
+
+        # Constant step size of 2
+        result = m.simulate_to_threshold(load, dt = 2, save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 2, 4])  
+
+        result = m.simulate_to_threshold(load, dt = 2, save_pts = [2.5])
+        self.assertListEqual(result.times, [0, 4])  
+
     # when range specified when state doesnt exist or entered incorrectly
     def test_state_limits(self):
         m = MockProgModel()
