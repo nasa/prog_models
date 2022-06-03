@@ -862,12 +862,12 @@ class TestModels(unittest.TestCase):
             return m.InputContainer({})
         
         with self.assertRaises(ProgModelException):
-            m.simulate_to_threshold(load, method='rk4')
+            m.simulate_to_threshold(load, integration_method='rk4')
 
         # With linear model
         m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
 
-        result = m.simulate_to_threshold(load, dt = 0.1, method='rk4')
+        result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
 
     # when range specified when state doesnt exist or entered incorrectly

@@ -662,7 +662,7 @@ class PrognosticsModel(ABC):
             function (t, x) -> dt\n
             Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
             string: mode - 'auto' or 'constant'\n
-        method: String, optional
+        integration_method: String, optional
             Integration method, e.g. 'rk4' or 'euler' (default: 'euler')
         save_freq : Number, optional
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
@@ -739,7 +739,7 @@ class PrognosticsModel(ABC):
         config = { # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
-            'method': 'euler',
+            'integration_method': 'euler',
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
@@ -877,7 +877,7 @@ class PrognosticsModel(ABC):
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
 
-        if config['method'] == 'rk4':
+        if config['integration_method'] == 'rk4':
             # Using RK4 Method
             dx = self.dx
 
@@ -885,7 +885,7 @@ class PrognosticsModel(ABC):
                 dx(x, future_loading_eqn(t, x))
             except ProgModelException:
                 raise ProgModelException("dx(x, u) must be defined to use RK4 method")
-                
+
             apply_limits = self.apply_limits
             apply_process_noise = self.apply_process_noise
             StateContainer = self.StateContainer
@@ -903,8 +903,8 @@ class PrognosticsModel(ABC):
 
                 x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
                 return apply_limits(apply_process_noise(x))
-        elif config['method'] != 'euler':
-            raise ProgModelInputException(f"'method' mode {config['method']} not supported. Must be 'euler' or 'rk4'")
+        elif config['integration_method'] != 'euler':
+            raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
         while t < horizon:
             dt = next_time(t, x)
