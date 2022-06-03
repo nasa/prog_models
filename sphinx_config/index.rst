@@ -35,7 +35,7 @@ Use the following to cite this repository:
   | month     = May,
   | year      = 2022,
   | version   = {1.3},
-  | url       = {https://github.com/nasa/prog_models}
+  | url       = {https://github.com/nasa/prog\_models}
   | }
 
 The corresponding reference should look like this:
