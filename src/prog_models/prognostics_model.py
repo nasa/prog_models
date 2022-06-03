@@ -657,8 +657,11 @@ class PrognosticsModel(ABC):
         -----------------
         t0 : Number, optional
             Starting time for simulation in seconds (default: 0.0) \n
-        dt : Number or function, optional
-            time step (s), e.g. dt = 0.1 or function (t, x) -> dt\n
+        dt : Number, tuple, string, or function, optional
+            Number: constant time step (s), e.g. dt = 0.1\n
+            function (t, x) -> dt\n
+            Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
+            string: mode - 'auto' or 'constant'\n
         save_freq : Number, optional
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : List[Number], optional
@@ -839,8 +842,6 @@ class PrognosticsModel(ABC):
                 saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
 
         # configuring next_time function to define prediction time step, default is constant dt
-    
-
         if callable(config['dt']):
             next_time = config['dt']
             dt_mode = 'function'
