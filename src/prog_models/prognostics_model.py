@@ -657,8 +657,11 @@ class PrognosticsModel(ABC):
         -----------------
         t0 : Number, optional
             Starting time for simulation in seconds (default: 0.0) \n
-        dt : Number or function, optional
-            time step (s), e.g. dt = 0.1 or function (t, x) -> dt\n
+        dt : Number, tuple, string, or function, optional
+            Number: constant time step (s), e.g. dt = 0.1\n
+            function (t, x) -> dt\n
+            Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
+            string: mode - 'auto' or 'constant'\n
         save_freq : Number, optional
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : List[Number], optional
@@ -733,7 +736,7 @@ class PrognosticsModel(ABC):
         # Configure
         config = { # Defaults
             't0': 0.0,
-            'dt': 1.0,
+            'dt': ('auto', 1.0),
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
@@ -743,7 +746,7 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
         
         # Configuration validation
-        if not isinstance(config['dt'], Number) and not callable(config['dt']):
+        if not isinstance(config['dt'], (Number, tuple, str)) and not callable(config['dt']):
             raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
@@ -841,10 +844,29 @@ class PrognosticsModel(ABC):
         # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
             next_time = config['dt']
+            dt_mode = 'function'
+        elif isinstance(config['dt'], tuple):
+            dt_mode = config['dt'][0]
+            dt = config['dt'][1]                
+        elif isinstance(config['dt'], str):
+            dt_mode = config['dt']
+            if dt_mode == 'constant':
+                dt = 1.0  # Default
+            else:
+                dt = np.inf
         else:
+            dt_mode = 'constant'
             dt = config['dt']  # saving to optimize access in while loop
+
+        if dt_mode == 'constant':
             def next_time(t, x):
                 return dt
+        elif dt_mode == 'auto':
+            def next_time(t, x):
+                return min(dt, next_save-t, save_pts[save_pt_index]-t)
+        elif dt_mode != 'function':
+            raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
+
         
         # Simulate
         update_all()
