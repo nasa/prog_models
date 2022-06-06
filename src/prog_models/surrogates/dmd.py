@@ -46,6 +46,13 @@ class SurrogateDMDModel(LinearModel):
 
         simulate_to_threshold:
             Simulate prognostics model until defined threshold is met, using simulate_to_threshold defined in PrognosticsModel, then interpolate results to be at user-defined times
+
+    Note
+    -------
+    This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
+    DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
+    In general, the approximation is less accurate if the DMD matrix is unstable. 
+    Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). Further functionalities will be included in future releases. \n
     """
 
     A = None
