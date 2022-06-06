@@ -1194,7 +1194,7 @@ class PrognosticsModel(ABC):
         from .surrogates import SURROAGATE_METHOD_LOOKUP
 
         if method not in SURROAGATE_METHOD_LOOKUP.keys():
-            raise ValueError("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
+            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
 
         # Configure
         config = { # Defaults
