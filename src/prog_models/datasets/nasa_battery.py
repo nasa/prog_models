@@ -83,7 +83,11 @@ def load_data(batt_id : str) -> tuple:
             raise ConnectionRefusedError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
         # Unzip response
-        cache[url] = zipfile.ZipFile(io.BytesIO(response.content))
+        try:
+            cache[url] = zipfile.ZipFile(io.BytesIO(response.content))
+        except zipfile.BadZipFile:
+            # In this case the url may have been forwarded to another page
+            raise ConnectionRefusedError("Data unzip failed- the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
     f = cache[url].open(f'{cache[url].infolist()[0].filename}Matlab/{batt_id}.mat')
 
