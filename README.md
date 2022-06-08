@@ -36,7 +36,7 @@ Use the following to cite this repository:
 
 ```
 @misc{2021_nasa_prog_models,
-    author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Katelyn Jarvis and and Matthew Daigle},
+    author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Katelyn Jarvis and Matthew Daigle},
     title     = {Prognostics Models Python Package},
     month     = May,
     year      = 2022,
