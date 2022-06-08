@@ -139,7 +139,7 @@ class SurrogateDMDModel(LinearModel):
                             remove_from.remove(key)
                         for i in range(len(times)):
                             del del_from[i][key]
-                           
+                                   
             if len(config['states']) != len(m.states):
                 user_val_set(m.states, 'states', states_dmd, states)
             if len(config['inputs']) != len(m.inputs):
