@@ -54,17 +54,19 @@ def run_example():
         'dt': 0.1,
         'threshold_keys': 'impact'
     }
+    
 
     # Define loading profile 
     def future_loading(t, x=None):
         return m.InputContainer({})
 
     # Simulate to threshold using DMD approximation
-    surrogate_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
-    surrogate_results_duplicate = DMD_approx_dup.simulate_to_threshold(future_loading,**options_sim)
-    high_fidelity_results = m.simulate_to_threshold(future_loading,**options_sim)
-    # surrogate_results = DMD_approx.simulate_to(5, future_loading,**options_sim)
-    # surrogate_results_duplicate = DMD_approx_dup.simulate_to(5, future_loading,**options_sim)
+    # surrogate_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+    # surrogate_results_duplicate = DMD_approx_dup.simulate_to_threshold(future_loading,**options_sim)
+    # high_fidelity_results = m.simulate_to_threshold(future_loading,**options_hf)
+    surrogate_results = DMD_approx.simulate_to(5, future_loading,**options_sim)
+    surrogate_results_duplicate = DMD_approx_dup.simulate_to(5, future_loading,**options_sim)
+    high_fidelity_results = m.simulate_to(5,future_loading,**options_hf)
 
     # Extract DMD results 
     velocity = [surrogate_results.states[iter]['v'] for iter in range(len(surrogate_results.times))]
@@ -75,20 +77,28 @@ def run_example():
     position_duplicate = [surrogate_results_duplicate.states[iter]['x'] for iter in range(len(surrogate_results_duplicate.times))]
     impact_duplicate = [surrogate_results_duplicate.states[iter]['impact'] for iter in range(len(surrogate_results_duplicate.times))]
     falling_duplicate = [surrogate_results_duplicate.states[iter]['falling'] for iter in range(len(surrogate_results_duplicate.times))]
+    velocity_hf = [high_fidelity_results.states[iter]['v'] for iter in range(len(high_fidelity_results.times))]
+    position_hf = [high_fidelity_results.states[iter]['x'] for iter in range(len(high_fidelity_results.times))]
+    impact_hf = [high_fidelity_results.event_states[iter]['impact'] for iter in range(len(high_fidelity_results.times))]
+    falling_hf = [high_fidelity_results.event_states[iter]['falling'] for iter in range(len(high_fidelity_results.times))]
 
     # plot
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
-    ax1.plot(surrogate_results.times,position,'-b',label='No duplicate')
-    ax1.plot(surrogate_results_duplicate.times,position_duplicate,'--r',label='Duplicate')
+    ax1.plot(high_fidelity_results.times,position_hf,'-b',label='HF')
+    ax1.plot(surrogate_results.times,position,'--r',label='No duplicate')
+    ax1.plot(surrogate_results_duplicate.times,position_duplicate,'-.g',label='Duplicate')
     ax1.set_title('Position')
-    ax2.plot(surrogate_results.times,velocity,'-b',label='No duplicate')
-    ax2.plot(surrogate_results_duplicate.times,velocity_duplicate,'--r',label='Duplicate')
+    ax2.plot(high_fidelity_results.times,velocity_hf,'-b',label='HF')
+    ax2.plot(surrogate_results.times,velocity,'--r',label='No duplicate')
+    ax2.plot(surrogate_results_duplicate.times,velocity_duplicate,'-.g',label='Duplicate')
     ax2.set_title('Velocity')
-    ax3.plot(surrogate_results.times,impact,'-b',label='No duplicate')
-    ax3.plot(surrogate_results_duplicate.times,impact_duplicate,'--r',label='Duplicate')
+    ax3.plot(high_fidelity_results.times,impact_hf,'-b',label='HF')
+    ax3.plot(surrogate_results.times,impact,'--r',label='No duplicate')
+    ax3.plot(surrogate_results_duplicate.times,impact_duplicate,'-.g',label='Duplicate')
     ax3.set_title('Impact')
-    ax4.plot(surrogate_results.times,falling,'-b',label='No duplicate')
-    ax4.plot(surrogate_results_duplicate.times,falling_duplicate,'--r',label='Duplicate')
+    ax4.plot(high_fidelity_results.times,falling_hf,'-b',label='HF')
+    ax4.plot(surrogate_results.times,falling,'--r',label='No duplicate')
+    ax4.plot(surrogate_results_duplicate.times,falling_duplicate,'-.g',label='Duplicate')
     ax4.set_title('Falling')
 
 
