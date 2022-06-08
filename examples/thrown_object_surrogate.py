@@ -48,6 +48,7 @@ def run_example():
     # Simulation options for implementation of surrogate model
     options_sim = {
         'save_freq': 0.1, # Frequency at which results are saved, or equivalently time step in results    
+        'threshold_keys': 'impact'
     }
     options_hf = {
         'save_freq': 0.1,
@@ -61,12 +62,9 @@ def run_example():
         return m.InputContainer({})
 
     # Simulate to threshold using DMD approximation
-    # surrogate_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
-    # surrogate_results_duplicate = DMD_approx_dup.simulate_to_threshold(future_loading,**options_sim)
-    # high_fidelity_results = m.simulate_to_threshold(future_loading,**options_hf)
-    surrogate_results = DMD_approx.simulate_to(5, future_loading,**options_sim)
-    surrogate_results_duplicate = DMD_approx_dup.simulate_to(5, future_loading,**options_sim)
-    high_fidelity_results = m.simulate_to(5,future_loading,**options_hf)
+    surrogate_results = DMD_approx.simulate_to_threshold(future_loading,**options_sim)
+    surrogate_results_duplicate = DMD_approx_dup.simulate_to_threshold(future_loading,**options_sim)
+    high_fidelity_results = m.simulate_to_threshold(future_loading,**options_hf)
 
     # Extract DMD results 
     velocity = [surrogate_results.states[iter]['v'] for iter in range(len(surrogate_results.times))]
@@ -75,6 +73,7 @@ def run_example():
     falling = [surrogate_results.states[iter]['falling'] for iter in range(len(surrogate_results.times))]
     velocity_duplicate = [surrogate_results_duplicate.states[iter]['v'] for iter in range(len(surrogate_results_duplicate.times))]
     position_duplicate = [surrogate_results_duplicate.states[iter]['x'] for iter in range(len(surrogate_results_duplicate.times))]
+    position_duplicate2 = [surrogate_results_duplicate.outputs[iter]['x'] for iter in range(len(surrogate_results_duplicate.times))]
     impact_duplicate = [surrogate_results_duplicate.states[iter]['impact'] for iter in range(len(surrogate_results_duplicate.times))]
     falling_duplicate = [surrogate_results_duplicate.states[iter]['falling'] for iter in range(len(surrogate_results_duplicate.times))]
     velocity_hf = [high_fidelity_results.states[iter]['v'] for iter in range(len(high_fidelity_results.times))]
@@ -88,6 +87,7 @@ def run_example():
     ax1.plot(surrogate_results.times,position,'--r',label='No duplicate')
     ax1.plot(surrogate_results_duplicate.times,position_duplicate,'-.g',label='Duplicate')
     ax1.set_title('Position')
+    ax1.legend()
     ax2.plot(high_fidelity_results.times,velocity_hf,'-b',label='HF')
     ax2.plot(surrogate_results.times,velocity,'--r',label='No duplicate')
     ax2.plot(surrogate_results_duplicate.times,velocity_duplicate,'-.g',label='Duplicate')
@@ -100,58 +100,15 @@ def run_example():
     ax4.plot(surrogate_results.times,falling,'--r',label='No duplicate')
     ax4.plot(surrogate_results_duplicate.times,falling_duplicate,'-.g',label='Duplicate')
     ax4.set_title('Falling')
+    plt.show()
+    
+    figB, axB = plt.subplots()
+    axB.plot(surrogate_results_duplicate.times, position_duplicate,'-g',label='x in states')
+    axB.plot(surrogate_results_duplicate.times, position_duplicate2,'--k',label='x in outputs')
+    axB.set_title('Comparing duplicated x value')
+    axB.legend()
+    plt.show()
 
-
-
-
-    # Plot results
-    # simulated_results.event_states.plot(title='Surrogate Model Event States')
-    # high_fidelity_results.event_states.plot(title='Full Fidelity Model Event States')
-
-    # simulated_results.outputs.plot(title='Surrogate Model Position')
-    # high_fidelity_results.outputs.plot(title='Full Fidelity Model Position')
-    # plt.show()
-
-    # Extract DMD results 
-    time_dmd = [simulated_results.times[iter] for iter in range(len(simulated_results.times))]
-    velocity_dmd = [simulated_results.states[iter]['v'] for iter in range(len(simulated_results.times))]
-    position_dmd = [simulated_results.states[iter]['x'] for iter in range(len(simulated_results.times))]
-    # falling_dmd = [simulated_results.states[iter]['falling'] for iter in range(len(simulated_results.times))]
-    # impact_dmd = [simulated_results.states[iter]['impact'] for iter in range(len(simulated_results.times))]
-
-    # Extract HF results
-    time_hf = [high_fidelity_results.times[iter] for iter in range(len(high_fidelity_results.times))]
-    velocity_hf = [high_fidelity_results.states[iter]['v'] for iter in range(len(high_fidelity_results.times))]
-    position_hf = [high_fidelity_results.states[iter]['x'] for iter in range(len(high_fidelity_results.times))]
-    # falling_hf = [high_fidelity_results.event_states[iter]['falling'] for iter in range(len(high_fidelity_results.times))]
-    # impact_hf = [high_fidelity_results.event_states[iter]['impact'] for iter in range(len(high_fidelity_results.times))]
-
-    # Test if DMD and HF at same times 
-    time_bool = [time_dmd[iter] == time_hf[iter] for iter in range(min(len(time_dmd),len(time_hf)))]
-    if sum(time_bool) != min(len(time_dmd),len(time_hf)):
-        print('Error: times are not equal.')
-
-    # Calculate error:
-    # rmse_impact = math.sqrt(sum([((impact_hf[iter] - impact_dmd[iter])**2)/min(len(impact_dmd),len(impact_hf)) for iter in range(min(len(impact_dmd),len(impact_hf)))]))
-    # rmse_falling = math.sqrt(sum([((falling_hf[iter] - falling_dmd[iter])**2)/min(len(falling_dmd),len(falling_hf)) for iter in range(min(len(falling_dmd),len(falling_hf)))]))
-    rmse_position = math.sqrt(sum([((position_hf[iter] - position_dmd[iter])**2)/min(len(position_dmd),len(position_hf)) for iter in range(min(len(position_dmd),len(position_hf)))]))
-    rmse_velocity = math.sqrt(sum([((velocity_hf[iter] - velocity_dmd[iter])**2)/min(len(velocity_dmd),len(velocity_hf)) for iter in range(min(len(velocity_dmd),len(velocity_hf)))]))    
-
-    """
-    # plot
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    ax1.plot(time_hf,position_hf,'-b',label='High fidelity')
-    ax1.plot(time_dmd,position_dmd,'--r',label='DMD')
-    ax1.set_title('Position')
-    ax2.plot(time_hf,falling_hf,'-b',label='High fidelity')
-    ax2.plot(time_dmd,falling_dmd,'--r',label='DMD')
-    ax2.set_title('Falling')
-    ax3.plot(time_hf,impact_hf,'-b',label='High fidelity')
-    ax3.plot(time_dmd,impact_dmd,'--r',label='DMD')
-    ax3.set_title('Impact')
-    """
-
-    debug = 1
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
