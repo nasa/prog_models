@@ -36,7 +36,7 @@ Use the following to cite this repository:
 
 ```
 @misc{2021_nasa_prog_models,
-    author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Katelyn Jarvis and Matthew Daigle},
+    author    = {Christopher Teubert, Matteo Corbetta, Chetan Kulkarni, Katelyn Jarvis, and Matthew Daigle},
     title     = {Prognostics Models Python Package},
     month     = May,
     year      = 2022,
@@ -50,7 +50,7 @@ The corresponding reference should look like this:
 C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.3, May 2022. URL https://github.com/nasa/prog_models.
 
 ## Acknowledgements
-The structure and algorithms of this package are strongly inspired by the [MATLAB Prognostics Model Library](https://github.com/nasa/PrognosticsModelLibrary). We would like to recognize Matthew Daigle and the rest of the team that contributed to the Prognostics Model Library for the contributions their work on the MATLAB library made to the design of prog_models
+The structure and algorithms of this package are strongly inspired by the [MATLAB Prognostics Model Library](https://github.com/nasa/PrognosticsModelLibrary). We would like to recognize Matthew Daigle and the rest of the team that contributed to the Prognostics Model Library for the contributions their work on the MATLAB library made to the design of prog_models.
 
 ## Notices
 
