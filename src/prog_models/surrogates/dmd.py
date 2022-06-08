@@ -141,16 +141,16 @@ class SurrogateDMDModel(LinearModel):
                             del del_from[i][key]
 
             for state_key in config['states']:
-                if state_key in inputs_dmd or state_key in outputs_dmd or state_key in events_dmd:
+                if state_key in config['inputs'] or state_key in config['outputs'] or state_key in config['events']:
                     config['states'].remove(state_key)
                     warn(f"State value '{state_key}' is duplicated in inputs, outputs, or events; duplicate has been removed.")
 
             for input_key in config['inputs']:
-                if input_key in outputs_dmd or input_key in events_dmd:
+                if input_key in config['outputs'] or input_key in config['events']:
                     warn(f"Input value '{input_key}' is duplicated in outputs or events; duplicate has not been removed.")     
 
             for output_key in config['outputs']:
-                if output_key in events_dmd:
+                if output_key in config['events']:
                     warn(f"Output value '{output_key}' is duplicated in events; duplicate has not been removed.")               
                                   
             if len(config['states']) != len(m.states):
