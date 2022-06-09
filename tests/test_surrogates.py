@@ -50,7 +50,7 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t = None, x = None):
             return m.InputContainer({})
         
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact')
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact',training_noise=0)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, m.states + m.outputs + m.events)
@@ -115,6 +115,7 @@ class TestSurrogate(unittest.TestCase):
             'states': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
             'trim_data_to': 0.7, # Trim data to this fraction of the time series
             'outputs': ['v'], # Define outputs to be included in surrogate model 
+            'training_noise': 0
         }
 
         surrogate = m.generate_surrogate(load_functions, **options_surrogate)
@@ -153,7 +154,7 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({})
 
         # Perfect subset
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states=['x', 'v'])
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states=['x', 'v'], training_noise = 0)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, m.states + m.outputs + m.events + m.inputs)
@@ -180,13 +181,13 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
         
         # State subset
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = ['v'])
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = ['v'], training_noise = 0)
         self.assertListEqual(surrogate.states, ['v'] + m.outputs + m.events + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, m.outputs)
         self.assertListEqual(surrogate.events, m.events)
 
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = 'v')
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = 'v', training_noise = 0)
         self.assertListEqual(surrogate.states, ['v'] + m.outputs + m.events + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, m.outputs)
@@ -211,8 +212,8 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
         # Events subset
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', events = ['impact'])
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', events = 'impact')
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', events = ['impact'], training_noise = 0)
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', events = 'impact', training_noise = 0)
         self.assertListEqual(surrogate.states, m.states + m.outputs + ['impact'] + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, m.outputs)
@@ -235,7 +236,7 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
         # Outputs - Empty
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', outputs = [])
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', outputs = [], training_noise = 0)
         self.assertListEqual(surrogate.states, m.states + m.events + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, [])
@@ -267,7 +268,7 @@ class TestSurrogate(unittest.TestCase):
         warnings.filterwarnings("error")
 
         try:
-            surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = ['v'])
+            surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = ['v'], training_noise = 0)
             self.fail('warning not raised')
         except Warning:
             pass
@@ -286,7 +287,7 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t = None, x = None):
             return m.InputContainer({})
         
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact')
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', training_noise = 0)
 
         with self.assertWarns(Warning):
             surrogate.simulate_to_threshold(load_eqn, dt = 0.05)
