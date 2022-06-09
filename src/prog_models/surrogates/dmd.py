@@ -163,11 +163,10 @@ class SurrogateDMDModel(LinearModel):
                 user_val_set(m.events, 'events', events_dmd, event_states)  
 
             # Initialize DMD matrices
-            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
-            xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
+            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]), len(times))) 
 
             # Save DMD matrices
-            for i, time in enumerate(times[:-1]): 
+            for i, time in enumerate(times): 
                 time_now = time + np.divide(config['save_freq'],2) 
                 load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
                 if len(config['inputs']) != len(m.inputs): # Delete any input values not specified by user to be included in surrogate model 
@@ -176,8 +175,6 @@ class SurrogateDMDModel(LinearModel):
                             del load_now[key]
 
                 states_now = states[i].matrix 
-                states_next = states[i+1].matrix 
-  
                 stack = (
                         states_now,
                         outputs[i].matrix,
@@ -185,16 +182,14 @@ class SurrogateDMDModel(LinearModel):
                         np.array([[load_now[key]] for key in load_now.keys()])
                     )
                 x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (0, )))[:,0]  # Filter out empty values (e.g., if there is no input)
-                stack2 = (
-                    states_next,
-                    outputs[i+1].matrix,
-                    np.array([list(event_states[i+1].values())]).T
-                )
-                xprime_mat_temp[:,i] = np.vstack(tuple(v for v in stack2 if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no output)
-                
+            # Get X and Xprime matrices by shifting time index by 1
+            x_mat_ = x_mat_temp[:, :-1] # X
+            if len(inputs[0])==0:   xprime_mat_ = x_mat_temp[:, 1:]                 # Xprime if no input (len(inputs)==0 messes things up)
+            else:                   xprime_mat_ = x_mat_temp[:-len(inputs[0]), 1:]  # Xprime if there's an input 
+
             # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
-            x_list.append(x_mat_temp)
-            xprime_list.append(xprime_mat_temp)
+            x_list.append(x_mat_)
+            xprime_list.append(xprime_mat_)
             time_list.append(times)
 
         # Format training data for DMD and solve for matrix A, in the form X' = AX 
