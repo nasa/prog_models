@@ -24,7 +24,7 @@ class TestDatasets(unittest.TestCase):
         # Legit website, but it's not the repos
         nasa_cmapss.URL = "https://github.com/nasa/prog_models"
         with self.assertRaises(ConnectionError):
-            (desc, data) = nasa_cmapss.load_data(1)
+            (train, test, results) = nasa_cmapss.load_data(1)
     # Testing for successful download located in manual testing files; test_manual.py
 
 # This allows the module to be executed directly
