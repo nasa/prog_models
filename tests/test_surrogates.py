@@ -259,6 +259,145 @@ class TestSurrogate(unittest.TestCase):
             self.assertAlmostEqual(surrogate_results.states[i]['impact'], result.event_states[i]['impact'], delta=0.1)
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
+    def test_surrogate_thrown_object_with_noise(self):
+        m = ThrownObject()
+        def load_eqn(t = None, x = None):
+            return m.InputContainer({})
+        
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact',training_noise=0)
+        surrogate_noise = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact',training_noise=0.01)
+        self.assertEqual(surrogate.dt, 0.25)
+
+        self.assertListEqual(surrogate.states, surrogate_noise.states)
+        self.assertListEqual(surrogate.inputs, surrogate_noise.inputs)
+        self.assertListEqual(surrogate.outputs, surrogate_noise.outputs)
+        self.assertListEqual(surrogate.events, surrogate_noise.events)
+
+        options = {
+            'threshold_keys': 'impact',
+            'save_freq': 0.25,
+            'dt': 0.25
+        }
+
+        surrogate_results = surrogate.simulate_to_threshold(load_eqn, **options)
+        surrogate_noise_results = surrogate_noise.simulate_to_threshold(load_eqn, **options)
+
+        position = [surrogate_results.states[iter]['x'] for iter in range(len(surrogate_results.times))]
+        position_noise = [surrogate_noise_results.states[iter]['x'] for iter in range(len(surrogate_noise_results.times))]
+
+        MSE = sum([(position[iter] - position_noise[iter])**2 for iter in range(min(len(position),len(position_noise)))])/min(len(position),len(position_noise))
+        self.assertLess(MSE, 10) # 
+
+        self.assertAlmostEqual(surrogate_results.times[-1], surrogate_noise_results.times[-1], delta=0.26)
+        for i in range(min(len(surrogate_results.times), len(surrogate_noise_results.times))):
+            self.assertListEqual(list(surrogate_noise_results.inputs[i].keys()), list(surrogate_noise_results.inputs[i].keys()))
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['x'], surrogate_results.states[i]['x'], delta=6)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['v'], surrogate_results.states[i]['v'], delta=1)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['falling'], surrogate_results.states[i]['falling'], delta = 0.1)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['impact'], surrogate_results.states[i]['impact'], delta = 0.5)
+            self.assertEqual(surrogate_noise_results.states[i]['x'], surrogate_noise_results.outputs[i]['x'])
+            self.assertEqual(surrogate_noise_results.states[i]['falling'], surrogate_noise_results.event_states[i]['falling'])
+            self.assertEqual(surrogate_noise_results.states[i]['impact'], surrogate_noise_results.event_states[i]['impact'])
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['falling'], surrogate_results.event_states[i]['falling'], delta=0.1)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['impact'], surrogate_results.event_states[i]['impact'], delta=0.5)
+
+    def test_surrogate_battery_with_noise(self):
+        m = BatteryElectroChemEOD(process_noise = 0)
+        def future_loading_1(t, x=None):
+            # Variable (piece-wise) future loading scheme 
+            if (t < 500):
+                i = 3
+            elif (t < 1000):
+                i = 2
+            elif (t < 1500):
+                i = 0.5
+            else:
+                i = 4.5
+            return m.InputContainer({'i': i})
+        
+        def future_loading_2(t, x=None):
+            # Variable (piece-wise) future loading scheme 
+            if (t < 300):
+                i = 2
+            elif (t < 800):
+                i = 3.5
+            elif (t < 1300):
+                i = 4
+            elif (t < 1600):
+                i = 1.5
+            else:
+                i = 5
+            return m.InputContainer({'i': i})
+        load_functions = [future_loading_1, future_loading_2]
+
+        options_surrogate = {
+            'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
+            'dt': 0.1, # For DMD, this value is the time step of the training data
+            'trim_data_to': 0.7, # Trim data to this fraction of the time series
+            'outputs': ['v'], # Define outputs to be included in surrogate model 
+            'training_noise': 0
+        }
+        options_surrogate_noise = {
+            'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
+            'dt': 0.1, # For DMD, this value is the time step of the training data
+            'trim_data_to': 0.7, # Trim data to this fraction of the time series
+            'outputs': ['v'], # Define outputs to be included in surrogate model 
+            'training_noise': 0.02
+        }
+
+        surrogate = m.generate_surrogate(load_functions, **options_surrogate)
+        surrogate_noise = m.generate_surrogate(load_functions, **options_surrogate_noise)
+        
+        self.assertListEqual(surrogate.states, surrogate_noise.states)
+        self.assertListEqual(surrogate.inputs, surrogate_noise.inputs)
+        self.assertListEqual(surrogate.outputs, surrogate_noise.outputs)
+        self.assertListEqual(surrogate.events, surrogate_noise.events)
+
+        options_sim = {
+            'save_freq': 1, # Frequency at which results are saved, or equivalently time step in results
+            'dt': 0.1,
+        }
+
+        # Define loading profile 
+        def future_loading(t, x=None):
+            if (t < 600):
+                i = 3
+            elif (t < 1000):
+                i = 2
+            elif (t < 1500):
+                i = 1.5
+            else:
+                i = 4
+            return m.InputContainer({'i': i})
+
+        surrogate_results = surrogate.simulate_to_threshold(future_loading, **options_sim)
+        surrogate_noise_results = surrogate_noise.simulate_to_threshold(future_loading, **options_sim)
+
+        voltage = [surrogate_results.states[iter]['v'] for iter in range(len(surrogate_results.times))]
+        voltage_noise = [surrogate_noise_results.states[iter]['v'] for iter in range(len(surrogate_noise_results.times))]
+
+        MSE = sum([(voltage[iter] - voltage_noise[iter])**2 for iter in range(min(len(voltage),len(voltage_noise)))])/min(len(voltage),len(voltage_noise))
+        self.assertLess(MSE, 0.02) # Pretty good approx            
+
+        self.assertAlmostEqual(surrogate_results.times[-1], surrogate_noise_results.times[-1], delta=20)
+        for i in range(min(len(surrogate_results.times), len(surrogate_noise_results.times))):
+            self.assertListEqual(list(surrogate_noise_results.inputs[i].keys()), list(surrogate_noise_results.inputs[i].keys()))
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['tb'], surrogate_results.states[i]['tb'], delta=10)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['Vo'], surrogate_results.states[i]['Vo'], delta=0.1)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['Vsn'], surrogate_results.states[i]['Vsn'], delta = 0.5)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['Vsp'], surrogate_results.states[i]['Vsp'], delta = 0.1)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['qnB'], surrogate_results.states[i]['qnB'], delta=15)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['qnS'], surrogate_results.states[i]['qnS'], delta=3)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['qpB'], surrogate_results.states[i]['qpB'], delta=15)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['qpS'], surrogate_results.states[i]['qpS'], delta=3)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['v'], surrogate_results.states[i]['v'], delta = 0.3)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['EOD'], surrogate_results.states[i]['EOD'],delta=0.1)
+            self.assertEqual(surrogate_noise_results.states[i]['v'], surrogate_noise_results.outputs[i]['v'])
+            self.assertEqual(surrogate_noise_results.states[i]['EOD'], surrogate_noise_results.event_states[i]['EOD'])
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['v'], surrogate_results.outputs[i]['v'], delta=0.3)
+            self.assertAlmostEqual(surrogate_noise_results.states[i]['EOD'], surrogate_results.event_states[i]['EOD'], delta=0.1)
+
+    
     def test_surrogate_options(self):
         m = ThrownObject()
         def load_eqn(t = None, x = None):
