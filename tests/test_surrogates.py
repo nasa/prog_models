@@ -53,7 +53,7 @@ class TestSurrogate(unittest.TestCase):
         surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact')
         self.assertEqual(surrogate.dt, 0.25)
 
-        self.assertListEqual(surrogate.states, m.states + m.outputs + m.events)
+        self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + m.events)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, m.outputs)
         self.assertListEqual(surrogate.events, m.events)
@@ -156,7 +156,7 @@ class TestSurrogate(unittest.TestCase):
         surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states=['x', 'v'])
         self.assertEqual(surrogate.dt, 0.25)
 
-        self.assertListEqual(surrogate.states, m.states + m.outputs + m.events + m.inputs)
+        self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.inputs and stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + m.events)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, m.outputs)
         self.assertListEqual(surrogate.events, m.events)
@@ -213,7 +213,7 @@ class TestSurrogate(unittest.TestCase):
         # Events subset
         surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', events = ['impact'])
         surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25,      threshold_keys = 'impact', events = 'impact')
-        self.assertListEqual(surrogate.states, m.states + m.outputs + ['impact'] + m.inputs)
+        self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.inputs and stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + ['impact'] + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, m.outputs)
         self.assertListEqual(surrogate.events, ['impact'])

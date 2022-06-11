@@ -1199,10 +1199,10 @@ class PrognosticsModel(ABC):
         # Configure
         config = { # Defaults
             'save_freq': 1.0, 
-            'states': self.states,
-            'inputs': self.inputs,
-            'outputs': self.outputs,
-            'events': self.events,
+            'states': self.states.copy(),
+            'inputs': self.inputs.copy(),
+            'outputs': self.outputs.copy(),
+            'events': self.events.copy(),
         }
         config.update(kwargs)
 
