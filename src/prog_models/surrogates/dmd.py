@@ -259,7 +259,7 @@ class SurrogateDMDModel(LinearModel):
     def next_state(self, x, u, _):   
         x.matrix = np.matmul(self.A, x.matrix) + self.E
         if self.B.shape[1] != 0:
-            x.matrix =+ np.matmul(self.B, u.matrix)
+           x.matrix += np.matmul(self.B, u.matrix)
         
         return x   
 
