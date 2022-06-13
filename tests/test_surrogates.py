@@ -44,6 +44,10 @@ class TestSurrogate(unittest.TestCase):
             m.generate_surrogate([load_eqn], stability_tol = -1)
         with self.assertRaises(ProgModelInputException):
             m.generate_surrogate([load_eqn], stability_tol = 'invalid')
+        with self.assertRaises(ProgModelInputException):
+            m.generate_surrogate([load_eqn], training_noise = -1)
+        with self.assertRaises(ProgModelInputException):
+            m.generate_surrogate([load_eqn], training_noise = ['invalid'])
     
     def test_surrogate_basic_thrown_object(self):
         m = ThrownObject()
