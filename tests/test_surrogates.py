@@ -290,7 +290,8 @@ class TestSurrogate(unittest.TestCase):
         position_noise = [surrogate_noise_results.states[iter]['x'] for iter in range(len(surrogate_noise_results.times))]
 
         MSE = sum([(position[iter] - position_noise[iter])**2 for iter in range(min(len(position),len(position_noise)))])/min(len(position),len(position_noise))
-        self.assertLess(MSE, 10) # 
+        self.assertLess(MSE, 10) 
+        self.assertNotEqual(MSE, 0)
 
         self.assertAlmostEqual(surrogate_results.times[-1], surrogate_noise_results.times[-1], delta=0.26)
         for i in range(min(len(surrogate_results.times), len(surrogate_noise_results.times))):
@@ -304,7 +305,14 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_noise_results.states[i]['impact'], surrogate_noise_results.event_states[i]['impact'])
             self.assertAlmostEqual(surrogate_noise_results.states[i]['falling'], surrogate_results.event_states[i]['falling'], delta=0.1)
             self.assertAlmostEqual(surrogate_noise_results.states[i]['impact'], surrogate_results.event_states[i]['impact'], delta=0.5)
-
+            if i > 0:
+                self.assertNotEqual(surrogate_noise_results.states[i]['x'] - surrogate_results.states[i]['x'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['v'] - surrogate_results.states[i]['v'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['falling'] - surrogate_results.states[i]['falling'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['impact'] - surrogate_results.states[i]['impact'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['falling']-surrogate_results.event_states[i]['falling'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['impact'], surrogate_results.event_states[i]['impact'], 0)
+                
     def test_surrogate_battery_with_noise(self):
         m = BatteryElectroChemEOD(process_noise = 0)
         def future_loading_1(t, x=None):
@@ -382,6 +390,7 @@ class TestSurrogate(unittest.TestCase):
 
         MSE = sum([(voltage[iter] - voltage_noise[iter])**2 for iter in range(min(len(voltage),len(voltage_noise)))])/min(len(voltage),len(voltage_noise))
         self.assertLess(MSE, 0.02) # Pretty good approx            
+        self.assertNotEqual(MSE, 0)
 
         self.assertAlmostEqual(surrogate_results.times[-1], surrogate_noise_results.times[-1], delta=20)
         for i in range(min(len(surrogate_results.times), len(surrogate_noise_results.times))):
@@ -400,7 +409,19 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_noise_results.states[i]['EOD'], surrogate_noise_results.event_states[i]['EOD'])
             self.assertAlmostEqual(surrogate_noise_results.states[i]['v'], surrogate_results.outputs[i]['v'], delta=0.3)
             self.assertAlmostEqual(surrogate_noise_results.states[i]['EOD'], surrogate_results.event_states[i]['EOD'], delta=0.1)
-
+            if i > 0:
+                self.assertNotEqual(surrogate_noise_results.states[i]['tb'] - surrogate_results.states[i]['tb'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['Vo'] - surrogate_results.states[i]['Vo'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['Vsn'] - surrogate_results.states[i]['Vsn'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['Vsp'] - surrogate_results.states[i]['Vsp'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['qnB'] - surrogate_results.states[i]['qnB'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['qnS'] - surrogate_results.states[i]['qnS'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['qpB'] - surrogate_results.states[i]['qpB'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['qpS'] - surrogate_results.states[i]['qpS'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['v'] - surrogate_results.states[i]['v'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['EOD'] - surrogate_results.states[i]['EOD'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['v'] - surrogate_results.outputs[i]['v'], 0)
+                self.assertNotEqual(surrogate_noise_results.states[i]['EOD'] - surrogate_results.event_states[i]['EOD'], 0)
     
     def test_surrogate_options(self):
         m = ThrownObject()

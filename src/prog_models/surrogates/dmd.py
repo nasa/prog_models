@@ -32,7 +32,7 @@ class SurrogateDMDModel(LinearModel):
         stability_tol: int, optional
             Value that determines the tolerance for DMD matrix stability\n
         training_noise: int, optional
-            Noise added to the training data sampled from a standard normal distribution with magnitude training_noise \n
+            Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise \n
 
     See Also
     ---------
