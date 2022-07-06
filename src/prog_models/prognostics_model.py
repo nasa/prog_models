@@ -944,8 +944,8 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(self.output, saved_times, saved_states, _copy=False) 
-            saved_event_states = LazySimResult(self.event_state, saved_times, saved_states, _copy=False)
+            saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
+            saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
             saved_event_states = SimResult(saved_times, saved_event_states, _copy=False)

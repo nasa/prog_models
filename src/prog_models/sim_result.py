@@ -20,11 +20,10 @@ class SimResult(UserList):
     __slots__ = ['times', 'data']  # Optimization 
     
     def __init__(self, times : list = [], data : list = [], _copy = True):
+        self.times = times.copy()
         if _copy:
-            self.times = times.copy()
             self.data = deepcopy(data)
         else:
-            self.times = times
             self.data = data
 
     def __eq__(self, other : "SimResult") -> bool:
@@ -179,11 +178,10 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.fcn = fcn
         self.__data = None
+        self.times = times.copy()
         if _copy:
-            self.times = times.copy()
             self.states = deepcopy(states)
         else:
-            self.times = times
             self.states = states
 
     def __reduce__(self):
