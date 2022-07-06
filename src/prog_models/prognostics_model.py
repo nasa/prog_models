@@ -947,13 +947,13 @@ class PrognosticsModel(ABC):
             saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
             saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
-            saved_outputs = SimResult(saved_times, saved_outputs)
-            saved_event_states = SimResult(saved_times, saved_event_states)
+            saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
+            saved_event_states = SimResult(saved_times, saved_event_states, _copy=False)
         
         return self.SimulationResults(
             saved_times, 
-            SimResult(saved_times, saved_inputs), 
-            SimResult(saved_times, saved_states), 
+            SimResult(saved_times, saved_inputs, _copy=False), 
+            SimResult(saved_times, saved_states, _copy=False), 
             saved_outputs, 
             saved_event_states
         )
