@@ -19,9 +19,13 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times : list = [], data : list = []):
-        self.times = times.copy()
-        self.data = deepcopy(data)
+    def __init__(self, times : list = [], data : list = [], _copy = True):
+        if _copy:
+            self.times = times.copy()
+            self.data = deepcopy(data)
+        else:
+            self.times = times
+            self.data = data
 
     def __eq__(self, other : "SimResult") -> bool:
         """Compare 2 SimResults
@@ -166,7 +170,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn : Callable, times : list = [], states : list = []) -> None:
+    def __init__(self, fcn : Callable, times : list = [], states : list = [], _copy = True) -> None:
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -174,9 +178,13 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
         self.fcn = fcn
-        self.times = times.copy()
-        self.states = deepcopy(states)
         self.__data = None
+        if _copy:
+            self.times = times.copy()
+            self.states = deepcopy(states)
+        else:
+            self.times = times
+            self.states = states
 
     def __reduce__(self):
         return (self.__class__.__base__, (self.times, self.data))
