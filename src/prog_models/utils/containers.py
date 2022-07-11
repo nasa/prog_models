@@ -79,7 +79,7 @@ class DictLikeMatrixWrapper():
     def items(self) -> zip:
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
             return zip(self._keys, np.array([value[0] for value in self.matrix]))
-        zip(self._keys, self.matrix)
+        return zip(self._keys, self.matrix)
 
     def update(self, other : "DictLikeMatrixWrapper") -> None:
         for key in other.keys():
