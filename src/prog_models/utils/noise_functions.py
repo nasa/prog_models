@@ -7,21 +7,13 @@ import numpy as np
 # Measurement Noise Functions
 # ---------------------------
 def uniform_measurement_noise(self, z : dict):
-    return self.OutputContainer({key: z[key] + \
-        np.random.uniform(-self.parameters['measurement_noise'][key], self.parameters['measurement_noise'][key], size=None if np.isscalar(z[key]) else len(z[key])) \
-            for key in self.outputs}) 
+    return self.OutputContainer(z.matrix + np.random.uniform(-1*self.parameters['measurement_noise'].matrix, self.parameters['measurement_noise'].matrix, size=z.matrix.shape))
 
 def triangular_measurement_noise(self, z : dict):
-    return self.OutputContainer({key: z[key] + \
-        np.random.triangular(-self.parameters['measurement_noise'][key], 0, self.parameters['measurement_noise'][key], size=None if np.isscalar(z[key]) else len(z[key])) \
-            for key in self.outputs})
+    return self.OutputContainer(z.matrix + np.random.triangular(-1*self.parameters['measurement_noise'].matrix, 0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape))
 
 def normal_measurement_noise(self, z : dict):
-    return self.OutputContainer({key: z[key] \
-        + np.random.normal(
-            0, self.parameters['measurement_noise'][key],
-            size=None if np.isscalar(z[key]) else len(z[key]))
-            for key in z.keys()})
+    return self.OutputContainer(z.matrix + np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape))
 
 def no_measurement_noise(self, z : dict) -> dict:
     return z
@@ -39,21 +31,13 @@ measurement_noise_functions = {
 # ---------------------------
 
 def triangular_process_noise(self, x : dict, dt : int =1):
-    return self.StateContainer({key: x[key] + \
-        dt*np.random.triangular(-self.parameters['process_noise'][key], 0, self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-            for key in self.states})
+    return self.StateContainer(x.matrix + np.random.triangular(-1*self.parameters['process_noise'].matrix, 0, self.parameters['process_noise'].matrix, size=x.matrix.shape))
 
 def uniform_process_noise(self, x : dict, dt : int =1):
-    return self.StateContainer({key: x[key] + \
-        dt*np.random.uniform(-self.parameters['process_noise'][key], self.parameters['process_noise'][key], size=None if np.isscalar(x[key]) else len(x[key])) \
-            for key in self.states})
+    return self.StateContainer(x.matrix + np.random.uniform(-1*self.parameters['process_noise'].matrix, self.parameters['process_noise'].matrix, size=x.matrix.shape))
 
 def normal_process_noise(self, x : dict, dt : int =1):
-    return self.StateContainer({key: x[key] +
-            dt*np.random.normal(
-                0, self.parameters['process_noise'][key],
-                size=None if np.isscalar(x[key]) else len(x[key]))
-                for key in x.keys()})
+    return self.StateContainer(x.matrix + np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape))
 
 def no_process_noise(self, x : dict, dt :int =1) -> dict:
     return x

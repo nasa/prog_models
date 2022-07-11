@@ -57,7 +57,7 @@ class SimResult(UserList):
             other (SimResult/LazySimResult)
 
         """
-        if other.__class__ in [SimResult, LazySimResult]:
+        if isinstance(other, SimResult):
             self.times.extend(other.times)
             self.data.extend(other.data)
         else:
@@ -202,7 +202,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
         self.states = []
 
-    def extend(self, other : "LazySimResult") -> None:
+    def extend(self, other : "LazySimResult", _copy=True) -> None:
         """
         Extend the LazySimResult with another LazySimResult object
         Raise ValueError if SimResult is passed
@@ -213,8 +213,11 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
         """
         if (isinstance(other, self.__class__)):
-            self.times.extend(other.times)  # lgtm [py/modification-of-default-value]
-            self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+            self.times.extend(other.times)  
+            if _copy:
+                self.states.extend(deepcopy(other.states))  
+            else:
+                self.states.extend(other.states)
             if self.__data is None or not other.is_cached():
                 self.__data = None
             else:

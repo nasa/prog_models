@@ -147,8 +147,6 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, state : dict) -> None:
-        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
-
         self.n_inputs = len(self.inputs)
         self.n_states = len(self.states)
         self.n_events = len(self.events)
@@ -174,6 +172,8 @@ class PrognosticsModel(ABC):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
+
+        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u : dict = None, z :dict = None) -> dict:
@@ -230,11 +230,8 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return self.OutputContainer({key: z[key] \
-            + np.random.normal(
-                0, self.parameters['measurement_noise'][key],
-                size=None if np.isscalar(z[key]) else len(z[key]))
-                for key in z.keys()})
+        z.matrix += np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape)
+        return z
         
     def apply_process_noise(self, x : dict, dt : int =1) -> dict:
         """
@@ -266,11 +263,8 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return self.StateContainer({key: x[key] +
-                dt*np.random.normal(
-                    0, self.parameters['process_noise'][key],
-                    size=None if np.isscalar(x[key]) else len(x[key]))
-                    for key in x.keys()})
+        x.matrix += np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape)
+        return x
 
     def dx(self, x : dict, u : dict) -> dict:
         """
@@ -352,7 +346,12 @@ class PrognosticsModel(ABC):
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
+        if isinstance(x, self.StateContainer) and isinstance(dx, self.StateContainer):
+            return self.StateContainer(x.matrix + dx.matrix * dt)
+        elif isinstance(dx, dict) or isinstance(x, dict):
+            return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
+        else:
+            raise ValueError(f"ValueError: Argument must be of type StateContainer")
 
     def apply_limits(self, x : dict) -> dict:
         """
@@ -797,6 +796,8 @@ class PrognosticsModel(ABC):
         elif threshold_keys is None: 
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
+        elif len(threshold_keys) == 0:
+            check_thresholds = lambda thresholds_met: False
 
         # Initialization of save arrays
         saved_times = []
@@ -868,7 +869,6 @@ class PrognosticsModel(ABC):
                 return min(dt, next_save-t, save_pts[save_pt_index]-t)
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
-
         
         # Simulate
         update_all()

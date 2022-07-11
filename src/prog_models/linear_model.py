@@ -99,7 +99,9 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((self.n_events, 1))
 
     def dx(self, x, u):
-        dx_array = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
+        dx_array = np.matmul(self.A, x.matrix) + self.E
+        if len(u.matrix) >= 0:
+            dx_array += np.matmul(self.B, u.matrix)
         return self.StateContainer(dx_array)
         
     def output(self, x):
