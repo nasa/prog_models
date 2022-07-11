@@ -100,7 +100,7 @@ class LinearModel(PrognosticsModel, ABC):
 
     def dx(self, x, u):
         dx_array = np.matmul(self.A, x.matrix) + self.E
-        if len(u.matrix) >= 0:
+        if len(u.matrix) > 0:
             dx_array += np.matmul(self.B, u.matrix)
         return self.StateContainer(dx_array)
         
