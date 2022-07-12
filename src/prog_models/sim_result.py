@@ -19,12 +19,16 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times : list = [], data : list = [], _copy = True):
-        self.times = times.copy()
-        if _copy:
-            self.data = deepcopy(data)
+    def __init__(self, times : list = None, data : list = None, _copy = True):
+        if times is None or data is None:
+            self.times = [] 
+            self.data = []
         else:
-            self.data = data
+            self.times = times.copy()
+            if _copy:
+                self.data = deepcopy(data)
+            else:
+                self.data = data
 
     def __eq__(self, other : "SimResult") -> bool:
         """Compare 2 SimResults
