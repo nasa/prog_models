@@ -305,14 +305,14 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
         return self.StateContainer(np.array([
-            [Tbdot],
-            [Vodot],
-            [Vsndot],
-            [Vspdot],
-            [qnBdot],
-            [qnSdot],
-            [qpBdot],
-            [qpSdot]
+            np.atleast_1d(Tbdot),
+            np.atleast_1d(Vodot),
+            np.atleast_1d(Vsndot),
+            np.atleast_1d(Vspdot),
+            np.atleast_1d(qnBdot),
+            np.atleast_1d(qnSdot),
+            np.atleast_1d(qpBdot),
+            np.atleast_1d(qpSdot)
         ]))
         
     def event_state(self, x : dict) -> dict:
@@ -420,8 +420,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
 
         return self.OutputContainer(np.array([
-            [x['tb'] - 273.15],
-            [Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']]
+            np.atleast_1d(x['tb'] - 273.15),
+            np.atleast_1d(Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp'])
         ]))
 
     def threshold_met(self, x : dict) -> dict:
@@ -506,9 +506,9 @@ class BatteryElectroChemEOL(PrognosticsModel):
         params = self.parameters
 
         return self.StateContainer(np.array([
-            [params['wq'] * abs(u['i'])],
-            [params['wr'] * abs(u['i'])],
-            [params['wd'] * abs(u['i'])]
+            np.atleast_1d(params['wq'] * abs(u['i'])),
+            np.atleast_1d(params['wr'] * abs(u['i'])),
+            np.atleast_1d(params['wd'] * abs(u['i']))
         ]))
 
     def event_state(self, x : dict) -> dict:

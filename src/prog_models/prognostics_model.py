@@ -197,10 +197,11 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = {'u1': 3.2}
-        | z = {'z1': 2.2}
-        | x = m.initialize(u, z) # Initialize first state
+            :
+                m = PrognosticsModel() # Replace with specific model being simulated
+                u = {'u1': 3.2}
+                z = {'z1': 2.2}
+                x = m.initialize(u, z) # Initialize first state
         """
         return {}
 
@@ -346,7 +347,7 @@ class PrognosticsModel(ABC):
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        if isinstance(x, self.StateContainer) and isinstance(dx, self.StateContainer):
+        if isinstance(x, DictLikeMatrixWrapper) and isinstance(dx, DictLikeMatrixWrapper):
             return self.StateContainer(x.matrix + dx.matrix * dt)
         elif isinstance(dx, dict) or isinstance(x, dict):
             return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
