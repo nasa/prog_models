@@ -34,9 +34,9 @@ jobs:
           pullRequestOpened: >
             Benchmarking Results With Changes
 
-            ${{steps.benchmark.outputs.bench}}
+            ${{steps.bench.outputs.bench}}
 
           pullRequestSynchronize: > 
             Benchmarking Results With Changes [Update]
 
-            ${{steps.benchmark.outputs.bench}}
+            ${{steps.bench.outputs.bench}}
