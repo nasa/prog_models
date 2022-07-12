@@ -58,16 +58,20 @@ jobs:
             Benchmarking Results
 
             From:
+
             ${{steps.bench-pre.outputs.bench}}
             
             To:
+
             ${{steps.bench.outputs.bench}}
 
           pullRequestSynchronize: > 
             Benchmarking Results [Update]
 
             From:
+
             ${{steps.bench-pre.outputs.bench}}
             
             To:
+            
             ${{steps.bench.outputs.bench}}
