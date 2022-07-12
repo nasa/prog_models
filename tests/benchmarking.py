@@ -70,13 +70,13 @@ if __name__ == "__main__":
     t = CLOCK()
     result.outputs.plot()
     t2 = CLOCK()
-    print(t2-t)
+    print(f'{t2-t} |')
 
     print(FORMAT_STR.format('Metrics'), end='')
     t = CLOCK()
     result.event_states.monotonicity()
     t2 = CLOCK()
-    print(t2-t)
+    print(f'{t2-t} |')
 
     print(FORMAT_STR.format('Surrogate Model Generation'), end='')
     temp_out = StringIO()
@@ -87,17 +87,17 @@ if __name__ == "__main__":
     t2 = CLOCK()
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
-    print(t2-t)
+    print(f'{t2-t} |')
 
     print(FORMAT_STR.format('surrogate sim'), end='')
     t = CLOCK()
     m2.simulate_to_threshold(future_load, threshold_keys='impact')
     t2 = CLOCK()
-    print(t2-t)
+    print(f'{t2-t} |')
 
     print(FORMAT_STR.format('surrogate sim, dt'), end='')
     t = CLOCK()
     m2.simulate_to_threshold(future_load, threshold_keys='impact', save_freq=0.25)
     t2 = CLOCK()
-    print(t2-t)
+    print(f'{t2-t} |')
 
