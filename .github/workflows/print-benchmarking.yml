@@ -26,6 +26,10 @@ jobs:
         shell: bash
         run: |
           bench=$(python -m tests.benchmarking)
+          # V To support multiline strings V
+          bench="${bench//'%'/'%25'}"
+          bench="${bench//$'\n'/'%0A'}"
+          bench="${bench//$'\r'/'%0D'}"
           echo "::set-output name=bench::$bench"
       - name: Auto Comment
         uses: wow-actions/auto-comment@v1
