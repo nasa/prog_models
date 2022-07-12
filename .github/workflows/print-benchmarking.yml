@@ -37,7 +37,7 @@ jobs:
           path: prog_models_target
       - name: Downgrade
         run: |
-          python -m pip uninstall prog_models
+          python -m pip uninstall -y prog_models
           python -m pip install -e ./prog_models_target
           cd prog_models_target
       - name: benchmark-pre
