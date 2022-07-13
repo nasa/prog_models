@@ -66,3 +66,38 @@ if __name__ == "__main__":
     
     result = m.simulate_to_threshold(future_load, threshold_keys='impact', save_freq = 0.5, dt=0.1)
 
+    print(FORMAT_STR.format('Plot results'), end='')
+    t = CLOCK()
+    result.outputs.plot()
+    t2 = CLOCK()
+    print(f'{t2-t} |')
+
+    print(FORMAT_STR.format('Metrics'), end='')
+    t = CLOCK()
+    result.event_states.monotonicity()
+    t2 = CLOCK()
+    print(f'{t2-t} |')
+
+    print(FORMAT_STR.format('Surrogate Model Generation'), end='')
+    temp_out = StringIO()
+    sys.stdout = temp_out
+    sys.stderr = temp_out
+    t = CLOCK()
+    m2 = m.generate_surrogate([future_load], threshold_keys='impact')
+    t2 = CLOCK()
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+    print(f'{t2-t} |')
+
+    print(FORMAT_STR.format('surrogate sim'), end='')
+    t = CLOCK()
+    m2.simulate_to_threshold(future_load, threshold_keys='impact')
+    t2 = CLOCK()
+    print(f'{t2-t} |')
+
+    print(FORMAT_STR.format('surrogate sim, dt'), end='')
+    t = CLOCK()
+    m2.simulate_to_threshold(future_load, threshold_keys='impact', save_freq=0.25)
+    t2 = CLOCK()
+    print(f'{t2-t} |')
+
