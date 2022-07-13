@@ -31,6 +31,8 @@ class SurrogateDMDModel(LinearModel):
             Note: To trim data to a set time, use the 'horizon' parameter\n   
         stability_tol: int, optional
             Value that determines the tolerance for DMD matrix stability\n
+        training_noise: int, optional
+            Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise \n
 
     See Also
     ---------
@@ -64,7 +66,8 @@ class SurrogateDMDModel(LinearModel):
         # Configure
         config = { # Defaults
             'trim_data_to': 1,
-            'stability_tol': 1e-05
+            'stability_tol': 1e-05,
+            'training_noise': 1e-05
         }
         config.update(kwargs)
 
@@ -72,6 +75,8 @@ class SurrogateDMDModel(LinearModel):
             raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
         if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
             raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
+        if not isinstance(config['training_noise'], Number) or config['training_noise'] < 0:
+            raise ProgModelInputException(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")
 
         states_dmd = m.states.copy()
         inputs_dmd = m.inputs.copy()
@@ -94,31 +99,43 @@ class SurrogateDMDModel(LinearModel):
             time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
 
             states_data_interp = {}
-            inputs_data_interp = {}
+            outputs_data_interp = {}
+            es_data_interp = {}
 
             for state_name in m.states:
                 states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
                 states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
-            for input_name in m.inputs:
-                inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
-                inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    states_data_interp[state_name] += np.random.randn(len(states_data_interp[state_name]))*config['training_noise']
+            for output_name in m.outputs:
+                outputs_data_temp = [outputs[iter_data3][output_name] for iter_data3 in range(len(outputs))]
+                outputs_data_interp[output_name] = interp1d(times,outputs_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    outputs_data_interp[output_name] += np.random.randn(len(outputs_data_interp[output_name]))*config['training_noise']
+            for es_name in m.events:
+                es_data_temp = [event_states[iter_data2][es_name] for iter_data2 in range(len(event_states))]
+                es_data_interp[es_name] = interp1d(times,es_data_temp)(time_data_interp)
+                if config['training_noise'] != 0:
+                    es_data_interp[es_name] += np.random.randn(len(es_data_interp[es_name]))*config['training_noise']
 
             states_data = [
                 m.StateContainer({
                     key: value[iter_dataT] for key, value in states_data_interp.items()
                 }) for iter_dataT in range(len(time_data_interp))
                 ]
-            inputs_data = [
-                m.InputContainer({
-                    key: value[iter_dataT] for key, value in inputs_data_interp.items()
+            outputs_data = [
+                m.OutputContainer({
+                    key: value[iter_dataT] for key, value in outputs_data_interp.items()
                 }) for iter_dataT in range(len(time_data_interp))
+                ]
+            event_states_data = [
+                {key: value[iter_dataT] for key, value in es_data_interp.items()} for iter_dataT in range(len(time_data_interp))
                 ]
 
             times = time_data_interp.tolist()
             states = SimResult(time_data_interp,states_data)
-            inputs = SimResult(time_data_interp,inputs_data)
-            outputs = LazySimResult(m.output, time_data_interp, states_data) 
-            event_states = LazySimResult(m.event_state, time_data_interp, states_data)
+            outputs = SimResult(time_data_interp,outputs_data) 
+            event_states = SimResult(time_data_interp,event_states_data)
             
             def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
                 """Sub-function for performing check and removal for user designated values.
@@ -155,15 +172,13 @@ class SurrogateDMDModel(LinearModel):
                                   
             if len(config['states']) != len(m.states):
                 user_val_set(m.states, 'states', states_dmd, states)
-            if len(config['inputs']) != len(m.inputs):
-                user_val_set(m.inputs, 'inputs', inputs_dmd, inputs)
             if len(config['outputs']) != len(m.outputs):
                 user_val_set(m.outputs, 'outputs', outputs_dmd, outputs) 
             if len(config['events']) != len(m.events):
                 user_val_set(m.events, 'events', events_dmd, event_states)  
 
             # Initialize DMD matrices
-            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]), len(times))) 
+            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(config['inputs']), len(times))) 
 
             # Save DMD matrices
             for i, time in enumerate(times): 
@@ -179,7 +194,7 @@ class SurrogateDMDModel(LinearModel):
                         states_now,
                         outputs[i].matrix,
                         np.array([list(event_states[i].values())]).T,
-                        np.array([[load_now[key]] for key in load_now.keys()])
+                        np.array([[load_now[key]+ np.random.randn()*config['training_noise']] for key in load_now.keys()])
                     )
                 x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (0, )))[:,0]  # Filter out empty values (e.g., if there is no input)
             # Get X and Xprime matrices by shifting time index by 1
