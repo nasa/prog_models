@@ -31,13 +31,13 @@ measurement_noise_functions = {
 # ---------------------------
 
 def triangular_process_noise(self, x : dict, dt : int =1):
-    return self.StateContainer(x.matrix + np.random.triangular(-1*self.parameters['process_noise'].matrix, 0, self.parameters['process_noise'].matrix, size=x.matrix.shape))
+    return self.StateContainer(x.matrix + dt*np.random.triangular(-1*self.parameters['process_noise'].matrix, 0, self.parameters['process_noise'].matrix, size=x.matrix.shape))
 
 def uniform_process_noise(self, x : dict, dt : int =1):
-    return self.StateContainer(x.matrix + np.random.uniform(-1*self.parameters['process_noise'].matrix, self.parameters['process_noise'].matrix, size=x.matrix.shape))
+    return self.StateContainer(x.matrix + dt*np.random.uniform(-1*self.parameters['process_noise'].matrix, self.parameters['process_noise'].matrix, size=x.matrix.shape))
 
 def normal_process_noise(self, x : dict, dt : int =1):
-    return self.StateContainer(x.matrix + np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape))
+    return self.StateContainer(x.matrix + dt*np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape))
 
 def no_process_noise(self, x : dict, dt :int =1) -> dict:
     return x
