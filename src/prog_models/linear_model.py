@@ -99,7 +99,9 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((self.n_events, 1))
 
     def dx(self, x, u):
-        dx_array = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
+        dx_array = np.matmul(self.A, x.matrix) + self.E
+        if len(u.matrix) > 0:
+            dx_array += np.matmul(self.B, u.matrix)
         return self.StateContainer(dx_array)
         
     def output(self, x):
@@ -109,3 +111,7 @@ class LinearModel(PrognosticsModel, ABC):
     def event_state(self, x):
         es_array = np.matmul(self.F, x.matrix) + self.G
         return {key: value[0] for key, value in zip(self.events, es_array)}
+    
+    def threshold_met(self, x):
+        es_array = np.matmul(self.F, x.matrix) + self.G
+        return {key: value[0] <= 0 for key, value in zip(self.events, es_array)}

@@ -19,7 +19,7 @@ class MockModel():
     }
 
     def initialize(self, u = {}, z = {}):
-        return deepcopy(self.parameters['x0'])
+        return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
         x['a']+= u['i1']*dt
@@ -263,7 +263,7 @@ class TestModels(unittest.TestCase):
                 noise[keys[i]] = i
             m = MockProgModel(**{noise_key: noise})
             self.fail("Should have raised exception at missing process_noise key")
-        except ProgModelTypeError:
+        except KeyError:
             pass
 
         try:
@@ -309,7 +309,9 @@ class TestModels(unittest.TestCase):
         m = MockProgModel() # Should work- sets default
         m = MockProgModel(process_noise = 0.0)
         x0 = m.initialize()
-        self.assertDictEqual(x0, m.parameters['x0'])
+        self.assertSetEqual(set(x0.keys()), set(m.parameters['x0'].keys()))
+        for key, value in m.parameters['x0'].items():
+            self.assertEqual(value, x0[key])
         x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
@@ -879,7 +881,7 @@ class TestModels(unittest.TestCase):
         x0 = m.initialize()
 
         def load(t, x=None):
-            return {'i1': 1, 'i2': 2.1}
+            return m.InputContainer({'i1': 1, 'i2': 2.1})
 
         # inside bounds
         x0['t'] = 0

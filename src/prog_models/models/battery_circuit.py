@@ -144,10 +144,10 @@ class BatteryCircuit(PrognosticsModel):
         ics = ib - Vcs/Rs
 
         return self.StateContainer(np.array([
-            [Tbdot],  # tb
-            [-ib],    # qb
-            [icp],    # qcp
-            [ics]     # qcs
+            np.atleast_1d(Tbdot),  # tb
+            np.atleast_1d(-ib),    # qb
+            np.atleast_1d(icp),    # qcp
+            np.atleast_1d(ics)     # qcs
         ]))
     
     def event_state(self, x : dict) -> dict:
@@ -175,8 +175,8 @@ class BatteryCircuit(PrognosticsModel):
         Vb = x['qb']/Cb
 
         return self.OutputContainer(np.array([
-            [x['tb']],            # t
-            [Vb - Vcp - Vcs]]))   # v
+            np.atleast_1d(x['tb']),            # t
+            np.atleast_1d(Vb - Vcp - Vcs)]))   # v
 
     def threshold_met(self, x : dict) -> dict:
         parameters = self.parameters

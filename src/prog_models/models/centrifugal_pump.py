@@ -221,15 +221,15 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
         return self.StateContainer(np.array([
-            [x['w'] + wdot * dt],
-            [x['Q'] + Qdot * dt],
-            [x['Tt'] + Ttdot * dt],
-            [x['Tr'] + Trdot * dt],
-            [x['To'] + Todot * dt],
-            [x['A'] + Adot * dt],
-            [x['rRadial'] + rRadialdot * dt],
-            [x['rThrust'] + rThrustdot * dt],
-            [QLeak]
+            np.atleast_1d(x['w'] + wdot * dt),
+            np.atleast_1d(x['Q'] + Qdot * dt),
+            np.atleast_1d(x['Tt'] + Ttdot * dt),
+            np.atleast_1d(x['Tr'] + Trdot * dt),
+            np.atleast_1d(x['To'] + Todot * dt),
+            np.atleast_1d(x['A'] + Adot * dt),
+            np.atleast_1d(x['rRadial'] + rRadialdot * dt),
+            np.atleast_1d(x['rThrust'] + rThrustdot * dt),
+            np.atleast_1d(QLeak)
         ]))
 
     def output(self, x : dict):
@@ -324,9 +324,9 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
 
         next_x.matrix = np.vstack((next_x.matrix, np.array([
-            [x['wA']],
-            [x['wRadial']],
-            [x['wThrust']]
+            np.atleast_1d(x['wA']),
+            np.atleast_1d(x['wRadial']),
+            np.atleast_1d(x['wThrust'])
         ])))
         return next_x
 
