@@ -25,9 +25,12 @@ Notes for Developers
 * The package itself is stored in the src directory.
 * This is a research tool, so when making a design decision between operational efficiency and usability, generally choose the more usable option
 * When supplied by or to the user, values with names (e.g., inputs, states, outputs, event_states, event occurance, etc.) should be supplied as dictionaries (or dict-like objects) where they can be referred to by name. 
-* Utils, Visualize, and metrics subpackages shall be independent (i.e., not have any dependencies with the wider package or other subpackages)
+* subpackages shall be independent (i.e., not have any dependencies with the wider package or other subpackages) when possible
 * Whenever possible Models, UncertainData types, State Estimators, and Predictors should be interchangable with any other class of the same type (e.g., any model should be interchangable with any other model)
 * Demonstrate common use cases as an example. 
+* Python code should comply with `PEP 8: Python Style Guide <https://peps.python.org/pep-0008/>`__, where appropriate
+  * See also: `Writing Clean and Pythonic Code (JPL) <https://trs.jpl.nasa.gov/bitstream/handle/2014/51618/CL%2319-5039.pdf?sequence=1>`__
+* Code should be complient with the recommendations of `LGTM <lgtm.com>`__, whenever appropriate
 * Every feature should be demonstrated in an example
   * The most commonly used features should be demonstrated in the tutorial
 * Except in the most extreme cases, maintain backwards compatibility for the convenience of existing users
@@ -77,26 +80,37 @@ PR Checklist
 * Each PR adding a new feature should include a test verifying that feature.
 * All tests must be passing.
 * All errors from static analysis must be resolved.
-* Any added dependencies are included in requirements.txt
-* All new files have the following notice on them:
+* Review the test coverage reports (if there is a change)
+* Review the software benchmarking results (if there is a change)
+* For added dependencies (new)
+   * Add to requirements.txt, 
+   * Add to setup.py,
+   * Add to the bottom of dev_guide.rst (this document)
+   * Notify Project Manager
+* [Checked automatically] All new files have the following notice on them:
     | "Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved."
 * All warnings from static analysis must be reviewed and resolved - if deemed appropriate.
 * Final merging can only be performed by the software assurance officer. 
 * For merging into master branch - see the Release Checklist below.
+
+Note: when making change to this, update the message in the github actions workflows
 
 Release Checklist
 *****************
 * [Complete - done in PRs to dev] Code review - all software must be checked by someone other than the author
 * Check that each new feature has corresponding tests
 * [Complete - checked automatically in PRs to dev] Confirm that every page has the copyright notice
-* Confirm dependencies in requirements.txt, setup.py
+* Confirm added dependencies are at the following:
+   * requirements.txt, 
+   * setup.py,
+   * the bottom of dev_guide.rst (this document)
 * Confirm that all issues associated with the release have been closed (i.e., requirements have been met) or assigned to another release
 * Run unit tests `python -m tests`
-* For prog_models: run manual tests `python -m tests.test_manual`
+* If present, run manual tests `python -m tests.test_manual`
 * Review the template(s)
 * Review static-analysis/linter results
-* Test the tutorial
-* Run the examples
+* Review the tutorial
+* Run and review the examples
 * Check that all examples are tested
 * Check new files in PR for any accidentally added
 * Check documents
@@ -106,6 +120,9 @@ Release Checklist
 * Write release notes
 * Update version number in src/\*/__init__.py and setup.py
 * For releases adding new features- ensure that NASA release process has been followed.
+* Confirm that on GitHub Releases page, the next release has been started and that a schedule is present including at least Release Date, Release Review Date, and Release Branch Opening Date.
+
+Note: when making change to this, update the message in the github actions workflows
 
 Post-Release Checklist
 ***********************
@@ -186,11 +203,11 @@ Life Cycle Management
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 013   | Maintain Software Plans          | FC         | This document                                                   |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 024a  | Conformance with Project Plan    | NC         | Not required for Class-E                                        |
+| 024a  | Conformance with Project Plan    | FC         | Corrective actions are tracked as github issues                 |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 024b  | Project Plan Configuration Mgmt  | FC         | Project plan is a tracked object in github                      |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 034   | Software Acceptance Criteria     | NC         | Not required for Class-E                                        |
+| 034   | Software Acceptance Criteria     | FC         | See Release Checklist, above                                    |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 036   | Software Processes               | FC         | See notes below                                                 |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
@@ -236,16 +253,17 @@ Life Cycle Management
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 029   | Software Classification          | FC         | This document                                                   |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
-| 027   | COTS/GOTS/MOTS/OSS               | NC         | Not Required for Class-E                                        |
+| 027   | COTS/GOTS/MOTS/OSS               | FC         |See dependencies at bottom of page                               |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 
 Note on software processes [SWE 034]:
+
 The project manager shall establish and maintain the software processes, software documentation plans, list of developed electronic products, deliverables, and list of tasks for the software development that are required for the project's software developers, as well as the action required (e.g., approval, review) of the Government upon receipt of each of the deliverables.
+
 * Processes are tracked in this document. 
 * Documentation, electronic products, and deliverables are tracked in GitHub
 * Tasks are tracked in GitHub issues
 * Actions required are listed in the checklists above
-
 
 Cost Estimation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -280,6 +298,8 @@ Schedules
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
 | 046   | Maintain Schedule                | FC         | See Milestones (from SWE016, above)                             |
 +-------+----------------------------------+------------+-----------------------------------------------------------------+
+
+Note: Release checklist includes confirming schedule exists for next release
 
 Classification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -333,7 +353,7 @@ Reuse
 +-------+----------------------------------+------------+------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                         |
 +=======+==================================+============+==================================================================+
-| 147   | Reusability Requirements         | NC         | Not required for Class-E                                         |
+| 147   | Reusability Requirements         | FC         | See notes below                                                  |
 +-------+----------------------------------+------------+------------------------------------------------------------------+
 | 148M  | Software Catalog                 | FC         | `prog_models <https://software.nasa.gov/software/ARC-18634-1>`__ |
 +-------+----------------------------------+------------+------------------------------------------------------------------+
@@ -341,6 +361,16 @@ Reuse
 +-------+----------------------------------+------------+------------------------------------------------------------------+
 | 148S  | Software Catalog                 | FC         | Will be posted soon                                              |
 +-------+----------------------------------+------------+------------------------------------------------------------------+
+
+Notes on SWE-147: Reusability requirements
+
+* This software is a research support software. As, such it is designed to be reusable and to support a wide variety of use-cases. The requirements and coding standards are specified to ensure re-usability. 
+* Examples, Templates, Tutorials, sourcecode, and Documentation will help support reuse
+* Some support will be provided to help users re-use it. 
+* The software will be released open-source, helping reduce the barriers to reuse.
+* Design decisions will support ease-of-use
+* Exceptions and warning will be implemented whenever appropriate to help users use the software properly
+* When depricating a feature, notice is provided at least one version of the software prior, in the form of a warning. 
 
 Cybersecurity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -350,27 +380,48 @@ Cybersecurity
 +=======+=====================================+============+===============================================+
 | 156   | Perform CyberSecurity Assessment    | FC         | See below                                     |
 +-------+-------------------------------------+------------+-----------------------------------------------+
-| 154   | Perform CyberSecurity Risks         | NC         | Not Required for Class-E                      |
+| 154   | Perform CyberSecurity Risks         | FC         | See below                                     |
 +-------+-------------------------------------+------------+-----------------------------------------------+
-| 157   | Protect Against Unauthorized Access | NC         | Not Required for Class-E                      |
+| 157   | Protect Against Unauthorized Access | FC         | See below                                     |
 +-------+-------------------------------------+------------+-----------------------------------------------+
-| 159   | Test CyberSecurity Mitigation       | NC         | Not Required for Class-E                      |
+| 159   | Test CyberSecurity Mitigation       | FC         | See below                                     |
 +-------+-------------------------------------+------------+-----------------------------------------------+
-| 207   | Secure Coding Practices             | NC         | Not Required for Class-E                      |
+| 207   | Secure Coding Practices             | FC         | Part of LGTM Static Analysis and Code Reviews |
 +-------+-------------------------------------+------------+-----------------------------------------------+
 | 185   | Static Analysis                     | FC         | See Static Analysis Notes under Implementation|
 +-------+-------------------------------------+------------+-----------------------------------------------+
 
 Cybersecurity risks were assessed, the identified cybersecurity threats and our mitigations are described below:
+
  * Code injection
+
    * Risk: insertion of hazardous code into an open-source project by malicious actor
-   * Mitigation: Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors.
+   * Mitigation: Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors. Branch rules to prohibit direct commits and unapproved additions
+   * Validation: Part of automated tests and confirmed in release review
+
+ * Programmers Accidentally Introduce Security Risks
+
+   * Risk: Programmers accidentally introduce security risks into the codebase
+   * Mitigation: Automated Tests. Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors. Branch rules to prohibit direct commits and unapproved additions
+   * Validation: Part of automated tests and confirmed in release review
+
  * Dependencies
+
    * Risk: Dependencies could introduce cybersecurity vulnerabilities
    * Mitigation: GitHub “dependabot” alerts will identify any known issues with package decencies. Also, the project is actively trying to limit the number of dependencies, and only use well-known packages from trusted developers.
+   * Validation: Alerts produced by dependabot system. Dependencies must be approved by Project Manager
+
  * Language
+
    * Risk: Python itself may introduce cybersecurity vulnerabilities 
    * Mitigation: Python is a well-known language, this risk is low. To mitigate this we only support actively maintained versions.
+   * Validation: Will check with each release
+   
+* Unauthorized Access to Hardware [SWE-157]
+
+   * Risk: Unauthorized access to hardware (GitHub Servers)
+   * Mitigation: Github is a trusted partner who has strict access control. Administrator rights are limited to Project Manager and NASA Org Administrators. Individuals not involved and vetted by the project cannot add to the repository directly (only through PR from fork) 
+   * Validation: System configuration validated by PM 7/13/22
 
 Bi-Directional Traceability
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -378,7 +429,7 @@ Bi-Directional Traceability
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                       |
 +=======+==================================+============+================================================================================+
-| 052   | Tracability                      | FC         | See Tracability Notes, below                                                   |
+| 052   | Tracability                      | FC         | See Tracability Notes, at bottom of page                                       |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Requirements
@@ -397,8 +448,13 @@ Requirements
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | 054   | Track Inconsistencies            | FC         | Tracked in enhancement issues, see comment from SWE050, above                  |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
-| 055   | Requirement Validation           | NC         | Not Required for Class-E                                                       |
+| 055   | Requirement Validation           | FC         | See below                                                                      |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
+
+Note on SWE-55: Requirement Validation:
+
+* This is a Research Suffort Software. As such it has many different usages that the requirements must fulfill.
+* These usages will be implemented as examples, in the tutorial, or as tests. Running these and inspecting them (part of the release process) will help validate that the requirements (as implmeneted) are correct to enable each use case.
 
 Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -406,7 +462,7 @@ Implementation
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                       |
 +=======+==================================+============+================================================================================+
-| 061   | Coding Standards                 | NC         | Not Required for Class-E                                                       |
+| 061   | Coding Standards                 | FC         | See Notes for Developers, above                                                |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 | 135   | Static Analysis                  | FC         | See list of static analysis tools, below.                                      |
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
@@ -422,6 +478,7 @@ Implementation
 +-------+----------------------------------+------------+--------------------------------------------------------------------------------+
 
 Static Analysis Methods Used:
+
 * CodeFactor.io (`prog_models <https://www.codefactor.io/repository/github/nasa/prog_models>`__, `prog_algs <https://www.codefactor.io/repository/github/nasa/prog_algs>`__, `prog_server <https://www.codefactor.io/repository/github/nasa/prog_server>`__): Runs automatically in each PR. If issues are detected, they are noted in the PR chat. 
 * LGTM (`prog_models <https://lgtm.com/projects/g/nasa/prog_models/?mode=list>`__, `prog_algs <https://lgtm.com/projects/g/nasa/prog_algs/?mode=list>`__, `prog_server <https://lgtm.com/projects/g/nasa/prog_server/?mode=list>`__): Runs automatically in each PR. If issues are detected, they are noted in the PR chat. 
 * Codecov (`prog_models <https://app.codecov.io/gh/nasa/prog_models>`__, `prog_algs <https://app.codecov.io/gh/nasa/prog_algs>`__, `prog_server <https://app.codecov.io/gh/nasa/prog_server>`__): Runs automatically in each PR. If issues are detected, they are noted in the PR chat. 
@@ -455,7 +512,7 @@ Testing
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
 | 066   | Verification                     | FC         | Each requirement has verification tests created before closing. Tests run using GitHub actions       |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
-| 068   | Evaluate Test Results            | NC         | Not required for Class-E                                                                             |
+| 068   | Evaluate Test Results            | FC         | See notes below                                                                                      |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
 | 071   | Update Test Plans                | FC         | Workflow, tests, and this document are updated as requirements change                                |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
@@ -465,8 +522,17 @@ Testing
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
 | 186S  | Code Coverage                    | FC         | See `Codecov <https://app.codecov.io/gh/nasa/prog_server>`__                                         |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
-| 192   | Reqs that Trace to Hazard        |            | Not required for Class-E                                                                             |
+| 192   | Reqs that Trace to Hazard        | FC         | When potential for hazard is identified, thorough tests are created to prevent the hazard            |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
+
+Notes on SWE-068: Evaluate Test Results:
+
+* All tests are conducted automatically, using github actions, using multiple versions of Python and both dev and release versions of compatable software. 
+* Results of the test are compared with expected results automatically. If they do not match what is expected, the test fails and GitHub does not allow merger of the branch into dev/master 
+* Whenever a requirement (i.e., feature issue) is implemented, it must include tests that properly cover the requirement. Ensuring that it covers the requirement is part of the code review checklist. 
+
+  * Furthermore, the coverage data is automatically reported on a PR. This will provide additional information to ensure the requirement is tested
+  * Code coverage is also reviewed as part of the release process 
 
 Operations, Maintenance, and Retirement
 ----------------------------------------
@@ -474,7 +540,7 @@ Operations, Maintenance, and Retirement
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
 | SWE # | Description                      | Compliance | Evidence                                                                                             |
 +=======+==================================+============+======================================================================================================+
-| 075   | Ops, Maintenance, and Retirement | NC         | Not required for Class-E                                                                             |
+| 075   | Ops, Maintenance, and Retirement | FC         | See below                                                                                            |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
 | 077   | Record-Keeping                   | FC         | Records maintained in repository and Sharepoint folder                                               |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
@@ -482,8 +548,29 @@ Operations, Maintenance, and Retirement
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
 | 195   | Maintainance Standards           | FC         | See this document, GitHub records                                                                    |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
-| 196   | Retirement Plan                  | NC         | Not required for Class-E                                                                             |
+| 196   | Retirement Plan                  | FC         | See Below                                                                                            |
 +-------+----------------------------------+------------+------------------------------------------------------------------------------------------------------+
+
+Operations and Maintenance: During the operational phase of the software, the team will do the following:
+
+* Provide documentation, examples, tutorial, templates, and source code to users to help them use the software
+* Provide a issues page for users to report issues and suggest features 
+* Provide a discussion page for further discussion on best practices and suggestions
+* Monitor and resolve security alerts from users, NASA organiztions, static analysis tools, and GitHub dependency checkers
+* Maintain the requirements (i.e., issues) and releases 
+* Maintain and update software assurance and compliance documentation (e.g., this page)
+* Until retirement, maintain the software. This includes:
+
+  * Providing support for NASA projects using the software and limited support for external users. 
+  * Fixing bugs, when identified
+  * Assisting in incorporating new features and enhancements
+
+* The project team is also responsible for conducting appropriate reviews (e.g., Release Reviews) to ensure the software is ready for use.
+
+Retirement Plan:
+
+* On complete retirement the software, tests, documentation, and other artifacts will continue to be available on GitHub, but a message will be added to the ReadMe and the main page of the documentation indicating that the software is no longer maintained or updated by NASA
+* All internal documents about the software will be archived in the Diagnostics and Prognostics Group's Teams OneDrive folder
 
 Configuration Management
 -------------------------------
@@ -513,10 +600,30 @@ Configuration Management
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
 | 083S  | Configuration Status             | FC         | See `Branches <https://github.com/nasa/prog_server/branches>`__   |
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
-| 084   | Configuration Audits             | NC         | Not Required for Class-E                                          |
+| 084   | Configuration Audits             | FC         | See Note below                                                    |
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
 | 085   | Release Procedures               | FC         | See this document                                                 |
 +-------+----------------------------------+------------+-------------------------------------------------------------------+
+
+Note on SWE084- Configuration Audits: Configuration audits are conducted in parts throughout the lifecycle process
+
+* To a large degree- configuration audits are performed automatically by GitHub actions and branch restrictions. These check the following:
+
+   * That tests were run (they are automatically run), passed, and results are recorded
+   * That files conform with copyright rules
+   * That required code reviews were performed (Requirement for branch merging)
+
+* In performing a code review, the reviewing user confirms:
+
+   * That the change is linked to a requirement (i.e., feature issue) and the requirement was met or that it is linked to another issue (e.g., bug report)
+   * That appropriate tests exist
+
+* In performing a release review, the project manager confirms:
+
+   * That all issues are completed
+   * That all tests pass, have proper documentation
+   * That documentation has been updated and matches the code 
+   * That a schedule exists for the next release and is in the proper place
 
 Non-Conformances
 -------------------------------
@@ -547,6 +654,71 @@ Requirement Tracking
 ********************
 Requirements are tracked as issues with the "Enhancement" label (See `prog_models <https://github.com/nasa/prog_models/labels/enhancement>`__, `prog_algs <https://github.com/nasa/prog_algs/labels/enhancement>`__, `prog_server <https://github.com/nasa/prog_server/labels/enhancement>`__ Enhancement Issues). An issue template is used to ensure that the requirement has the desired information. Issues are closed to indicate the requirement has been met. Closing a requirement issue is done with a pull request, which is linked to the relevant requirement, for tracability. Closing the requirement issue requires a code review (see above for details), and requires implementation of passing tests that test the requirement (i.e., verification tests). The tests are reviewed with the code implementing the requirement. Issues are assigned to a milestone (i.e., release) indicating the requirements for that release. Github automatically tracks any changes to the issues (i.e., requirements)
 
+Dependencies
+**************
+The following dependencies are used in the project:
+
+* `numpy <https://numpy.org/>`__
+
+   * Requirements met: Various mathematical and array functions
+   * Documentation: https://numpy.org
+   * Usage Rights: Released under the BSD 3-Clause License
+   * Future Support: expected- Numpy is a common tool still under development and actively supported
+
+* `scipy <https://www.scipy.org/>`__
+
+   * Requirements met: Various mathematical and array functions
+   * Documentation: https://www.scipy.org
+   * Usage Rights: Released under the BSD 3-Clause License
+   * Future Support: expected- Scipy is a common tool still under development and actively supported
+
+* `matplotlib <https://matplotlib.org/>`__
+
+   * Requirements met: Various figure generation methods
+   * Documentation: https://matplotlib.org
+   * Usage Rights: Released under the BSD 3-Clause License
+   * Future Support: expected- Matplotlib is a common tool still under development and actively supported
+
+* `pandas <https://pandas.pydata.org/>`__
+
+   * Requirements met: Various data analysis methods (especially for datasets)
+   * Documentation: https://pandas.pydata.org
+   * Usage Rights: Released under the BSD 3-Clause License
+   * Future Support: expected- Pandas is a common tool still under development and actively supported
+
+* `FilterPy <https://filterpy.readthedocs.io>`__ (prog_algs only)
+
+   * Requirements met: Algorithms for state estimators and predictors
+   * Documentation: https://filterpy.readthedocs.io
+   * Usage Rights: Released under the MIT License
+   * Future Support: expected- FilterPy is a common tool still under development and actively supported
+
+* `Requests <https://requests.readthedocs.io>`__ (prog_server only)
+
+   * Requirements met: HTTP requests
+   * Documentation: https://requests.readthedocs.io
+   * Usage Rights: Released under the Apache License
+   * Future Support: expected- Requests is a common tool still under development and actively supported
+
+* `Flask <https://flask.palletsprojects.com/en/1.1.x/>`__ (prog_server only)
+
+   * Requirements met: Web server
+   * Documentation: https://flask.palletsprojects.com/en/1.1.x
+   * Usage Rights: Released under the BSD 3-Clause License
+   * Future Support: expected- Flask is a common tool still under development and actively supported
+
+* `urllib3 <http://urllib3.readthedocs.org>`__ (prog_server only)
+
+   * Requirements met: HTTP requests
+   * Documentation: https://urllib3.readthedocs.org
+   * Usage Rights: Released under the MIT License
+   * Future Support: expected- urllib3 is a common tool still under development and actively supported
+
+Notes for all: 
+
+* The function and performance of these tools are verified and validated as part of the automated tests and examples. [SWE-027 3.1.14.e]
+* GitHub dependency checker will periodically check for known issues and notify. [SWE-027 3.1.14.f]
+
 Tracability Notes
 *****************
 Hazards and non-conformances are tracked as issues with the label bug (See `prog_models <https://github.com/nasa/prog_models/labels/bug>`__, `prog_algs <https://github.com/nasa/prog_algs/labels/bug>`__, `prog_server <https://github.com/nasa/prog_server/labels/bug>`__). In the template for a bug report, there is a section asking for relevant enhancement issues (i.e., requirements). This linking establishes tracability from hazards/non-conformances to the underlying requirement. These linkings are automatically marked by the github system in the requirement issue. Additionally, to close an enhancement issue (i.e., requirement), passing verification tests must be created and checked in. The PR where these tests are created and the implementation is completed is linked to the issue establishing tracability from requirement -> verification test. These tests run automatically at every change/PR. 
@@ -554,6 +726,7 @@ Hazards and non-conformances are tracked as issues with the label bug (See `prog
 Additionally, requirements are assigned to milestones/releases, establishing bi-directional tracability to these 
 
 Summary: The following tracabilities are maintained:
+
 * Hazard <-> Requirement
 * Non-conformance <-> Requirement
 * Requirement <-> Verification Test & Results 
