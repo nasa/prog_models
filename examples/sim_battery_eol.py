@@ -2,8 +2,10 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met. 
+Example of a battery being simulated until End of Life (EOL). Battery capacity decreases with use. In this case, EOL is defined as when the battery capacity falls below some acceptable threshold (i.e., what we define as useful capacity). 
 """
+
+import matplotlib.pyplot as plt
 
 from prog_models.models import BatteryElectroChem as Battery
 
@@ -30,7 +32,7 @@ def run_example():
         # Rule for loading at initialization
         return batt.InputContainer({'i': load})
 
-    # Simulate to EOL Threshold
+    # Step 3: Simulate to Capacity is insufficient Threshold
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
     options = {
@@ -40,6 +42,13 @@ def run_example():
         'print': True
     }
     simulated_results = batt.simulate_to_threshold(future_loading, **options)
+
+    # Step 4: Plot Results
+    simulated_results.inputs.plot(ylabel='Current drawn (amps)')
+    simulated_results.event_states.plot(ylabel='Event States', labels={'EOD': 'State of Charge (SOC)', 'InsufficientCapacity': 'State of Health (SOH)'})
+    plt.ylim([0, 1])
+
+    plt.show()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
