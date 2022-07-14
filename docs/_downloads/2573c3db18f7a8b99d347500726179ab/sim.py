@@ -43,6 +43,17 @@ def run_example():
     }
     simulated_results = batt.simulate_to_threshold(future_loading, **options)
 
+    # Alternately, you can set a max step size and allow step size to be adjusted automatically
+    options['dt'] = ('auto', 2)  # set step size automatically, with a max of 2 seconds
+    options['save_freq'] = 201  # Save every 201 seconds
+    options['save_pts'] = [250, 772, 1023]  # Special points we sould like to see reported
+    simulated_results = batt.simulate_to_threshold(future_loading, **options)
+    # Note that even though the step size is 2, the odd points in the save frequency are met perfectly, dt is adjusted automatically to capture the save points
+
+    # You can also change the integration method. For example:
+    options['integration_method'] = 'rk4'  # Using Runge-Kutta 4th order
+    simulated_results_rk4 = batt.simulate_to_threshold(future_loading, **options)
+
 # This allows the module to be executed directly 
 if __name__ == '__main__':
     run_example()

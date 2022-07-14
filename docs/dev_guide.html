@@ -83,7 +83,8 @@
 <ul>
 <li><p><a class="reference internal" href="#aquisition-options" id="id32">Aquisition Options</a></p></li>
 <li><p><a class="reference internal" href="#requirement-tracking" id="id33">Requirement Tracking</a></p></li>
-<li><p><a class="reference internal" href="#tracability-notes" id="id34">Tracability Notes</a></p></li>
+<li><p><a class="reference internal" href="#dependencies" id="id34">Dependencies</a></p></li>
+<li><p><a class="reference internal" href="#tracability-notes" id="id35">Tracability Notes</a></p></li>
 </ul>
 </li>
 </ul>
@@ -110,9 +111,12 @@
 <li><p>The package itself is stored in the src directory.</p></li>
 <li><p>This is a research tool, so when making a design decision between operational efficiency and usability, generally choose the more usable option</p></li>
 <li><p>When supplied by or to the user, values with names (e.g., inputs, states, outputs, event_states, event occurance, etc.) should be supplied as dictionaries (or dict-like objects) where they can be referred to by name.</p></li>
-<li><p>Utils, Visualize, and metrics subpackages shall be independent (i.e., not have any dependencies with the wider package or other subpackages)</p></li>
+<li><p>subpackages shall be independent (i.e., not have any dependencies with the wider package or other subpackages) when possible</p></li>
 <li><p>Whenever possible Models, UncertainData types, State Estimators, and Predictors should be interchangable with any other class of the same type (e.g., any model should be interchangable with any other model)</p></li>
 <li><p>Demonstrate common use cases as an example.</p></li>
+<li><p>Python code should comply with <a class="reference external" href="https://peps.python.org/pep-0008/">PEP 8: Python Style Guide</a>, where appropriate
+* See also: <a class="reference external" href="https://trs.jpl.nasa.gov/bitstream/handle/2014/51618/CL%2319-5039.pdf?sequence=1">Writing Clean and Pythonic Code (JPL)</a></p></li>
+<li><p>Code should be complient with the recommendations of <a class="reference external" href="lgtm.com">LGTM</a>, whenever appropriate</p></li>
 <li><p>Every feature should be demonstrated in an example
 * The most commonly used features should be demonstrated in the tutorial</p></li>
 <li><p>Except in the most extreme cases, maintain backwards compatibility for the convenience of existing users
@@ -192,9 +196,20 @@
 <li><p>Each PR adding a new feature should include a test verifying that feature.</p></li>
 <li><p>All tests must be passing.</p></li>
 <li><p>All errors from static analysis must be resolved.</p></li>
-<li><p>Any added dependencies are included in requirements.txt</p></li>
+<li><p>Review the test coverage reports (if there is a change)</p></li>
+<li><p>Review the software benchmarking results (if there is a change)</p></li>
+<li><dl class="simple">
+<dt>For added dependencies (new)</dt><dd><ul class="simple">
+<li><p>Add to requirements.txt,</p></li>
+<li><p>Add to setup.py,</p></li>
+<li><p>Add to the bottom of dev_guide.rst (this document)</p></li>
+<li><p>Notify Project Manager</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><dl>
-<dt>All new files have the following notice on them:</dt><dd><div class="line-block">
+<dt>[Checked automatically] All new files have the following notice on them:</dt><dd><div class="line-block">
 <div class="line">“Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved.”</div>
 </div>
 </dd>
@@ -204,6 +219,7 @@
 <li><p>Final merging can only be performed by the software assurance officer.</p></li>
 <li><p>For merging into master branch - see the Release Checklist below.</p></li>
 </ul>
+<p>Note: when making change to this, update the message in the github actions workflows</p>
 </section>
 <section id="release-checklist">
 <h3><a class="toc-backref" href="#contents">Release Checklist</a><a class="headerlink" href="#release-checklist" title="Permalink to this headline">¶</a></h3>
@@ -211,14 +227,22 @@
 <li><p>[Complete - done in PRs to dev] Code review - all software must be checked by someone other than the author</p></li>
 <li><p>Check that each new feature has corresponding tests</p></li>
 <li><p>[Complete - checked automatically in PRs to dev] Confirm that every page has the copyright notice</p></li>
-<li><p>Confirm dependencies in requirements.txt, setup.py</p></li>
+<li><dl class="simple">
+<dt>Confirm added dependencies are at the following:</dt><dd><ul>
+<li><p>requirements.txt,</p></li>
+<li><p>setup.py,</p></li>
+<li><p>the bottom of dev_guide.rst (this document)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><p>Confirm that all issues associated with the release have been closed (i.e., requirements have been met) or assigned to another release</p></li>
 <li><p>Run unit tests <cite>python -m tests</cite></p></li>
-<li><p>For prog_models: run manual tests <cite>python -m tests.test_manual</cite></p></li>
+<li><p>If present, run manual tests <cite>python -m tests.test_manual</cite></p></li>
 <li><p>Review the template(s)</p></li>
 <li><p>Review static-analysis/linter results</p></li>
-<li><p>Test the tutorial</p></li>
-<li><p>Run the examples</p></li>
+<li><p>Review the tutorial</p></li>
+<li><p>Run and review the examples</p></li>
 <li><p>Check that all examples are tested</p></li>
 <li><p>Check new files in PR for any accidentally added</p></li>
 <li><dl class="simple">
@@ -233,7 +257,9 @@
 <li><p>Write release notes</p></li>
 <li><p>Update version number in src/*/__init__.py and setup.py</p></li>
 <li><p>For releases adding new features- ensure that NASA release process has been followed.</p></li>
+<li><p>Confirm that on GitHub Releases page, the next release has been started and that a schedule is present including at least Release Date, Release Review Date, and Release Branch Opening Date.</p></li>
 </ul>
+<p>Note: when making change to this, update the message in the github actions workflows</p>
 </section>
 <section id="post-release-checklist">
 <h3><a class="toc-backref" href="#contents">Post-Release Checklist</a><a class="headerlink" href="#post-release-checklist" title="Permalink to this headline">¶</a></h3>
@@ -329,8 +355,8 @@ or whose anomalous behavior would cause or contribute to a failure of system fun
 </tr>
 <tr class="row-even"><td><p>024a</p></td>
 <td><p>Conformance with Project Plan</p></td>
-<td><p>NC</p></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>Corrective actions are tracked as github issues</p></td>
 </tr>
 <tr class="row-odd"><td><p>024b</p></td>
 <td><p>Project Plan Configuration Mgmt</p></td>
@@ -339,8 +365,8 @@ or whose anomalous behavior would cause or contribute to a failure of system fun
 </tr>
 <tr class="row-even"><td><p>034</p></td>
 <td><p>Software Acceptance Criteria</p></td>
-<td><p>NC</p></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See Release Checklist, above</p></td>
 </tr>
 <tr class="row-odd"><td><p>036</p></td>
 <td><p>Software Processes</p></td>
@@ -454,17 +480,19 @@ or whose anomalous behavior would cause or contribute to a failure of system fun
 </tr>
 <tr class="row-odd"><td><p>027</p></td>
 <td><p>COTS/GOTS/MOTS/OSS</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See dependencies at bottom of page</p></td>
 </tr>
 </tbody>
 </table>
-<p>Note on software processes [SWE 034]:
-The project manager shall establish and maintain the software processes, software documentation plans, list of developed electronic products, deliverables, and list of tasks for the software development that are required for the project’s software developers, as well as the action required (e.g., approval, review) of the Government upon receipt of each of the deliverables.
-* Processes are tracked in this document.
-* Documentation, electronic products, and deliverables are tracked in GitHub
-* Tasks are tracked in GitHub issues
-* Actions required are listed in the checklists above</p>
+<p>Note on software processes [SWE 034]:</p>
+<p>The project manager shall establish and maintain the software processes, software documentation plans, list of developed electronic products, deliverables, and list of tasks for the software development that are required for the project’s software developers, as well as the action required (e.g., approval, review) of the Government upon receipt of each of the deliverables.</p>
+<ul class="simple">
+<li><p>Processes are tracked in this document.</p></li>
+<li><p>Documentation, electronic products, and deliverables are tracked in GitHub</p></li>
+<li><p>Tasks are tracked in GitHub issues</p></li>
+<li><p>Actions required are listed in the checklists above</p></li>
+</ul>
 </section>
 <section id="cost-estimation">
 <h4><a class="toc-backref" href="#contents">Cost Estimation</a><a class="headerlink" href="#cost-estimation" title="Permalink to this headline">¶</a></h4>
@@ -543,6 +571,7 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 </tbody>
 </table>
+<p>Note: Release checklist includes confirming schedule exists for next release</p>
 </section>
 <section id="classification">
 <h4><a class="toc-backref" href="#contents">Classification</a><a class="headerlink" href="#classification" title="Permalink to this headline">¶</a></h4>
@@ -688,8 +717,8 @@ The project manager shall establish and maintain the software processes, softwar
 <tbody>
 <tr class="row-even"><td><p>147</p></td>
 <td><p>Reusability Requirements</p></td>
-<td><p>NC</p></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See notes below</p></td>
 </tr>
 <tr class="row-odd"><td><p>148M</p></td>
 <td><p>Software Catalog</p></td>
@@ -708,6 +737,16 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 </tbody>
 </table>
+<p>Notes on SWE-147: Reusability requirements</p>
+<ul class="simple">
+<li><p>This software is a research support software. As, such it is designed to be reusable and to support a wide variety of use-cases. The requirements and coding standards are specified to ensure re-usability.</p></li>
+<li><p>Examples, Templates, Tutorials, sourcecode, and Documentation will help support reuse</p></li>
+<li><p>Some support will be provided to help users re-use it.</p></li>
+<li><p>The software will be released open-source, helping reduce the barriers to reuse.</p></li>
+<li><p>Design decisions will support ease-of-use</p></li>
+<li><p>Exceptions and warning will be implemented whenever appropriate to help users use the software properly</p></li>
+<li><p>When depricating a feature, notice is provided at least one version of the software prior, in the form of a warning.</p></li>
+</ul>
 </section>
 <section id="cybersecurity">
 <h4><a class="toc-backref" href="#contents">Cybersecurity</a><a class="headerlink" href="#cybersecurity" title="Permalink to this headline">¶</a></h4>
@@ -733,23 +772,23 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 <tr class="row-odd"><td><p>154</p></td>
 <td><p>Perform CyberSecurity Risks</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See below</p></td>
 </tr>
 <tr class="row-even"><td><p>157</p></td>
 <td><p>Protect Against Unauthorized Access</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See below</p></td>
 </tr>
 <tr class="row-odd"><td><p>159</p></td>
 <td><p>Test CyberSecurity Mitigation</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See below</p></td>
 </tr>
 <tr class="row-even"><td><p>207</p></td>
 <td><p>Secure Coding Practices</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>Part of LGTM Static Analysis and Code Reviews</p></td>
 </tr>
 <tr class="row-odd"><td><p>185</p></td>
 <td><p>Static Analysis</p></td>
@@ -758,20 +797,50 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 </tbody>
 </table>
-<dl class="simple">
-<dt>Cybersecurity risks were assessed, the identified cybersecurity threats and our mitigations are described below:</dt><dd><ul class="simple">
-<li><p>Code injection
-* Risk: insertion of hazardous code into an open-source project by malicious actor
-* Mitigation: Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors.</p></li>
-<li><p>Dependencies
-* Risk: Dependencies could introduce cybersecurity vulnerabilities
-* Mitigation: GitHub “dependabot” alerts will identify any known issues with package decencies. Also, the project is actively trying to limit the number of dependencies, and only use well-known packages from trusted developers.</p></li>
-<li><p>Language
-* Risk: Python itself may introduce cybersecurity vulnerabilities
-* Mitigation: Python is a well-known language, this risk is low. To mitigate this we only support actively maintained versions.</p></li>
+<p>Cybersecurity risks were assessed, the identified cybersecurity threats and our mitigations are described below:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Code injection</p>
+<ul>
+<li><p>Risk: insertion of hazardous code into an open-source project by malicious actor</p></li>
+<li><p>Mitigation: Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors. Branch rules to prohibit direct commits and unapproved additions</p></li>
+<li><p>Validation: Part of automated tests and confirmed in release review</p></li>
 </ul>
-</dd>
-</dl>
+</li>
+<li><p>Programmers Accidentally Introduce Security Risks</p>
+<ul>
+<li><p>Risk: Programmers accidentally introduce security risks into the codebase</p></li>
+<li><p>Mitigation: Automated Tests. Strict code review requirements in the repository. Static analysis/security alerts. Vetting for contributors. Branch rules to prohibit direct commits and unapproved additions</p></li>
+<li><p>Validation: Part of automated tests and confirmed in release review</p></li>
+</ul>
+</li>
+<li><p>Dependencies</p>
+<ul>
+<li><p>Risk: Dependencies could introduce cybersecurity vulnerabilities</p></li>
+<li><p>Mitigation: GitHub “dependabot” alerts will identify any known issues with package decencies. Also, the project is actively trying to limit the number of dependencies, and only use well-known packages from trusted developers.</p></li>
+<li><p>Validation: Alerts produced by dependabot system. Dependencies must be approved by Project Manager</p></li>
+</ul>
+</li>
+<li><p>Language</p>
+<ul>
+<li><p>Risk: Python itself may introduce cybersecurity vulnerabilities</p></li>
+<li><p>Mitigation: Python is a well-known language, this risk is low. To mitigate this we only support actively maintained versions.</p></li>
+<li><p>Validation: Will check with each release</p></li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p>Unauthorized Access to Hardware [SWE-157]</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Risk: Unauthorized access to hardware (GitHub Servers)</p></li>
+<li><p>Mitigation: Github is a trusted partner who has strict access control. Administrator rights are limited to Project Manager and NASA Org Administrators. Individuals not involved and vetted by the project cannot add to the repository directly (only through PR from fork)</p></li>
+<li><p>Validation: System configuration validated by PM 7/13/22</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
 </section>
 <section id="bi-directional-traceability">
 <h4><a class="toc-backref" href="#contents">Bi-Directional Traceability</a><a class="headerlink" href="#bi-directional-traceability" title="Permalink to this headline">¶</a></h4>
@@ -793,7 +862,7 @@ The project manager shall establish and maintain the software processes, softwar
 <tr class="row-even"><td><p>052</p></td>
 <td><p>Tracability</p></td>
 <td><p>FC</p></td>
-<td><p>See Tracability Notes, below</p></td>
+<td><p>See Tracability Notes, at bottom of page</p></td>
 </tr>
 </tbody>
 </table>
@@ -842,11 +911,16 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 <tr class="row-odd"><td><p>055</p></td>
 <td><p>Requirement Validation</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See below</p></td>
 </tr>
 </tbody>
 </table>
+<p>Note on SWE-55: Requirement Validation:</p>
+<ul class="simple">
+<li><p>This is a Research Suffort Software. As such it has many different usages that the requirements must fulfill.</p></li>
+<li><p>These usages will be implemented as examples, in the tutorial, or as tests. Running these and inspecting them (part of the release process) will help validate that the requirements (as implmeneted) are correct to enable each use case.</p></li>
+</ul>
 </section>
 <section id="implementation">
 <h4><a class="toc-backref" href="#contents">Implementation</a><a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h4>
@@ -867,8 +941,8 @@ The project manager shall establish and maintain the software processes, softwar
 <tbody>
 <tr class="row-even"><td><p>061</p></td>
 <td><p>Coding Standards</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See Notes for Developers, above</p></td>
 </tr>
 <tr class="row-odd"><td><p>135</p></td>
 <td><p>Static Analysis</p></td>
@@ -902,12 +976,14 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 </tbody>
 </table>
-<p>Static Analysis Methods Used:
-* CodeFactor.io (<a class="reference external" href="https://www.codefactor.io/repository/github/nasa/prog_models">prog_models</a>, <a class="reference external" href="https://www.codefactor.io/repository/github/nasa/prog_algs">prog_algs</a>, <a class="reference external" href="https://www.codefactor.io/repository/github/nasa/prog_server">prog_server</a>): Runs automatically in each PR. If issues are detected, they are noted in the PR chat.
-* LGTM (<a class="reference external" href="https://lgtm.com/projects/g/nasa/prog_models/?mode=list">prog_models</a>, <a class="reference external" href="https://lgtm.com/projects/g/nasa/prog_algs/?mode=list">prog_algs</a>, <a class="reference external" href="https://lgtm.com/projects/g/nasa/prog_server/?mode=list">prog_server</a>): Runs automatically in each PR. If issues are detected, they are noted in the PR chat.
-* Codecov (<a class="reference external" href="https://app.codecov.io/gh/nasa/prog_models">prog_models</a>, <a class="reference external" href="https://app.codecov.io/gh/nasa/prog_algs">prog_algs</a>, <a class="reference external" href="https://app.codecov.io/gh/nasa/prog_server">prog_server</a>): Runs automatically in each PR. If issues are detected, they are noted in the PR chat.
-* CodeQL Scanning: Runs automatically in each PR. If issues are detected, they are noted in the PR chat.
-* Github Dependabot Alerts: Tracks dependencies, alerts of any issues.</p>
+<p>Static Analysis Methods Used:</p>
+<ul class="simple">
+<li><p>CodeFactor.io (<a class="reference external" href="https://www.codefactor.io/repository/github/nasa/prog_models">prog_models</a>, <a class="reference external" href="https://www.codefactor.io/repository/github/nasa/prog_algs">prog_algs</a>, <a class="reference external" href="https://www.codefactor.io/repository/github/nasa/prog_server">prog_server</a>): Runs automatically in each PR. If issues are detected, they are noted in the PR chat.</p></li>
+<li><p>LGTM (<a class="reference external" href="https://lgtm.com/projects/g/nasa/prog_models/?mode=list">prog_models</a>, <a class="reference external" href="https://lgtm.com/projects/g/nasa/prog_algs/?mode=list">prog_algs</a>, <a class="reference external" href="https://lgtm.com/projects/g/nasa/prog_server/?mode=list">prog_server</a>): Runs automatically in each PR. If issues are detected, they are noted in the PR chat.</p></li>
+<li><p>Codecov (<a class="reference external" href="https://app.codecov.io/gh/nasa/prog_models">prog_models</a>, <a class="reference external" href="https://app.codecov.io/gh/nasa/prog_algs">prog_algs</a>, <a class="reference external" href="https://app.codecov.io/gh/nasa/prog_server">prog_server</a>): Runs automatically in each PR. If issues are detected, they are noted in the PR chat.</p></li>
+<li><p>CodeQL Scanning: Runs automatically in each PR. If issues are detected, they are noted in the PR chat.</p></li>
+<li><p>Github Dependabot Alerts: Tracks dependencies, alerts of any issues.</p></li>
+</ul>
 </section>
 </section>
 </section>
@@ -985,8 +1061,8 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 <tr class="row-odd"><td><p>068</p></td>
 <td><p>Evaluate Test Results</p></td>
-<td><p>NC</p></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See notes below</p></td>
 </tr>
 <tr class="row-even"><td><p>071</p></td>
 <td><p>Update Test Plans</p></td>
@@ -1010,11 +1086,22 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 <tr class="row-even"><td><p>192</p></td>
 <td><p>Reqs that Trace to Hazard</p></td>
-<td></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>When potential for hazard is identified, thorough tests are created to prevent the hazard</p></td>
 </tr>
 </tbody>
 </table>
+<p>Notes on SWE-068: Evaluate Test Results:</p>
+<ul class="simple">
+<li><p>All tests are conducted automatically, using github actions, using multiple versions of Python and both dev and release versions of compatable software.</p></li>
+<li><p>Results of the test are compared with expected results automatically. If they do not match what is expected, the test fails and GitHub does not allow merger of the branch into dev/master</p></li>
+<li><p>Whenever a requirement (i.e., feature issue) is implemented, it must include tests that properly cover the requirement. Ensuring that it covers the requirement is part of the code review checklist.</p>
+<ul>
+<li><p>Furthermore, the coverage data is automatically reported on a PR. This will provide additional information to ensure the requirement is tested</p></li>
+<li><p>Code coverage is also reviewed as part of the release process</p></li>
+</ul>
+</li>
+</ul>
 </section>
 <section id="operations-maintenance-and-retirement">
 <h2><a class="toc-backref" href="#contents">Operations, Maintenance, and Retirement</a><a class="headerlink" href="#operations-maintenance-and-retirement" title="Permalink to this headline">¶</a></h2>
@@ -1035,8 +1122,8 @@ The project manager shall establish and maintain the software processes, softwar
 <tbody>
 <tr class="row-even"><td><p>075</p></td>
 <td><p>Ops, Maintenance, and Retirement</p></td>
-<td><p>NC</p></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See below</p></td>
 </tr>
 <tr class="row-odd"><td><p>077</p></td>
 <td><p>Record-Keeping</p></td>
@@ -1055,11 +1142,33 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 <tr class="row-even"><td><p>196</p></td>
 <td><p>Retirement Plan</p></td>
-<td><p>NC</p></td>
-<td><p>Not required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See Below</p></td>
 </tr>
 </tbody>
 </table>
+<p>Operations and Maintenance: During the operational phase of the software, the team will do the following:</p>
+<ul class="simple">
+<li><p>Provide documentation, examples, tutorial, templates, and source code to users to help them use the software</p></li>
+<li><p>Provide a issues page for users to report issues and suggest features</p></li>
+<li><p>Provide a discussion page for further discussion on best practices and suggestions</p></li>
+<li><p>Monitor and resolve security alerts from users, NASA organiztions, static analysis tools, and GitHub dependency checkers</p></li>
+<li><p>Maintain the requirements (i.e., issues) and releases</p></li>
+<li><p>Maintain and update software assurance and compliance documentation (e.g., this page)</p></li>
+<li><p>Until retirement, maintain the software. This includes:</p>
+<ul>
+<li><p>Providing support for NASA projects using the software and limited support for external users.</p></li>
+<li><p>Fixing bugs, when identified</p></li>
+<li><p>Assisting in incorporating new features and enhancements</p></li>
+</ul>
+</li>
+<li><p>The project team is also responsible for conducting appropriate reviews (e.g., Release Reviews) to ensure the software is ready for use.</p></li>
+</ul>
+<p>Retirement Plan:</p>
+<ul class="simple">
+<li><p>On complete retirement the software, tests, documentation, and other artifacts will continue to be available on GitHub, but a message will be added to the ReadMe and the main page of the documentation indicating that the software is no longer maintained or updated by NASA</p></li>
+<li><p>All internal documents about the software will be archived in the Diagnostics and Prognostics Group’s Teams OneDrive folder</p></li>
+</ul>
 </section>
 <section id="configuration-management">
 <h2><a class="toc-backref" href="#contents">Configuration Management</a><a class="headerlink" href="#configuration-management" title="Permalink to this headline">¶</a></h2>
@@ -1135,8 +1244,8 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 <tr class="row-odd"><td><p>084</p></td>
 <td><p>Configuration Audits</p></td>
-<td><p>NC</p></td>
-<td><p>Not Required for Class-E</p></td>
+<td><p>FC</p></td>
+<td><p>See Note below</p></td>
 </tr>
 <tr class="row-even"><td><p>085</p></td>
 <td><p>Release Procedures</p></td>
@@ -1145,6 +1254,36 @@ The project manager shall establish and maintain the software processes, softwar
 </tr>
 </tbody>
 </table>
+<p>Note on SWE084- Configuration Audits: Configuration audits are conducted in parts throughout the lifecycle process</p>
+<ul>
+<li><p>To a large degree- configuration audits are performed automatically by GitHub actions and branch restrictions. These check the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>That tests were run (they are automatically run), passed, and results are recorded</p></li>
+<li><p>That files conform with copyright rules</p></li>
+<li><p>That required code reviews were performed (Requirement for branch merging)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>In performing a code review, the reviewing user confirms:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>That the change is linked to a requirement (i.e., feature issue) and the requirement was met or that it is linked to another issue (e.g., bug report)</p></li>
+<li><p>That appropriate tests exist</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>In performing a release review, the project manager confirms:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>That all issues are completed</p></li>
+<li><p>That all tests pass, have proper documentation</p></li>
+<li><p>That documentation has been updated and matches the code</p></li>
+<li><p>That a schedule exists for the next release and is in the proper place</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
 </section>
 <section id="non-conformances">
 <h2><a class="toc-backref" href="#contents">Non-Conformances</a><a class="headerlink" href="#non-conformances" title="Permalink to this headline">¶</a></h2>
@@ -1213,16 +1352,109 @@ The project manager shall establish and maintain the software processes, softwar
 <h3><a class="toc-backref" href="#contents">Requirement Tracking</a><a class="headerlink" href="#requirement-tracking" title="Permalink to this headline">¶</a></h3>
 <p>Requirements are tracked as issues with the “Enhancement” label (See <a class="reference external" href="https://github.com/nasa/prog_models/labels/enhancement">prog_models</a>, <a class="reference external" href="https://github.com/nasa/prog_algs/labels/enhancement">prog_algs</a>, <a class="reference external" href="https://github.com/nasa/prog_server/labels/enhancement">prog_server</a> Enhancement Issues). An issue template is used to ensure that the requirement has the desired information. Issues are closed to indicate the requirement has been met. Closing a requirement issue is done with a pull request, which is linked to the relevant requirement, for tracability. Closing the requirement issue requires a code review (see above for details), and requires implementation of passing tests that test the requirement (i.e., verification tests). The tests are reviewed with the code implementing the requirement. Issues are assigned to a milestone (i.e., release) indicating the requirements for that release. Github automatically tracks any changes to the issues (i.e., requirements)</p>
 </section>
+<section id="dependencies">
+<h3><a class="toc-backref" href="#contents">Dependencies</a><a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
+<p>The following dependencies are used in the project:</p>
+<ul>
+<li><p><a class="reference external" href="https://numpy.org/">numpy</a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: Various mathematical and array functions</p></li>
+<li><p>Documentation: <a class="reference external" href="https://numpy.org">https://numpy.org</a></p></li>
+<li><p>Usage Rights: Released under the BSD 3-Clause License</p></li>
+<li><p>Future Support: expected- Numpy is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://www.scipy.org/">scipy</a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: Various mathematical and array functions</p></li>
+<li><p>Documentation: <a class="reference external" href="https://www.scipy.org">https://www.scipy.org</a></p></li>
+<li><p>Usage Rights: Released under the BSD 3-Clause License</p></li>
+<li><p>Future Support: expected- Scipy is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://matplotlib.org/">matplotlib</a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: Various figure generation methods</p></li>
+<li><p>Documentation: <a class="reference external" href="https://matplotlib.org">https://matplotlib.org</a></p></li>
+<li><p>Usage Rights: Released under the BSD 3-Clause License</p></li>
+<li><p>Future Support: expected- Matplotlib is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://pandas.pydata.org/">pandas</a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: Various data analysis methods (especially for datasets)</p></li>
+<li><p>Documentation: <a class="reference external" href="https://pandas.pydata.org">https://pandas.pydata.org</a></p></li>
+<li><p>Usage Rights: Released under the BSD 3-Clause License</p></li>
+<li><p>Future Support: expected- Pandas is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://filterpy.readthedocs.io">FilterPy</a> (prog_algs only)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: Algorithms for state estimators and predictors</p></li>
+<li><p>Documentation: <a class="reference external" href="https://filterpy.readthedocs.io">https://filterpy.readthedocs.io</a></p></li>
+<li><p>Usage Rights: Released under the MIT License</p></li>
+<li><p>Future Support: expected- FilterPy is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://requests.readthedocs.io">Requests</a> (prog_server only)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: HTTP requests</p></li>
+<li><p>Documentation: <a class="reference external" href="https://requests.readthedocs.io">https://requests.readthedocs.io</a></p></li>
+<li><p>Usage Rights: Released under the Apache License</p></li>
+<li><p>Future Support: expected- Requests is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/">Flask</a> (prog_server only)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: Web server</p></li>
+<li><p>Documentation: <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x">https://flask.palletsprojects.com/en/1.1.x</a></p></li>
+<li><p>Usage Rights: Released under the BSD 3-Clause License</p></li>
+<li><p>Future Support: expected- Flask is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="http://urllib3.readthedocs.org">urllib3</a> (prog_server only)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Requirements met: HTTP requests</p></li>
+<li><p>Documentation: <a class="reference external" href="https://urllib3.readthedocs.org">https://urllib3.readthedocs.org</a></p></li>
+<li><p>Usage Rights: Released under the MIT License</p></li>
+<li><p>Future Support: expected- urllib3 is a common tool still under development and actively supported</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>Notes for all:</p>
+<ul class="simple">
+<li><p>The function and performance of these tools are verified and validated as part of the automated tests and examples. [SWE-027 3.1.14.e]</p></li>
+<li><p>GitHub dependency checker will periodically check for known issues and notify. [SWE-027 3.1.14.f]</p></li>
+</ul>
+</section>
 <section id="tracability-notes">
 <h3><a class="toc-backref" href="#contents">Tracability Notes</a><a class="headerlink" href="#tracability-notes" title="Permalink to this headline">¶</a></h3>
 <p>Hazards and non-conformances are tracked as issues with the label bug (See <a class="reference external" href="https://github.com/nasa/prog_models/labels/bug">prog_models</a>, <a class="reference external" href="https://github.com/nasa/prog_algs/labels/bug">prog_algs</a>, <a class="reference external" href="https://github.com/nasa/prog_server/labels/bug">prog_server</a>). In the template for a bug report, there is a section asking for relevant enhancement issues (i.e., requirements). This linking establishes tracability from hazards/non-conformances to the underlying requirement. These linkings are automatically marked by the github system in the requirement issue. Additionally, to close an enhancement issue (i.e., requirement), passing verification tests must be created and checked in. The PR where these tests are created and the implementation is completed is linked to the issue establishing tracability from requirement -&gt; verification test. These tests run automatically at every change/PR.</p>
 <p>Additionally, requirements are assigned to milestones/releases, establishing bi-directional tracability to these</p>
-<p>Summary: The following tracabilities are maintained:
-* Hazard &lt;-&gt; Requirement
-* Non-conformance &lt;-&gt; Requirement
-* Requirement &lt;-&gt; Verification Test &amp; Results
-* Requirement &lt;-&gt; Implementation
-* Release/Milestone &lt;-&gt; Requirement</p>
+<p>Summary: The following tracabilities are maintained:</p>
+<ul class="simple">
+<li><p>Hazard &lt;-&gt; Requirement</p></li>
+<li><p>Non-conformance &lt;-&gt; Requirement</p></li>
+<li><p>Requirement &lt;-&gt; Verification Test &amp; Results</p></li>
+<li><p>Requirement &lt;-&gt; Implementation</p></li>
+<li><p>Release/Milestone &lt;-&gt; Requirement</p></li>
+</ul>
 </section>
 </section>
 </section>

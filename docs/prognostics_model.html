@@ -469,7 +469,7 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <dl class="py method">
 <dt class="sig sig-object py" id="prog_models.PrognosticsModel.generate_model">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize_eqn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_eqn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_state_eqn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_eqn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_state_eqn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_eqn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{'process_noise':</span> <span class="pre">0.1}</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#prog_models.PrognosticsModel" title="prog_models.prognostics_model.PrognosticsModel"><span class="pre">prog_models.prognostics_model.PrognosticsModel</span></a></span></span><a class="headerlink" href="#prog_models.PrognosticsModel.generate_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a new prognostics model from individual model functions</p>
+<dd><p>[DEPRECIATED] Generate a new prognostics model from individual model functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -528,15 +528,10 @@ and <cite>next_state</cite> for discrete, where the behavior cannot be described
 <li><p><strong>keywords</strong> (<em>Includes all keyword arguments from simulate_to_threshold</em><em> (</em><em>except save_pts</em><em>)</em><em>, </em><em>and the following additional</em>) – </p></li>
 <li><p><strong>dt</strong> (<em>Number</em><em> or </em><em>function</em><em>, </em><em>optional</em>) – Same as in simulate_to_threshold; for DMD, this value is the time step of the training data</p></li>
 <li><p><strong>save_freq</strong> (<em>Number</em><em>, </em><em>optional</em>) – Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated</p></li>
-<li><p><strong>trim_data_to</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70</p>
-<p>Note: To trim data to a set time, use the ‘horizon’ parameter</p>
-</p></li>
 <li><p><strong>states</strong> (<em>list</em><em>, </em><em>optional</em>) – List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
 <li><p><strong>inputs</strong> (<em>list</em><em>, </em><em>optional</em>) – List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
 <li><p><strong>outputs</strong> (<em>list</em><em>, </em><em>optional</em>) – List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
 <li><p><strong>events</strong> (<em>list</em><em>, </em><em>optional</em>) – List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel</p></li>
-<li><p><strong>stability_tol</strong> (<em>int</em><em>, </em><em>optional</em>) – Value that determines the tolerance for DMD matrix stability</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Returns</dt>
@@ -548,13 +543,6 @@ e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the s
 </dl>
 <p class="rubric">Example</p>
 <p>See examples/generate_surrogate</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This is a first draft of a surrogate model generation using Dynamic Mode Decomposition.
-DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step.
-In general, the approximation is less accurate if the DMD matrix is unstable.
-Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system’s dimensions through SVD). Further functionalities will be included in future releases.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
@@ -582,12 +570,13 @@ Additionally, this implementation does not yet include all functionalities of DM
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="line-block">
-<div class="line">m = PrognosticsModel() # Replace with specific model being simulated</div>
-<div class="line">u = {‘u1’: 3.2}</div>
-<div class="line">z = {‘z1’: 2.2}</div>
-<div class="line">x = m.initialize(u, z) # Initialize first state</div>
-</div>
+<dl class="simple">
+<dt>:</dt><dd><p>m = PrognosticsModel() # Replace with specific model being simulated
+u = {‘u1’: 3.2}
+z = {‘z1’: 2.2}
+x = m.initialize(u, z) # Initialize first state</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -787,7 +776,12 @@ e.g., x = {‘abc’: 332.1, ‘def’: 221.003} given states = [‘abc’, ‘d
 <dt class="field-even">Keyword Arguments</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>t0</strong> (<em>Number</em><em>, </em><em>optional</em>) – Starting time for simulation in seconds (default: 0.0)</p></li>
-<li><p><strong>dt</strong> (<em>Number</em><em> or </em><em>function</em><em>, </em><em>optional</em>) – time step (s), e.g. dt = 0.1 or function (t, x) -&gt; dt</p></li>
+<li><p><strong>dt</strong> (<em>Number</em><em>, </em><em>tuple</em><em>, </em><em>string</em><em>, or </em><em>function</em><em>, </em><em>optional</em>) – <p>Number: constant time step (s), e.g. dt = 0.1</p>
+<p>function (t, x) -&gt; dt</p>
+<p>Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size</p>
+<p>string: mode - ‘auto’ or ‘constant’</p>
+</p></li>
+<li><p><strong>integration_method</strong> (<em>String</em><em>, </em><em>optional</em>) – Integration method, e.g. ‘rk4’ or ‘euler’ (default: ‘euler’)</p></li>
 <li><p><strong>save_freq</strong> (<em>Number</em><em>, </em><em>optional</em>) – Frequency at which output is saved (s), e.g., save_freq = 10</p></li>
 <li><p><strong>save_pts</strong> (<em>List</em><em>[</em><em>Number</em><em>]</em><em>, </em><em>optional</em>) – Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75]</p></li>
 <li><p><strong>horizon</strong> (<em>Number</em><em>, </em><em>optional</em>) – maximum time that the model will be simulated forward (s), e.g., horizon = 1000</p></li>
