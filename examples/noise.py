@@ -12,7 +12,7 @@ from prog_models.models.thrown_object import ThrownObject
 def run_example():
     # Define future loading
     def future_load(t=None, x=None):  
-        # The thrown object model has no inputs- you cannot load the system (i.e., effect it once it's in the air)
+        # The thrown object model has no inputs- you cannot load the system (i.e., affect it once it's in the air)
         # So we return an empty input container
         return m.InputContainer({})
 
@@ -103,7 +103,7 @@ def run_example():
     print('\nExample with proportional noise on velocity')
     simulated_results = m.simulate_to_threshold(future_load, **config)
     print_results(simulated_results)
-    plt.title('Ex7: Proprotial noise on velocity')
+    plt.title('Ex7: Proportional noise on velocity')
 
     print('\nNote: If you would like noise to be applied in a repeatable manner, set the numpy random seed to a fixed value')
     print('e.g., numpy.random.seed(42)')
