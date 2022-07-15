@@ -61,9 +61,14 @@ class ThrownObject(LinearModel):
         'impact' # Event- object has impacted ground
     ]
 
-    A = np.array([[0, 1], [0, 0]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
+    # These are the core of the linear model. 
+    # Linear models defined by the following equations:
+    #   * dx/dt = Ax + Bu + E
+    #   * z = Cx + D
+    #   * event states = Fx + G
+    A = np.array([[0, 1], [0, 0]]) # dx/dt = Ax + Bu + E
+    E = np.array([[0], [-9.81]]) # Acceleration due to gravity (m/s^2)
+    C = np.array([[1, 0]]) # z = Cx + D
     F = None # Will override method
 
     # The Default parameters. Overwritten by passing parameters dictionary into constructor
