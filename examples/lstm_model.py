@@ -8,11 +8,20 @@ In this example, we generate fake data using the ThrownObject model. This is a c
 """
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from prog_models.lstm_model import LSTMStateTransitionModel
 from prog_models.models import ThrownObject
 
 def run_example():
+    # -----------------------------------------------------
+    # Example 1- set timestep 
+    # Here we will create a model for a specific timestep.
+    # The model will only work with that timestep 
+    # This is useful if you know the timestep you would like to use
+    # -----------------------------------------------------
+    TIMESTEP = 0.01
+
     # Step 1: Generate data
     # We'll use the ThrownObject model to generate data.
     # For cases where you're generating a model from data (e.g., collected from a testbed or a real-world environment), 
@@ -23,7 +32,7 @@ def run_example():
     def future_loading(t, x=None):
         return m.InputContainer({})  # No input for thrown object 
 
-    data = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=0.01, dt=0.01)
+    data = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP, dt=TIMESTEP)
 
     # Step 2: Generate model
     # We'll use the LSTMStateTransitionModel class to generate a model from the data.
@@ -31,27 +40,91 @@ def run_example():
     m2 = LSTMStateTransitionModel.from_data(
         (data.inputs, data.outputs),  
         sequence_length=4, 
-        epochs=250, 
+        epochs=250,
         outputs = ['x'])    
     
     # Step 3: Use model to simulate_to time of threshold
     print('Simulating with generated model...')
+
     t_counter = 0
     x_counter = m.initialize()
     def future_loading2(t, x = None):
+        # Future Loading is a bit complicated here 
+        # Loading for the resulting model includes the data inputs, 
+        # and the output from the last timestep
         nonlocal t_counter, x_counter
         z = m.output(x_counter)
         z = m2.InputContainer(z.matrix)
         x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
         t_counter = t
         return z
-    results2 = m2.simulate_to(data.times[-1], future_loading2, dt=0.01, save_freq = 0.01)
+    
+    results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
 
     # Step 4: Compare model to original model
     print('Comparing results...')
     data.outputs.plot(title='original model')
     results2.outputs.plot(title='generated model')
+    plt.show()
 
+    # -----------------------------------------------------
+    # Example 2- variable timestep 
+    # Here we will create a model to work with any timestep
+    # We do this by adding timestep as a variable in the model
+    # -----------------------------------------------------
+
+    # Step 1: Generate additional data
+    # We will use data generated above, but we also want data at additional timesteps 
+    print('Generating additional data...')
+    data_half = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP/2, dt=TIMESTEP/2)
+    data_quarter = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP/4, dt=TIMESTEP/4)
+    data_twice = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP*2, dt=TIMESTEP*2)
+    data_four = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP*4, dt=TIMESTEP*4)
+
+    # Step 2: Data Prep
+    # We need to add the timestep as a input
+    u = np.array([[TIMESTEP] for _ in data.inputs])
+    u_half = np.array([[TIMESTEP/2] for _ in data_half.inputs])
+    u_quarter = np.array([[TIMESTEP/4] for _ in data_quarter.inputs])
+    u_twice = np.array([[TIMESTEP*2] for _ in data_twice.inputs])
+    u_four = np.array([[TIMESTEP*4] for _ in data_four.inputs])
+
+    training_data = [
+        (u, data.outputs),
+        (u_half, data_half.outputs),
+        (u_quarter, data_quarter.outputs),
+        (u_twice, data_twice.outputs),
+        (u_four, data_four.outputs)
+    ]
+
+    # Step 3: Generate Model
+    print('Building model...')
+    m3 = LSTMStateTransitionModel.from_data(
+        training_data,  
+        sequence_length=4, 
+        epochs=50, 
+        inputs = ['dt'],
+        outputs = ['x'])    
+
+    # Step 4: Simulate with model
+    t_counter = 0
+    x_counter = m.initialize()
+    def future_loading3(t, x = None):
+        nonlocal t_counter, x_counter
+        z = m.output(x_counter)
+        z = m3.InputContainer({'x_t-1': z['x'], 'dt': t - t_counter})
+        x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
+        t_counter = t
+        return z
+
+    # Use new dt, not used in training
+    data = m.simulate_to(data.times[-1], future_loading, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
+    results3 = m3.simulate_to(data.times[-1], future_loading3, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
+
+    # Step 5: Compare Results
+    print('Comparing results...')
+    data.outputs.plot(title='original model')
+    results3.outputs.plot(title='generated model')
     plt.show()
 
 if __name__ == '__main__':
