@@ -34,8 +34,11 @@ def run_example():
     t_counter = 0
     x_counter = m.initialize()
     def future_loading2(t, x = None):
-        z = m2.InputContainer(m.output(x_counter))
-        x_counter = m2.next_state(x_counter, future_loading(t), t - t_counter)
+        nonlocal t_counter, x_counter
+        z = m.output(x_counter)
+        z = {'z0_t-1': z['x']}
+        z = m2.InputContainer(z)
+        x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
         t_counter = t
         return z
     m2.simulate_to(2, future_loading2, dt=0.01, save_freq = 0.01, print=True)

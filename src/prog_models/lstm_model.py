@@ -61,7 +61,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         return self.StateContainer(np.vstack((states, input_data)))
 
     def output(self, x):
-        if x.matrix[0] is None:
+        if x.matrix[0,0] is None:
             warn(f"Output estimation is not available until at least {1+self.parameters['sequence_length']} timesteps have passed.")
             return self.OutputContainer(np.array([[None] for _ in self.outputs]))
         m_input = x.matrix[:self.parameters['sequence_length']*len(self.inputs)].reshape(self.parameters['sequence_length'], len(self.inputs))
