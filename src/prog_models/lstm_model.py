@@ -35,9 +35,10 @@ class LSTMStateTransitionModel(PrognosticsModel):
 
         self.outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
         # Outputs from the last step are part of input
-        self.inputs = [f'{z_key}_t-1' for z_key in self.outputs]
         input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
-        self.inputs.extend(input_keys)
+        self.inputs = input_keys
+        self.inputs.extend([f'{z_key}_t-1' for z_key in self.outputs])
+
         
         # States are in format [u_t-n+1, z_t-n, ..., u_t, z_t-1]
         self.states = []

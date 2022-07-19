@@ -75,6 +75,7 @@ def run_example():
 
     # Step 1: Generate additional data
     # We will use data generated above, but we also want data at additional timesteps 
+    print('\n------------------------------------------\nExample 2...')
     print('Generating additional data...')
     data_half = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP/2, dt=TIMESTEP/2)
     data_quarter = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP/4, dt=TIMESTEP/4)
@@ -111,8 +112,7 @@ def run_example():
     x_counter = m.initialize()
     def future_loading3(t, x = None):
         nonlocal t_counter, x_counter
-        z = m.output(x_counter)
-        z = m3.InputContainer({'x_t-1': z['x'], 'dt': t - t_counter})
+        z = m3.InputContainer({'x_t-1': x_counter['x'], 'dt': t - t_counter})
         x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
         t_counter = t
         return z
