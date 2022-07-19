@@ -910,6 +910,7 @@ class PrognosticsModel(ABC):
             dt = next_time(t, x)
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
+            # This is sometimes referred to as 'leapfrog integration'
             u = future_loading_eqn(t, x)
             t = t + dt/2
             x = next_state(x, u, dt)

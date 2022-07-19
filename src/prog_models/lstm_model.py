@@ -36,12 +36,12 @@ class LSTMStateTransitionModel(PrognosticsModel):
         self.outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
         # Outputs from the last step are part of input
         self.inputs = [f'{z_key}_t-1' for z_key in self.outputs]
-        self.inputs.extend(kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-model.output.shape[1])]))
-        input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2])])
+        input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
+        self.inputs.extend(input_keys)
         
         # States are in format [u_t-n+1, z_t-n, ..., u_t, z_t-1]
         self.states = []
-        for j in range(input_shape[1], -1, -1):
+        for j in range(input_shape[1]-1, -1, -1):
             self.states.extend([f'{input_i}_t-{j}' for input_i in input_keys])
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
 
@@ -65,8 +65,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
             warn(f"Output estimation is not available until at least {1+self.parameters['sequence_length']} timesteps have passed.")
             return self.OutputContainer(np.array([[None] for _ in self.outputs]))
         m_input = x.matrix[:self.parameters['sequence_length']*len(self.inputs)].reshape(self.parameters['sequence_length'], len(self.inputs))
-        m_output = self.model(m_input)
-        return self.OutputContainer(m_output)
+        m_output = self.model(m_input.T)
+        return self.OutputContainer(m_output.numpy().T)
 
     @staticmethod
     def _pre_process_data(data, sequence_length, **kwargs):
@@ -151,7 +151,6 @@ class LSTMStateTransitionModel(PrognosticsModel):
             inputs (List[str]): List of input keys
             outputs (List[str]): List of outputs keys
             validation_percentage (float): Percentage of data to use for validation, between 0-1
-            layers (int): Number of LSTM layers in the model
             epochs (int): Number of epochs to use in training
 
         Returns:
@@ -160,10 +159,10 @@ class LSTMStateTransitionModel(PrognosticsModel):
         params = { # default_params
             'sequence_length': 128,
             'validation_split': 0.25,
-            'layers': 1,
             'epochs': 2
         }
         # TODO(CT): Add shuffling
+        # TODO(CT): Add layers
         params.update(LSTMStateTransitionModel.default_params)
         params.update(kwargs)
 
@@ -172,8 +171,6 @@ class LSTMStateTransitionModel(PrognosticsModel):
             raise Exception(f"sequence_length must be greater than 0, got {params['sequence_length']}")
         if params['validation_split'] < 0 or params['validation_split'] > 1:
             raise Exception(f"validation_split must be between 0 and 1, got {params['validation_split']}")
-        if params['layers'] < 1:
-            raise Exception(f"layers must be greater than 0, got {params['layers']}")
         if params['epochs'] < 1:
             raise Exception(f"epochs must be greater than 0, got {params['epochs']}")
         if isinstance(data, tuple) and len(data) == 2:
@@ -189,14 +186,55 @@ class LSTMStateTransitionModel(PrognosticsModel):
         ]
 
         inputs = keras.Input(shape=u_all.shape[1:])
-        x = inputs
-        for _ in range(params['layers']):
-            x = layers.LSTM(16)(x)
+        x = layers.LSTM(16)(inputs)
         x = layers.Dense(z_all.shape[1] if len(z_all) == 2 else 1)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
         return LSTMStateTransitionModel(keras.models.load_model("jena_sense.keras"), **params)
+        
+    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+        t = kwargs.get('t0', 0)
+        dt = kwargs.get('dt', 0)
+        x = kwargs.get('x', self.initialize(future_loading_eqn(t), first_output))
+
+        # configuring next_time function to define prediction time step, default is constant dt
+        if callable(dt):
+            dt_mode = 'function'
+        elif isinstance(dt, tuple):
+            dt_mode = dt[0]
+            dt = dt[1]               
+        elif isinstance(dt, str):
+            dt_mode = dt
+            if dt_mode == 'constant':
+                dt = 1.0  # Default
+            else:
+                dt = np.inf
+        else:
+            dt_mode = 'constant'
+
+        if dt_mode in ('constant', 'auto'):
+            def next_time(t, x):
+                return dt
+        elif dt_mode != 'function':
+            raise Exception(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
+
+        # Simulate until passing minimum number of steps
+        while x.matrix[0,0] is None:
+            dt = next_time(t, x)
+            t = t + dt/2
+            # Use state at midpoint of step to best represent the load during the duration of the step
+            u = future_loading_eqn(t, x)
+            t = t + dt/2
+            x = self.next_state(x, u, dt)
+
+        # Now do actual simulate_to_threshold
+        kwargs['t0'] = t
+        x.matrix = np.array(x.matrix, dtype=np.float)
+        kwargs['x'] = x
+        if 'horizon' in kwargs:
+            kwargs['horizon'] = kwargs['horizon'] - t
+        return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
         
     # TODO(CT): From Model
