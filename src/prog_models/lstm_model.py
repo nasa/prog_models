@@ -2,52 +2,141 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 import numpy as np
+from tensorflow import keras
+from tensorflow.keras import layers
+from warnings import warn
 
 from . import PrognosticsModel
+from .sim_result import SimResult
 
 
 class LSTMStateTransitionModel(PrognosticsModel):
     """
     A State Transition Model with no events using an Keras LSTM Model.
+    State transition models map form the inputs at time t and outputs at time t-1 plus historical data to the outputs at time t
 
     Args:
         model (keras.Model): Keras model to use for state transition
 
     Keyword Args:
         inputs (list[str]): List of input keys
+        outputs (list[str]): List of output keys
+
+    See Also:
+        LSTMStateTransitionModel.from_data
 
     TODO: Examples
     """
     default_params = {
-        'delay': 1,
     }
 
     def __init__(self, model, **kwargs):
-        model_shape = model.input.shape
-        inputs = kwargs.get('inputs', [f'u{i}' for i in range(model_shape[2])])
+        input_shape = model.input.shape
+
+        self.outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
+        # Outputs from the last step are part of input
+        self.inputs = [f'{z_key}_t-1' for z_key in self.outputs]
+        self.inputs.extend(kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-model.output.shape[1])]))
+        input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2])])
+        
+        # States are in format [u_t-n+1, z_t-n, ..., u_t, z_t-1]
+        self.states = []
+        for j in range(input_shape[1], -1, -1):
+            self.states.extend([f'{input_i}_t-{j}' for input_i in input_keys])
+            self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
+
         kwargs['sequence_length'] = model.input.shape[1]
-        states = [f'{input_i}_{j}' for j in range(model_shape[1]+kwargs.get('delay', self.default_params['delay'])) for input_i in inputs]
-        outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
 
         super().__init__(**kwargs)
 
         self.model = model
 
     def initialize(self, u=None, z=None):
-        return self.StateContainer([None for _ in self.states])
+        return self.StateContainer(np.array([[None] for _ in self.states]))
 
     def next_state(self, x, u, dt):
         # Rotate new input into state
         input_data = u.matrix
         states = x.matrix[len(input_data):]
-        return self.StateContainer(np.vstack(states, input_data))
+        return self.StateContainer(np.vstack((states, input_data)))
 
     def output(self, x):
-        if x[0] is None:
-            raise Exception(f"Output estimation is not available until at least {self.parameters['delay']+self.parameters['sequence_length']} timesteps have passed.")
+        if x.matrix[0] is None:
+            warn(f"Output estimation is not available until at least {1+self.parameters['sequence_length']} timesteps have passed.")
+            return self.OutputContainer(np.array([[None] for _ in self.outputs]))
         m_input = x.matrix[:self.parameters['sequence_length']*len(self.inputs)].reshape(self.parameters['sequence_length'], len(self.inputs))
         m_output = self.model(m_input)
         return self.OutputContainer(m_output)
+
+    @staticmethod
+    def _pre_process_data(data, sequence_length, **kwargs):
+        # Data is a List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))
+        # Tuple is (input, output)
+
+        u_all = []
+        z_all = []
+        for (u, z) in data:
+            # Each item (u, z) is a 1-d array, a 2-d array, or a SimResult
+
+            # Process Input
+            if isinstance(u, SimResult):
+                if len(u[0].keys()) == 0:
+                    u = []
+                else:
+                    u = np.array([u_i.matrix[:][0] for u_i in u])
+            if isinstance(u, (list, np.ndarray)):
+                if len(u) == 0:
+                    # No inputs
+                    u_i = []
+                elif np.isscalar(u[0]):
+                    # Input is 1-d array (i.e., 1 input)
+                    # Note: 1 is added to account for current time (current input used to predict output at time i)
+                    u_i = [[[u[i+j]] for j in range(1, sequence_length+1)] for i in range(len(u)-sequence_length-1)]
+                elif isinstance(u[0], (list, np.ndarray)):
+                    # Input is d-d array
+                    # Note: 1 is added to account for current time (current input used to predict output at time i)
+                    n_inputs = len(u[0])
+                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,sequence_length+1)] for i in range(len(u)-sequence_length-1)]
+                else:
+                    raise Exception(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
+            else:
+                raise Exception(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+
+            # Process Output
+            if isinstance(z, SimResult):
+                if len(z[0].keys()) == 0:
+                    z = []
+                else:
+                    z = np.array([z_i.matrix[:][0] for z_i in z])
+            if isinstance(z, (list, np.ndarray)):
+                if len(z) == 0:
+                    # No inputs
+                    z_i = []
+                elif np.isscalar(z[0]):
+                    # Output is 1-d array (i.e., 1 output)
+                    z_i = [[[z[i+j]] for j in range(sequence_length)] for i in range(len(z)-sequence_length-1)]
+                elif isinstance(z[0], (list, np.ndarray)):
+                    # Input is d-d array
+                    n_outputs = len(z[0])
+                    z_i = [[[z[i+j][k] for k in range(n_outputs)] for j in range(sequence_length)] for i in range(len(z)-sequence_length-1)]
+                else:
+                    raise Exception(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
+                # Also add to input (past outputs are part of input)
+                if len(u_i) == 0:
+                    u_i = z_i.copy()
+                else:
+                    for i in range(len(z_i)):
+                        for j in range(sequence_length):
+                            u_i[i][j].extend(z_i[i][j])
+            else:
+                raise Exception(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+            
+            u_all.extend(u_i)
+            z_all.extend(z_i)
+        
+        u_all = np.array(u_all)
+        z_all = np.array(z_all)
+        return (u_all, z_all)
 
     @staticmethod
     def from_data(data, **kwargs):
@@ -55,16 +144,14 @@ class LSTMStateTransitionModel(PrognosticsModel):
         Generate a LSTMStateTransitionModel from data
 
         Args:
-            data (Tuple[Array, Array]): 
+            data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run.
 
         Keyword Args:
-            delay (int): Number of timesteps to delay the input
             sequence_length (int): Length of the input sequence
             inputs (List[str]): List of input keys
             outputs (List[str]): List of outputs keys
-            shuffle (bool): If the data is shuffled in data preparation
             validation_percentage (float): Percentage of data to use for validation, between 0-1
-            lstm_layers (int): Number of LSTM layers in the model
+            layers (int): Number of LSTM layers in the model
             epochs (int): Number of epochs to use in training
 
         Returns:
@@ -72,64 +159,44 @@ class LSTMStateTransitionModel(PrognosticsModel):
         """
         params = { # default_params
             'sequence_length': 128,
-            'validation_percentage': 0.25,
-            'shuffle': True,
-            'lstm_layers': 1,
+            'validation_split': 0.25,
+            'layers': 1,
             'epochs': 2
         }
+        # TODO(CT): Add shuffling
         params.update(LSTMStateTransitionModel.default_params)
         params.update(kwargs)
 
-        # TODO(CT): Check parameters
-
-        from tensorflow import keras
-        from tensorflow.keras import layers
+        # Input Validation
+        if params['sequence_length'] <= 0:
+            raise Exception(f"sequence_length must be greater than 0, got {params['sequence_length']}")
+        if params['validation_split'] < 0 or params['validation_split'] > 1:
+            raise Exception(f"validation_split must be between 0 and 1, got {params['validation_split']}")
+        if params['layers'] < 1:
+            raise Exception(f"layers must be greater than 0, got {params['layers']}")
+        if params['epochs'] < 1:
+            raise Exception(f"epochs must be greater than 0, got {params['epochs']}")
+        if isinstance(data, tuple) and len(data) == 2:
+            # Just one dataset, turn into array so loop works properly
+            data = [data]
 
         # Prepare datasets
-        u_all = []
-        z_all = []
-        SEQUENCE_LENGTH = params['sequence_length']
-        DELAY = params['delay']
-
-        for (u, z) in data:
-            datem = keras.utils.timeseries_dataset_from_array(
-                    np.array([u[:-DELAY], z[:-DELAY]]).T,
-                    targets = z[DELAY:],
-                    sequence_length = SEQUENCE_LENGTH,
-                    shuffle = params['shuffle']
-                )
-            for u_i, z_i in datem:
-                if len(u_i) == SEQUENCE_LENGTH:
-                    u_all.extend(u_i)
-                    z_all.extend(z_i)
-
-        u_all = np.array(u_all)
-        z_all = np.array(z_all)
+        (u_all, z_all) = LSTMStateTransitionModel._pre_process_data(data, **params)
 
         # Build model
-        VALIDATION_PERCENT = params['validation_percentage']
-        TRAINING_SIZE = int(len(u_all)*(1-VALIDATION_PERCENT))
-
         callbacks = [
             keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
         ]
 
-        training_data = (u_all[:TRAINING_SIZE], z_all[:TRAINING_SIZE])
-        validation_data = (u_all[TRAINING_SIZE:], z_all[TRAINING_SIZE:])
-
-        inputs = keras.Input(shape=training_data[0].shape[1:])
+        inputs = keras.Input(shape=u_all.shape[1:])
         x = inputs
-        for i in range(params['lstm_layers']):
+        for _ in range(params['layers']):
             x = layers.LSTM(16)(x)
-        x = layers.Dense(1)(x)
+        x = layers.Dense(z_all.shape[1] if len(z_all) == 2 else 1)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
-        model.fit(training_data[0], training_data[1], epochs=params['epochs'], callbacks = callbacks, validation_data = validation_data)
+        model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+
         return LSTMStateTransitionModel(keras.models.load_model("jena_sense.keras"), **params)
         
-    @staticmethod
-    def from_model(model, **kwargs):
-        config = { # default_params
-            'include_time': True, # Include time as a config parameter
-        }
-        pass
+    # TODO(CT): From Model
