@@ -36,10 +36,9 @@ class LSTMStateTransitionModel(PrognosticsModel):
         self.outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
         # Outputs from the last step are part of input
         input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
-        self.inputs = input_keys
+        self.inputs = input_keys.copy()
         self.inputs.extend([f'{z_key}_t-1' for z_key in self.outputs])
 
-        
         # States are in format [u_t-n+1, z_t-n, ..., u_t, z_t-1]
         self.states = []
         for j in range(input_shape[1]-1, -1, -1):
@@ -84,7 +83,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
                 if len(u[0].keys()) == 0:
                     u = []
                 else:
-                    u = np.array([u_i.matrix[:][0] for u_i in u])
+                    u = np.array([u_i.matrix[:,0] for u_i in u])
             if isinstance(u, (list, np.ndarray)):
                 if len(u) == 0:
                     # No inputs
@@ -108,27 +107,27 @@ class LSTMStateTransitionModel(PrognosticsModel):
                 if len(z[0].keys()) == 0:
                     z = []
                 else:
-                    z = np.array([z_i.matrix[:][0] for z_i in z])
+                    z = np.array([z_i.matrix[:,0] for z_i in z])
             if isinstance(z, (list, np.ndarray)):
                 if len(z) == 0:
                     # No inputs
                     z_i = []
                 elif np.isscalar(z[0]):
                     # Output is 1-d array (i.e., 1 output)
-                    z_i = [[[z[i+j]] for j in range(sequence_length)] for i in range(len(z)-sequence_length-1)]
+                    z_i = [[z[i]] for i in range(sequence_length+1, len(z))]
                 elif isinstance(z[0], (list, np.ndarray)):
                     # Input is d-d array
                     n_outputs = len(z[0])
-                    z_i = [[[z[i+j][k] for k in range(n_outputs)] for j in range(sequence_length)] for i in range(len(z)-sequence_length-1)]
+                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(sequence_length+1, len(z))]
                 else:
                     raise Exception(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
                 # Also add to input (past outputs are part of input)
                 if len(u_i) == 0:
-                    u_i = z_i.copy()
+                    u_i = [[z_ii for _ in range(sequence_length)] for z_ii in z_i]
                 else:
                     for i in range(len(z_i)):
                         for j in range(sequence_length):
-                            u_i[i][j].extend(z_i[i][j])
+                            u_i[i][j].extend(z_i[i])
             else:
                 raise Exception(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
             
@@ -164,6 +163,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         }
         # TODO(CT): Add shuffling
         # TODO(CT): Add layers
+        # TODO(CT): Add - look for dtype of ndarray
         params.update(LSTMStateTransitionModel.default_params)
         params.update(kwargs)
 
@@ -188,7 +188,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
 
         inputs = keras.Input(shape=u_all.shape[1:])
         x = layers.LSTM(16)(inputs)
-        x = layers.Dense(z_all.shape[1] if len(z_all) == 2 else 1)(x)
+        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
