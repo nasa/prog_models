@@ -41,7 +41,8 @@ setup(
     install_requires = [
         'scipy',
         'pandas',
-        'matplotlib'
+        'matplotlib',
+        'tensorflow'
     ],
     license = 'NOSA',
     project_urls={  # Optional
