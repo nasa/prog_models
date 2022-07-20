@@ -8,4 +8,4 @@ from .pneumatic_valve import PneumaticValve, PneumaticValveBase, PneumaticValveW
 from .dcmotor import DCMotor
 from .esc import ESC
 from .powertrain import Powertrain
-from .thrown_object import ThrownObject
+from .thrown_object import ThrownObject, LinearThrownObject
