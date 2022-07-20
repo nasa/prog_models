@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from collections.abc import Iterable
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -98,9 +99,9 @@ class LSTMStateTransitionModel(PrognosticsModel):
                     n_inputs = len(u[0])
                     u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,sequence_length+1)] for i in range(len(u)-sequence_length-1)]
                 else:
-                    raise Exception(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
+                    raise TypeError(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
             else:
-                raise Exception(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+                raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
 
             # Process Output
             if isinstance(z, SimResult):
@@ -109,6 +110,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
                 else:
                     z = np.array([z_i.matrix[:,0] for z_i in z])
             if isinstance(z, (list, np.ndarray)):
+                if len(z) != len(u) and len(u) != 0 and len(z) != 0:
+                    raise IndexError(f"Number of outputs ({len(z)}) does not match number of inputs ({len(u)})")
                 if len(z) == 0:
                     # No inputs
                     z_i = []
@@ -120,7 +123,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
                     n_outputs = len(z[0])
                     z_i = [[z[i][k] for k in range(n_outputs)] for i in range(sequence_length+1, len(z))]
                 else:
-                    raise Exception(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
+                    raise TypeError(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
                 # Also add to input (past outputs are part of input)
                 if len(u_i) == 0:
                     u_i = [[z_ii for _ in range(sequence_length)] for z_ii in z_i]
@@ -129,7 +132,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
                         for j in range(sequence_length):
                             u_i[i][j].extend(z_i[i])
             else:
-                raise Exception(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+                raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
             
             u_all.extend(u_i)
             z_all.extend(z_i)
@@ -152,6 +155,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
             outputs (List[str]): List of outputs keys
             validation_percentage (float): Percentage of data to use for validation, between 0-1
             epochs (int): Number of epochs to use in training
+            layers (int): Number of layers in the LSTM
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -159,24 +163,45 @@ class LSTMStateTransitionModel(PrognosticsModel):
         params = { # default_params
             'sequence_length': 128,
             'validation_split': 0.25,
-            'epochs': 2
-        }
+            'epochs': 2,
+            'layers': 1
+        }.copy()
         # TODO(CT): Add shuffling
-        # TODO(CT): Add layers
         # TODO(CT): Add - look for dtype of ndarray
+        # TODO(CT): Other Parameters in LSTM
+        # TODO(CT): Normalize inputs
+        # TODO(CT): Keep state between use (model.states and initial_state in model)
         params.update(LSTMStateTransitionModel.default_params)
         params.update(kwargs)
 
         # Input Validation
+        if not np.isscalar(params['sequence_length']):
+            raise TypeError(f"sequence_length must be an integer greater than 0, not {type(params['sequence_length'])}")
         if params['sequence_length'] <= 0:
-            raise Exception(f"sequence_length must be greater than 0, got {params['sequence_length']}")
+            raise ValueError(f"sequence_length must be greater than 0, got {params['sequence_length']}")
+        if not np.isscalar(params['layers']):
+            raise TypeError(f"layers must be an integer greater than 0, not {type(params['layers'])}")
+        if params['layers'] <= 0:
+            raise ValueError(f"layers must be greater than 0, got {params['layers']}")
+        if not np.isscalar(params['validation_split']):
+            raise TypeError(f"validation_split must be an float between 0 and 1, not {type(params['validation_split'])}")
         if params['validation_split'] < 0 or params['validation_split'] > 1:
-            raise Exception(f"validation_split must be between 0 and 1, got {params['validation_split']}")
+            raise ValueError(f"validation_split must be between 0 and 1, got {params['validation_split']}")
+        if not np.isscalar(params['epochs']):
+            raise TypeError(f"epochs must be an integer greater than 0, not {type(params['epochs'])}")
         if params['epochs'] < 1:
-            raise Exception(f"epochs must be greater than 0, got {params['epochs']}")
-        if isinstance(data, tuple) and len(data) == 2:
+            raise ValueError(f"epochs must be greater than 0, got {params['epochs']}")
+        if isinstance(data, tuple):
             # Just one dataset, turn into array so loop works properly
             data = [data]
+        if not isinstance(data, Iterable):
+            raise ValueError(f"data must be in format [(input, output), ...], got {type(data)}")
+        if len(data) == 0:
+            raise ValueError("No data provided. Data must be in format [(input, output), ...] and have at least one element")
+        if not isinstance(data[0], tuple):
+            raise ValueError(f"Each element of data must be a tuple, got {type(data[0])}")
+        if len(data[0]) != 2:
+            raise ValueError("Each element of data must be in format (input, output), where input and output are either np.array or SimulationResults and have at least one element")
 
         # Prepare datasets
         (u_all, z_all) = LSTMStateTransitionModel._pre_process_data(data, **params)
@@ -187,7 +212,14 @@ class LSTMStateTransitionModel(PrognosticsModel):
         ]
 
         inputs = keras.Input(shape=u_all.shape[1:])
-        x = layers.LSTM(16)(inputs)
+        x = inputs
+        for i in range(params['layers']):
+            if i == params['layers'] - 1:
+                # Last layer
+                x = layers.LSTM(16)(x)
+            else:
+                # Intermediate layer
+                x = layers.LSTM(16, return_sequences=True)(x)
         x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
