@@ -27,7 +27,7 @@ class TestLSTM(unittest.TestCase):
             outputs = ['x'])  
         self.assertListEqual(m2.outputs, ['x'])
         self.assertListEqual(m2.inputs, ['x_t-1'])
-        self.assertSetEqual(set(m2.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4']))
+        self.assertSetEqual(set(m2.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']))
         
         # Step 3: Use model to simulate_to time of threshold
         t_counter = 0
