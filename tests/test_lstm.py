@@ -22,7 +22,7 @@ class TestLSTM(unittest.TestCase):
         # Step 2: Generate model
         m2 = LSTMStateTransitionModel.from_data(
             (data.inputs, data.outputs),  
-            sequence_length=4, 
+            sequence_length=5, 
             epochs=250,
             outputs = ['x'])  
         self.assertListEqual(m2.outputs, ['x'])
@@ -48,7 +48,10 @@ class TestLSTM(unittest.TestCase):
         # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
         # Compare RMSE of the results to the original data
         error = m.calc_error(results2.times, results2.inputs, results2.outputs)
-        self.assertLess(error, 1)
+        self.assertLess(error, 5)
+
+        # Create from model
+        m3 = LSTMStateTransitionModel(m2.model, outputs = ['x'])
 
         # More tests in examples.lstm_model
 
