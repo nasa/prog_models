@@ -25,19 +25,26 @@ class LSTMStateTransitionModel(PrognosticsModel):
 
     See Also:
         LSTMStateTransitionModel.from_data
+        examples.lstm_model
 
-    TODO: Examples
+    Examples:
+        :
+            >>> from prog_models import LSTMStateTransitionModel
+            >>> # Generate model from data
+            >>> m = LSTMStateTransitionModel.from_data(inputs, outputs)
     """
     default_params = {
     }
 
     def __init__(self, model, **kwargs):
-        input_shape = model.input.shape
 
+        # Setup inputs, outputs, states 
         self.outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
-        # Outputs from the last step are part of input
+
+        input_shape = model.input.shape
         input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
         self.inputs = input_keys.copy()
+        # Outputs from the last step are part of input
         self.inputs.extend([f'{z_key}_t-1' for z_key in self.outputs])
 
         # States are in format [u_t-n+1, z_t-n, ..., u_t, z_t-1]
@@ -46,13 +53,26 @@ class LSTMStateTransitionModel(PrognosticsModel):
             self.states.extend([f'{input_i}_t-{j}' for input_i in input_keys])
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
 
-        kwargs['sequence_length'] = model.input.shape[1]
+        kwargs['sequence_length'] = input_shape[1]
 
         super().__init__(**kwargs)
 
+        # Save Model
         self.model = model
 
     def initialize(self, u=None, z=None):
+        """
+        Initialize the model with the given inputs and outputs. For LSTMStateTransitionModel, the initial state is set to None. As data is added (i.e., next_state is called), the initial state is updated.
+
+        This is one of the rare models that cannot be initialized right away.
+
+        Args:
+            u (InputContainer, optional): first input
+            z (OutputContainer, optional): first output
+
+        Returns:
+            StateContainer: First State
+        """
         return self.StateContainer(np.array([[None] for _ in self.states]))
 
     def next_state(self, x, u, dt):
@@ -65,12 +85,28 @@ class LSTMStateTransitionModel(PrognosticsModel):
         if x.matrix[0,0] is None:
             warn(f"Output estimation is not available until at least {1+self.parameters['sequence_length']} timesteps have passed.")
             return self.OutputContainer(np.array([[None] for _ in self.outputs]))
+
+        # Enough data has been received to calculate output
+        # Format input into np array with shape (1, sequence_length, num_inputs)
         m_input = x.matrix[:self.parameters['sequence_length']*len(self.inputs)].reshape(1, self.parameters['sequence_length'], len(self.inputs))
+
+        # Pass into model to calculate output
         m_output = self.model(m_input)
+
         return self.OutputContainer(m_output.numpy().T)
 
     @staticmethod
     def _pre_process_data(data, sequence_length, **kwargs):
+        """
+        Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
+
+        Args:
+            data (List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))): Data to be processed. each element is of format (input, output), where input and output can be ndarray or SimulationResult
+            sequence_length (int): Length of a single sequence
+
+        Returns:
+            Tuple[ndarray, ndarray]: pre-processed data (input, output). Where input is of size (num_sequences, sequence_length, num_inputs) and output is of size (num_sequences, num_outputs)
+        """
         # Data is a List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))
         # Tuple is (input, output)
 
@@ -82,9 +118,11 @@ class LSTMStateTransitionModel(PrognosticsModel):
             # Process Input
             if isinstance(u, SimResult):
                 if len(u[0].keys()) == 0:
+                    # No inputs
                     u = []
                 else:
                     u = np.array([u_i.matrix[:,0] for u_i in u])
+
             if isinstance(u, (list, np.ndarray)):
                 if len(u) == 0:
                     # No inputs
@@ -106,14 +144,18 @@ class LSTMStateTransitionModel(PrognosticsModel):
             # Process Output
             if isinstance(z, SimResult):
                 if len(z[0].keys()) == 0:
+                    # No outputs
                     z = []
                 else:
                     z = np.array([z_i.matrix[:,0] for z_i in z])
+
             if isinstance(z, (list, np.ndarray)):
                 if len(z) != len(u) and len(u) != 0 and len(z) != 0:
+                    # Checked here to avoid SimResults from accidentially triggering this check
                     raise IndexError(f"Number of outputs ({len(z)}) does not match number of inputs ({len(u)})")
+
                 if len(z) == 0:
-                    # No inputs
+                    # No outputs
                     z_i = []
                 elif np.isscalar(z[0]):
                     # Output is 1-d array (i.e., 1 output)
@@ -124,6 +166,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
                     z_i = [[z[i][k] for k in range(n_outputs)] for i in range(sequence_length+1, len(z))]
                 else:
                     raise TypeError(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
+
                 # Also add to input (past outputs are part of input)
                 if len(u_i) == 0:
                     u_i = [[z_ii for _ in range(sequence_length)] for z_ii in z_i]
@@ -147,7 +190,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         Generate a LSTMStateTransitionModel from data
 
         Args:
-            data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run.
+            data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run. Input and Output are of size (n_times, n_inputs/outputs)
 
         Keyword Args:
             sequence_length (int): Length of the input sequence
@@ -165,12 +208,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
             'validation_split': 0.25,
             'epochs': 2,
             'layers': 1
-        }.copy()
-        # TODO(CT): Add shuffling
-        # TODO(CT): Add - look for dtype of ndarray
-        # TODO(CT): Other Parameters in LSTM
-        # TODO(CT): Normalize inputs
-        # TODO(CT): Keep state between use (model.states and initial_state in model)
+        }.copy()  # Copy is needed to avoid updating default
+
         params.update(LSTMStateTransitionModel.default_params)
         params.update(kwargs)
 
@@ -255,6 +294,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
 
         # Simulate until passing minimum number of steps
         while x.matrix[0,0] is None:
+            if 'horizon' in kwargs and t > kwargs['horizon']:
+                raise Exception(f'Not enough timesteps to reach minimum number of steps for model simulation')
             dt = next_time(t, x)
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
@@ -269,5 +310,3 @@ class LSTMStateTransitionModel(PrognosticsModel):
         if 'horizon' in kwargs:
             kwargs['horizon'] = kwargs['horizon'] - t
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
-        
-    # TODO(CT): From Model
