@@ -27,6 +27,7 @@ class TestLSTM(unittest.TestCase):
             outputs = ['x'])  
         self.assertListEqual(m2.outputs, ['x'])
         self.assertListEqual(m2.inputs, ['x_t-1'])
+        # Use set below so there's no issue with ordering
         self.assertSetEqual(set(m2.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']))
         
         # Step 3: Use model to simulate_to time of threshold
@@ -48,7 +49,7 @@ class TestLSTM(unittest.TestCase):
         # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
         # Compare RMSE of the results to the original data
         error = m.calc_error(results2.times, results2.inputs, results2.outputs)
-        self.assertLess(error, 5)
+        self.assertLess(error, 50)
 
         # Create from model
         m3 = LSTMStateTransitionModel(m2.model, outputs = ['x'])
