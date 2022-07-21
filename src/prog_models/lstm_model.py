@@ -64,7 +64,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         # Needed bacause we add .model, which is not present in the parent class
         if not isinstance(other, LSTMStateTransitionModel):
             return False
-        return super().__eq__(self, other) and self.model == other.model
+        return super().__eq__(other) and self.model == other.model
 
     def initialize(self, u=None, z=None):
         """
