@@ -3,7 +3,7 @@ name: Print Benchmarking - Non Release
 on: 
   pull_request:
     branches:
-      - '!release/**'
+      - 'dev'
 
 jobs:
   benchmark_branch: 
