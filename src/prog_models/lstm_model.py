@@ -60,6 +60,12 @@ class LSTMStateTransitionModel(PrognosticsModel):
         # Save Model
         self.model = model
 
+    def __eq__(self, other):
+        # Needed bacause we add .model, which is not present in the parent class
+        if not isinstance(other, LSTMStateTransitionModel):
+            return False
+        return super().__eq__(self, other) and self.model == other.model
+
     def initialize(self, u=None, z=None):
         """
         Initialize the model with the given inputs and outputs. For LSTMStateTransitionModel, the initial state is set to None. As data is added (i.e., next_state is called), the initial state is updated.
