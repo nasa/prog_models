@@ -205,15 +205,25 @@ class LSTMStateTransitionModel(PrognosticsModel):
             validation_percentage (float): Percentage of data to use for validation, between 0-1
             epochs (int): Number of epochs to use in training
             layers (int): Number of layers in the LSTM
+            units (int or list[int]): number of units used in each lstm layer. Using a scalar value will use the same number of units for each layer.
+            activation (str or list[str]): Activation method for each layer
+            dropout (float): Dropout rate
 
         Returns:
             LSTMStateTransitionModel: Generated Model
+
+        See Also:
+            https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
         """
         params = { # default_params
             'sequence_length': 128,
             'validation_split': 0.25,
             'epochs': 2,
-            'layers': 1
+            'prediction_steps': 1,
+            'layers': 1,
+            'units': 16,
+            'activation': 'tanh',
+            'dropout': 0.1
         }.copy()  # Copy is needed to avoid updating default
 
         params.update(LSTMStateTransitionModel.default_params)
@@ -228,6 +238,21 @@ class LSTMStateTransitionModel(PrognosticsModel):
             raise TypeError(f"layers must be an integer greater than 0, not {type(params['layers'])}")
         if params['layers'] <= 0:
             raise ValueError(f"layers must be greater than 0, got {params['layers']}")
+        if np.isscalar(params['units']):
+            params['units'] = [params['units'] for _ in range(params['layers'])]
+        if not isinstance(params['units'], (list, np.ndarray)):
+            raise TypeError(f"units must be a list of integers, not {type(params['units'])}")
+        if len(params['units']) != params['layers']:
+            raise ValueError(f"units must be a list of integers of length {params['layers']}, got {params['units']}")
+        for i in range(params['layers']):
+            if params['units'][i] <= 0:
+                raise ValueError(f"units[{i}] must be greater than 0, got {params['units'][i]}")
+        if not np.isscalar(params['dropout']):
+            raise TypeError(f"dropout must be an float greater than or equal to 0, not {type(params['dropout'])}")
+        if params['dropout'] < 0:
+            raise ValueError(f"dropout must be greater than or equal to 0, got {params['dropout']}")
+        if not isinstance(params['activation'], (list, np.ndarray)):
+            params['activation'] = [params['activation'] for _ in range(params['layers'])]
         if not np.isscalar(params['validation_split']):
             raise TypeError(f"validation_split must be an float between 0 and 1, not {type(params['validation_split'])}")
         if params['validation_split'] < 0 or params['validation_split'] > 1:
@@ -247,7 +272,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
             raise ValueError(f"Each element of data must be a tuple, got {type(data[0])}")
         if len(data[0]) != 2:
             raise ValueError("Each element of data must be in format (input, output), where input and output are either np.array or SimulationResults and have at least one element")
-
+        
         # Prepare datasets
         (u_all, z_all) = LSTMStateTransitionModel._pre_process_data(data, **params)
 
@@ -261,10 +286,15 @@ class LSTMStateTransitionModel(PrognosticsModel):
         for i in range(params['layers']):
             if i == params['layers'] - 1:
                 # Last layer
-                x = layers.LSTM(16)(x)
+                x = layers.LSTM(params['units'][i], activation=params['activation'][i])(x)
             else:
                 # Intermediate layer
-                x = layers.LSTM(16, return_sequences=True)(x)
+                x = layers.LSTM(params['units'][i], activation=params['activation'][i], return_sequences=True)(x)
+        
+        if params['dropout'] > 0:
+            # Dropout prevents overfitting
+            x = layers.Dropout(params['dropout'])(x)
+
         x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
