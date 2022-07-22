@@ -84,6 +84,11 @@ class LSTMStateTransitionModel(PrognosticsModel):
     def next_state(self, x, u, dt):
         # Rotate new input into state
         input_data = u.matrix
+        if 'normalization' in self.parameters:
+            # TODO(CT): Handle normalization if keys dont match previous
+            input_data -= self.parameters['normalization'][0]
+            input_data /= self.parameters['normalization'][1]
+            
         states = x.matrix[len(input_data):]
         return self.StateContainer(np.vstack((states, input_data)))
 
@@ -96,8 +101,11 @@ class LSTMStateTransitionModel(PrognosticsModel):
         # Format input into np array with shape (1, sequence_length, num_inputs)
         m_input = x.matrix[:self.parameters['sequence_length']*len(self.inputs)].reshape(1, self.parameters['sequence_length'], len(self.inputs))
 
-        # Pass into model to calculate output
+        # Pass into model to calculate outp        
         m_output = self.model(m_input)
+        if 'normalization' in self.parameters:
+            m_output *= self.parameters['normalization'][3]
+            m_output += self.parameters['normalization'][2]
 
         return self.OutputContainer(m_output.numpy().T)
 
@@ -208,6 +216,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
             units (int or list[int]): number of units used in each lstm layer. Using a scalar value will use the same number of units for each layer.
             activation (str or list[str]): Activation method for each layer
             dropout (float): Dropout rate
+            normalize (bool): If the data should be normalized
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -223,7 +232,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
             'layers': 1,
             'units': 16,
             'activation': 'tanh',
-            'dropout': 0.1
+            'dropout': 0.1,
+            'normalize': True
         }.copy()  # Copy is needed to avoid updating default
 
         params.update(LSTMStateTransitionModel.default_params)
@@ -272,10 +282,35 @@ class LSTMStateTransitionModel(PrognosticsModel):
             raise ValueError(f"Each element of data must be a tuple, got {type(data[0])}")
         if len(data[0]) != 2:
             raise ValueError("Each element of data must be in format (input, output), where input and output are either np.array or SimulationResults and have at least one element")
-        
+        if not isinstance(params['normalize'], bool):
+            raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
+
         # Prepare datasets
         (u_all, z_all) = LSTMStateTransitionModel._pre_process_data(data, **params)
 
+        # Normalize
+        if params['normalize']:
+            n_inputs = len(data[0][0][0])
+            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
+            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
+            # If there's no variation- dont normalize 
+            u_std[u_std == 0] = 1
+            z_mean = np.mean(z_all, axis=0)
+            z_std = np.std(z_all, axis=0)
+            # If there's no variation- dont normalize 
+            z_std[z_std == 0] = 1
+
+            # Add output (since z_t-1 is last input)
+            u_mean = np.hstack((u_mean, z_mean))
+            u_std = np.hstack((u_std, z_std))
+
+            u_all = (u_all - u_mean)/u_std
+            z_all = (z_all - z_mean)/z_std
+
+            # u_mean and u_std act on the column vector form (from inputcontainer)
+            # so we need to transpose them to a column vector
+            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
+        
         # Build model
         callbacks = [
             keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
@@ -298,6 +333,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
         x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
+        
+        # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
         return LSTMStateTransitionModel(keras.models.load_model("jena_sense.keras"), **params)
