@@ -14,7 +14,9 @@ from .sim_result import SimResult
 class LSTMStateTransitionModel(PrognosticsModel):
     """
     A State Transition Model with no events using an Keras LSTM Model.
-    State transition models map form the inputs at time t and outputs at time t-1 plus historical data to the outputs at time t
+    State transition models map form the inputs at time t and outputs at time t-1 plus historical data from a set window to the outputs at time t.
+
+    Most users will use the `LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past inputs are stored in the model's internal state. Actual calculation of output is performed when `output` is called. When using in simulation that may not be until the simulation results are accessed.
 
     Args:
         model (keras.Model): Keras model to use for state transition
@@ -53,7 +55,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
             self.states.extend([f'{input_i}_t-{j}' for input_i in input_keys])
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
 
-        kwargs['sequence_length'] = input_shape[1]
+        kwargs['window'] = input_shape[1]
 
         super().__init__(**kwargs)
 
@@ -94,12 +96,12 @@ class LSTMStateTransitionModel(PrognosticsModel):
 
     def output(self, x):
         if x.matrix[0,0] is None:
-            warn(f"Output estimation is not available until at least {1+self.parameters['sequence_length']} timesteps have passed.")
+            warn(f"Output estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
             return self.OutputContainer(np.array([[None] for _ in self.outputs]))
 
         # Enough data has been received to calculate output
-        # Format input into np array with shape (1, sequence_length, num_inputs)
-        m_input = x.matrix[:self.parameters['sequence_length']*len(self.inputs)].reshape(1, self.parameters['sequence_length'], len(self.inputs))
+        # Format input into np array with shape (1, window, num_inputs)
+        m_input = x.matrix[:self.parameters['window']*len(self.inputs)].reshape(1, self.parameters['window'], len(self.inputs))
 
         # Pass into model to calculate outp        
         m_output = self.model(m_input)
@@ -110,16 +112,16 @@ class LSTMStateTransitionModel(PrognosticsModel):
         return self.OutputContainer(m_output.numpy().T)
 
     @staticmethod
-    def _pre_process_data(data, sequence_length, **kwargs):
+    def _pre_process_data(data, window, **kwargs):
         """
         Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
 
         Args:
             data (List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))): Data to be processed. each element is of format (input, output), where input and output can be ndarray or SimulationResult
-            sequence_length (int): Length of a single sequence
+            window (int): Length of a single sequence
 
         Returns:
-            Tuple[ndarray, ndarray]: pre-processed data (input, output). Where input is of size (num_sequences, sequence_length, num_inputs) and output is of size (num_sequences, num_outputs)
+            Tuple[ndarray, ndarray]: pre-processed data (input, output). Where input is of size (num_sequences, window, num_inputs) and output is of size (num_sequences, num_outputs)
         """
         # Data is a List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))
         # Tuple is (input, output)
@@ -144,12 +146,12 @@ class LSTMStateTransitionModel(PrognosticsModel):
                 elif np.isscalar(u[0]):
                     # Input is 1-d array (i.e., 1 input)
                     # Note: 1 is added to account for current time (current input used to predict output at time i)
-                    u_i = [[[u[i+j]] for j in range(1, sequence_length+1)] for i in range(len(u)-sequence_length-1)]
+                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window-1)]
                 elif isinstance(u[0], (list, np.ndarray)):
                     # Input is d-d array
                     # Note: 1 is added to account for current time (current input used to predict output at time i)
                     n_inputs = len(u[0])
-                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,sequence_length+1)] for i in range(len(u)-sequence_length-1)]
+                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window-1)]
                 else:
                     raise TypeError(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
             else:
@@ -173,20 +175,20 @@ class LSTMStateTransitionModel(PrognosticsModel):
                     z_i = []
                 elif np.isscalar(z[0]):
                     # Output is 1-d array (i.e., 1 output)
-                    z_i = [[z[i]] for i in range(sequence_length+1, len(z))]
+                    z_i = [[z[i]] for i in range(window+1, len(z))]
                 elif isinstance(z[0], (list, np.ndarray)):
                     # Input is d-d array
                     n_outputs = len(z[0])
-                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(sequence_length+1, len(z))]
+                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window+1, len(z))]
                 else:
                     raise TypeError(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
 
                 # Also add to input (past outputs are part of input)
                 if len(u_i) == 0:
-                    u_i = [[z_ii for _ in range(sequence_length)] for z_ii in z_i]
+                    u_i = [[z_ii for _ in range(window)] for z_ii in z_i]
                 else:
                     for i in range(len(z_i)):
-                        for j in range(sequence_length):
+                        for j in range(window):
                             u_i[i][j].extend(z_i[i])
             else:
                 raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
@@ -207,16 +209,16 @@ class LSTMStateTransitionModel(PrognosticsModel):
             data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run. Input and Output are of size (n_times, n_inputs/outputs)
 
         Keyword Args:
-            sequence_length (int): Length of the input sequence
-            inputs (List[str]): List of input keys
-            outputs (List[str]): List of outputs keys
+            window (int): Number of historical points used in the model. I.e, if window is 3, the model will map from [t-3, t-2, t-1] to t
+            inputs (List[str]): List of keys to use to identify inputs. If not supplied u[#] will be used to idenfiy inputs
+            outputs (List[str]): List of keys to use to identify outputs. If not supplied z[#] will be used to idenfiy outputs
             validation_percentage (float): Percentage of data to use for validation, between 0-1
-            epochs (int): Number of epochs to use in training
-            layers (int): Number of layers in the LSTM
-            units (int or list[int]): number of units used in each lstm layer. Using a scalar value will use the same number of units for each layer.
-            activation (str or list[str]): Activation method for each layer
-            dropout (float): Dropout rate
-            normalize (bool): If the data should be normalized
+            epochs (int): Number of epochs (i.e., iterations) to train the model. More epochs means better results (to a point), but more time to train. Note: large numbers of epochs may result in overfitting.
+            layers (int): Number of LSTM layers to use. More layers can represent more complex systems, but are less efficient. Note: 2 layers is typically enough for most complex systems. Default: 1
+            units (int or list[int]): number of units (i.e., dimensionality of output state) used in each lstm layer. Using a scalar value will use the same number of units for each layer.
+            activation (str or list[str]): Activation function to use for each layer
+            dropout (float): Dropout rate to be applied. Dropout helps avoid overfitting
+            normalize (bool): If the data should be normalized. This is recommended for most cases.
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -225,7 +227,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
             https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
         """
         params = { # default_params
-            'sequence_length': 128,
+            'window': 128,
             'validation_split': 0.25,
             'epochs': 2,
             'prediction_steps': 1,
@@ -240,10 +242,10 @@ class LSTMStateTransitionModel(PrognosticsModel):
         params.update(kwargs)
 
         # Input Validation
-        if not np.isscalar(params['sequence_length']):
-            raise TypeError(f"sequence_length must be an integer greater than 0, not {type(params['sequence_length'])}")
-        if params['sequence_length'] <= 0:
-            raise ValueError(f"sequence_length must be greater than 0, got {params['sequence_length']}")
+        if not np.isscalar(params['window']):
+            raise TypeError(f"window must be an integer greater than 0, not {type(params['window'])}")
+        if params['window'] <= 0:
+            raise ValueError(f"window must be greater than 0, got {params['window']}")
         if not np.isscalar(params['layers']):
             raise TypeError(f"layers must be an integer greater than 0, not {type(params['layers'])}")
         if params['layers'] <= 0:
