@@ -22,8 +22,8 @@ class TestLSTM(unittest.TestCase):
         # Step 2: Generate model
         m2 = LSTMStateTransitionModel.from_data(
             (data.inputs, data.outputs),  
-            sequence_length=5, 
-            epochs=250,
+            window=5, 
+            epochs=50,
             outputs = ['x'])  
         self.assertListEqual(m2.outputs, ['x'])
         self.assertListEqual(m2.inputs, ['x_t-1'])
@@ -49,7 +49,7 @@ class TestLSTM(unittest.TestCase):
         # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
         # Compare RMSE of the results to the original data
         error = m.calc_error(results2.times, results2.inputs, results2.outputs)
-        self.assertLess(error, 50)
+        self.assertLess(error, 2)
 
         # Create from model
         m3 = LSTMStateTransitionModel(m2.model, outputs = ['x'])
@@ -68,9 +68,9 @@ class TestLSTM(unittest.TestCase):
         with self.assertRaises(ValueError, msg="Too large Tuple"):
             LSTMStateTransitionModel.from_data((1, 2, 3))
         with self.assertRaises(ValueError, msg="Too small sequence length"):
-            LSTMStateTransitionModel.from_data((1, 2), sequence_length=0)
+            LSTMStateTransitionModel.from_data((1, 2), window=0)
         with self.assertRaises(TypeError, msg="Non-scalar sequence length"):
-            LSTMStateTransitionModel.from_data((1, 2), sequence_length=[])
+            LSTMStateTransitionModel.from_data((1, 2), window=[])
         with self.assertRaises(ValueError, msg="Too few layers"):
             LSTMStateTransitionModel.from_data((1, 2), layers=0)
         with self.assertRaises(TypeError, msg="Non-scalar layers"):
@@ -87,6 +87,14 @@ class TestLSTM(unittest.TestCase):
             LSTMStateTransitionModel.from_data((1, [2]))
         with self.assertRaises(TypeError, msg="Element Format-2"):
             LSTMStateTransitionModel.from_data(([1], 2))
+        with self.assertRaises(TypeError, msg="Normalize type"):
+            LSTMStateTransitionModel.from_data(([1], [2]), normalize=[1, 2])
+        with self.assertRaises(ValueError, msg="Negative dropout"):
+            LSTMStateTransitionModel.from_data(([1], [2]), dropout = -1)   
+        with self.assertRaises(ValueError, msg="Zero units"):
+            LSTMStateTransitionModel.from_data(([1], [2]), units = 0)  
+        with self.assertRaises(ValueError, msg="Units, layers mismatch"):
+            LSTMStateTransitionModel.from_data(([1], [2]), units = [1], layers=2)  
 
 # This allows the module to be executed directly
 def run_tests():

@@ -39,7 +39,7 @@ def run_example():
     print('Building model...')
     m2 = LSTMStateTransitionModel.from_data(
         (data.inputs, data.outputs),  
-        sequence_length=4, 
+        window=4, 
         epochs=30,
         outputs = ['x'])    
     
@@ -102,7 +102,7 @@ def run_example():
     print('Building model...')
     m3 = LSTMStateTransitionModel.from_data(
         training_data,  
-        sequence_length=4, 
+        window=4, 
         epochs=30, 
         inputs = ['dt'],
         outputs = ['x'])    
@@ -118,6 +118,8 @@ def run_example():
         return z
 
     # Use new dt, not used in training
+    # Using a dt not used in training will demonstrate the model's 
+    # ability to handle different timesteps not part of training set
     data = m.simulate_to(data.times[-1], future_loading, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
     results3 = m3.simulate_to(data.times[-1], future_loading3, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
 
@@ -151,7 +153,7 @@ def run_example():
     print('Building model...')
     m_batt = LSTMStateTransitionModel.from_data(
         training_data,  
-        sequence_length=12, 
+        window=12, 
         epochs=30, 
         units=64,  # Additional units given the increased complexity of the system
         inputs = ['i', 'dt'],
@@ -172,7 +174,9 @@ def run_example():
         t_counter = t
         return z
 
-    # Use new dt, not used in training
+    # Use a new dt, not used in training. 
+    # Using a dt not used in training will demonstrate the model's 
+    # ability to handle different timesteps not part of training set
     data = batt.simulate_to_threshold(future_loading, dt=1, save_freq=1)
     results = m_batt.simulate_to(data.times[-1], future_loading2, dt=1, save_freq=1)
 
