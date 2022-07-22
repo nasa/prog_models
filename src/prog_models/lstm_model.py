@@ -200,8 +200,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
         z_all = np.array(z_all)
         return (u_all, z_all)
 
-    @staticmethod
-    def from_data(data, **kwargs):
+    @classmethod
+    def from_data(cls, data, **kwargs):
         """
         Generate a LSTMStateTransitionModel from data
 
@@ -339,7 +339,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return LSTMStateTransitionModel(keras.models.load_model("jena_sense.keras"), **params)
+        return cls(keras.models.load_model("jena_sense.keras"), **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
