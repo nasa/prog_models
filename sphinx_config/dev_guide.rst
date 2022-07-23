@@ -717,6 +717,13 @@ The following dependencies are used in the project:
    * Usage Rights: Released under the MIT License
    * Future Support: expected- urllib3 is a common tool still under development and actively supported
 
+* `tensorflow <https://www.tensorflow.org>__
+
+   * Requirements met: Machine learning algorithms
+   * Documentation: https://www.tensorflow.org
+   * Usage Rights: Released under the Apache License 2.0
+   * Future Support: expected- Tensorflow is a common tool still under development and actively supported
+
 Notes for all: 
 
 * The function and performance of these tools are verified and validated as part of the automated tests and examples. [SWE-027 3.1.14.e]
