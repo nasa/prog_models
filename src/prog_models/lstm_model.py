@@ -112,7 +112,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         return self.OutputContainer(m_output.numpy().T)
 
     @staticmethod
-    def _pre_process_data(data, window, **kwargs):
+    def pre_process_data(data, window, **kwargs):
         """
         Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
 
@@ -288,7 +288,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
         # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel._pre_process_data(data, **params)
+        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
 
         # Normalize
         if params['normalize']:
