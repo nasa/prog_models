@@ -138,7 +138,7 @@ def run_example():
     # -----------------------------------------------------
     print('\n------------------------------------------\nExample 3...')
     print('Generating data...')
-    batt = BatteryElectroChemEOD()
+    batt = BatteryElectroChemEOD(process_noise = 0, measurement_noise=0)
     future_loading_eqns = [lambda t, x=None: batt.InputContainer({'i': 1+1.5*load}) for load in range(6)]
     # Generate data with different loading and step sizes
     # Adding the step size as an element of the output
@@ -159,7 +159,9 @@ def run_example():
         epochs=30, 
         units=64,  # Additional units given the increased complexity of the system
         inputs = ['i', 'dt'],
-        outputs = ['t', 'v'])    
+        outputs = ['t', 'v'],
+        process_noise=0,
+        measurement_noise=0)    
 
     # Step 3: Simulate with model
     t_counter = 0
