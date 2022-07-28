@@ -63,7 +63,7 @@ class LSTMStateTransitionModel(PrognosticsModel):
         self.model = model
 
     def __eq__(self, other):
-        # Needed bacause we add .model, which is not present in the parent class
+        # Needed because we add .model, which is not present in the parent class
         if not isinstance(other, LSTMStateTransitionModel):
             return False
         return super().__eq__(other) and self.model == other.model
@@ -368,6 +368,11 @@ class LSTMStateTransitionModel(PrognosticsModel):
             raise Exception(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
 
         # Simulate until passing minimum number of steps
+        # TODO Suggestion (Matteo): 
+        # normalize data before prediction loop starts; de-normalize them after loop.
+        # This way, normalization could be handled using functions that normalize nd arrays all at once, 
+        # avoiding to normalize data at each step of the simulation. 
+        # I don't know if this interferes with how the PrognosticsModel class works. 
         while x.matrix[0,0] is None:
             if 'horizon' in kwargs and t > kwargs['horizon']:
                 raise Exception(f'Not enough timesteps to reach minimum number of steps for model simulation')
