@@ -17,6 +17,7 @@ If you are new to this package, see `<getting_started.html>`__.
    models
    prognostics_model
    linear_model
+   data_models
    simresult
    datasets
    ProgAlgs <https://nasa.github.io/prog_algs>
