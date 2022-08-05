@@ -1,9 +1,10 @@
-name: Print Benchmarking - Non Release
+name: Print PR Message - Non Release
 
 on: 
   pull_request:
     branches:
-      - '!release/**'
+      - 'dev'
+    types: [opened]
 
 jobs:
   benchmark_branch: 
@@ -17,10 +18,17 @@ jobs:
             Thank you for opening this PR. Each PR into dev requires a code review. For the code review, look at the following:
 
             - [ ] Reviewer should look for bugs, efficiency, readability, testing, and coverage in examples (if relevant).
+
             - [ ] Ensure that each PR adding a new feature should include a test verifying that feature.
+
             - [ ] All tests must be passing.
+
             - [ ] All errors from static analysis must be resolved.
+            
             - [ ] Review the test coverage reports (if there is a change) - will be added as comment on PR if there is a change
+
             - [ ] Review the software benchmarking results (if there is a change) - will be added as comment on PR
+
             - [ ] Any added dependencies are included in requirements.txt, setup.py, and dev_guide.rst (this document)
+
             - [ ] All warnings from static analysis must be reviewed and resolved - if deemed appropriate.
