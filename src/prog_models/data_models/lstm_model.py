@@ -7,11 +7,11 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from warnings import warn
 
-from . import PrognosticsModel
-from .sim_result import SimResult
+from . import DataModel
+from ..sim_result import SimResult
 
 
-class LSTMStateTransitionModel(PrognosticsModel):
+class LSTMStateTransitionModel(DataModel):
     """
     A State Transition Model with no events using an Keras LSTM Model.
     State transition models map form the inputs at time t and outputs at time t-1 plus historical data from a set window to the outputs at time t.
@@ -36,6 +36,8 @@ class LSTMStateTransitionModel(PrognosticsModel):
             >>> m = LSTMStateTransitionModel.from_data(inputs, outputs)
     """
     default_params = {
+        'process_noise': 0,  # Default 0 noise
+        'measurement_noise': 0,  # Default 0 noise
     }
 
     def __init__(self, model, **kwargs):
