@@ -12,7 +12,7 @@ Finally, we repeat the exercise with data from the more complex BatteryElectroCh
 import matplotlib.pyplot as plt
 import numpy as np
 
-from prog_models.lstm_model import LSTMStateTransitionModel
+from prog_models.data_models import LSTMStateTransitionModel
 from prog_models.models import ThrownObject, BatteryElectroChemEOD
 
 def run_example():

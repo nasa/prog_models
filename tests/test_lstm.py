@@ -3,7 +3,7 @@
 
 import unittest
 
-from prog_models.lstm_model import LSTMStateTransitionModel
+from prog_models.data_models import LSTMStateTransitionModel, DataModel
 from prog_models.models import ThrownObject
 
 
@@ -25,6 +25,8 @@ class TestLSTM(unittest.TestCase):
             window=5, 
             epochs=50,
             outputs = ['x'])  
+        self.assertIsInstance(m2, LSTMStateTransitionModel)
+        self.assertIsInstance(m2, DataModel)
         self.assertListEqual(m2.outputs, ['x'])
         self.assertListEqual(m2.inputs, ['x_t-1'])
         # Use set below so there's no issue with ordering
