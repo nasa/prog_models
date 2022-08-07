@@ -93,16 +93,15 @@ class PrognosticsModel(ABC):
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
-    performance_metric_keys = []  # Identifies for each performance metric
-    events = []       # Identifiers for each event
+    # performance_metric_keys = []  # Identifies for each performance metric
+    # events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
-
-    observables_keys = performance_metric_keys # for backwards compatability        
+      
     SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
         if not hasattr(self, 'inputs'):
-            raise ProgModelTypeError('Must have `inputs` attribute')
+            self.inputs = []
         
         if not hasattr(self, 'states'):
             raise ProgModelTypeError('Must have `states` attribute')
@@ -119,6 +118,12 @@ class PrognosticsModel(ABC):
             iter(self.outputs)
         except TypeError:
             raise ProgModelTypeError('model.outputs must be iterable')
+
+        if not hasattr(self, 'performance_metric_keys'):
+            self.performance_metric_keys = []
+
+        if not hasattr(self, 'events'):
+            self.events = []  
         
         # Default params for any model
         params = PrognosticsModel.default_parameters.copy()

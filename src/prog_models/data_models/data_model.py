@@ -65,7 +65,11 @@ class DataModel(PrognosticsModel, ABC):
         """
          # Configure
         config = { # Defaults
-            'add_dt': True
+            'add_dt': True,
+            'input_keys': m.inputs.copy(),
+            'output_keys': m.outputs.copy(),
+            'state_keys': m.states.copy(),
+            'event_keys': m.events.copy()
         }
         config.update(kwargs)
 
@@ -96,11 +100,12 @@ class DataModel(PrognosticsModel, ABC):
                for cfg in sim_cfg_params if cfg in config
         } for i in range(len(load_functions))]
 
-        # Simulate
+        # Simulate            
         data = [m.simulate_to_threshold(load, **sim_cfg[i]) for (i, load) in enumerate(load_functions)]
 
         # Prepare data
         if config['add_dt']:
+            config['input_keys'].append('dt')
             if len(data[0].inputs) > 0 and len(data[0].inputs[0]) == 0:
                 # No inputs
                 inputs = [np.array([[config['dt'][i]] for _ in data[i].inputs], dtype=float) for i in range(len(data))]
@@ -112,4 +117,4 @@ class DataModel(PrognosticsModel, ABC):
         states = [d.states for d in data]
         event_states = [d.event_states for d in data]
 
-        return cls.from_data(inputs = inputs, outputs = outputs, states = states, event_states = event_states, **kwargs)
+        return cls.from_data(inputs = inputs, outputs = outputs, states = states, event_states = event_states, **config)

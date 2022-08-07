@@ -2,6 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from collections.abc import Iterable
+from numbers import Number
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -260,7 +261,7 @@ class LSTMStateTransitionModel(DataModel):
         for i in range(params['layers']):
             if params['units'][i] <= 0:
                 raise ValueError(f"units[{i}] must be greater than 0, got {params['units'][i]}")
-        if not np.isscalar(params['dropout']):
+        if not isinstance(params['dropout'], Number):
             raise TypeError(f"dropout must be an float greater than or equal to 0, not {type(params['dropout'])}")
         if params['dropout'] < 0:
             raise ValueError(f"dropout must be greater than or equal to 0, got {params['dropout']}")
@@ -268,12 +269,16 @@ class LSTMStateTransitionModel(DataModel):
             params['activation'] = [params['activation'] for _ in range(params['layers'])]
         if not np.isscalar(params['validation_split']):
             raise TypeError(f"validation_split must be an float between 0 and 1, not {type(params['validation_split'])}")
-        if params['validation_split'] < 0 or params['validation_split'] > 1:
+        if params['validation_split'] < 0 or params['validation_split'] >= 1:
             raise ValueError(f"validation_split must be between 0 and 1, got {params['validation_split']}")
         if not np.isscalar(params['epochs']):
             raise TypeError(f"epochs must be an integer greater than 0, not {type(params['epochs'])}")
         if params['epochs'] < 1:
             raise ValueError(f"epochs must be greater than 0, got {params['epochs']}")
+        if np.isscalar(inputs):  # Is scalar (e.g., SimResult)
+            inputs = [inputs]
+        if np.isscalar(outputs):
+            outputs = [outputs]
         if len(inputs) != len(outputs):
             raise ValueError("Inputs must be same length as outputs")
         if not isinstance(inputs, Iterable):

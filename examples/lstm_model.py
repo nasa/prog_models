@@ -111,9 +111,7 @@ def run_example():
     #     [future_loading for _ in range(5)],
     #     dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
     #     window=4, 
-    #     epochs=30, 
-    #     input_keys = ['dt'],
-    #     output_keys = ['x'])  
+    #     epochs=30)  
 
     # Step 4: Simulate with model
     t_counter = 0
