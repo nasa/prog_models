@@ -40,10 +40,11 @@ def run_example():
     # We'll use the LSTMStateTransitionModel class to generate a model from the data.
     print('Building model...')
     m2 = LSTMStateTransitionModel.from_data(
-        (data.inputs, data.outputs),  
+        inputs = [data.inputs],
+        outputs = [data.outputs],  
         window=4, 
         epochs=30,
-        outputs = ['x'])    
+        output_keys = ['x'])    
     
     # Step 3: Use model to simulate_to time of threshold
     print('Simulating with generated model...')
@@ -92,22 +93,27 @@ def run_example():
     u_twice = np.array([[TIMESTEP*2] for _ in data_twice.inputs])
     u_four = np.array([[TIMESTEP*4] for _ in data_four.inputs])
 
-    training_data = [
-        (u, data.outputs),
-        (u_half, data_half.outputs),
-        (u_quarter, data_quarter.outputs),
-        (u_twice, data_twice.outputs),
-        (u_four, data_four.outputs)
-    ]
+    input_data = [u, u_half, u_quarter, u_twice, u_four]
+    output_data = [data.outputs, data_half.outputs, data_quarter.outputs, data_twice.outputs, data_four.outputs]
 
     # Step 3: Generate Model
     print('Building model...')
     m3 = LSTMStateTransitionModel.from_data(
-        training_data,  
+        inputs = input_data,  
+        outputs = output_data,
         window=4, 
         epochs=30, 
-        inputs = ['dt'],
-        outputs = ['x'])    
+        input_keys = ['dt'],
+        output_keys = ['x'])  
+    # Note, since we're generating from a model, we could also have done this:
+    # m3 = LSTMStateTransitionModel.from_model(
+    #     m,
+    #     [future_loading for _ in range(5)],
+    #     dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
+    #     window=4, 
+    #     epochs=30, 
+    #     input_keys = ['dt'],
+    #     output_keys = ['x'])  
 
     # Step 4: Simulate with model
     t_counter = 0
@@ -139,29 +145,30 @@ def run_example():
     print('\n------------------------------------------\nExample 3...')
     print('Generating data...')
     batt = BatteryElectroChemEOD(process_noise = 0, measurement_noise=0)
-    future_loading_eqns = [lambda t, x=None: batt.InputContainer({'i': 1+1.5*load}) for load in range(6)]
+    future_loading_eqns = [lambda t, x=None, load=load: batt.InputContainer({'i': 1+1.5*load}) for load in range(6)]
     # Generate data with different loading and step sizes
     # Adding the step size as an element of the output
-    training_data = []
+    input_data = []
+    output_data = []
     for i in range(9):
         dt = i/3+0.25
         for loading_eqn in future_loading_eqns:
             d = batt.simulate_to_threshold(loading_eqn, save_freq=dt, dt=dt) 
-            u = np.array([np.hstack((u_i.matrix[:][0].T, [dt])) for u_i in d.inputs], dtype=float)
-            z = d.outputs
-            training_data.append((u, z))
+            input_data.append(np.array([np.hstack((u_i.matrix[:][0].T, [dt])) for u_i in d.inputs], dtype=float))
+            output_data.append(d.outputs)
   
     # Step 2: Generate Model
-    print('Building model...')
-    m_batt = LSTMStateTransitionModel.from_data(
-        training_data,  
+    print('Building model...') 
+    m_batt = LSTMStateTransitionModel.from_model(
+        batt,
+        future_loading_eqns,
         window=12, 
-        epochs=30, 
+        epochs=3, 
         units=64,  # Additional units given the increased complexity of the system
-        inputs = ['i', 'dt'],
-        outputs = ['t', 'v'],
+        input_keys = ['i', 'dt'],
+        output_keys = ['t', 'v'],
         process_noise=0,
-        measurement_noise=0)    
+        measurement_noise=0) 
 
     # Step 3: Simulate with model
     t_counter = 0

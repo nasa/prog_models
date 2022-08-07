@@ -22,8 +22,8 @@ class LSTMStateTransitionModel(DataModel):
         model (keras.Model): Keras model to use for state transition
 
     Keyword Args:
-        inputs (list[str]): List of input keys
-        outputs (list[str]): List of output keys
+        input_keys (list[str]): List of input keys
+        output_keys (list[str]): List of output keys
 
     See Also:
         LSTMStateTransitionModel.from_data
@@ -43,10 +43,10 @@ class LSTMStateTransitionModel(DataModel):
     def __init__(self, model, **kwargs):
 
         # Setup inputs, outputs, states 
-        self.outputs = kwargs.get('outputs', [f'z{i}' for i in range(model.output.shape[1])])
+        self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(model.output.shape[1])])
 
         input_shape = model.input.shape
-        input_keys = kwargs.get('inputs', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
+        input_keys = kwargs.get('input_keys', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
         self.inputs = input_keys.copy()
         # Outputs from the last step are part of input
         self.inputs.extend([f'{z_key}_t-1' for z_key in self.outputs])
@@ -203,17 +203,16 @@ class LSTMStateTransitionModel(DataModel):
         return (u_all, z_all)
 
     @classmethod
-    def from_data(cls, data, **kwargs):
+    def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
         """
         Generate a LSTMStateTransitionModel from data
 
-        Args:
-            data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run. Input and Output are of size (n_times, n_inputs/outputs)
-
         Keyword Args:
+            inputs (List[Array]): REQUIRED, list of input data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
+            outputs (List[Array]): REQUIRED, list of output data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
             window (int): Number of historical points used in the model. I.e, if window is 3, the model will map from [t-3, t-2, t-1] to t
-            inputs (List[str]): List of keys to use to identify inputs. If not supplied u[#] will be used to idenfiy inputs
-            outputs (List[str]): List of keys to use to identify outputs. If not supplied z[#] will be used to idenfiy outputs
+            input_keys (List[str]): List of keys to use to identify inputs. If not supplied u[#] will be used to idenfiy inputs
+            output_keys (List[str]): List of keys to use to identify outputs. If not supplied z[#] will be used to idenfiy outputs
             validation_percentage (float): Percentage of data to use for validation, between 0-1
             epochs (int): Number of epochs (i.e., iterations) to train the model. More epochs means better results (to a point), but more time to train. Note: large numbers of epochs may result in overfitting.
             layers (int): Number of LSTM layers to use. More layers can represent more complex systems, but are less efficient. Note: 2 layers is typically enough for most complex systems. Default: 1
@@ -275,19 +274,21 @@ class LSTMStateTransitionModel(DataModel):
             raise TypeError(f"epochs must be an integer greater than 0, not {type(params['epochs'])}")
         if params['epochs'] < 1:
             raise ValueError(f"epochs must be greater than 0, got {params['epochs']}")
-        if isinstance(data, tuple):
-            # Just one dataset, turn into array so loop works properly
-            data = [data]
-        if not isinstance(data, Iterable):
-            raise ValueError(f"data must be in format [(input, output), ...], got {type(data)}")
-        if len(data) == 0:
-            raise ValueError("No data provided. Data must be in format [(input, output), ...] and have at least one element")
-        if not isinstance(data[0], tuple):
-            raise ValueError(f"Each element of data must be a tuple, got {type(data[0])}")
-        if len(data[0]) != 2:
-            raise ValueError("Each element of data must be in format (input, output), where input and output are either np.array or SimulationResults and have at least one element")
+        if len(inputs) != len(outputs):
+            raise ValueError("Inputs must be same length as outputs")
+        if not isinstance(inputs, Iterable):
+            raise ValueError(f"inputs must be in format [run1_inputs, ...], got {type(inputs)}")
+        if len(inputs) == 0:
+            raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
+        if not isinstance(outputs, Iterable):
+            raise ValueError(f"outputs must be in format [run1_outputs, ...], got {type(outputs)}")
+        if len(outputs) == 0:
+            raise ValueError("No outputs provided. outputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
+
+        # Convert to previous format - used below
+        data = [(u, z) for u, z in zip(inputs, outputs)]
 
         # Prepare datasets
         (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)

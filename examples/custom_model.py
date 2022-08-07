@@ -26,6 +26,8 @@ def run_example():
     # Generate data with different loading and step sizes
     # Adding the step size as an element of the output
     training_data = []
+    input_data = []
+    output_data = []
     for i in range(9):
         dt = i/3+0.25
         for loading_eqn in future_loading_eqns:
@@ -33,16 +35,19 @@ def run_example():
             u = np.array([np.hstack((u_i.matrix[:][0].T, [dt])) for u_i in d.inputs], dtype=float)
             z = d.outputs
             training_data.append((u, z))
+            input_data.append(u)
+            output_data.append(z)
 
     # Step 2: Build standard model
     print("Building standard model...")
     m_batt = LSTMStateTransitionModel.from_data(
-        training_data,  
+        inputs = input_data,
+        outputs = output_data,  
         window=12, 
         epochs=30, 
         units=64,  # Additional units given the increased complexity of the system
-        inputs = ['i', 'dt'],
-        outputs = ['t', 'v'])   
+        input_keys = ['i', 'dt'],
+        output_keys = ['t', 'v'])   
 
     # Step 3: Build custom model
     print('Building custom model...')
@@ -84,8 +89,8 @@ def run_example():
     # Step 4: Build LSTMStateTransitionModel
     m_custom = LSTMStateTransitionModel(model, 
         normalization=normalization, 
-        inputs = ['i', 'dt'],
-        outputs = ['t', 'v']
+        input_keys = ['i', 'dt'],
+        output_keys = ['t', 'v']
     )
 
     # Step 5: Simulate
