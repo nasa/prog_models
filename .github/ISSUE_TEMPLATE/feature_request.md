@@ -17,9 +17,10 @@ Optional
 Optional, Solution that is proposed. Requirement can be met with other solutions 
 
 **DoD**
-What need to be completed for this feature to be complete. E.g., 
- - [ ] Implement ability to simulate to specified event
+edit this to be a list of tasks that need to be completed
+ - [ ] Implement feature
  - [ ] Add to example 
  - [ ] Add to tutorial
  - [ ] Add tests 
+ - [ ] update documentation
  - [ ] Add to change notes for next release
