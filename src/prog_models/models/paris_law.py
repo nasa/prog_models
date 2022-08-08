@@ -33,10 +33,6 @@ class Growth(PrognosticsModel):
       |k_max :  Maximum crack growth 
       |k_min :  Minimum crack growth 
 
-    # Work in Progress
-    # Meets two criteria expects to be changing over time for a system as your simulate it
-    # something you need to keep track of in order to calculate the event state or outputs
-    # and progress towards the event (Crack Growth Fracture)
     States: (1)
       |c_li :    crack length # wrong Yes, Yes One state
   
