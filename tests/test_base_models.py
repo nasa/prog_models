@@ -211,11 +211,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = missing_inputs()
-            self.fail("Should not have worked, missing 'inputs'")
-        except ProgModelTypeError:
-            pass
+        m = missing_inputs()
+        self.assertEmpty(m.inputs)
 
         try: 
             m = missing_outputs()

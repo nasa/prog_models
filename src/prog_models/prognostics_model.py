@@ -99,32 +99,7 @@ class PrognosticsModel(ABC):
       
     SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
-    def __init__(self, **kwargs):
-        if not hasattr(self, 'inputs'):
-            self.inputs = []
-        
-        if not hasattr(self, 'states'):
-            raise ProgModelTypeError('Must have `states` attribute')
-        if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
-        try:
-            iter(self.states)
-        except TypeError:
-            raise ProgModelTypeError('model.states must be iterable')
-
-        if not hasattr(self, 'outputs'):
-            raise ProgModelTypeError('Must have `outputs` attribute')
-        try:
-            iter(self.outputs)
-        except TypeError:
-            raise ProgModelTypeError('model.outputs must be iterable')
-
-        if not hasattr(self, 'performance_metric_keys'):
-            self.performance_metric_keys = []
-
-        if not hasattr(self, 'events'):
-            self.events = []  
-        
+    def __init__(self, **kwargs):                
         # Default params for any model
         params = PrognosticsModel.default_parameters.copy()
 
@@ -152,10 +127,34 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, state : dict) -> None:
+        if not hasattr(self, 'inputs'):
+            self.inputs = []
         self.n_inputs = len(self.inputs)
+
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
+        try:
+            iter(self.states)
+        except TypeError:
+            raise ProgModelTypeError('model.states must be iterable')
         self.n_states = len(self.states)
+
+        if not hasattr(self, 'events'):
+            self.events = []  
         self.n_events = len(self.events)
+
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        try:
+            iter(self.outputs)
+        except TypeError:
+            raise ProgModelTypeError('model.outputs must be iterable')
         self.n_outputs = len(self.outputs)
+
+        if not hasattr(self, 'performance_metric_keys'):
+            self.performance_metric_keys = []
         self.n_performance = len(self.performance_metric_keys)
 
         # Setup Containers 
