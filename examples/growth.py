@@ -81,7 +81,7 @@ def run_example():
 
     (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
-    # Step 4: Plot Results
+    # Step 5: Plot Results
     # crack length
     # plot event state
 
