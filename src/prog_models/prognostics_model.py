@@ -910,6 +910,7 @@ class PrognosticsModel(ABC):
             dt = next_time(t, x)
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
+            # This is sometimes referred to as 'leapfrog integration'
             u = future_loading_eqn(t, x)
             t = t + dt/2
             x = next_state(x, u, dt)
@@ -1093,18 +1094,21 @@ class PrognosticsModel(ABC):
         t_last = times[0]
         err_total = 0
 
+        counter = 0  # Needed to account for skipped (i.e., none) values
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + params['dt'], t)
                 x = self.next_state(x, u, t_new-t_last)
                 t_last = t_new
             z_obs = self.output(x)
-            if any([np.isnan(z_i) for z_i in z_obs.values()]):
+            if any([np.isnan(z_i) for z_i in z_obs.values() if z_i is not None]):
                 warn("Model unstable- NaN reached in simulation (t={})".format(t))
                 break
-            err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
+            if not (None in z_obs.values() or None in z.values()):
+                err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
+                counter += 1
 
-        return err_total/len(times)
+        return err_total/counter
     
     def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters

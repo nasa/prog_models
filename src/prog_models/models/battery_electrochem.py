@@ -175,9 +175,13 @@ class BatteryElectroChemEOD(PrognosticsModel):
             for surface overpotential (neg)
         tsp : float
             for surface overpotential (pos)
-        U0p, Ap : float
+        U0p : float
             Redlich-Kister parameter (+ electrode)
-        U0n, An : float
+        Ap : float
+            Redlich-Kister parameter (+ electrode)
+        U0n : float
+            Redlich-Kister parameter (- electrode)
+        An : float
             Redlich-Kister parameter (- electrode)
         VEOD : float
             End of Discharge Voltage Threshold
