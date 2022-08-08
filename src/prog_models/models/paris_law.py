@@ -29,7 +29,6 @@ class Growth(PrognosticsModel):
     Events: (1)
         CGF :   Crack Growth Fracture 
 
-    # Correct
     Inputs/Loading: (2)
       |k_max :  Maximum crack growth 
       |k_min :  Minimum crack growth 
