@@ -139,7 +139,7 @@ def run_example():
     print('\n------------------------------------------\nExample 3...')
     print('Generating data...')
     batt = BatteryElectroChemEOD(process_noise = 0, measurement_noise=0)
-    future_loading_eqns = [lambda t, x=None: batt.InputContainer({'i': 1+1.5*load}) for load in range(6)]
+    future_loading_eqns = [lambda t, x=None, load=load: batt.InputContainer({'i': 1+1.5*load}) for load in range(6)]
     # Generate data with different loading and step sizes
     # Adding the step size as an element of the output
     training_data = []
