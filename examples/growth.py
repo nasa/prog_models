@@ -29,7 +29,11 @@ def run_example():
             k_max = 28
         return m.InputContainer({'k_min': k_min, 'k_max': k_max})
 
-    
+    # Step 3: Estimate parameters
+    # We do not know the model parameters for this system, 
+    # so we need to estimate it using data collected from the system
+    # First we have to import some data from the real system
+    # This is what we use to estimate parameters
     times = []
     inputs = []
     outputs = []
