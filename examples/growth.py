@@ -9,8 +9,6 @@ from prog_models.models.paris_law import Growth
 import matplotlib.pyplot as plt
 import csv
 import os
-# VVV Uncomment this to use Electro Chemistry Model VVV
-# from prog_models.models import BatteryElectroChem as Battery
 
 def run_example(): 
     # Step 1: Create a model object
