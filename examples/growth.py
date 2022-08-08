@@ -7,8 +7,7 @@ Example of a battery being simulated for a set period of time and then till thre
 
 from prog_models.models.paris_law import Growth 
 import matplotlib.pyplot as plt
-import csv # for reading csv files
-import pandas as pd
+import csv
 import os
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
@@ -19,7 +18,7 @@ def run_example():
     
     # Step 2: Define future loading function 
     def future_loading(t, x=None):
-        # Variable (piece-wise) future loading scheme 
+        #variable (piece-wise) future loading scheme 
         #inputs are ['k_min', 'k_max']
         if (t < 500):
             k_min = 12
@@ -36,7 +35,7 @@ def run_example():
     times = []
     inputs = []
     outputs = []
-    
+
     #Finds file path
 
     csv_dir = os.path.join(os.path.dirname(__file__), 'growth.csv')

@@ -10,10 +10,8 @@
 
 # Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
 
-from typing_extensions import Self
 from prog_models import PrognosticsModel
 from numpy import inf
-import numpy as np
 
 # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
 # See examples.derived_params
