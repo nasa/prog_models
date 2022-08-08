@@ -4,7 +4,7 @@
 from prog_models import PrognosticsModel
 from numpy import inf
 
-class Growth(PrognosticsModel): 
+class CrackGrowth(PrognosticsModel): 
     """
     Events: (1)
         CGF :   Crack Growth Fracture 
