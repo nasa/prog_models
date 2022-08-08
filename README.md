@@ -6,7 +6,7 @@
 
 The NASA Prognostic Model Package is a Python framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.
 
-This is designed to be used with the [Prognostics Algorithms Package](https://github.com/nasa/prog_algs).
+This is part of the wider Prognostics Python Packages (ProgPy) and is designed to be used with the [Prognostics Algorithms Package](https://github.com/nasa/prog_algs).
 
 ## Installation 
 `pip3 install prog_models`
@@ -18,8 +18,9 @@ See documentation [here](https://nasa.github.io/prog_models/)
 Here is the directory structure for the github repository 
  
 `src/prog_models/` - The prognostics model python package<br />
-&nbsp;&nbsp; |-`datasets/` - Tools to access datasets <br /> 
+&nbsp;&nbsp; |-`datasets/` - Tools for accessing prognostics datasets<br />
 &nbsp;&nbsp; |-`models/` - Example models<br /> 
+&nbsp;&nbsp; |-`linear_model.py` - A simpler subclass of PrognosticsModel for linear models<br />
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
 &nbsp;&nbsp; |-`sim_result.py` - Class for storing the result of a simulation (used by `prognostics_model`)<br />
 `docs/` - Project documentation<br />
@@ -35,7 +36,7 @@ Here is the directory structure for the github repository
 Use the following to cite this repository:
 
 ```
-@misc{2021_nasa_prog_models,
+@misc{2022_nasa_prog_models,
     author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Katelyn Jarvis and Matthew Daigle},
     title     = {Prognostics Models Python Package},
     month     = September,
@@ -48,6 +49,11 @@ Use the following to cite this repository:
 The corresponding reference should look like this:
 
 C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.4, September 2022. URL https://github.com/nasa/prog_models.
+
+Alternatively, if using both prog_models and prog_algs, you can cite the combined package as
+
+C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, ProgPy Prognostics Python Packages, v1.3, May 2022. URL https://github.com/nasa/prog_models.
+
 
 ## Acknowledgements
 The structure and algorithms of this package are strongly inspired by the [MATLAB Prognostics Model Library](https://github.com/nasa/PrognosticsModelLibrary). We would like to recognize Matthew Daigle and the rest of the team that contributed to the Prognostics Model Library for the contributions their work on the MATLAB library made to the design of prog_models.
