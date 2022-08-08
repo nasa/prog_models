@@ -2,11 +2,9 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from abc import ABC, abstractclassmethod
-from numbers import Number
 import numpy as np
 
 from .. import PrognosticsModel
-from ..exceptions import ProgModelInputException
 
 
 class DataModel(PrognosticsModel, ABC):
