@@ -75,7 +75,6 @@ def run_example():
         'save_freq': 10, # Frequency at which results are saved
         'dt': 10, # Timestep
         'print': True,
-        'progress': False,
         'horizon': 1e5, # Horizon
     }
 
