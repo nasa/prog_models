@@ -4,17 +4,6 @@
 from prog_models import PrognosticsModel
 from numpy import inf
 
-# REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
-# See examples.derived_params
-# 
-# Each function defines one or more derived parameters as a function of the other parameters.
-def example_callback(params):
-    # Return format: dict of key: new value pair for at least one derived parameter
-    return {
-        "Example Parameter 1": params["Example Parameter 2"]-3
-    }
-
-
 class Growth(PrognosticsModel): 
     """
     Events: (1)
