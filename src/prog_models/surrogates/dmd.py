@@ -4,13 +4,15 @@
 from numbers import Number
 import numpy as np
 from scipy.interpolate import interp1d
+import types
 from warnings import warn
 
 from ..exceptions import ProgModelInputException
 from ..sim_result import SimResult, LazySimResult
-from .. import LinearModel
+from .. import LinearModel, PrognosticsModel
+from ..data_models import DataModel
 
-class SurrogateDMDModel(LinearModel):
+class SurrogateDMDModel(LinearModel, DataModel):
     """
     A subclass of LinearModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
     
@@ -36,7 +38,7 @@ class SurrogateDMDModel(LinearModel):
 
     See Also
     ---------
-        LinearModel
+        LinearModel, DataModel
 
     Methods
     ----------
@@ -62,7 +64,69 @@ class SurrogateDMDModel(LinearModel):
     C = None
     F = None
 
-    def __init__(self, m, load_functions, **kwargs):
+    def __new__(cls, dmd_matrix, *args, **kwargs):
+        if isinstance(dmd_matrix, PrognosticsModel):
+            # Keep for backwards compatability (in first version, model was passed into constructor)
+            warn('Passing a PrognosticsModel into SurrogateDMDModel is deprecated and will be removed in v1.5.', DeprecationWarning)
+            return cls.from_model(dmd_matrix, args[0], **kwargs) 
+        return DataModel.__new__(cls)
+
+    def __init__(self, dmd_matrix, *args, **kwargs):
+        if isinstance(dmd_matrix, PrognosticsModel):
+            # Initialized in __new__
+            # Remove in future version
+            return
+
+        params = {
+            'dt': None,
+            'input_keys': None,
+            'state_keys': None,
+            'output_keys': None,
+            'event_keys': []
+        }
+        params.update(**kwargs)
+        
+        if params['input_keys'] is None:
+            raise ValueError('input_keys must be specified')
+        if params['dt'] is None:
+            raise ValueError('dt must be specified')
+        if params['state_keys'] is None:
+            raise ValueError('state_keys must be specified')
+        if params['output_keys'] is None:
+            raise ValueError('output_keys must be specified')
+
+        self.inputs = params['input_keys']
+        n_inputs = len(params['input_keys'])
+        
+        self.states = params['state_keys'] + params['output_keys'] + params['event_keys']
+        n_states = len(params['state_keys'])
+        
+        self.outputs = params['output_keys']
+        n_outputs = len(params['output_keys'])
+        
+        self.events = params['event_keys']
+        n_events = len(params['event_keys'])
+        n_total = n_states + n_outputs + n_events
+
+        self.A = dmd_matrix[:,0:n_total]
+        self.B = np.vstack(dmd_matrix[:,n_total:n_total+n_inputs]) 
+        self.C = np.zeros((n_outputs,n_total))
+        for iter1 in range(n_outputs):
+            self.C[iter1,n_states+iter1] = 1 
+        self.F = np.zeros((n_events,n_total))
+        for iter2 in range(n_events):
+            self.F[iter2,n_states+n_outputs+iter2] = 1 
+        
+        self.dt = params['dt']
+
+        super().__init__(**params)
+
+    @classmethod
+    def from_data(cls, inputs, states, outputs, event_states = None, **kwargs):
+        pass
+        
+    @classmethod
+    def from_model(cls, m, load_functions, **kwargs):
         # Configure
         config = { # Defaults
             'trim_data_to': 1,
@@ -222,24 +286,18 @@ class SurrogateDMDModel(LinearModel):
         xprime_mat = np.hstack((xprime_list[:]))
 
         # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
-        dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))
-
-        # Save size of states, inputs, outputs, event_states, and current instance of PrognosticsModel
-        num_states = len(states[0].matrix)
-        num_inputs = len(inputs[0].matrix)
-        num_outputs = len(outputs[0].matrix)
-        num_event_states = len(event_states[0])
-        num_total = num_states + num_outputs + num_event_states 
-        dmd_dt = config['save_freq']
-        process_noise_temp = {key: 0 for key in m.events}  # Process noise for event states is zero
+        dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))        
 
         # Check for stability of dmd_matrix
+        num_inputs = len(inputs[0].matrix)
         eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-num_inputs if num_inputs > 0 else None])            
         
         if sum(eig_val>1) != 0:
             for eig_val_i in eig_val:
                 if eig_val_i>1 and eig_val_i-1>config['stability_tol']:
                     warn("The DMD matrix is unstable, may result in poor approximation.")
+
+        process_noise_temp = {key: 0 for key in m.events}  # Process noise for event states is zero
 
         params = {
             'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
@@ -248,26 +306,35 @@ class SurrogateDMDModel(LinearModel):
                 'measurement_noise_dist': m.parameters.get('measurement_noise_dist', 'normal')
         }
         params.update(kwargs)
-        self.A = dmd_matrix[:,0:num_total]
-        self.B = np.vstack(dmd_matrix[:,num_total:num_total+num_inputs]) 
-        self.C = np.zeros((num_outputs,num_total))
-        for iter1 in range(num_outputs):
-            self.C[iter1,num_states+iter1] = 1 
-        self.F = np.zeros((num_event_states,num_total))
-        for iter2 in range(num_event_states):
-            self.F[iter2,num_states+num_outputs+iter2] = 1 
-        self.states = states_dmd + outputs_dmd + events_dmd
-        self.inputs = inputs_dmd
-        self.outputs = outputs_dmd 
-        self.events = events_dmd
-        self.dt = dmd_dt
-        self._m = m
-        super().__init__(**params)
+        del params['inputs']
+        del params['states']
+        del params['outputs']
+        del params['events']
+        del params['dt']
+
+        # Build Model
+        m_dmd = cls(
+            dmd_matrix, 
+            dt = params['save_freq'], 
+            input_keys = inputs_dmd,
+            state_keys = states_dmd,
+            output_keys = outputs_dmd,
+            event_keys = events_dmd,
+            **params)
+
+        # Override initialize for dmd to use base model (since we have it in the original model)
+        def init_dmd(self, u=None, z=None):
+            x = m.initialize(u,z)
+            x.update(m.output(x))
+            x.update(m.event_state(x))
+
+            return self.StateContainer(x)
+        m_dmd.initialize = types.MethodType(init_dmd, m_dmd)
+
+        return m_dmd
 
     def initialize(self, u=None, z=None):
-        x = self._m.initialize(u,z)
-        x.update(self._m.output(x))
-        x.update(self._m.event_state(x))
+        # TODO(CT): WHAT DO WE PUT HERE AS DEFAULT
 
         return self.StateContainer(x)
 

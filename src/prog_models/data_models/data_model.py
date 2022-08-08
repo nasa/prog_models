@@ -20,9 +20,6 @@ class DataModel(PrognosticsModel, ABC):
         """
         Create a Data Model from data. This class is overwritten by specific data-driven classes (e.g., LSTM)
 
-        Args:
-            data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run. Input and Output are of size (n_times, n_inputs/outputs)
-
         Keyword Arguments:
             inputs (List[Array]): list of input data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
             states (List[Array]): list of state data for use in data. Each element is the states for a single run of size (n_times, n_states)
