@@ -123,7 +123,30 @@ class SurrogateDMDModel(LinearModel, DataModel):
 
     @classmethod
     def from_data(cls, inputs, states, outputs, event_states = None, **kwargs):
-        pass
+
+        # Configure
+        config = { # Defaults
+            'trim_data_to': 1,
+            'stability_tol': 1e-05,
+            'training_noise': 1e-05
+        }
+        config.update(kwargs)
+
+        if not isinstance(config['trim_data_to'], Number) or config['trim_data_to']>1 or config['trim_data_to']<=0:
+            raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
+        if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
+            raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
+        if not isinstance(config['training_noise'], Number) or config['training_noise'] < 0:
+            raise ProgModelInputException(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")
+
+        states_dmd = m.states.copy()
+        inputs_dmd = m.inputs.copy()
+        outputs_dmd = m.outputs.copy()
+        events_dmd = m.events.copy()
+        
+        # Train DMD model
+
+        return cls(dmd_matrix, **kwargs)
         
     @classmethod
     def from_model(cls, m, load_functions, **kwargs):
