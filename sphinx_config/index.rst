@@ -17,6 +17,7 @@ If you are new to this package, see `<getting_started.html>`__.
    models
    prognostics_model
    linear_model
+   data_models
    simresult
    datasets
    ProgAlgs <https://nasa.github.io/prog_algs>
@@ -32,15 +33,15 @@ Use the following to cite this repository:
 @misc{2021_nasa_prog_model,
   | author    = {Christopher Teubert and Chetan Kulkarni and Matteo Corbetta and Katelyn Jarvis and Matthew Daigle},
   | title     = {Prognostics Model Python Package},
-  | month     = May,
+  | month     = September,
   | year      = 2022,
-  | version   = {1.3},
-  | url       = {https://github.com/nasa/prog_models}
+  | version   = {1.4},
+  | url       = {https://github.com/nasa/prog\_models}
   | }
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.3, May 2022. URL https://github.com/nasa/prog_models.
+C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.4, September 2022. URL https://github.com/nasa/prog_models.
 
 Indices and Tables
 -----------------------

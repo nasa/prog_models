@@ -93,7 +93,11 @@ class ESC(PrognosticsModel):
         V = pw*u['v']
         SP = commutation(u['theta'])
         VP = [V * sp_i for sp_i in SP]
-        return self.StateContainer(np.array([[VP[0]], [VP[1]], [VP[2]], [x['t'] + dt]]))
+        return self.StateContainer(np.array([
+            np.atleast_1d(VP[0]), 
+            np.atleast_1d(VP[1]), 
+            np.atleast_1d(VP[2]), 
+            np.atleast_1d(x['t'] + dt)]))
 
     def output(self, x):
         return self.OutputContainer(x)

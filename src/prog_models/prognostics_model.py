@@ -6,7 +6,6 @@ from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelEx
 from abc import abstractmethod, ABC
 from numbers import Number
 import numpy as np
-from scipy.interpolate import interp1d
 from copy import deepcopy
 import itertools
 from warnings import warn
@@ -148,8 +147,6 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, state : dict) -> None:
-        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
-
         self.n_inputs = len(self.inputs)
         self.n_states = len(self.states)
         self.n_events = len(self.events)
@@ -175,6 +172,8 @@ class PrognosticsModel(ABC):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
+
+        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u : dict = None, z :dict = None) -> dict:
@@ -198,10 +197,11 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = {'u1': 3.2}
-        | z = {'z1': 2.2}
-        | x = m.initialize(u, z) # Initialize first state
+            :
+                m = PrognosticsModel() # Replace with specific model being simulated
+                u = {'u1': 3.2}
+                z = {'z1': 2.2}
+                x = m.initialize(u, z) # Initialize first state
         """
         return {}
 
@@ -231,11 +231,8 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `measurement_noise` and `measurement_noise_dist`
         """
-        return self.OutputContainer({key: z[key] \
-            + np.random.normal(
-                0, self.parameters['measurement_noise'][key],
-                size=None if np.isscalar(z[key]) else len(z[key]))
-                for key in z.keys()})
+        z.matrix += np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape)
+        return z
         
     def apply_process_noise(self, x : dict, dt : int =1) -> dict:
         """
@@ -267,11 +264,8 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        return self.StateContainer({key: x[key] +
-                dt*np.random.normal(
-                    0, self.parameters['process_noise'][key],
-                    size=None if np.isscalar(x[key]) else len(x[key]))
-                    for key in x.keys()})
+        x.matrix += dt*np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape)
+        return x
 
     def dx(self, x : dict, u : dict) -> dict:
         """
@@ -353,7 +347,12 @@ class PrognosticsModel(ABC):
         
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
+        if isinstance(x, DictLikeMatrixWrapper) and isinstance(dx, DictLikeMatrixWrapper):
+            return self.StateContainer(x.matrix + dx.matrix * dt)
+        elif isinstance(dx, dict) or isinstance(x, dict):
+            return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
+        else:
+            raise ValueError(f"ValueError: Argument must be of type StateContainer")
 
     def apply_limits(self, x : dict) -> dict:
         """
@@ -657,8 +656,13 @@ class PrognosticsModel(ABC):
         -----------------
         t0 : Number, optional
             Starting time for simulation in seconds (default: 0.0) \n
-        dt : Number or function, optional
-            time step (s), e.g. dt = 0.1 or function (t, x) -> dt\n
+        dt : Number, tuple, string, or function, optional
+            Number: constant time step (s), e.g. dt = 0.1\n
+            function (t, x) -> dt\n
+            Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
+            string: mode - 'auto' or 'constant'\n
+        integration_method: String, optional
+            Integration method, e.g. 'rk4' or 'euler' (default: 'euler')
         save_freq : Number, optional
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : List[Number], optional
@@ -733,7 +737,8 @@ class PrognosticsModel(ABC):
         # Configure
         config = { # Defaults
             't0': 0.0,
-            'dt': 1.0,
+            'dt': ('auto', 1.0),
+            'integration_method': 'euler',
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
@@ -743,7 +748,7 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
         
         # Configuration validation
-        if not isinstance(config['dt'], Number) and not callable(config['dt']):
+        if not isinstance(config['dt'], (Number, tuple, str)) and not callable(config['dt']):
             raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
@@ -792,6 +797,8 @@ class PrognosticsModel(ABC):
         elif threshold_keys is None: 
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
+        elif len(threshold_keys) == 0:
+            check_thresholds = lambda thresholds_met: False
 
         # Initialization of save arrays
         saved_times = []
@@ -841,21 +848,69 @@ class PrognosticsModel(ABC):
         # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
             next_time = config['dt']
+            dt_mode = 'function'
+        elif isinstance(config['dt'], tuple):
+            dt_mode = config['dt'][0]
+            dt = config['dt'][1]                
+        elif isinstance(config['dt'], str):
+            dt_mode = config['dt']
+            if dt_mode == 'constant':
+                dt = 1.0  # Default
+            else:
+                dt = np.inf
         else:
+            dt_mode = 'constant'
             dt = config['dt']  # saving to optimize access in while loop
+
+        if dt_mode == 'constant':
             def next_time(t, x):
                 return dt
+        elif dt_mode == 'auto':
+            def next_time(t, x):
+                return min(dt, next_save-t, save_pts[save_pt_index]-t)
+        elif dt_mode != 'function':
+            raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
         # Simulate
         update_all()
         if progress:
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
+
+        if config['integration_method'] == 'rk4':
+            # Using RK4 Method
+            dx = self.dx
+
+            try:
+                dx(x, future_loading_eqn(t, x))
+            except ProgModelException:
+                raise ProgModelException("dx(x, u) must be defined to use RK4 method")
+
+            apply_limits = self.apply_limits
+            apply_process_noise = self.apply_process_noise
+            StateContainer = self.StateContainer
+            def next_state(x, u, dt):
+                dx1 = StateContainer(dx(x, u))
+                
+                x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
+                dx2 = dx(x2, u)
+
+                x3 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx2.items()})
+                dx3 = dx(x3, u)
+                
+                x4 = StateContainer({key: x[key] + dt*dx_i for key, dx_i in dx3.items()})   
+                dx4 = dx(x4, u)
+
+                x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
+                return apply_limits(apply_process_noise(x))
+        elif config['integration_method'] != 'euler':
+            raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
         while t < horizon:
             dt = next_time(t, x)
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
+            # This is sometimes referred to as 'leapfrog integration'
             u = future_loading_eqn(t, x)
             t = t + dt/2
             x = next_state(x, u, dt)
@@ -864,7 +919,10 @@ class PrognosticsModel(ABC):
             if (t >= next_save):
                 next_save = next(iterator)
                 update_all()
-            if (t >= save_pts[save_pt_index]):
+                if (t >= save_pts[save_pt_index]):
+                    # Prevent double saving when save_pt and save_freq align
+                    save_pt_index += 1
+            elif (t >= save_pts[save_pt_index]):
                 save_pt_index += 1
                 update_all()
 
@@ -891,13 +949,13 @@ class PrognosticsModel(ABC):
             saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
             saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
-            saved_outputs = SimResult(saved_times, saved_outputs)
-            saved_event_states = SimResult(saved_times, saved_event_states)
+            saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
+            saved_event_states = SimResult(saved_times, saved_event_states, _copy=False)
         
         return self.SimulationResults(
             saved_times, 
-            SimResult(saved_times, saved_inputs), 
-            SimResult(saved_times, saved_states), 
+            SimResult(saved_times, saved_inputs, _copy=False), 
+            SimResult(saved_times, saved_states, _copy=False), 
             saved_outputs, 
             saved_event_states
         )
@@ -905,7 +963,7 @@ class PrognosticsModel(ABC):
     @staticmethod
     def generate_model(keys : dict, initialize_eqn : Callable, output_eqn : Callable, next_state_eqn : Callable = None, dx_eqn : Callable = None, event_state_eqn : Callable = None, threshold_eqn : Callable = None, config : dict = {'process_noise': 0.1}) -> "PrognosticsModel":
         """
-        Generate a new prognostics model from individual model functions
+        [DEPRECIATED] Generate a new prognostics model from individual model functions
 
         Parameters
         ----------
@@ -948,6 +1006,8 @@ class PrognosticsModel(ABC):
         |
         | m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)
         """
+        warn("PrognosticsModel.generate_model is deprecated and will be removed in v1.5. Subclass PrognosticsModel instead", DeprecationWarning)
+
         # Input validation
         if not callable(initialize_eqn):
             raise ProgModelTypeError("Initialize Function must be callable")
@@ -1034,18 +1094,21 @@ class PrognosticsModel(ABC):
         t_last = times[0]
         err_total = 0
 
+        counter = 0  # Needed to account for skipped (i.e., none) values
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + params['dt'], t)
                 x = self.next_state(x, u, t_new-t_last)
                 t_last = t_new
             z_obs = self.output(x)
-            if any([np.isnan(z_i) for z_i in z_obs.values()]):
+            if any([np.isnan(z_i) for z_i in z_obs.values() if z_i is not None]):
                 warn("Model unstable- NaN reached in simulation (t={})".format(t))
                 break
-            err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
+            if not (None in z_obs.values() or None in z.values()):
+                err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
+                counter += 1
 
-        return err_total/len(times)
+        return err_total/counter
     
     def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
@@ -1063,6 +1126,7 @@ class PrognosticsModel(ABC):
 
         config = {
             'method': 'nelder-mead',  # Optimization method
+            'bounds': ((-np.inf, np.inf) for _ in keys),
             'options': {'xatol': 1e-8}  # Options passed to optimizer
         }
         config.update(kwargs)
@@ -1085,7 +1149,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=config['method'], options=config['options'])
+        res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'])
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
 
@@ -1112,10 +1176,6 @@ class PrognosticsModel(ABC):
             Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
         save_freq : Number, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
-        trim_data_to: int, optional
-            Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-            e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n   
-            Note: To trim data to a set time, use the 'horizon' parameter\n   
         states: list, optional
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
         inputs: list, optional
@@ -1124,8 +1184,7 @@ class PrognosticsModel(ABC):
             List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
         events: list, optional
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
-        stability_tol: int, optional
-            Value that determines the tolerance for DMD matrix stability\n
+        
 
         Returns
         -------
@@ -1135,35 +1194,22 @@ class PrognosticsModel(ABC):
         Example
         -------
         See examples/generate_surrogate
-
-        Note
-        -------
-        This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
-        DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
-        In general, the approximation is less accurate if the DMD matrix is unstable. 
-        Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). Further functionalities will be included in future releases. \n
         """
 
-        if method != 'dmd':
-            raise ProgModelInputException(f"Method {method} is not supported. DMD is currently the only method available.")
+        from .surrogates import SURROAGATE_METHOD_LOOKUP
+
+        if method not in SURROAGATE_METHOD_LOOKUP.keys():
+            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
 
         # Configure
         config = { # Defaults
             'save_freq': 1.0, 
-            'trim_data_to': 1,
-            'states': self.states,
-            'inputs': self.inputs,
-            'outputs': self.outputs,
-            'events': self.events,
-            'stability_tol': 1e-05
+            'states': self.states.copy(),
+            'inputs': self.inputs.copy(),
+            'outputs': self.outputs.copy(),
+            'events': self.events.copy(),
         }
         config.update(kwargs)
-
-        # List of user-define values to include in surrogate model: 
-        states_dmd = self.states.copy()
-        inputs_dmd = self.inputs.copy()
-        outputs_dmd = self.outputs.copy()
-        events_dmd = self.events.copy()
 
         # Validate user inputs 
         try:
@@ -1175,10 +1221,6 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("load_functions must contain at least one element")
         if 'save_pts' in config.keys():
             raise ProgModelInputException("'save_pts' is not a valid input for DMD Surrogate Model.")
-        if not isinstance(config['trim_data_to'], Number) or config['trim_data_to']>1 or config['trim_data_to']<=0:
-            raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
-        if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
-            raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
 
         if isinstance(config['inputs'], str):
             config['inputs'] = [config['inputs']]
@@ -1200,289 +1242,4 @@ class PrognosticsModel(ABC):
         if not all([x in self.events for x in config['events']]):
             raise ProgModelInputException(f"Invalid 'events' input value ({config['events']}), must be a subset of the model's states ({self.events}).")
 
-        # Initialize lists to hold individual matrices
-        x_list = []
-        xprime_list = []
-        time_list = []
-
-        # Generate Data to train surrogate model: 
-        for iter_load, load_fcn_now in enumerate(load_functions):
-            print('Generating training data: loading profile {} of {}'.format(iter_load+1, len(load_functions)))
-
-            # Simulate to threshold 
-            (times, inputs, states, outputs, event_states) = self.simulate_to_threshold(load_fcn_now, **config)
-        
-            # Interpolate results to time step of save_freq
-            time_data_interp = np.arange(times[0], times[-1], config['save_freq'])
-
-            states_data_interp = {}
-            inputs_data_interp = {}
-
-            for state_name in self.states:
-                states_data_temp = [states[iter_data1][state_name] for iter_data1 in range(len(states))]
-                states_data_interp[state_name] = interp1d(times,states_data_temp)(time_data_interp)
-            for input_name in self.inputs:
-                inputs_data_temp = [inputs[iter_data4][input_name] for iter_data4 in range(len(inputs))]
-                inputs_data_interp[input_name] = interp1d(times,inputs_data_temp)(time_data_interp)
-
-            states_data = [
-                self.StateContainer({
-                    key: value[iter_dataT] for key, value in states_data_interp.items()
-                }) for iter_dataT in range(len(time_data_interp))
-                ]
-            inputs_data = [
-                self.InputContainer({
-                    key: value[iter_dataT] for key, value in inputs_data_interp.items()
-                }) for iter_dataT in range(len(time_data_interp))
-                ]
-
-            times = time_data_interp.tolist()
-            states = SimResult(time_data_interp,states_data)
-            inputs = SimResult(time_data_interp,inputs_data)
-            outputs = LazySimResult(self.output, time_data_interp, states_data) 
-            event_states = LazySimResult(self.event_state, time_data_interp, states_data)
-            
-            def user_val_set(iter_loop : list, config_key : str, remove_from : dict, del_from) -> None:
-                """Sub-function for performing check and removal for user designated values.
-            
-                Args:
-                    iter_loop : list
-                        List of keys to iterate through.
-                    config_key : str
-                        String key to check keys against config
-                    remove_from : dict
-                        Dictionary dmd to remove key from
-                    del_from : list or dict
-                        Final data structure to remove key and data from 
-                """
-                for key in iter_loop:
-                    if key not in config[config_key]:
-                        if iter_load == 0:
-                            remove_from.remove(key)
-                        for i in range(len(times)):
-                            del del_from[i][key]
-                           
-            if len(config['states']) != len(self.states):
-                user_val_set(self.states,  'states', states_dmd, states)
-            if len(config['inputs']) != len(self.inputs):
-                user_val_set(self.inputs,  'inputs', inputs_dmd, inputs)
-            if len(config['outputs']) != len(self.outputs):
-                user_val_set(self.outputs,  'outputs', outputs_dmd, outputs) 
-            if len(config['events']) != len(self.events):
-                user_val_set(self.events,  'events', events_dmd, event_states)  
-
-            # Initialize DMD matrices
-            x_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0])+len(inputs[0]),len(times)-1)) 
-            xprime_mat_temp = np.zeros((len(states[0])+len(outputs[0])+len(event_states[0]),len(times)-1)) 
-
-            # Save DMD matrices
-            for i, time in enumerate(times[:-1]): 
-                time_now = time + np.divide(config['save_freq'],2) 
-                load_now = load_fcn_now(time_now) # Evaluate load_function at (t_now + t_next)/2 to be consistent with next_state implementation
-                if len(config['inputs']) != len(self.inputs): # Delete any input values not specified by user to be included in surrogate model 
-                    for key in self.inputs:
-                        if key not in config['inputs']:
-                            del load_now[key]
-
-                states_now = states[i].matrix 
-                states_next = states[i+1].matrix 
-  
-                stack = (
-                        states_now,
-                        outputs[i].matrix,
-                        np.array([list(event_states[i].values())]).T,
-                        np.array([[load_now[key]] for key in load_now.keys()])
-                    )
-                x_mat_temp[:,i] = np.vstack(tuple(v for v in stack if v.shape != (0, )))[:,0]  # Filter out empty values (e.g., if there is no input)
-                stack2 = (
-                    states_next,
-                    outputs[i+1].matrix,
-                    np.array([list(event_states[i+1].values())]).T
-                )
-                xprime_mat_temp[:,i] = np.vstack(tuple(v for v in stack2 if v.shape != (1,0)))[:,0]  # Filter out empty values (e.g., if there is no output)
-                
-            # Save matrices in list, where each index in list corresponds to one of the user-defined loading equations 
-            x_list.append(x_mat_temp)
-            xprime_list.append(xprime_mat_temp)
-            time_list.append(times)
-
-        # Format training data for DMD and solve for matrix A, in the form X' = AX 
-        print('Generate DMD Surrogate Model')
-
-        # Cut data to user-defined length 
-        if config['trim_data_to'] != 1:
-            for iter3 in range(len(load_functions)):
-                trim_index = round(len(time_list[iter3])*(config['trim_data_to'])) 
-                x_list[iter3] = x_list[iter3][:,0:trim_index]
-                xprime_list[iter3] = xprime_list[iter3][:,0:trim_index]
-     
-        # Convert lists of datasets into arrays, sequentially stacking data in the horizontal direction
-        x_mat = np.hstack((x_list[:]))
-        xprime_mat = np.hstack((xprime_list[:]))
-
-        # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
-        dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))
-
-        # Save size of states, inputs, outputs, event_states, and current instance of PrognosticsModel
-        num_states = len(states[0].matrix)
-        num_inputs = len(inputs[0].matrix)
-        num_outputs = len(outputs[0].matrix)
-        num_event_states = len(event_states[0])
-        num_total = num_states + num_outputs + num_event_states 
-        prog_model = self
-        dmd_dt = config['save_freq']
-        process_noise_temp = {key: 0 for key in prog_model.events}  # Process noise for event states is zero
-
-        # Check for stability of dmd_matrix
-        eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-num_inputs if num_inputs > 0 else None])            
-        
-        if sum(eig_val>1) != 0:
-            for eig_val_i in eig_val:
-                if eig_val_i>1 and eig_val_i-1>config['stability_tol']:
-                    warn("The DMD matrix is unstable, may result in poor approximation.")
-
-        from .linear_model import LinearModel
-        
-
-        class SurrogateModelDMD(LinearModel):
-            """
-            A subclass of LinearModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
-            
-            Given an initial state of the system (including internal states, outputs, and event_states), and the expected inputs throuhgout time, this class defines a surrogate model that can approximate the internal states, outputs, and event_states throughout time until threshold is met.
-
-            Keyword Args
-            ------------
-                process_noise : Optional, float or Dict[Srt, float]
-
-            See Also
-            ------
-                LinearModel
-
-            Attributes
-            ----------
-                initialize : 
-                    Calculate initial state, augmented with outputs and event_states
-
-                next_state : 
-                    State transition equation: Calculate next state with matrix multiplication (overrides 'dx' defined in LinearModel)
-
-                simulate_to_threshold:
-                    Simulate prognostics model until defined threshold is met, using simulate_to_threshold defined in PrognosticsModel, then interpolate results to be at user-defined times
-            """
-
-            # Default parameters: set process_noise and measurement_noise to be defined based on PrognosticsModel values
-            default_parameters = {
-                'process_noise': {**prog_model.parameters['process_noise'],**prog_model.parameters['measurement_noise'],**process_noise_temp},
-                'measurement_noise': prog_model.parameters['measurement_noise'],
-                'process_noise_dist': prog_model.parameters.get('process_noise_dist', 'normal'),
-                'measurement_noise_dist': prog_model.parameters.get('measurement_noise_dist', 'normal')
-            }
-
-            # Define appropriate matrices for LinearModel
-            A = dmd_matrix[:,0:num_total]
-            B = np.vstack(dmd_matrix[:,num_total:num_total+num_inputs]) 
-            C = np.zeros((num_outputs,num_total))
-            for iter1 in range(num_outputs):
-                C[iter1,num_states+iter1] = 1 
-            F = np.zeros((num_event_states,num_total))
-            for iter2 in range(num_event_states):
-                F[iter2,num_states+num_outputs+iter2] = 1 
-
-            states = states_dmd + outputs_dmd + events_dmd
-            inputs = inputs_dmd
-            outputs = outputs_dmd 
-            events = events_dmd
-
-            dt = dmd_dt  # Step size (so it can be accessed programmatically)
-
-            def initialize(self, u=None, z=None):
-                x = prog_model.initialize(u,z)
-                x.update(prog_model.output(x))
-                x.update(prog_model.event_state(x))
-
-                return self.StateContainer(x)
-
-            def next_state(self, x, u, _):   
-                x.matrix = np.matmul(self.A, x.matrix) + np.matmul(self.B, u.matrix) + self.E
-                
-                return x   
-
-            def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
-                # Save keyword arguments same as DMD training for approximation 
-                kwargs_sim = kwargs.copy()
-                kwargs_sim['save_freq'] = dmd_dt
-                kwargs_sim['dt'] = dmd_dt
-
-                # Simulate to threshold at DMD time step
-                results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_sim)
-                
-                # Interpolate results to be at user-desired time step
-                if 'dt' in kwargs:
-                    warn("dt is not used in DMD approximation")
-
-                # Default parameters 
-                config = {
-                    'dt': None,
-                    'save_freq': None,
-                    'save_pts': []
-                }
-                config.update(kwargs)
-
-                if (config['save_freq'] == dmd_dt or
-                    (isinstance(config['save_freq'], tuple) and
-                        config['save_freq'][0]%dmd_dt < 1e-9 and
-                        config['save_freq'][1] == dmd_dt)
-                    ) and config['save_pts'] == []:
-                    # In this case, the user wants what the DMD approximation returns 
-                    return results 
-
-                # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
-                # Define time vector based on user specifications
-                time_basic = [results.times[0], results.times[-1]]
-                time_basic.extend(config['save_pts'])                       
-                if config['save_freq'] != None:
-                    if isinstance(config['save_freq'], tuple):
-                        # Tuple used to specify start and frequency
-                        t_step = config['save_freq'][1]
-                        # Use starting time or the next multiple
-                        t_start = config['save_freq'][0]
-                        start = max(t_start, results.times[0] - (results.times[0]-t_start)%t_step)
-                        time_array = np.arange(start+t_step,results.times[-1],t_step)
-                    else: 
-                        time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
-                    time_basic.extend(time_array.tolist())
-                time_interp = sorted(time_basic)
-
-                # Interpolate States
-                states_dict_temp = {}
-                for states_name in self.states:
-                    states_list_temp = [results.states[iter1a][states_name] for iter1a in range(len(results.states))]
-                    states_dict_temp[states_name] = interp1d(results.times,states_list_temp)(time_interp)
-                states_interp = [
-                    self.StateContainer({key: state[i] for key, state in states_dict_temp.items()})
-                    for i in range(len(time_interp))
-                ]
-                    
-                # Interpolate Inputs
-                inputs_dict_temp = {}
-                for inputs_name in self.inputs:
-                    inputs_list_temp = [results.inputs[iter1a][inputs_name] for iter1a in range(len(results.inputs))]
-                    inputs_dict_temp[inputs_name] = interp1d(results.times,inputs_list_temp)(time_interp)
-                inputs_interp = [
-                    self.InputContainer({key: input[i] for key, input in inputs_dict_temp.items()}) for i in range(len(time_interp))
-                ]
-
-                states = SimResult(time_interp,states_interp)
-                inputs = SimResult(time_interp,inputs_interp)
-                outputs = LazySimResult(self.output, time_interp, states_interp)
-                event_states = LazySimResult(self.event_state, time_interp, states_interp)
-
-                return self.SimulationResults(
-                    time_interp,
-                    inputs,
-                    states,
-                    outputs,
-                    event_states
-                )
-                
-        return SurrogateModelDMD()
+        return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)

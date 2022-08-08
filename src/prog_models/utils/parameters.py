@@ -26,7 +26,7 @@ class PrognosticsModelParameters(UserDict):
     """
     def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}):
         super().__init__()
-        self.__m = model
+        self._m = model
         self.callbacks = {}
         # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
         for (key, value) in dict_in.items():
@@ -61,11 +61,13 @@ class PrognosticsModelParameters(UserDict):
         
         if key == 'process_noise' or key == 'process_noise_dist':
             if callable(self['process_noise']):  # Provided a function
-                self.__m.apply_process_noise = types.MethodType(self['process_noise'], self.__m)
+                self._m.apply_process_noise = types.MethodType(self['process_noise'], self._m)
             else:  # Not a function
                 # Process noise is single number - convert to dict
                 if isinstance(self['process_noise'], Number):
-                    self['process_noise'] = {key: self['process_noise'] for key in self.__m.states}
+                    self['process_noise'] = self._m.StateContainer({key: self['process_noise'] for key in self._m.states})
+                elif isinstance(self['process_noise'], dict):
+                    self['process_noise'] = self._m.StateContainer(self['process_noise'])
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
@@ -74,26 +76,28 @@ class PrognosticsModelParameters(UserDict):
                 if all(value == 0 for value in self['process_noise'].values()):
                     # No noise, use none function
                     fcn = process_noise_functions['none']
-                    self.__m.apply_process_noise = types.MethodType(fcn, self.__m)
+                    self._m.apply_process_noise = types.MethodType(fcn, self._m)
                 elif 'process_noise_dist' in self:
                     fcn = process_noise_functions[self['process_noise_dist'].lower()]
-                    self.__m.apply_process_noise = types.MethodType(fcn, self.__m)
+                    self._m.apply_process_noise = types.MethodType(fcn, self._m)
                 else:
                     # Default to gaussian
                     fcn = process_noise_functions['gaussian']
-                    self.__m.apply_process_noise = types.MethodType(fcn, self.__m)
+                    self._m.apply_process_noise = types.MethodType(fcn, self._m)
                 
                 # Make sure every key is present (single value already handled above)
-                if not all([key in self['process_noise'] for key in self.__m.states]):
+                if not all([key in self['process_noise'] for key in self._m.states]):
                     raise ProgModelTypeError("Process noise must have every key in model.states")
 
         elif key == 'measurement_noise' or key == 'measurement_noise_dist':
             if callable(self['measurement_noise']):
-                self.__m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self.__m)
+                self._m.apply_measurement_noise = types.MethodType(self['measurement_noise'], self._m)
             else:
                 # Process noise is single number - convert to dict
                 if isinstance(self['measurement_noise'], Number):
-                    self['measurement_noise'] = {key: self['measurement_noise'] for key in self.__m.outputs}
+                    self['measurement_noise'] = self._m.OutputContainer({key: self['measurement_noise'] for key in self._m.outputs})
+                elif isinstance(self['measurement_noise'], dict):
+                    self['measurement_noise'] = self._m.OutputContainer(self['measurement_noise'])
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:
@@ -102,17 +106,17 @@ class PrognosticsModelParameters(UserDict):
                 if all(value == 0 for value in self['measurement_noise'].values()):
                     # No noise, use none function
                     fcn = measurement_noise_functions['none']
-                    self.__m.apply_measurement_noise = types.MethodType(fcn, self.__m)
+                    self._m.apply_measurement_noise = types.MethodType(fcn, self._m)
                 elif 'measurement_noise_dist' in self:
                     fcn = measurement_noise_functions[self['measurement_noise_dist'].lower()]
-                    self.__m.apply_measurement_noise = types.MethodType(fcn, self.__m)
+                    self._m.apply_measurement_noise = types.MethodType(fcn, self._m)
                 else:
                     # Default to gaussian
                     fcn = measurement_noise_functions['gaussian']
-                    self.__m.apply_measurement_noise = types.MethodType(fcn, self.__m)
+                    self._m.apply_measurement_noise = types.MethodType(fcn, self._m)
                     
                 # Make sure every key is present (single value already handled above)
-                if not all([key in self['measurement_noise'] for key in self.__m.outputs]):
+                if not all([key in self['measurement_noise'] for key in self._m.outputs]):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.outputs")
 
     def register_derived_callback(self, key : str, callback : Callable) -> None:

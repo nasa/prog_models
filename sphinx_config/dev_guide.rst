@@ -152,17 +152,20 @@ NPR 7150
 --------
 NASA software must comply with the requirements enumarated in `NPR 7150 <https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7150&s=2B>`__. See the `NASA Software Engineering and Assurance Handbook <https://swehb.nasa.gov>`__ for more information.
 
-* Software Classification: Class-E (Research Software)
-* Safety Criticality: Not Safety Critical 
-* Assessment done by Christopher Teubert in March 2021
-
 Intention is to expand the scope of use to also include its inclusion in Ground software tools that support mission planning or formulation; Ground software that operates a research, development, test, or evaluation laboratory (i.e., not a major engineering/research facility); or Ground software that provides decision support for non-mission-critical situations and airborn software whose anomalous behavior would cause or contribute to a failure of system function resulting in a minor failure condition for the airborne vehicle,
 or whose anomalous behavior would cause or contribute to a failure of system function with no effect on airborne vehicle operational capability or pilot workload. The classification for this increased scope is described below
 
 * Effective version: v1.4 (Est. Fall 2022)
-* [Future] Software Classification: Class-D (Basic Research and Technology Software)
-* [Future] Safety Criticality: Not Safety Critical 
-* Assessment done by Christopher Teubert in April 26 2022
+* Software Classification: Class-D (Basic Research and Technology Software)
+* Safety Criticality: Not Safety Critical 
+* Assessment done by Christopher Teubert in April 26, 2022
+* Approved July 14, 2022 (Robert Duffy)
+
+Previous Classification: 
+
+* Software Classification: Class-E (Research Software)
+* Safety Criticality: Not Safety Critical 
+* Assessment done by Christopher Teubert in March 2021
 
 Safety Criticality Analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -713,6 +716,13 @@ The following dependencies are used in the project:
    * Documentation: https://urllib3.readthedocs.org
    * Usage Rights: Released under the MIT License
    * Future Support: expected- urllib3 is a common tool still under development and actively supported
+
+* `tensorflow <https://www.tensorflow.org>__
+
+   * Requirements met: Machine learning algorithms
+   * Documentation: https://www.tensorflow.org
+   * Usage Rights: Released under the Apache License 2.0
+   * Future Support: expected- Tensorflow is a common tool still under development and actively supported
 
 Notes for all: 
 

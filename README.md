@@ -23,7 +23,6 @@ Here is the directory structure for the github repository
 &nbsp;&nbsp; |-`linear_model.py` - A simpler subclass of PrognosticsModel for linear models<br />
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
 &nbsp;&nbsp; |-`sim_result.py` - Class for storing the result of a simulation (used by `prognostics_model`)<br />
-&nbsp;&nbsp; |-`visualize.py` - Visualization tools<br />
 `docs/` - Project documentation<br />
 `sphinx_config/` - Configuration for automatic documentation generation<br />
 `examples/` - Example Python scripts using prog_models<br />
@@ -40,16 +39,16 @@ Use the following to cite this repository:
 @misc{2022_nasa_prog_models,
     author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Katelyn Jarvis and Matthew Daigle},
     title     = {Prognostics Models Python Package},
-    month     = May,
+    month     = September,
     year      = 2022,
-    version   = {1.3},
+    version   = {1.4},
     url       = {https://github.com/nasa/prog\_models}
     }
 ```
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.3, May 2022. URL https://github.com/nasa/prog_models.
+C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.4, September 2022. URL https://github.com/nasa/prog_models.
 
 Alternatively, if using both prog_models and prog_algs, you can cite the combined package as
 

@@ -80,6 +80,9 @@ The best way to learn how to use `prog_models` is through the `tutorial <https:/
 * :download:`examples.linear_model <../examples/linear_model.py>`
     .. automodule:: examples.linear_model
     |
+* :download:`examples.lstm_model <../examples/lstm_model.py>`
+    .. automodule:: examples.lstm_model
+    | 
 * :download:`examples.visualize <../examples/visualize.py>`
     .. automodule:: examples.visualize
     |
