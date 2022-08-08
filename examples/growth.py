@@ -68,7 +68,7 @@ def run_example():
         print("-", key, m.parameters[key])
     print(' Error: ', m.calc_error(times, inputs, outputs, dt=10))
 
-    # Simulate to threshold
+    # Step 4: Simulate to threshold
     print('\n\n------------------------------------------------')
     print('Simulating to threshold\n\n')
     options = {
