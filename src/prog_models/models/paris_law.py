@@ -46,10 +46,6 @@ class Growth(PrognosticsModel):
        |n :     cycles per loading
     """ 
 
-    # V Uncomment Below if the class is vectorized (i.e., if it can accept input to all functions as arrays) V
-    # is_vectorized = True
-
-    # REPLACE THE FOLLOWING LIST WITH EVENTS BEING PREDICTED
     events = ['CGF']
     
     # REPLACE THE FOLLOWING LIST WITH INPUTS (LOADING)
