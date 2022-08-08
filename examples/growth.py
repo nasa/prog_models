@@ -39,7 +39,6 @@ def run_example():
     outputs = []
 
     #Finds file path
-
     csv_dir = os.path.join(os.path.dirname(__file__), 'growth.csv')
 
     #Reads csv file
