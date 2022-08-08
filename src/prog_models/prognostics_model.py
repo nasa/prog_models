@@ -126,7 +126,9 @@ class PrognosticsModel(ABC):
     def __getstate__(self) -> dict:
         return self.parameters.data
 
-    def __setstate__(self, state : dict) -> None:
+    def __setstate__(self, params : dict) -> None:
+        # This method is called when depickling and in construction. It builds the model from the parameters 
+        
         if not hasattr(self, 'inputs'):
             self.inputs = []
         self.n_inputs = len(self.inputs)
@@ -177,7 +179,7 @@ class PrognosticsModel(ABC):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
 
-        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
+        self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u : dict = None, z :dict = None) -> dict:

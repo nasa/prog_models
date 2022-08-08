@@ -157,16 +157,14 @@ def run_example():
   
     # Step 2: Generate Model
     print('Building model...') 
-    m_batt = LSTMStateTransitionModel.from_model(
-        batt,
-        future_loading_eqns,
+    m_batt = LSTMStateTransitionModel.from_data(
+        inputs = input_data,
+        outputs = output_data,
         window=12, 
         epochs=3, 
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
-        output_keys = ['t', 'v'],
-        process_noise=0,
-        measurement_noise=0) 
+        output_keys = ['t', 'v']) 
 
     # Step 3: Simulate with model
     t_counter = 0
