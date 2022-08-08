@@ -1,15 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-# INSTRUCTIONS:
-# 1. Copy this file- renaming to the name of your model
-# 2. Rename the class as desired
-# 3. Replace the events, inputs, states, outputs keys with those specific to the model
-# 4. Uncomment either dx or next_state function. dx for continuous models, and next_state for discrete
-# 5. Implement logic of model in each method
-
-# Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
-
 from prog_models import PrognosticsModel
 from numpy import inf
 
