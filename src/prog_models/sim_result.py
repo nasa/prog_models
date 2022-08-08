@@ -1,11 +1,13 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+
 from collections import UserList, defaultdict
+from copy import deepcopy
+from matplotlib.pyplot import figure
+import numpy as np
 from typing import Callable, Dict, List
 
-from matplotlib.pyplot import figure
-from numpy import sign
+from .utils.containers import DictLikeMatrixWrapper
 from .visualize import plot_timeseries
-from copy import deepcopy
 
 
 class SimResult(UserList):
@@ -112,6 +114,21 @@ class SimResult(UserList):
         """
         return self.times[index]
 
+    def to_numpy(self) -> np.ndarray:
+        """
+        Convert from simresult to numpy array
+
+        Returns:
+            np.ndarray: numpy array representing simresult
+        """
+        if len(self.data) == 0:
+            return np.array([[]], dtype=np.float64)
+        if len(self.data[0]) == 0:
+            return np.array([[] for _ in self.data], dtype=np.float64)
+        if isinstance(self.data[0], DictLikeMatrixWrapper):
+            return np.array([u_i.matrix[:,0] for u_i in self.data], dtype=np.float64)
+        return np.array([[u_i[key] for key in u_i.keys()] for u_i in self.data ], dtype=np.float64)
+
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
@@ -153,7 +170,7 @@ class SimResult(UserList):
         for key,l in by_event.items():
             mono_sum = 0
             for i in range(len(l)-1): 
-                mono_sum += sign(l[i+1] - l[i])
+                mono_sum += np.sign(l[i+1] - l[i])
             result[key] = abs(mono_sum / (len(l)-1))
         return result
 
