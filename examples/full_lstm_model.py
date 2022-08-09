@@ -47,13 +47,8 @@ def run_example():
     # unlike the original model. This is necessary to calculate the events.
     # Since the outputs will then match the states, we pass in the states below
 
-    training_data = [
-        (u, data.states),
-        (u_half, data_half.states),
-        (u_quarter, data_quarter.states),
-        (u_twice, data_twice.states),
-        (u_four, data_four.states)
-    ]
+    u_data = [u, u_half, u_quarter, u_twice, u_four]
+    z_data = [data.states, data_half.states, data_quarter.states, data_twice.states, data_four.states]
 
     # Step 3: Create model
     print('Creating model...')
@@ -92,11 +87,12 @@ def run_example():
     # Step 4: Generate Model
     print('Building model...')
     m2 = LSTMThrownObject.from_data(
-        training_data,  
+        inputs=u_data,  
+        outputs=z_data,
         window=4, 
         epochs=30, 
-        inputs = ['dt'],
-        outputs = m.states)
+        input_keys = ['dt'],
+        output_keys = m.states)
 
     # Step 5: Simulate with model
     t_counter = 0

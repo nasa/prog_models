@@ -211,11 +211,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = missing_inputs()
-            self.fail("Should not have worked, missing 'inputs'")
-        except ProgModelTypeError:
-            pass
+        m = missing_inputs()
+        self.assertEqual(len(m.inputs), 0)
 
         try: 
             m = missing_outputs()
@@ -256,15 +253,6 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(**{noise_key: add_one})
         x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
         self.assertEqual(x[keys[0]], 2)
-
-        try:
-            noise = {}
-            for i in range(len(keys)-1):
-                noise[keys[i]] = i
-            m = MockProgModel(**{noise_key: noise})
-            self.fail("Should have raised exception at missing process_noise key")
-        except KeyError:
-            pass
 
         try:
             noise = []

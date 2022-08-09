@@ -93,33 +93,13 @@ class PrognosticsModel(ABC):
     # inputs = []     # Identifiers for each input
     # states = []     # Identifiers for each state
     # outputs = []    # Identifiers for each output
-    performance_metric_keys = []  # Identifies for each performance metric
-    events = []       # Identifiers for each event
+    # performance_metric_keys = []  # Identifies for each performance metric
+    # events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
-
-    observables_keys = performance_metric_keys # for backwards compatability        
+      
     SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
-    def __init__(self, **kwargs):
-        if not hasattr(self, 'inputs'):
-            raise ProgModelTypeError('Must have `inputs` attribute')
-        
-        if not hasattr(self, 'states'):
-            raise ProgModelTypeError('Must have `states` attribute')
-        if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
-        try:
-            iter(self.states)
-        except TypeError:
-            raise ProgModelTypeError('model.states must be iterable')
-
-        if not hasattr(self, 'outputs'):
-            raise ProgModelTypeError('Must have `outputs` attribute')
-        try:
-            iter(self.outputs)
-        except TypeError:
-            raise ProgModelTypeError('model.outputs must be iterable')
-        
+    def __init__(self, **kwargs):                
         # Default params for any model
         params = PrognosticsModel.default_parameters.copy()
 
@@ -146,11 +126,37 @@ class PrognosticsModel(ABC):
     def __getstate__(self) -> dict:
         return self.parameters.data
 
-    def __setstate__(self, state : dict) -> None:
+    def __setstate__(self, params : dict) -> None:
+        # This method is called when depickling and in construction. It builds the model from the parameters 
+        
+        if not hasattr(self, 'inputs'):
+            self.inputs = []
         self.n_inputs = len(self.inputs)
+
+        if not hasattr(self, 'states'):
+            raise ProgModelTypeError('Must have `states` attribute')
+        if len(self.states) <= 0:
+            raise ProgModelTypeError('`states` attribute must have at least one state key')
+        try:
+            iter(self.states)
+        except TypeError:
+            raise ProgModelTypeError('model.states must be iterable')
         self.n_states = len(self.states)
+
+        if not hasattr(self, 'events'):
+            self.events = []  
         self.n_events = len(self.events)
+
+        if not hasattr(self, 'outputs'):
+            raise ProgModelTypeError('Must have `outputs` attribute')
+        try:
+            iter(self.outputs)
+        except TypeError:
+            raise ProgModelTypeError('model.outputs must be iterable')
         self.n_outputs = len(self.outputs)
+
+        if not hasattr(self, 'performance_metric_keys'):
+            self.performance_metric_keys = []
         self.n_performance = len(self.performance_metric_keys)
 
         # Setup Containers 
@@ -173,7 +179,7 @@ class PrognosticsModel(ABC):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
 
-        self.parameters = PrognosticsModelParameters(self, state, self.param_callbacks)
+        self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
     
     @abstractmethod
     def initialize(self, u : dict = None, z :dict = None) -> dict:
