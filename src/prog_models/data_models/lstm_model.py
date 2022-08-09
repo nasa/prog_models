@@ -205,24 +205,6 @@ class LSTMStateTransitionModel(DataModel):
         callbacks = [
             keras.callbacks.ModelCheckpoint(params['checkpoint'], save_best_only=True)
         ]
-
-        inputs = keras.Input(shape=u_all.shape[1:])
-        x = inputs
-        for i in range(params['layers']):
-            if i == params['layers'] - 1:
-                # Last layer
-                x = layers.LSTM(params['units'][i], activation=params['activation'][i])(x)
-            else:
-                # Intermediate layer
-                x = layers.LSTM(params['units'][i], activation=params['activation'][i], return_sequences=True)(x)
-        
-        if params['dropout'] > 0:
-            # Dropout prevents overfitting
-            x = layers.Dropout(params['dropout'])(x)
-
-        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
-        model = keras.Model(inputs, x)
-        model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
