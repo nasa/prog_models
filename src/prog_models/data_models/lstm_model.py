@@ -61,14 +61,19 @@ class LSTMStateTransitionModel(DataModel):
 
         super().__init__(**kwargs)
 
-        # Save Model
+        # Store Model
         self.model = model
+
+        # store params
+        self.params = kwargs
+
 
     def __eq__(self, other):
         # Needed because we add .model, which is not present in the parent class
         if not isinstance(other, LSTMStateTransitionModel):
             return False
         return super().__eq__(other) and self.model == other.model
+
 
     def initialize(self, u=None, z=None):
         """
@@ -85,6 +90,7 @@ class LSTMStateTransitionModel(DataModel):
         """
         return self.StateContainer(np.array([[None] for _ in self.states]))
 
+
     def next_state(self, x, u, dt):
         # Rotate new input into state
         input_data = u.matrix
@@ -95,6 +101,7 @@ class LSTMStateTransitionModel(DataModel):
             
         states = x.matrix[len(input_data):]
         return self.StateContainer(np.vstack((states, input_data)))
+
 
     def output(self, x):
         if x.matrix[0,0] is None:
@@ -112,6 +119,117 @@ class LSTMStateTransitionModel(DataModel):
             m_output += self.parameters['normalization'][2]
 
         return self.OutputContainer(m_output.numpy().T)
+
+
+    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+        t = kwargs.get('t0', 0)
+        dt = kwargs.get('dt', 0)
+        x = kwargs.get('x', self.initialize(future_loading_eqn(t), first_output))
+
+        # configuring next_time function to define prediction time step, default is constant dt
+        if callable(dt):
+            dt_mode = 'function'
+        elif isinstance(dt, tuple):
+            dt_mode = dt[0]
+            dt = dt[1]               
+        elif isinstance(dt, str):
+            dt_mode = dt
+            if dt_mode == 'constant':
+                dt = 1.0  # Default
+            else:
+                dt = np.inf
+        else:
+            dt_mode = 'constant'
+
+        if dt_mode in ('constant', 'auto'):
+            def next_time(t, x):
+                return dt
+        elif dt_mode != 'function':
+            raise Exception(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
+
+        # Simulate until passing minimum number of steps
+        # TODO Suggestion (Matteo): 
+        # normalize data before prediction loop starts; de-normalize them after loop.
+        # This way, normalization could be handled using functions that normalize nd arrays all at once, 
+        # avoiding to normalize data at each step of the simulation. 
+        # I don't know if this interferes with how the PrognosticsModel class works. 
+        while x.matrix[0,0] is None:
+            if 'horizon' in kwargs and t > kwargs['horizon']:
+                raise Exception(f'Not enough timesteps to reach minimum number of steps for model simulation')
+            dt = next_time(t, x)
+            t = t + dt/2
+            # Use state at midpoint of step to best represent the load during the duration of the step
+            u = future_loading_eqn(t, x)
+            t = t + dt/2
+            x = self.next_state(x, u, dt)
+
+        # Now do actual simulate_to_threshold
+        kwargs['t0'] = t
+        x.matrix = np.array(x.matrix, dtype=np.float)
+        kwargs['x'] = x
+        if 'horizon' in kwargs:
+            kwargs['horizon'] = kwargs['horizon'] - t
+        return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
+
+
+    def reduce(self, data, **params):
+        print('reducing model size')
+
+        # Prepare datasets
+        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
+
+        # Normalize
+        if params['normalize']:
+            n_inputs = len(data[0][0][0])
+            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
+            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
+            # If there's no variation- dont normalize 
+            u_std[u_std == 0] = 1
+            z_mean = np.mean(z_all, axis=0)
+            z_std = np.std(z_all, axis=0)
+            # If there's no variation- dont normalize 
+            z_std[z_std == 0] = 1
+
+            # Add output (since z_t-1 is last input)
+            u_mean = np.hstack((u_mean, z_mean))
+            u_std = np.hstack((u_std, z_std))
+
+            u_all = (u_all - u_mean)/u_std
+            z_all = (z_all - z_mean)/z_std
+
+            # u_mean and u_std act on the column vector form (from inputcontainer)
+            # so we need to transpose them to a column vector
+            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
+        
+        # Build model
+        callbacks = [
+            keras.callbacks.ModelCheckpoint(params['checkpoint'], save_best_only=True)
+        ]
+
+        inputs = keras.Input(shape=u_all.shape[1:])
+        x = inputs
+        for i in range(params['layers']):
+            if i == params['layers'] - 1:
+                # Last layer
+                x = layers.LSTM(params['units'][i], activation=params['activation'][i])(x)
+            else:
+                # Intermediate layer
+                x = layers.LSTM(params['units'][i], activation=params['activation'][i], return_sequences=True)(x)
+        
+        if params['dropout'] > 0:
+            # Dropout prevents overfitting
+            x = layers.Dropout(params['dropout'])(x)
+
+        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
+        model = keras.Model(inputs, x)
+        model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
+        
+        # Train model
+        model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+
+        self.reduced_model = keras.models.load_model(params['checkpoint'])
+
+
 
     @staticmethod
     def pre_process_data(data, window, **kwargs):
@@ -201,6 +319,7 @@ class LSTMStateTransitionModel(DataModel):
         u_all = np.array(u_all)
         z_all = np.array(z_all)
         return (u_all, z_all)
+
 
     @classmethod
     def from_data(cls, data, **kwargs):
@@ -317,7 +436,7 @@ class LSTMStateTransitionModel(DataModel):
         
         # Build model
         callbacks = [
-            keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
+            keras.callbacks.ModelCheckpoint(params['checkpoint'], save_best_only=True)
         ]
 
         inputs = keras.Input(shape=u_all.shape[1:])
@@ -341,54 +460,5 @@ class LSTMStateTransitionModel(DataModel):
         # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return cls(keras.models.load_model("jena_sense.keras"), **params)
+        return cls(keras.models.load_model(params['checkpoint']), **params)
         
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
-        t = kwargs.get('t0', 0)
-        dt = kwargs.get('dt', 0)
-        x = kwargs.get('x', self.initialize(future_loading_eqn(t), first_output))
-
-        # configuring next_time function to define prediction time step, default is constant dt
-        if callable(dt):
-            dt_mode = 'function'
-        elif isinstance(dt, tuple):
-            dt_mode = dt[0]
-            dt = dt[1]               
-        elif isinstance(dt, str):
-            dt_mode = dt
-            if dt_mode == 'constant':
-                dt = 1.0  # Default
-            else:
-                dt = np.inf
-        else:
-            dt_mode = 'constant'
-
-        if dt_mode in ('constant', 'auto'):
-            def next_time(t, x):
-                return dt
-        elif dt_mode != 'function':
-            raise Exception(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
-
-        # Simulate until passing minimum number of steps
-        # TODO Suggestion (Matteo): 
-        # normalize data before prediction loop starts; de-normalize them after loop.
-        # This way, normalization could be handled using functions that normalize nd arrays all at once, 
-        # avoiding to normalize data at each step of the simulation. 
-        # I don't know if this interferes with how the PrognosticsModel class works. 
-        while x.matrix[0,0] is None:
-            if 'horizon' in kwargs and t > kwargs['horizon']:
-                raise Exception(f'Not enough timesteps to reach minimum number of steps for model simulation')
-            dt = next_time(t, x)
-            t = t + dt/2
-            # Use state at midpoint of step to best represent the load during the duration of the step
-            u = future_loading_eqn(t, x)
-            t = t + dt/2
-            x = self.next_state(x, u, dt)
-
-        # Now do actual simulate_to_threshold
-        kwargs['t0'] = t
-        x.matrix = np.array(x.matrix, dtype=np.float)
-        kwargs['x'] = x
-        if 'horizon' in kwargs:
-            kwargs['horizon'] = kwargs['horizon'] - t
-        return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
