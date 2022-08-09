@@ -144,9 +144,9 @@ class TestLSTM(unittest.TestCase):
     def test_improper_input(self):
         # Input, output format
         with self.assertRaises(Exception, msg='No outputs'):
-            LSTMStateTransitionModel.from_data(inputs=[])
+            LSTMStateTransitionModel.from_data(inputs=[1])
         with self.assertRaises(Exception, msg='No inputs'):
-            LSTMStateTransitionModel.from_data(outputs=[])
+            LSTMStateTransitionModel.from_data(outputs=[1])
         with self.assertRaises(ValueError, msg='Empty inputs/outputs'):
             LSTMStateTransitionModel.from_data(inputs=[], outputs=[])
         with self.assertRaises(ValueError, msg="Uneven Inputs/outputs"):
