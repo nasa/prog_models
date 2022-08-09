@@ -5,14 +5,14 @@
  Example demonstrating the Paris Law Crack Growth Equation
 """
 
-from prog_models.models.paris_law import CrackGrowth 
+from prog_models.models.paris_law import ParisLawCrackGrowth 
 import matplotlib.pyplot as plt
 import csv
 import os
 
 def run_example(): 
     # Step 1: Create a model object
-    m = CrackGrowth(process_noise = 0)
+    m = ParisLawCrackGrowth(process_noise = 0)
     
     # Step 2: Define future loading function 
     def future_loading(t, x=None):
@@ -48,7 +48,7 @@ def run_example():
             for row in data:
                 times.append(row[0])
                 inputs.append({'k_min': row[1], 'k_max': row[2]})
-                outputs.append({'c_li': row[3]})
+                outputs.append({'c_l': row[3]})
     except FileNotFoundError:
         print("No data file found")
 
@@ -77,7 +77,7 @@ def run_example():
         'horizon': 1e5, # Horizon
     }
 
-    (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
+    (times, inputs, _, outputs, event_states) = m.simulate_to_threshold(future_loading, **options)
 
     # Step 5: Plot Results
     # crack length
@@ -85,7 +85,7 @@ def run_example():
 
     inputs.plot(ylabel='Stress Intensity')
     event_states.plot(ylabel= 'CGF')
-    outputs.plot(ylabel= {'c_li': "Crack Length"}, compact= False)
+    outputs.plot(ylabel= {'c_l': "Crack Length"}, compact= False)
     plt.show()
 
 if __name__ == '__main__':

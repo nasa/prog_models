@@ -4,12 +4,10 @@
 from prog_models import PrognosticsModel
 from numpy import inf
 
-# Paris Law model that simulates 
-# Fatigue crack growth testing measures rate of advance of a fatigue crack in terms of the applied driving force for growth using 
-# Linear Elastic Fracture Mechanics (LEFM) principles. 
-# The range of stress intensity factor in the loading cycle (ΔK), is used as the driving force parameter.
-class CrackGrowth(PrognosticsModel): 
+class ParisLawCrackGrowth(PrognosticsModel): 
     """
+    A simple Paris Law Model Implementation
+
     Events: (1)
         CGF :   Crack Growth Fracture 
 
@@ -18,39 +16,39 @@ class CrackGrowth(PrognosticsModel):
       |k_min :  Minimum crack growth 
 
     States: (1)
-      |c_li :    crack length # wrong Yes, Yes One state
+      |c_l :    crack length
   
-    Outputs: (1) #output  user needs to be able to measure
+    Outputs: (1)
        |c_l :   crack length
 
     Model Configuration Parameters:
-       |a :     Length of crack
-       |c :     Constant
-       |m :     Constant
-       |n :     cycles per loading
+       |crack_limit : crack length limit after which the crack growth fracture event is triggered
+       |c :     Material Constant
+       |m :     Material Constant
+       |dndt :  cycles per second
     """ 
     # Event: Crack Growth Fracture
     events = ['CGF']
     # Inputs are ['k_min', 'k_max']
     inputs = ['k_max','k_min']
     # State: Crack Length
-    states = ['c_li']
+    states = ['c_l']
     # Output: Crack Length
-    outputs = ['c_li']
+    outputs = ['c_l']
 
     # The default parameters
     default_parameters = {
-        'config_length': 1e-4,
+        'crack_limit': 1e-4,
         'c': 3.24,
         'm': 0.1527,
         'dndt': 10, 
         'x0' : {
-            'c_li': 0.00001,
+            'c_l': 0.00001,
         }  
     }
     
     state_limits = {
-        'c_li': (0, inf),
+        'c_l': (0, inf),
     }
     
     def initialize(self, u=None, z=None):
@@ -61,7 +59,7 @@ class CrackGrowth(PrognosticsModel):
         parameters = self.parameters
         r = (parameters['c']*(u['k_max'] - u['k_min'])**parameters['m'])*parameters['dndt'] # Paris Law Equation with respect to time
         dxdt = {
-             'c_li': r,
+             'c_l': r,
          }
         return self.StateContainer(dxdt)
 
@@ -70,12 +68,12 @@ class CrackGrowth(PrognosticsModel):
 
     def event_state(self, x : dict) -> dict: 
        return {
-            'CGF' : 1- x['c_li'] / self.parameters['config_length']
+            'CGF' : 1- x['c_l'] / self.parameters['crack_limit']
         }
 
     def threshold_met(self, x):
         t_met = {
-           'CGF': x['c_li'] > self.parameters['config_length']
+           'CGF': x['c_l'] > self.parameters['crack_limit']
         }
         return t_met
          
