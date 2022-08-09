@@ -4,6 +4,10 @@
 from prog_models import PrognosticsModel
 from numpy import inf
 
+# Paris Law model that simulates 
+# Fatigue crack growth testing measures rate of advance of a fatigue crack in terms of the applied driving force for growth using 
+# Linear Elastic Fracture Mechanics (LEFM) principles. 
+# The range of stress intensity factor in the loading cycle (ΔK), is used as the driving force parameter.
 class CrackGrowth(PrognosticsModel): 
     """
     Events: (1)
@@ -25,20 +29,17 @@ class CrackGrowth(PrognosticsModel):
        |m :     Constant
        |n :     cycles per loading
     """ 
-
+    # Event: Crack Growth Fracture
     events = ['CGF']
-    
-    # REPLACE THE FOLLOWING LIST WITH INPUTS (LOADING)
-    inputs = ['k_max', 'k_min'] # change
-
-    # REPLACE THE FOLLOWING LIST WITH STATES
+    # Inputs are ['k_min', 'k_max']
+    inputs = ['k_max','k_min']
+    # State: Crack Length
     states = ['c_li']
-
-    # REPLACE THE FOLLOWING LIST WITH OUTPUTS (MEASURED VALUES)
+    # Output: Crack Length
     outputs = ['c_li']
 
-    # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
-    default_parameters = {# Set default parameters
+    # The default parameters
+    default_parameters = {
         'config_length': 1e-4,
         'c': 3.24,
         'm': 0.1527,
@@ -47,77 +48,34 @@ class CrackGrowth(PrognosticsModel):
             'c_li': 0.00001,
         }  
     }
-
-    # REPLACE THE FOLLOWING WITH STATE BOUNDS IF NEEDED
+    
     state_limits = {
-        # 'state': (lower_limit, upper_limit)
-        # only specify for states with limits
-        #crack length cannot be 0 else it is not a crack and cannot be infinite length
         'c_li': (0, inf),
     }
-
-    # Identify callbacks used by this model
-    # See examples.derived_params
-    # Format: "trigger": [callbacks]
-    # Where trigger is the parameter that the derived parameters are derived from.
-    # And callbacks are one or more callback functions that define parameters that are 
-    # derived from that parameter
-    # REPLACE THIS WITH ACTUAL DERIVED PARAMETER CALLBACKS
-    #param_callbacks = {
-    #    "Example Parameter 2": [example_callback]
-    #}
-
-
-    #def __init__(self, **kwargs):
-        
-        # ADD OPTIONS CHECKS HERE
-
-        # e.g., Checking for required parameters
-        # if not 'required_param' in kwargs: 
-        #   throw Exception;
-
-        # e.g. 2, Modify parameters
-        # kwargs['some_param'] = some_function(kwargs['some_param'])
-
-    #super().__init__(**kwargs) # Run Parent constructor
-
-    # Sometimes initial input (u) and initial output (z) are needed to initialize the model
-    # In that case remove the '= None' for the appropriate argument
-    # Note: If they are needed, that requirement propogated through to the simulate_to* functions
+    
     def initialize(self, u=None, z=None):
         return self.StateContainer(self.parameters['x0'])
 
-    #- UNCOMMENT THIS FUNCTION FOR CONTINUOUS MODELS
-    # update crack length based of derivative of  da/dt
-    # cycle rate wont change
-    #get the derivative of the crack length
-    #multiply by the cycle rate
+    # The model equations
     def dx(self, x : dict, u : dict):
         parameters = self.parameters
-        r = (parameters['c']*(u['k_max'] - u['k_min'])**parameters['m'])*parameters['dndt']#r = C*(k_max / k_min)^m (Stress ratio)
+        r = (parameters['c']*(u['k_max'] - u['k_min'])**parameters['m'])*parameters['dndt'] # Paris Law Equation with respect to time
         dxdt = {
              'c_li': r,
          }
         return self.StateContainer(dxdt)
 
     def output(self, x):
-        return self.OutputContainer(x) #disctionary or an array/coloumn vector of outputs
+        return self.OutputContainer(x) 
 
-        # when crack length is maximum it should be 0
-        # when crack length is 0 it should be 1
-        # when the crack length is half the maximum it should be 0.5
-
-
-    def event_state(self, x : dict) -> dict: #true if it greater than the threashold
+    def event_state(self, x : dict) -> dict: 
        return {
             'CGF' : 1- x['c_li'] / self.parameters['config_length']
         }
 
-       
-    # Note: Thresholds met equation below is not strictly necessary. By default threshold_met will check if event_state is ≤ 0 for each event
-    # crack length ends when we reach a configurable size
     def threshold_met(self, x):
         t_met = {
            'CGF': x['c_li'] > self.parameters['config_length']
         }
-        return t_met 
+        return t_met
+         

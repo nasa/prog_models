@@ -2,17 +2,17 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a battery being simulated for a set period of time and then till threshold is met.
+ Example demonstrating the Paris Law Crack Growth Equation
 """
 
-from prog_models.models.paris_law import Growth 
+from prog_models.models.paris_law import CrackGrowth 
 import matplotlib.pyplot as plt
 import csv
 import os
 
 def run_example(): 
     # Step 1: Create a model object
-    m = Growth(process_noise = 0)
+    m = CrackGrowth(process_noise = 0)
     
     # Step 2: Define future loading function 
     def future_loading(t, x=None):
@@ -52,7 +52,7 @@ def run_example():
     except FileNotFoundError:
         print("No data file found")
 
-    # estimates the model parameters
+    # Estimates the model parameters
     keys = ['c', 'm']
 
     print('Model configuration before')
