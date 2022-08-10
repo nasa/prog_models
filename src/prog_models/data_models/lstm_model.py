@@ -292,60 +292,80 @@ class LSTMStateTransitionModel(DataModel):
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
-        # Convert to previous format - used below
-        data = [(u, z) for u, z in zip(inputs, outputs)]
+        # Data split
+        all_data = [(u, z) for u, z in zip(inputs, outputs)]
+        if len(all_data) == 1 and params['validation_split'] > 0:
+            raise ValueError('Cannot split validation data when only one run is provided')
+        if params['validation_split'] == 0:
+            training_data = all_data
+            validation_data = None
+        else:
+            validation_index = max(int(len(all_data)*params['validation_split']), 1)
+            training_data = all_data[:-validation_index]
+            validation_data = LSTMStateTransitionModel.pre_process_data(all_data[-validation_index:], **params)
 
         # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
+        is_built = False
+        for data in training_data:
+            (u_all, z_all) = LSTMStateTransitionModel.pre_process_data([data], **params)
 
-        # Normalize
-        if params['normalize']:
-            n_inputs = len(data[0][0][0])
-            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
-            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
-            u_std[u_std == 0] = 1
-            z_mean = np.mean(z_all, axis=0)
-            z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
-            z_std[z_std == 0] = 1
+            # Normalize
+            if params['normalize']:
+                n_inputs = len(data[0][0])
+                u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
+                u_std = np.std(u_all[:,0,:n_inputs], axis=0)
+                # If there's no variation- dont normalize 
+                u_std[u_std == 0] = 1
+                z_mean = np.mean(z_all, axis=0)
+                z_std = np.std(z_all, axis=0)
+                # If there's no variation- dont normalize 
+                z_std[z_std == 0] = 1
 
-            # Add output (since z_t-1 is last input)
-            u_mean = np.hstack((u_mean, z_mean))
-            u_std = np.hstack((u_std, z_std))
+                # Add output (since z_t-1 is last input)
+                u_mean = np.hstack((u_mean, z_mean))
+                u_std = np.hstack((u_std, z_std))
 
-            u_all = (u_all - u_mean)/u_std
-            z_all = (z_all - z_mean)/z_std
+                u_all = (u_all - u_mean)/u_std
+                z_all = (z_all - z_mean)/z_std
 
-            # u_mean and u_std act on the column vector form (from inputcontainer)
-            # so we need to transpose them to a column vector
-            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
-        
-        # Build model
-        callbacks = [
-            keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
-        ]
+                # u_mean and u_std act on the column vector form (from inputcontainer)
+                # so we need to transpose them to a column vector
+                params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
+            
+            # Build model
+            if not is_built:
+                callbacks = [
+                    keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
+                ]
 
-        inputs = keras.Input(shape=u_all.shape[1:])
-        x = inputs
-        for i in range(params['layers']):
-            if i == params['layers'] - 1:
-                # Last layer
-                x = layers.LSTM(params['units'][i], activation=params['activation'][i])(x)
+                inputs = keras.Input(shape=u_all.shape[1:])
+                x = inputs
+                lstm_layers = []
+                for i in range(params['layers']):
+                    name = f"lstm{len(lstm_layers)+1}"
+                    lstm_layers.append(name)
+                    if i == params['layers'] - 1:
+                        # Last layer
+                        x = layers.LSTM(params['units'][i], name = name, stateful = True, activation=params['activation'][i])(x)
+                    else:
+                        # Intermediate layer
+                        x = layers.LSTM(params['units'][i], name = name, stateful = True, activation=params['activation'][i], return_sequences=True)(x)
+                
+                if params['dropout'] > 0:
+                    # Dropout prevents overfitting
+                    x = layers.Dropout(params['dropout'])(x)
+
+                x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
+                model = keras.Model(inputs, x)
+                model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
+                is_built = True
             else:
-                # Intermediate layer
-                x = layers.LSTM(params['units'][i], activation=params['activation'][i], return_sequences=True)(x)
-        
-        if params['dropout'] > 0:
-            # Dropout prevents overfitting
-            x = layers.Dropout(params['dropout'])(x)
-
-        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
-        model = keras.Model(inputs, x)
-        model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
-        
-        # Train model
-        model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+                # Reset state - because this is a new run 
+                for layer in lstm_layers:
+                    model.get_layer(name=layer).reset_states()
+            
+            # Train model
+            model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_data = validation_data, )
 
         return cls(keras.models.load_model("jena_sense.keras"), **params)
         
