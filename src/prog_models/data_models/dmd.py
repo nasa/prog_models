@@ -179,10 +179,6 @@ class SurrogateDMDModel(LinearModel, DataModel):
             if len(u) == 0:
                 raise ProgModelInputException(f"Each run must have at least one timestep, not true for Run {run}")
 
-            # Process times
-            if isinstance(t, list):
-                t = np.array(t)
-
             # Process inputs
             if isinstance(u, SimResult):                
                 if config['input_keys'] == None:
@@ -271,7 +267,7 @@ class SurrogateDMDModel(LinearModel, DataModel):
             time_list.append(t)
             x_mat = np.hstack((x, z, es, u)).T
             x_list.append(x_mat[:, :-1])
-            xprime_list.append(x_mat[:-n_inputs, 1:] if n_inputs != 0 else x_mat[:, 1:])
+            xprime_list.append(x_mat[:-n_inputs if n_inputs != 0 else None, 1:])
 
         for state_key in config['state_keys']:
             if state_key in config['input_keys'] or state_key in config['output_keys'] or state_key in config['event_keys']:
