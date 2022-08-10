@@ -157,14 +157,11 @@ def run_example():
     print('Example 3 MSE:',MSE)
 
     # Plot results
-    # simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
-    # simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
-    # simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
-    # plt.show()
+    simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
+    simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
+    simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
+    plt.show()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
-    import time
-    t1 = time.perf_counter()
     run_example()
-    print(f'Time: {time.perf_counter()-t1}')
