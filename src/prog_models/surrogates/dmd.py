@@ -314,7 +314,14 @@ class SurrogateDMDModel(LinearModel, DataModel):
         
     @classmethod
     def from_model(cls, m, load_functions, **kwargs):
-        config = {'add_dt': False}  # Defaults specific to this class
+        process_noise_temp = {key: 0 for key in m.events}
+        config = {
+            'add_dt': False,
+            'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
+            'measurement_noise': m.parameters['measurement_noise'],
+            'process_noise_dist': m.parameters.get('process_noise_dist', 'normal'),
+            'measurement_noise_dist': m.parameters.get('measurement_noise_dist', 'normal')
+        }  # Defaults specific to this class
         config.update(kwargs)
         # Build Model
         m_dmd = super().from_model(m, load_functions, **config)
