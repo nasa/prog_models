@@ -1220,15 +1220,19 @@ class PrognosticsModel(ABC):
         if 'inputs' in config:
             warn("Use 'input_keys' instead of 'inputs'. 'inputs' will be deprecated in v1.5")
             config['input_keys'] = config['inputs']
+            del config['inputs']
         if 'states' in config:
             warn("Use 'state_keys' instead of 'states'. 'states' will be deprecated in v1.5")
             config['state_keys'] = config['states']
+            del config['states']
         if 'outputs' in config:
             warn("Use 'output_keys' instead of 'outputs'. 'outputs' will be deprecated in v1.5")
-            config['input_keys'] = config['outputs']
+            config['output_keys'] = config['outputs']
+            del config['outputs']
         if 'events' in config:
             warn("Use 'event_keys' instead of 'events'. 'events' will be deprecated in v1.5")
             config['event_keys'] = config['events']
+            del config['states']
 
         # Validate user inputs 
         try:
