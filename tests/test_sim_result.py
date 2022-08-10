@@ -1,8 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+import numpy as np
 import unittest
 
 from prog_models.sim_result import SimResult, LazySimResult
+from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class TestSimResult(unittest.TestCase):
@@ -138,6 +140,33 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.pop, {})
         self.assertRaises(TypeError, result.pop, set())
         self.assertRaises(TypeError, result.pop, 1.5)
+
+    def test_to_numpy(self):
+        NUM_ELEMENTS = 10
+        time = list(range(NUM_ELEMENTS))
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
+        result = SimResult(time, state)
+        result = result.to_numpy()
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.shape, (NUM_ELEMENTS, 2))
+        self.assertEqual(result.dtype, np.dtype('float64'))
+        self.assertTrue(np.all(result==np.array([[i * 2.5, i * 5] for i in range(NUM_ELEMENTS)])))
+
+        # Now test when empty
+        result = SimResult([], [])
+        result = result.to_numpy()
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.shape, (1, 0))
+        self.assertEqual(result.dtype, np.dtype('float64'))
+
+        # Now test with StateContainer
+        state = [DictLikeMatrixWrapper(['a', 'b'], x) for x in state]
+        result = SimResult(time, state)
+        result = result.to_numpy()
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.shape, (NUM_ELEMENTS, 2))
+        self.assertEqual(result.dtype, np.dtype('float64'))
+        self.assertTrue(np.all(result==np.array([[i * 2.5, i * 5] for i in range(NUM_ELEMENTS)])))
 
     def test_remove(self):
         NUM_ELEMENTS = 5 # Creating two result objects
@@ -554,7 +583,7 @@ def main():
     result = runner.run(l.loadTestsFromTestCase(TestSimResult)).wasSuccessful()
 
     if not result:
-        raise Exception("Failed test")
+         raise Exception("Failed test")
 
 if __name__ == '__main__':
     main()
