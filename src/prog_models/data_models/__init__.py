@@ -6,6 +6,6 @@ from .dmd import DMDModel
 from .lstm_model import LSTMStateTransitionModel
 
 SURROAGATE_METHOD_LOOKUP = {
-    'dmd': DMDModel,
-    'lstm': LSTMStateTransitionModel
+    'dmd': DMDModel.from_model,
+    'lstm': LSTMStateTransitionModel.from_model
 }

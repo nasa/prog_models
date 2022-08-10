@@ -119,7 +119,7 @@ class DMDModel(LinearModel, DataModel):
         self.dt = params['dt']
 
         super().__init__(**params)
-        if not isinstance(self.parameters['x0'], self.StateContainer):
+        if not isinstance(self.parameters['x0'], bool) and not isinstance(self.parameters['x0'], self.StateContainer):
             self.parameters['x0'] = self.StateContainer(params['x0'])
 
     @classmethod

@@ -1232,7 +1232,7 @@ class PrognosticsModel(ABC):
         if 'events' in config:
             warn("Use 'event_keys' instead of 'events'. 'events' will be deprecated in v1.5")
             config['event_keys'] = config['events']
-            del config['states']
+            del config['events']
 
         # Validate user inputs 
         try:
