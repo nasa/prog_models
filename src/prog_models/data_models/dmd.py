@@ -155,7 +155,7 @@ class DMDModel(LinearModel, DataModel):
             # This means one dt for each run
             # Use mean
             config['dt'] = sum(config['dt'])/len(config['dt'])
-        elif config['dt'] == None:
+        elif config['dt'] is None:
             # Use times from data - calculate mean dt
             dts = [t[j+1] - t[j]  for j in range(len(t)-1) for t in times]
             config['dt'] = sum(dts)/len(dts)
@@ -167,42 +167,42 @@ class DMDModel(LinearModel, DataModel):
             config['save_freq'] = sum(config['save_freq'])/len(config['save_freq'])
 
         # Handle Keys
-        if config['input_keys'] == None:
+        if config['input_keys'] is None:
             for u in inputs:
-                if config['input_keys'] == None:
+                if config['input_keys'] is None:
                     config['input_keys'] = list(u[0].keys())
                     break
-            if config['input_keys'] == None:
+            if config['input_keys'] is None:
                 # Wasn't able to fill it in
                 config['input_keys'] = ['u{i}' for i in range(inputs[0].shape[1])]
-        if config['state_keys'] == None:
-            if states == None:
+        if config['state_keys'] is None:
+            if states is None:
                 config['state_keys'] = []
             else:
                 for x in states:
-                    if config['state_keys'] == None:
+                    if config['state_keys'] is None:
                         config['state_keys'] = list(x[0].keys())
                         break
-                if config['state_keys'] == None:
+                if config['state_keys'] is None:
                     # Wasn't able to fill it in
                     config['state_keys'] = ['x{i}' for i in range(states[0].shape[1])]
-        if config['output_keys'] == None:
+        if config['output_keys'] is None:
             for z in outputs:
-                if config['output_keys'] == None:
+                if config['output_keys'] is None:
                     config['output_keys'] = list(x[0].keys())
                     break
-            if config['output_keys'] == None:
+            if config['output_keys'] is None:
                 # Wasn't able to fill it in
                 config['output_keys'] = ['z{i}' for i in range(outputs[0].shape[1])]
-        if config['event_keys'] == None:
-            if event_states == None:
+        if config['event_keys'] is None:
+            if event_states is None:
                 config['event_keys'] = []
             else:
                 for es in event_states:
-                    if config['event_keys'] == None:
+                    if config['event_keys'] is None:
                         config['event_keys'] = list(es[0].keys())
                         break
-                if config['event_keys'] == None:
+                if config['event_keys'] is None:
                     # Wasn't able to fill it in
                     config['event_keys'] = ['es{i}' for i in range(event_states[0].shape[1])]
 
@@ -278,7 +278,7 @@ class DMDModel(LinearModel, DataModel):
             # This is done when dt and save_freq are not equal. 
             # dt is the frequency at which simulation is performed to generate data, 
             # while save_freq is the frequency for the dmd_matrix
-            if config['save_freq'] != config['dt'] or config['dt'] == None:
+            if config['save_freq'] != config['dt'] or config['dt'] is None:
                 if isinstance(config['save_freq'], (tuple, list, np.ndarray)):
                     # Tuple used to specify start and frequency
                     t_step = config['save_freq'][1]
