@@ -178,28 +178,9 @@ class LSTMStateTransitionModel(DataModel):
         # Prepare datasets
         (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
 
-        # Normalize
-        if params['normalize']:
-            n_inputs = len(data[0][0][0])
-            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
-            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
-            u_std[u_std == 0] = 1
-            z_mean = np.mean(z_all, axis=0)
-            z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
-            z_std[z_std == 0] = 1
-
-            # Add output (since z_t-1 is last input)
-            u_mean = np.hstack((u_mean, z_mean))
-            u_std = np.hstack((u_std, z_std))
-
-            u_all = (u_all - u_mean)/u_std
-            z_all = (z_all - z_mean)/z_std
-
-            # u_mean and u_std act on the column vector form (from inputcontainer)
-            # so we need to transpose them to a column vector
-            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
+        # u_mean and u_std act on the column vector form (from inputcontainer)
+        # so we need to transpose them to a column vector
+        params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
         
         # Build model
         callbacks = [
@@ -300,7 +281,32 @@ class LSTMStateTransitionModel(DataModel):
         
         u_all = np.array(u_all)
         z_all = np.array(z_all)
-        return (u_all, z_all)
+
+        # Normalize
+        if kwargs['normalize']:
+            n_inputs = len(data[0][0][0])
+            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
+            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
+            # If there's no variation- dont normalize 
+            u_std[u_std == 0] = 1
+            z_mean = np.mean(z_all, axis=0)
+            z_std = np.std(z_all, axis=0)
+            # If there's no variation- dont normalize 
+            z_std[z_std == 0] = 1
+
+            # Add output (since z_t-1 is last input)
+            u_mean = np.hstack((u_mean, z_mean))
+            u_std = np.hstack((u_std, z_std))
+
+            u_all = (u_all - u_mean)/u_std
+            z_all = (z_all - z_mean)/z_std
+
+            normalization = (u_mean, u_std, z_mean, z_std)
+
+            return (u_all, z_all, normalization)
+        
+        else:
+            return (u_all, z_all)
 
 
     @classmethod
@@ -337,7 +343,9 @@ class LSTMStateTransitionModel(DataModel):
             'layers': 1,
             'units': 16,
             'activation': 'tanh',
-            'dropout': 0.1,
+            'optimizer': 'adam',
+            'learning_rate': .001,
+            'dropout': 0.4,
             'normalize': True
         }.copy()  # Copy is needed to avoid updating default
 
@@ -390,31 +398,18 @@ class LSTMStateTransitionModel(DataModel):
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
-        # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
-
         # Normalize
         if params['normalize']:
-            n_inputs = len(data[0][0][0])
-            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
-            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
-            u_std[u_std == 0] = 1
-            z_mean = np.mean(z_all, axis=0)
-            z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
-            z_std[z_std == 0] = 1
 
-            # Add output (since z_t-1 is last input)
-            u_mean = np.hstack((u_mean, z_mean))
-            u_std = np.hstack((u_std, z_std))
-
-            u_all = (u_all - u_mean)/u_std
-            z_all = (z_all - z_mean)/z_std
+            # Prepare datasets
+            (u_all, z_all, normalize) = LSTMStateTransitionModel.pre_process_data(data, **params)
 
             # u_mean and u_std act on the column vector form (from inputcontainer)
             # so we need to transpose them to a column vector
-            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
+            params['normalization'] = (normalize[0][np.newaxis].T, normalize[1][np.newaxis].T, normalize[2], normalize[3])
+
+        else:
+            (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
         
         # Build model
         callbacks = [
@@ -437,7 +432,13 @@ class LSTMStateTransitionModel(DataModel):
 
         x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
         model = keras.Model(inputs, x)
-        model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
+
+        if params['optimizer'] == 'adam':
+            optimizer = keras.optimizers.Adam(learning_rate=params['learning_rate'])
+        elif params['optimizer'] == 'rmsprop':
+            optimizer = keras.optimizers.RMSprop(learning_rate=params['learning_rate'])
+
+        model.compile(optimizer=optimizer, loss="mse", metrics=[keras.metrics.RootMeanSquaredError()])
         
         # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
