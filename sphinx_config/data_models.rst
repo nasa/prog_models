@@ -7,4 +7,10 @@ Data-Driven Models
 LSTM State Transition Model
 ------------------------------
 
-.. autoclass:: prog_models.lstm_model.LSTMStateTransitionModel
+.. autoclass:: prog_models.data_models.LSTMStateTransitionModel
+
+Dynamic Mode Decomposition (DMD) Model
+------------------------------
+
+.. autoclass:: prog_models.data_models.DMDModel
+

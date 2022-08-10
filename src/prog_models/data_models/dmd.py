@@ -12,7 +12,8 @@ from ..sim_result import SimResult, LazySimResult
 from .. import LinearModel, PrognosticsModel
 from . import DataModel
 
-class SurrogateDMDModel(LinearModel, DataModel):
+
+class DMDModel(LinearModel, DataModel):
     """
     A subclass of LinearModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
     
@@ -78,22 +79,20 @@ class SurrogateDMDModel(LinearModel, DataModel):
             return
 
         params = {
-            'dt': None,
-            'input_keys': None,
-            'state_keys': None,
-            'output_keys': None,
             'event_keys': []
         }
         params.update(**kwargs)
         
-        if params['input_keys'] is None:
+        if 'input_keys' not in params:
             raise ValueError('input_keys must be specified')
-        if params['dt'] is None:
+        if 'dt' not in params:
             raise ValueError('dt must be specified')
-        if params['state_keys'] is None:
+        if 'state_keys' not in params:
             raise ValueError('state_keys must be specified')
-        if params['output_keys'] is None:
+        if 'output_keys' not in params:
             raise ValueError('output_keys must be specified')
+        if 'x0' not in params:
+            raise ValueError('x0 must be specified')
 
         self.inputs = params['input_keys']
         n_inputs = len(params['input_keys'])
@@ -120,9 +119,11 @@ class SurrogateDMDModel(LinearModel, DataModel):
         self.dt = params['dt']
 
         super().__init__(**params)
+        if not isinstance(self.parameters['x0'], self.StateContainer):
+            self.parameters['x0'] = self.StateContainer(params['x0'])
 
     @classmethod
-    def from_data(cls, times, inputs, states, outputs, event_states = None, **kwargs):
+    def from_data(cls, times, inputs, outputs, states = None, event_states = None, **kwargs):
 
         # Configure
         config = { # Defaults
@@ -144,7 +145,11 @@ class SurrogateDMDModel(LinearModel, DataModel):
             raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
         if not isinstance(config['training_noise'], Number) or config['training_noise'] < 0:
             raise ProgModelInputException(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")
-        if len(inputs) != len(outputs) or len(inputs) != len(states) or (event_states is not None and len(event_states) != len(inputs)):
+        if (
+            len(inputs) != len(outputs) or 
+            (states is not None and len(inputs) != len(states)) or 
+            (event_states is not None and len(event_states) != len(inputs))
+            ):
             raise ProgModelInputException("Must have same number of runs for inputs, states, and outputs")
         if isinstance(config['dt'], list):
             # This means one dt for each run
@@ -152,7 +157,7 @@ class SurrogateDMDModel(LinearModel, DataModel):
             config['dt'] = sum(config['dt'])/len(config['dt'])
         elif config['dt'] == None:
             # Use times from data - calculate mean dt
-            dts = [t[j+1] - t[j] for t in times for j in len(t)-1]
+            dts = [t[j+1] - t[j]  for j in range(len(t)-1) for t in times]
             config['dt'] = sum(dts)/len(dts)
         if 'save_freq' not in config:
             config['save_freq'] = config['dt']
@@ -160,6 +165,64 @@ class SurrogateDMDModel(LinearModel, DataModel):
             # This means one save_freq for each run
             # Use mean
             config['save_freq'] = sum(config['save_freq'])/len(config['save_freq'])
+
+        # Handle Keys
+        if config['input_keys'] == None:
+            for u in inputs:
+                if config['input_keys'] == None:
+                    config['input_keys'] = list(u[0].keys())
+                    break
+            if config['input_keys'] == None:
+                # Wasn't able to fill it in
+                config['input_keys'] = ['u{i}' for i in range(inputs[0].shape[1])]
+        if config['state_keys'] == None:
+            if states == None:
+                config['state_keys'] = []
+            else:
+                for x in states:
+                    if config['state_keys'] == None:
+                        config['state_keys'] = list(x[0].keys())
+                        break
+                if config['state_keys'] == None:
+                    # Wasn't able to fill it in
+                    config['state_keys'] = ['x{i}' for i in range(states[0].shape[1])]
+        if config['output_keys'] == None:
+            for z in outputs:
+                if config['output_keys'] == None:
+                    config['output_keys'] = list(x[0].keys())
+                    break
+            if config['output_keys'] == None:
+                # Wasn't able to fill it in
+                config['output_keys'] = ['z{i}' for i in range(outputs[0].shape[1])]
+        if config['event_keys'] == None:
+            if event_states == None:
+                config['event_keys'] = []
+            else:
+                for es in event_states:
+                    if config['event_keys'] == None:
+                        config['event_keys'] = list(es[0].keys())
+                        break
+                if config['event_keys'] == None:
+                    # Wasn't able to fill it in
+                    config['event_keys'] = ['es{i}' for i in range(event_states[0].shape[1])]
+
+        for state_key in config['state_keys']:
+            if state_key in config['input_keys'] or state_key in config['output_keys'] or state_key in config['event_keys']:
+                config['state_keys'].remove(state_key)
+                warn(f"State value '{state_key}' is duplicated in inputs, outputs, or events; duplicate has been removed.")
+
+        for input_key in config['input_keys']:
+            if input_key in config['output_keys'] or input_key in config['event_keys']:
+                warn(f"Input value '{input_key}' is duplicated in outputs or events")     
+
+        for output_key in config['output_keys']:
+            if output_key in config['event_keys']:
+                warn(f"Output value '{output_key}' is duplicated in events")
+
+        n_inputs = len(config['input_keys'])
+        n_states = len(config['state_keys'])
+        n_outputs = len(config['output_keys'])
+        n_events = len(config['event_keys'])
 
         # Initialize lists to hold individual matrices
         x_list = []
@@ -171,53 +234,36 @@ class SurrogateDMDModel(LinearModel, DataModel):
         for run in range(n_runs):
             t = times[run]
             u = inputs[run]
-            x = states[run]
             z = outputs[run]
 
-            if len(u) != len(x) or len(u) != len(z):
-                raise ProgModelInputException(f"Must have same number of steps for inputs, states, and outputs in a single run. Not true for run {run}")
+            if len(u) != len(z):
+                raise ProgModelInputException(f"Must have same number of steps for inputs and outputs in a single run. Not true for run {run}")
             if len(u) == 0:
                 raise ProgModelInputException(f"Each run must have at least one timestep, not true for Run {run}")
 
-            # Process inputs
             if isinstance(u, SimResult):                
-                if config['input_keys'] == None:
-                    config['input_keys'] = u.keys()
-                u = u.to_numpy(config['input_keys'])
-            elif config['input_keys'] == None:  # Is numpy array already, but no keys
-                config['input_keys'] = ['u{i}' for i in range(u.shape[1])]
-            n_inputs = u.shape[1]
+                u = u.to_numpy(config['input_keys'])                
+            
+            if states != None:
+                x = states[run]
+                if len(x) != len(u):
+                    raise ProgModelInputException(f"Must have same number of steps for inputs, states, and outputs in a single run. Not true for states in run {run}")
+                if isinstance(x, SimResult):                
+                    x = x.to_numpy(config['state_keys'])
+            else:
+                x = np.array([[] for _ in u])
 
-            # Process states
-            if isinstance(x, SimResult):                
-                if config['state_keys'] == None:
-                    config['state_keys'] = x.keys()
-                x = x.to_numpy(config['state_keys'])
-            elif config['state_keys'] == None:  # Is numpy array already, but no keys
-                config['state_keys'] = ['x{i}' for i in range(x.shape[1])]
-            n_states = x.shape[1]
-
-            # Process outputs
             if isinstance(z, SimResult):                
-                if config['output_keys'] == None:
-                    config['output_keys'] = z.keys()
                 z = z.to_numpy(config['output_keys'])
-            elif config['output_keys'] == None:  # Is numpy array already, but no keys
-                config['output_keys'] = ['z{i}' for i in range(z.shape[1])]
-            n_outputs = z.shape[1]
 
-            # Process events
             if event_states != None:
                 es = event_states[run]
+                if len(es) != len(u):
+                    raise ProgModelInputException(f"Must have same number of steps for inputs, event_states, and outputs in a single run. Not true for event_states in run {run}")
                 if isinstance(es, SimResult):                
-                    if config['event_keys'] == None:
-                        config['event_keys'] = es.keys()
                     es = es.to_numpy(config['event_keys'])
-                elif config['event_keys'] == None:  # Is numpy array already, but no keys
-                    config['event_keys'] = ['event{i}' for i in range(es.shape[1])]    
             else:
-                es = np.array([[] for _ in u.shape[0]])   
-            n_events = es.shape[1]  
+                es = np.array([[] for _ in u])
 
             # Trim
             if config['trim_data_to'] != 1:
@@ -246,7 +292,8 @@ class SurrogateDMDModel(LinearModel, DataModel):
                     
                 t_new = np.arange(start, t[-1], t_step)
                 u = interp1d(t, u, axis=0)(t_new)
-                x = interp1d(t, x, axis=0)(t_new)
+                if n_states != 0:
+                    x = interp1d(t, x, axis=0)(t_new)
                 z = interp1d(t, z, axis=0)(t_new)
                 if n_events != 0:  
                     # Optimization - avoid interpolation of empty array
@@ -257,7 +304,8 @@ class SurrogateDMDModel(LinearModel, DataModel):
             if config['training_noise'] != 0:
                 n_steps = len(u)
                 u += np.random.randn(n_steps, n_inputs)*config['training_noise']
-                x += np.random.randn(n_steps, n_states)*config['training_noise']
+                if n_states != 0:
+                    x += np.random.randn(n_steps, n_states)*config['training_noise']
                 z += np.random.randn(n_steps, n_outputs)*config['training_noise']
                 if n_events != 0:  
                     # Optimization - avoid generation for empty array
@@ -267,23 +315,13 @@ class SurrogateDMDModel(LinearModel, DataModel):
             time_list.append(t)
             x_mat = np.hstack((x, z, es, u)).T
             x_list.append(x_mat[:, :-1])
-            xprime_list.append(x_mat[:-n_inputs if n_inputs != 0 else None, 1:])
-
-        for state_key in config['state_keys']:
-            if state_key in config['input_keys'] or state_key in config['output_keys'] or state_key in config['event_keys']:
-                config['state_keys'].remove(state_key)
-                warn(f"State value '{state_key}' is duplicated in inputs, outputs, or events; duplicate has been removed.")
-
-        for input_key in config['input_keys']:
-            if input_key in config['output_keys'] or input_key in config['event_keys']:
-                warn(f"Input value '{input_key}' is duplicated in outputs or events")     
-
-        for output_key in config['output_keys']:
-            if output_key in config['event_keys']:
-                warn(f"Output value '{output_key}' is duplicated in events")    
+            xprime_list.append(x_mat[:-n_inputs if n_inputs != 0 else None, 1:])    
 
         # Format training data for DMD and solve for matrix A, in the form X' = AX 
         print('Generate DMD Surrogate Model')
+
+        if 'x0' not in config:
+            config['x0'] = np.mean(np.array([x[:-n_inputs if n_inputs != 0 else None, 0] for x in x_list]), axis=0)[np.newaxis].T
      
         # Convert lists of datasets into arrays, sequentially stacking data in the horizontal direction
         x_mat = np.hstack((x_list[:]))
@@ -313,6 +351,7 @@ class SurrogateDMDModel(LinearModel, DataModel):
         process_noise_temp = {key: 0 for key in m.events}
         config = {
             'add_dt': False,
+            'x0': True,  # Set it to anything not None since we define our own function
             'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
             'measurement_noise': m.parameters['measurement_noise'],
             'process_noise_dist': m.parameters.get('process_noise_dist', 'normal'),
@@ -334,9 +373,7 @@ class SurrogateDMDModel(LinearModel, DataModel):
         return m_dmd
 
     def initialize(self, u=None, z=None):
-        # TODO(CT): WHAT DO WE PUT HERE AS DEFAULT
-
-        return self.StateContainer(x)
+        return self.parameters['x0']
 
     def next_state(self, x, u, _):   
         x.matrix = np.matmul(self.A, x.matrix) + self.E
@@ -422,3 +459,6 @@ class SurrogateDMDModel(LinearModel, DataModel):
             outputs,
             event_states
         )
+
+# Kept for backwards compatability
+SurrogateDMDModel = DMDModel

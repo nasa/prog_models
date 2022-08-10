@@ -2,13 +2,10 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .data_model import DataModel
+from .dmd import DMDModel
 from .lstm_model import LSTMStateTransitionModel
-from .dmd import SurrogateDMDModel
 
 SURROAGATE_METHOD_LOOKUP = {
-    'dmd': SurrogateDMDModel,
+    'dmd': DMDModel,
     'lstm': LSTMStateTransitionModel
 }
-
-
-__all__ = ['DataModel', 'LSTMStateTransitionModel']

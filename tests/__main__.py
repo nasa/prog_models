@@ -11,7 +11,7 @@ from .test_tutorials import main as tutorials_main
 from .test_datasets import main as datasets_main
 from .test_powertrain import main as powertrain_main
 from .test_surrogates import main as surrogates_main
-from .test_lstm import main as lstm_main
+from .test_data_model import main as lstm_main
 
 from io import StringIO
 import sys
