@@ -15,7 +15,6 @@ from .test_lstm import main as lstm_main
 
 from io import StringIO
 import sys
-import unittest
 from examples import sim as sim_example
 
 def _test_ex():

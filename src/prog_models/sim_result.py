@@ -114,9 +114,12 @@ class SimResult(UserList):
         """
         return self.times[index]
 
-    def to_numpy(self) -> np.ndarray:
+    def to_numpy(self, keys = None) -> np.ndarray:
         """
         Convert from simresult to numpy array
+
+        Args:
+            keys: Subset of keys to return as part of numpy array (by default, all)
 
         Returns:
             np.ndarray: numpy array representing simresult
@@ -125,9 +128,9 @@ class SimResult(UserList):
             return np.array([[]], dtype=np.float64)
         if len(self.data[0]) == 0:
             return np.array([[] for _ in self.data], dtype=np.float64)
-        if isinstance(self.data[0], DictLikeMatrixWrapper):
-            return np.array([u_i.matrix[:,0] for u_i in self.data], dtype=np.float64)
-        return np.array([[u_i[key] for key in u_i.keys()] for u_i in self.data ], dtype=np.float64)
+        if keys == None:
+            keys = self.data[0].keys()
+        return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
 
     def plot(self, **kwargs) -> figure:
         """

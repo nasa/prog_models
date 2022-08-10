@@ -146,11 +146,18 @@ class TestSimResult(unittest.TestCase):
         time = list(range(NUM_ELEMENTS))
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
-        result = result.to_numpy()
+        np_result = result.to_numpy()
+        self.assertIsInstance(np_result, np.ndarray)
+        self.assertEqual(np_result.shape, (NUM_ELEMENTS, 2))
+        self.assertEqual(np_result.dtype, np.dtype('float64'))
+        self.assertTrue(np.all(np_result==np.array([[i * 2.5, i * 5] for i in range(NUM_ELEMENTS)])))
+
+        # Subset of keys
+        result = result.to_numpy(['b'])
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, (NUM_ELEMENTS, 2))
+        self.assertEqual(result.shape, (NUM_ELEMENTS, 1))
         self.assertEqual(result.dtype, np.dtype('float64'))
-        self.assertTrue(np.all(result==np.array([[i * 2.5, i * 5] for i in range(NUM_ELEMENTS)])))
+        self.assertTrue(np.all(result==np.array([[i * 5] for i in range(NUM_ELEMENTS)])))
 
         # Now test when empty
         result = SimResult([], [])
