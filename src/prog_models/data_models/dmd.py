@@ -15,15 +15,15 @@ from . import DataModel
 
 class DMDModel(LinearModel, DataModel):
     """
-    A subclass of LinearModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
+    A subclass of LinearModel and DataModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
     
-    Given an initial state of the system (including internal states, outputs, and event_states), and the expected inputs throuhgout time, this class defines a surrogate model that can approximate the internal states, outputs, and event_states throughout time until threshold is met.
+    Given an initial state of the system (including internal states, outputs, and event_states), and the expected inputs throuhgout time, this class defines a model that can approximate the internal states, outputs, and event_states throughout time until threshold is met.
+
+    Most users will use from_model or from_data to generate the model.
 
     Args
     ---------
-        m : PrognosticsModel 
-        load_functions : list of callable functions
-            Each index is a callable loading function of (t, x = None) -> z used to predict future loading (output) at a given time (t) and state (x)
+        dmd_matrix : Matrix used by DMD
 
     Keyword Args
     ------------
@@ -41,20 +41,8 @@ class DMDModel(LinearModel, DataModel):
     ---------
         LinearModel, DataModel
 
-    Methods
-    ----------
-        initialize : 
-            Calculate initial state, augmented with outputs and event_states
-
-        next_state : 
-            State transition equation: Calculate next state with matrix multiplication (overrides 'dx' defined in LinearModel)
-
-        simulate_to_threshold:
-            Simulate prognostics model until defined threshold is met, using simulate_to_threshold defined in PrognosticsModel, then interpolate results to be at user-defined times
-
     Note
     -------
-    This is a first draft of a surrogate model generation using Dynamic Mode Decomposition. 
     DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
     In general, the approximation is less accurate if the DMD matrix is unstable. 
     Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). Further functionalities will be included in future releases. \n
@@ -68,7 +56,7 @@ class DMDModel(LinearModel, DataModel):
     def __new__(cls, dmd_matrix, *args, **kwargs):
         if isinstance(dmd_matrix, PrognosticsModel):
             # Keep for backwards compatability (in first version, model was passed into constructor)
-            warn('Passing a PrognosticsModel into SurrogateDMDModel is deprecated and will be removed in v1.5.', DeprecationWarning)
+            warn('Passing a PrognosticsModel into DMDModel is deprecated and will be removed in v1.5.  Please use DMDModel.from_model instead', DeprecationWarning)
             return cls.from_model(dmd_matrix, args[0], **kwargs) 
         return DataModel.__new__(cls)
 
