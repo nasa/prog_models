@@ -89,10 +89,6 @@ class LSTMStateTransitionModel(DataModel):
     def next_state(self, x, u, dt):
         # Rotate new input into state
         input_data = u.matrix
-        if 'normalization' in self.parameters:
-            # TODO(CT): Handle normalization if keys dont match previous
-            input_data -= self.parameters['normalization'][0]
-            input_data /= self.parameters['normalization'][1]
             
         states = x.matrix[len(input_data):]
         return self.StateContainer(np.vstack((states, input_data)))
@@ -108,9 +104,6 @@ class LSTMStateTransitionModel(DataModel):
 
         # Pass into model to calculate outp        
         m_output = self.model(m_input)
-        if 'normalization' in self.parameters:
-            m_output *= self.parameters['normalization'][3]
-            m_output += self.parameters['normalization'][2]
 
         return self.OutputContainer(m_output.numpy().T)
 
@@ -313,13 +306,6 @@ class LSTMStateTransitionModel(DataModel):
             # Add output (since z_t-1 is last input)
             u_mean = np.hstack((u_mean, z_mean))
             u_std = np.hstack((u_std, z_std))
-
-            u_all = (u_all - u_mean)/u_std
-            z_all = (z_all - z_mean)/z_std
-
-            # u_mean and u_std act on the column vector form (from inputcontainer)
-            # so we need to transpose them to a column vector
-            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
         
         # Build model
         callbacks = [
@@ -327,7 +313,7 @@ class LSTMStateTransitionModel(DataModel):
         ]
 
         inputs = keras.Input(shape=u_all.shape[1:])
-        x = inputs
+        x = layers.Normalization(mean = u_mean, variance = u_std**2)(inputs)
         for i in range(params['layers']):
             if i == params['layers'] - 1:
                 # Last layer
