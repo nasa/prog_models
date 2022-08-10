@@ -10,7 +10,7 @@ from warnings import warn
 from ..exceptions import ProgModelInputException
 from ..sim_result import SimResult, LazySimResult
 from .. import LinearModel, PrognosticsModel
-from ..data_models import DataModel
+from . import DataModel
 
 class SurrogateDMDModel(LinearModel, DataModel):
     """

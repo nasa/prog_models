@@ -1202,7 +1202,7 @@ class PrognosticsModel(ABC):
         See examples/generate_surrogate
         """
 
-        from .surrogates import SURROAGATE_METHOD_LOOKUP
+        from .data_models import SURROAGATE_METHOD_LOOKUP
 
         if method not in SURROAGATE_METHOD_LOOKUP.keys():
             raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
