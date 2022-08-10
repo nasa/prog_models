@@ -128,7 +128,6 @@ jobs:
     - name: Run coverage
       run: |
         coverage run -m tests
-        coverage run __autograph_generated_filep0ix907r.py
         coverage xml -i
         
     - name: "Upload coverage to Codecov"
