@@ -130,8 +130,8 @@ def run_example():
         'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
         'trim_data': 1, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-        'states': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
-        'outputs': ['v'] # Define outputs to be included in surrogate model 
+        'state_keys': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
+        'output_keys': ['v'] # Define outputs to be included in surrogate model 
     }
 
     # Set noise in Prognostics Model, default for surrogate model is also this value
@@ -157,11 +157,14 @@ def run_example():
     print('Example 3 MSE:',MSE)
 
     # Plot results
-    simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
-    simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
-    simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
-    plt.show()
+    # simulated_results.inputs.plot(ylabel = 'Current (amps)',title='Example 3 Input')
+    # simulated_results.outputs.plot(ylabel = 'Outputs (voltage)',title='Example 3 Predicted Output')
+    # simulated_results.event_states.plot(ylabel = 'State of Charge',title='Example 3 Predicted SOC')
+    # plt.show()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
+    import time
+    t1 = time.perf_counter()
     run_example()
+    print(f'Time: {time.perf_counter()-t1}')
