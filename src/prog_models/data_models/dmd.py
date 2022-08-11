@@ -9,6 +9,7 @@ from warnings import warn
 
 from ..exceptions import ProgModelInputException
 from ..sim_result import SimResult, LazySimResult
+from ..utils.containers import DictLikeMatrixWrapper
 from .. import LinearModel, PrognosticsModel
 from . import DataModel
 
@@ -17,9 +18,7 @@ class DMDModel(LinearModel, DataModel):
     """
     A subclass of LinearModel and DataModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
     
-    Given an initial state of the system (including internal states, outputs, and event_states), and the expected inputs throuhgout time, this class defines a model that can approximate the internal states, outputs, and event_states throughout time until threshold is met.
-
-    Most users will use from_model or from_data to generate the model.
+    Given an initial state of the system and the expected inputs throughout time, this class defines a model that can approximate the dynamics of the system throughout time until threshold is met. This model can be fully data-driven (using from_data) or a surrogate of another model (using from_model) where internal states of a high-fidelity model augment the purely data-driven method. 
 
     Args
     ---------
@@ -40,6 +39,23 @@ class DMDModel(LinearModel, DataModel):
     See Also
     ---------
         LinearModel, DataModel
+
+    Example
+    --------------------
+       | 
+          Method 1: from data
+          >>> from prog_models.data_models import DMDModel
+          >>> m = DMDModel.from_data(inputs= input_data, outputs = output_data)  # Generating from data
+
+       |
+          Method 2: from a model
+          >>> from prog_models.data_models import DMDModel
+          >>> m = DMDModel.from_model(other_model, loading_equations)
+
+       |
+          Method 3: from DMD Matrix
+          >>> from prog_models.data_models import DMDModel
+          >>> m = DMDModel(DMD_Matrix, input_keys = ['i'], output_keys = ['t', 'v'])
 
     Note
     -------
@@ -157,7 +173,7 @@ class DMDModel(LinearModel, DataModel):
         # Handle Keys
         if config['input_keys'] is None:
             for u in inputs:
-                if config['input_keys'] is None:
+                if isinstance(x, DictLikeMatrixWrapper):
                     config['input_keys'] = list(u[0].keys())
                     break
             if config['input_keys'] is None:
@@ -168,7 +184,7 @@ class DMDModel(LinearModel, DataModel):
                 config['state_keys'] = []
             else:
                 for x in states:
-                    if config['state_keys'] is None:
+                    if isinstance(x, DictLikeMatrixWrapper):
                         config['state_keys'] = list(x[0].keys())
                         break
                 if config['state_keys'] is None:
@@ -176,8 +192,8 @@ class DMDModel(LinearModel, DataModel):
                     config['state_keys'] = ['x{i}' for i in range(states[0].shape[1])]
         if config['output_keys'] is None:
             for z in outputs:
-                if config['output_keys'] is None:
-                    config['output_keys'] = list(x[0].keys())
+                if isinstance(x, DictLikeMatrixWrapper):
+                    config['output_keys'] = list(z[0].keys())
                     break
             if config['output_keys'] is None:
                 # Wasn't able to fill it in
@@ -187,7 +203,7 @@ class DMDModel(LinearModel, DataModel):
                 config['event_keys'] = []
             else:
                 for es in event_states:
-                    if config['event_keys'] is None:
+                    if isinstance(x, DictLikeMatrixWrapper):
                         config['event_keys'] = list(es[0].keys())
                         break
                 if config['event_keys'] is None:

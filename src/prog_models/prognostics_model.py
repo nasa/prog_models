@@ -1258,11 +1258,11 @@ class PrognosticsModel(ABC):
         if isinstance(config['output_keys'], str):
             config['output_keys'] = [config['output_keys']]
         if not all([x in self.outputs for x in config['output_keys']]):
-            raise ProgModelInputException(f"Invalid 'output_keys' input value ({config['output_keys']}), must be a subset of the model's states ({self.outputs}).")
+            raise ProgModelInputException(f"Invalid 'output_keys' input value ({config['output_keys']}), must be a subset of the model's outputs ({self.outputs}).")
 
         if isinstance(config['event_keys'], str):
             config['event_keys'] = [config['event_keys']]
         if not all([x in self.events for x in config['event_keys']]):
-            raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's states ({self.events}).")
+            raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
