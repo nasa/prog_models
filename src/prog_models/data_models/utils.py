@@ -10,6 +10,7 @@ from keras.engine import base_preprocessing_layer
 from keras.layers.preprocessing import preprocessing_utils as utils
 
 
+@tf.keras.utils.register_keras_serializable()   # this is supposed to let you save a model with this layer without needing the custom_layer option. 
 class DeNormalization(base_preprocessing_layer.PreprocessingLayer):
     """
     Kears custom DeNormalization layer for data normalized to a standard Gaussian distribution.
@@ -33,9 +34,7 @@ class DeNormalization(base_preprocessing_layer.PreprocessingLayer):
     In case of variance approaching 0, the epsilon value is used instead.
     """
     def __init__(self, axis=-1, mean=None, variance=None, **kwargs):
-
-
-        super().__init__(**kwargs)
+        super(DeNormalization, self).__init__(**kwargs)
         
         # Standardize axis to a tuple
         if axis is None:
@@ -66,7 +65,15 @@ class DeNormalization(base_preprocessing_layer.PreprocessingLayer):
             )
         self.input_mean     = mean
         self.input_variance = variance
-        
+    
+    def get_config(self):
+        config = super().get_config()
+        config["input_mean"] = self.input_mean
+        config["input_variance"] = self.input_variance
+        config["mean"] = self.mean
+        config["variance"] = self.variance
+        return config
+
     def build(self, input_shape):
         super().build(input_shape)
 

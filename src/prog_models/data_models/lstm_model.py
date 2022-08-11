@@ -7,6 +7,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from warnings import warn
+from .utils import DeNormalization
 
 from . import DataModel
 from ..sim_result import SimResult
@@ -105,9 +106,9 @@ class LSTMStateTransitionModel(DataModel):
         # Pass into model to calculate outp        
         m_output = self.model(m_input)
 
-        if 'normalization' in self.parameters:
-            m_output *= self.parameters['normalization'][1]
-            m_output += self.parameters['normalization'][0]
+        # if 'normalization' in self.parameters:
+        #     m_output *= self.parameters['normalization'][1]
+        #     m_output += self.parameters['normalization'][0]
 
         return self.OutputContainer(m_output.numpy().T)
 
@@ -322,7 +323,7 @@ class LSTMStateTransitionModel(DataModel):
             u_mean = np.hstack((u_mean, z_mean))
             u_std = np.hstack((u_std, z_std))
 
-            z_all = (z_all - z_mean)/z_std
+            # z_all = (z_all - z_mean)/z_std
 
             # u_mean and u_std act on the column vector form (from inputcontainer)
             # so we need to transpose them to a column vector
@@ -350,6 +351,10 @@ class LSTMStateTransitionModel(DataModel):
             x = layers.Dropout(params['dropout'])(x)
 
         x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
+        # Add de-normalization of output if necessary
+        if params['normalize']:
+            x = DeNormalization(mean=z_mean, variance=z_std**2.0)(x)
+
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
