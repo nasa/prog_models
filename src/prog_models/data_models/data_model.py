@@ -42,6 +42,17 @@ class DataModel(PrognosticsModel, ABC):
         """
         pass
 
+    def __setstate__(self, state):
+        # Set the state (after un-pickling)
+        # If you use the __getstate__ method format below, you dont have to override setstate
+        (args, config) = state
+        self.__init__(*args, **config)
+
+    def __getstate__(self):
+        # This is necessary to support pickling
+        # Override this, replacing the [] with any arguments from the constructor
+        return ([], self.parameters.data)
+
     @classmethod
     def from_model(cls, m: PrognosticsModel, load_functions: list, **kwargs) -> "DataModel":
         """

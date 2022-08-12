@@ -64,6 +64,9 @@ class LSTMStateTransitionModel(DataModel):
         # Save Model
         self.model = model
 
+    def __getstate__(self):
+        return ((self.model, ), self.parameters.data)
+
     def __eq__(self, other):
         # Needed because we add .model, which is not present in the parent class
         if not isinstance(other, LSTMStateTransitionModel):
@@ -329,7 +332,7 @@ class LSTMStateTransitionModel(DataModel):
         
         # Build model
         callbacks = [
-            keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
+            keras.callbacks.ModelCheckpoint("best_model.keras", save_best_only=True)
         ]
 
         inputs = keras.Input(shape=u_all.shape[1:])
@@ -355,7 +358,7 @@ class LSTMStateTransitionModel(DataModel):
         # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return cls(keras.models.load_model("jena_sense.keras"), **params)
+        return cls(keras.models.load_model("best_model.keras"), **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)

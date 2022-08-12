@@ -75,27 +75,34 @@ class DMDModel(LinearModel, DataModel):
             return cls.from_model(dmd_matrix, args[0], **kwargs) 
         return DataModel.__new__(cls)
 
-    def __init__(self, dmd_matrix, *args, **kwargs):
+    def __getstate__(self):
+        return ((self.dmd_matrix,), self.parameters.data)
+
+    def __getnewargs__(self):
+        return (self.dmd_matrix, )
+
+    def __init__(self, dmd_matrix, *_, **kwargs):
         if isinstance(dmd_matrix, PrognosticsModel):
             # Initialized in __new__
             # Remove in future version
             return
 
+        if 'input_keys' not in kwargs:
+            raise ValueError('input_keys must be specified')
+        if 'dt' not in kwargs:
+            raise ValueError('dt must be specified')
+        if 'output_keys' not in kwargs:
+            raise ValueError('output_keys must be specified')
+        if 'x0' not in kwargs:
+            raise ValueError('x0 must be specified')
+
         params = {
+            'state_keys': [],
             'event_keys': []
         }
         params.update(**kwargs)
-        
-        if 'input_keys' not in params:
-            raise ValueError('input_keys must be specified')
-        if 'dt' not in params:
-            raise ValueError('dt must be specified')
-        if 'state_keys' not in params:
-            raise ValueError('state_keys must be specified')
-        if 'output_keys' not in params:
-            raise ValueError('output_keys must be specified')
-        if 'x0' not in params:
-            raise ValueError('x0 must be specified')
+
+        self.dmd_matrix = dmd_matrix
 
         self.inputs = params['input_keys']
         n_inputs = len(params['input_keys'])
