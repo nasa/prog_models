@@ -116,16 +116,16 @@ class TestSurrogate(unittest.TestCase):
         options_surrogate = {
             'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
             'dt': 0.1, # For DMD, this value is the time step of the training data
-            'states': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
+            'state_keys': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
             'trim_data_to': 0.7, # Trim data to this fraction of the time series
-            'outputs': ['v'], # Define outputs to be included in surrogate model 
+            'output_keys': ['v'], # Define outputs to be included in surrogate model 
             'training_noise': 0
         }
 
         surrogate = m.generate_surrogate(load_functions, **options_surrogate)
-        self.assertSetEqual(set(surrogate.states), set(['tb', 'Vsn', 'Vsp'] + options_surrogate['outputs'] + m.events))
+        self.assertSetEqual(set(surrogate.states), set(['tb', 'Vsn', 'Vsp'] + options_surrogate['output_keys'] + m.events))
         self.assertListEqual(surrogate.inputs, m.inputs)
-        self.assertListEqual(surrogate.outputs, options_surrogate['outputs'])
+        self.assertListEqual(surrogate.outputs, options_surrogate['output_keys'])
         self.assertListEqual(surrogate.events, m.events)
 
         options_sim = {

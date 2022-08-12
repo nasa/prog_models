@@ -42,7 +42,6 @@ class LSTMStateTransitionModel(DataModel):
     }
 
     def __init__(self, model, **kwargs):
-
         # Setup inputs, outputs, states 
         self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(model.output.shape[1])])
 

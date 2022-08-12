@@ -9,7 +9,6 @@ from warnings import warn
 
 from ..exceptions import ProgModelInputException
 from ..sim_result import SimResult, LazySimResult
-from ..utils.containers import DictLikeMatrixWrapper
 from .. import LinearModel, PrognosticsModel
 from . import DataModel
 
