@@ -19,6 +19,7 @@ Here is the directory structure for the github repository
  
 `src/prog_models/` - The prognostics model python package<br />
 &nbsp;&nbsp; |-`datasets/` - Tools for accessing prognostics datasets<br />
+&nbsp;&nbsp; |-`data_models` - Tools for building data-based prognostics models
 &nbsp;&nbsp; |-`models/` - Example models<br /> 
 &nbsp;&nbsp; |-`linear_model.py` - A simpler subclass of PrognosticsModel for linear models<br />
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
@@ -54,6 +55,13 @@ Alternatively, if using both prog_models and prog_algs, you can cite the combine
 
 C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, ProgPy Prognostics Python Packages, v1.3, May 2022. URL https://github.com/nasa/prog_models.
 
+## Contributing Organizations
+ProgPy was created by a partnership of multiple organizations, working together to build a set of high-quality prognostic tools for the wider PHM Community. We would like to give a big thank you for the ProgPy community, especially the following contributing organizations:
+
+* [NASA's Diagnostics and Prognostics Group](https://www.nasa.gov/content/diagnostics-prognostics)
+* German Aerospace Center (DLR)
+* Northrop Grumman Corporation (NGC)
+* Vanderbilt University
 
 ## Acknowledgements
 The structure and algorithms of this package are strongly inspired by the [MATLAB Prognostics Model Library](https://github.com/nasa/PrognosticsModelLibrary). We would like to recognize Matthew Daigle and the rest of the team that contributed to the Prognostics Model Library for the contributions their work on the MATLAB library made to the design of prog_models.
