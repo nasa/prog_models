@@ -10,6 +10,13 @@ from warnings import warn
 from . import DataModel
 from ..sim_result import SimResult
 
+import tensorflow as tf
+import tensorflow_model_optimization as tfmot
+from tensorflow_model_optimization.python.core.sparsity.keras import prune
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
 
 class LSTMStateTransitionModel(DataModel):
     """
@@ -63,6 +70,10 @@ class LSTMStateTransitionModel(DataModel):
 
         # Store Model
         self.model = model
+        self.model_bytes = None
+        self.pruned = None
+        self.pruned_bytes = None
+        self.quantized_bytes = None
 
         # store params
         self.params = kwargs
@@ -172,26 +183,80 @@ class LSTMStateTransitionModel(DataModel):
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
 
 
-    def reduce(self, data, **params):
+    def reduce(self, data, log_dir='logs'):
         print('reducing model size')
+        params = self.params
 
-        # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
+        # Normalize
+        if params['normalize']:
 
-        # u_mean and u_std act on the column vector form (from inputcontainer)
-        # so we need to transpose them to a column vector
-        params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
-        
+            # Prepare datasets
+            (u_all, z_all, normalize) = LSTMStateTransitionModel.pre_process_data(data, **params)
+
+            # u_mean and u_std act on the column vector form (from inputcontainer)
+            # so we need to transpose them to a column vector
+            params['normalization'] = (normalize[0][np.newaxis].T, normalize[1][np.newaxis].T, normalize[2], normalize[3])
+
+        else:
+            (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
+
+
         # Build model
-        callbacks = [
-            keras.callbacks.ModelCheckpoint(params['checkpoint'], save_best_only=True)
-        ]
+        callbacks=[pruning_callbacks.UpdatePruningStep(), 
+                    pruning_callbacks.PruningSummaries(log_dir=log_dir)]
         
+
+        name = 'pruned'
+        pruned = prune.prune_low_magnitude(self.model, pruning_schedule.PolynomialDecay(
+            initial_sparsity=0.3, final_sparsity=0.7, begin_step = 100, end_step = 10000))
+
+        if params['optimizer'] == 'adam':
+            optimizer = keras.optimizers.Adam(learning_rate=params['learning_rate'])
+        elif params['optimizer'] == 'rmsprop':
+            optimizer = keras.optimizers.RMSprop(learning_rate=params['learning_rate'])
+
+        pruned.compile(optimizer=optimizer, loss="mse", metrics=[keras.metrics.RootMeanSquaredError()])
+
         # Train model
-        model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        pruned.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        self.reduced_model = keras.models.load_model(params['checkpoint'])
+        pruned = tfmot.sparsity.keras.strip_pruning(pruned)
 
+        #pruned.save(f'{name}.h5', save_format='h5')
+        tf.keras.models.save_model(pruned, f'{name}.h5', include_optimizer=False)
+
+        self.pruned = pruned
+
+        converter = tf.lite.TFLiteConverter.from_keras_model(pruned)
+        converter.target_spec.supported_ops = [
+            tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+            tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+        ]
+        converter._experimental_lower_tensor_list_ops = False
+        pruned_bytes = converter.convert()
+
+        with open(f'{name}.tflite', 'wb') as f:
+            f.write(pruned_bytes)
+
+        self.pruned_bytes = pruned_bytes
+
+
+
+        converter = tf.lite.TFLiteConverter.from_keras_model(self.pruned)
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.target_spec.supported_ops = [
+            tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+            tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+        ]
+        converter._experimental_lower_tensor_list_ops = False
+        quantized_bytes = converter.convert()
+
+        name = 'quantized'
+        with open(f'{name}.tflite', 'wb') as f:
+            f.write(quantized_bytes)
+
+        self.quantized_bytes = quantized_bytes
+        
 
 
     @staticmethod
