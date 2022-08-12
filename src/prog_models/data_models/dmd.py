@@ -173,42 +173,42 @@ class DMDModel(LinearModel, DataModel):
         # Handle Keys
         if config['input_keys'] is None:
             for u in inputs:
-                if isinstance(u, DictLikeMatrixWrapper):
+                if isinstance(u, SimResult):
                     config['input_keys'] = list(u[0].keys())
                     break
             if config['input_keys'] is None:
                 # Wasn't able to fill it in
-                config['input_keys'] = ['u{i}' for i in range(inputs[0].shape[1])]
+                config['input_keys'] = [f'u{i}' for i in range(len(inputs[0][0]))]
         if config['state_keys'] is None:
             if states is None:
                 config['state_keys'] = []
             else:
                 for x in states:
-                    if isinstance(x, DictLikeMatrixWrapper):
+                    if isinstance(x, SimResult):
                         config['state_keys'] = list(x[0].keys())
                         break
                 if config['state_keys'] is None:
                     # Wasn't able to fill it in
-                    config['state_keys'] = ['x{i}' for i in range(states[0].shape[1])]
+                    config['state_keys'] = [f'x{i}' for i in range(len(states[0][0]))]
         if config['output_keys'] is None:
             for z in outputs:
-                if isinstance(x, DictLikeMatrixWrapper):
+                if isinstance(z, SimResult):
                     config['output_keys'] = list(z[0].keys())
                     break
             if config['output_keys'] is None:
                 # Wasn't able to fill it in
-                config['output_keys'] = ['z{i}' for i in range(outputs[0].shape[1])]
+                config['output_keys'] = [f'z{i}' for i in range(len(outputs[0][0]))]
         if config['event_keys'] is None:
             if event_states is None:
                 config['event_keys'] = []
             else:
                 for es in event_states:
-                    if isinstance(x, DictLikeMatrixWrapper):
+                    if isinstance(es, SimResult):
                         config['event_keys'] = list(es[0].keys())
                         break
                 if config['event_keys'] is None:
                     # Wasn't able to fill it in
-                    config['event_keys'] = ['es{i}' for i in range(event_states[0].shape[1])]
+                    config['event_keys'] = [f'es{i}' for i in range(len(event_states[0][0]))]
 
         for state_key in config['state_keys']:
             if state_key in config['input_keys'] or state_key in config['output_keys'] or state_key in config['event_keys']:
@@ -245,26 +245,26 @@ class DMDModel(LinearModel, DataModel):
             if len(u) == 0:
                 raise ProgModelInputException(f"Each run must have at least one timestep, not true for Run {run}")
 
-            if isinstance(u, SimResult):                
-                u = u.to_numpy(config['input_keys'])                
+            if isinstance(u, SimResult):
+                u = u.to_numpy(config['input_keys'])
             
             if states != None:
                 x = states[run]
                 if len(x) != len(u):
                     raise ProgModelInputException(f"Must have same number of steps for inputs, states, and outputs in a single run. Not true for states in run {run}")
-                if isinstance(x, SimResult):                
+                if isinstance(x, SimResult):     
                     x = x.to_numpy(config['state_keys'])
             else:
                 x = np.array([[] for _ in u])
 
-            if isinstance(z, SimResult):                
+            if isinstance(z, SimResult):
                 z = z.to_numpy(config['output_keys'])
 
             if event_states != None:
                 es = event_states[run]
                 if len(es) != len(u):
                     raise ProgModelInputException(f"Must have same number of steps for inputs, event_states, and outputs in a single run. Not true for event_states in run {run}")
-                if isinstance(es, SimResult):                
+                if isinstance(es, SimResult):    
                     es = es.to_numpy(config['event_keys'])
             else:
                 es = np.array([[] for _ in u])
