@@ -173,7 +173,7 @@ class DMDModel(LinearModel, DataModel):
         # Handle Keys
         if config['input_keys'] is None:
             for u in inputs:
-                if isinstance(x, DictLikeMatrixWrapper):
+                if isinstance(u, DictLikeMatrixWrapper):
                     config['input_keys'] = list(u[0].keys())
                     break
             if config['input_keys'] is None:
