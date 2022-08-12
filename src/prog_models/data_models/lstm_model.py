@@ -89,10 +89,6 @@ class LSTMStateTransitionModel(DataModel):
     def next_state(self, x, u, dt):
         # Rotate new input into state
         input_data = u.matrix
-        if 'normalization' in self.parameters:
-            # TODO(CT): Handle normalization if keys dont match previous
-            input_data -= self.parameters['normalization'][0]
-            input_data /= self.parameters['normalization'][1]
             
         states = x.matrix[len(input_data):]
         return self.StateContainer(np.vstack((states, input_data)))
@@ -108,9 +104,10 @@ class LSTMStateTransitionModel(DataModel):
 
         # Pass into model to calculate outp        
         m_output = self.model(m_input)
+
         if 'normalization' in self.parameters:
-            m_output *= self.parameters['normalization'][3]
-            m_output += self.parameters['normalization'][2]
+            m_output *= self.parameters['normalization'][1]
+            m_output += self.parameters['normalization'][0]
 
         return self.OutputContainer(m_output.numpy().T)
 
@@ -210,16 +207,27 @@ class LSTMStateTransitionModel(DataModel):
 
         Keyword Args:
             inputs (List[Array]): REQUIRED, list of input data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
+
             outputs (List[Array]): REQUIRED, list of output data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
+
             window (int): Number of historical points used in the model. I.e, if window is 3, the model will map from [t-3, t-2, t-1] to t
+
             input_keys (List[str]): List of keys to use to identify inputs. If not supplied u[#] will be used to idenfiy inputs
+
             output_keys (List[str]): List of keys to use to identify outputs. If not supplied z[#] will be used to idenfiy outputs
+
             validation_percentage (float): Percentage of data to use for validation, between 0-1
+
             epochs (int): Number of epochs (i.e., iterations) to train the model. More epochs means better results (to a point), but more time to train. Note: large numbers of epochs may result in overfitting.
+
             layers (int): Number of LSTM layers to use. More layers can represent more complex systems, but are less efficient. Note: 2 layers is typically enough for most complex systems. Default: 1
+
             units (int or list[int]): number of units (i.e., dimensionality of output state) used in each lstm layer. Using a scalar value will use the same number of units for each layer.
+
             activation (str or list[str]): Activation function to use for each layer
+
             dropout (float): Dropout rate to be applied. Dropout helps avoid overfitting
+
             normalize (bool): If the data should be normalized. This is recommended for most cases.
 
         Returns:
@@ -314,12 +322,11 @@ class LSTMStateTransitionModel(DataModel):
             u_mean = np.hstack((u_mean, z_mean))
             u_std = np.hstack((u_std, z_std))
 
-            u_all = (u_all - u_mean)/u_std
             z_all = (z_all - z_mean)/z_std
 
             # u_mean and u_std act on the column vector form (from inputcontainer)
             # so we need to transpose them to a column vector
-            params['normalization'] = (u_mean[np.newaxis].T, u_std[np.newaxis].T, z_mean, z_std)
+            params['normalization'] = (z_mean, z_std)
         
         # Build model
         callbacks = [
@@ -328,6 +335,8 @@ class LSTMStateTransitionModel(DataModel):
 
         inputs = keras.Input(shape=u_all.shape[1:])
         x = inputs
+        if params['normalize']:
+            x = layers.Normalization(mean = u_mean, variance = u_std**2)(inputs)
         for i in range(params['layers']):
             if i == params['layers'] - 1:
                 # Last layer
