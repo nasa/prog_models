@@ -1182,13 +1182,13 @@ class PrognosticsModel(ABC):
             Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
         save_freq : Number, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
-        states: list, optional
+        state_keys: list, optional
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        inputs: list, optional
+        input_keys: list, optional
             List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        outputs: list, optional
+        output_keys: list, optional
             List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        events: list, optional
+        event_keys: list, optional
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n      
         
 
@@ -1202,7 +1202,7 @@ class PrognosticsModel(ABC):
         See examples/generate_surrogate
         """
 
-        from .surrogates import SURROAGATE_METHOD_LOOKUP
+        from .data_models import SURROAGATE_METHOD_LOOKUP
 
         if method not in SURROAGATE_METHOD_LOOKUP.keys():
             raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
@@ -1210,12 +1210,29 @@ class PrognosticsModel(ABC):
         # Configure
         config = { # Defaults
             'save_freq': 1.0, 
-            'states': self.states.copy(),
-            'inputs': self.inputs.copy(),
-            'outputs': self.outputs.copy(),
-            'events': self.events.copy(),
+            'state_keys': self.states.copy(),
+            'input_keys': self.inputs.copy(),
+            'output_keys': self.outputs.copy(),
+            'event_keys': self.events.copy(),
         }
         config.update(kwargs)
+
+        if 'inputs' in config:
+            warn("Use 'input_keys' instead of 'inputs'. 'inputs' will be deprecated in v1.5")
+            config['input_keys'] = config['inputs']
+            del config['inputs']
+        if 'states' in config:
+            warn("Use 'state_keys' instead of 'states'. 'states' will be deprecated in v1.5")
+            config['state_keys'] = config['states']
+            del config['states']
+        if 'outputs' in config:
+            warn("Use 'output_keys' instead of 'outputs'. 'outputs' will be deprecated in v1.5")
+            config['output_keys'] = config['outputs']
+            del config['outputs']
+        if 'events' in config:
+            warn("Use 'event_keys' instead of 'events'. 'events' will be deprecated in v1.5")
+            config['event_keys'] = config['events']
+            del config['events']
 
         # Validate user inputs 
         try:
@@ -1228,24 +1245,24 @@ class PrognosticsModel(ABC):
         if 'save_pts' in config.keys():
             raise ProgModelInputException("'save_pts' is not a valid input for DMD Surrogate Model.")
 
-        if isinstance(config['inputs'], str):
-            config['inputs'] = [config['inputs']]
-        if not all([x in self.inputs for x in config['inputs']]):
-            raise ProgModelInputException(f"Invalid 'inputs' input value ({config['inputs']}), must be a subset of the model's inputs ({self.inputs}).")
+        if isinstance(config['input_keys'], str):
+            config['input_keys'] = [config['input_keys']]
+        if not all([x in self.inputs for x in config['input_keys']]):
+            raise ProgModelInputException(f"Invalid 'input_keys' value ({config['input_keys']}), must be a subset of the model's inputs ({self.inputs}).")
         
-        if isinstance(config['states'], str):
-            config['states'] = [config['states']]
-        if not all([x in self.states for x in config['states']]):
-            raise ProgModelInputException(f"Invalid 'states' input value ({config['states']}), must be a subset of the model's states ({self.states}).")
+        if isinstance(config['state_keys'], str):
+            config['state_keys'] = [config['state_keys']]
+        if not all([x in self.states for x in config['state_keys']]):
+            raise ProgModelInputException(f"Invalid 'state_keys' input value ({config['state_keys']}), must be a subset of the model's states ({self.states}).")
 
-        if isinstance(config['outputs'], str):
-            config['outputs'] = [config['outputs']]
-        if not all([x in self.outputs for x in config['outputs']]):
-            raise ProgModelInputException(f"Invalid 'outputs' input value ({config['outputs']}), must be a subset of the model's states ({self.outputs}).")
+        if isinstance(config['output_keys'], str):
+            config['output_keys'] = [config['output_keys']]
+        if not all([x in self.outputs for x in config['output_keys']]):
+            raise ProgModelInputException(f"Invalid 'output_keys' input value ({config['output_keys']}), must be a subset of the model's outputs ({self.outputs}).")
 
-        if isinstance(config['events'], str):
-            config['events'] = [config['events']]
-        if not all([x in self.events for x in config['events']]):
-            raise ProgModelInputException(f"Invalid 'events' input value ({config['events']}), must be a subset of the model's states ({self.events}).")
+        if isinstance(config['event_keys'], str):
+            config['event_keys'] = [config['event_keys']]
+        if not all([x in self.events for x in config['event_keys']]):
+            raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)

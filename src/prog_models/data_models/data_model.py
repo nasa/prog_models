@@ -20,10 +20,8 @@ class DataModel(PrognosticsModel, ABC):
         """
         Create a Data Model from data. This class is overwritten by specific data-driven classes (e.g., LSTM)
 
-        Args:
-            data (List[Tuple[Array, Array]]): list of runs to use for training. Each element is a tuple (input, output) for a single run. Input and Output are of size (n_times, n_inputs/outputs)
-
         Keyword Arguments:
+            times (List[List]): list of input data for use in data. Each element is the times for a single run of size (n_times)
             inputs (List[Array]): list of input data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
             states (List[Array]): list of state data for use in data. Each element is the states for a single run of size (n_times, n_states)
             outputs (List[Array]): list of output data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
@@ -102,6 +100,7 @@ class DataModel(PrognosticsModel, ABC):
         data = [m.simulate_to_threshold(load, **sim_cfg[i]) for (i, load) in enumerate(load_functions)]
 
         # Prepare data
+        times = [d.times for d in data]
         if config['add_dt']:
             config['input_keys'].append('dt')
             if len(data[0].inputs) > 0 and len(data[0].inputs[0]) == 0:
@@ -115,4 +114,4 @@ class DataModel(PrognosticsModel, ABC):
         states = [d.states for d in data]
         event_states = [d.event_states for d in data]
 
-        return cls.from_data(inputs = inputs, outputs = outputs, states = states, event_states = event_states, **config)
+        return cls.from_data(times = times, inputs = inputs, states = states, outputs = outputs, event_states = event_states, **config)

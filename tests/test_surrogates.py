@@ -54,7 +54,7 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t = None, x = None):
             return m.InputContainer({})
         
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact',training_noise=0)
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', training_noise=0)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + m.events)
@@ -123,7 +123,7 @@ class TestSurrogate(unittest.TestCase):
         }
 
         surrogate = m.generate_surrogate(load_functions, **options_surrogate)
-        self.assertListEqual(surrogate.states, ['tb', 'Vsn', 'Vsp'] + options_surrogate['outputs'] + m.events)
+        self.assertSetEqual(set(surrogate.states), set(['tb', 'Vsn', 'Vsp'] + options_surrogate['outputs'] + m.events))
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, options_surrogate['outputs'])
         self.assertListEqual(surrogate.events, m.events)
@@ -158,7 +158,7 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({})
 
         # Perfect subset
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states=['x', 'v'], training_noise = 0)
+        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys=['x', 'v'], training_noise = 0)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.inputs and stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + m.events)
@@ -346,14 +346,14 @@ class TestSurrogate(unittest.TestCase):
             'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
             'dt': 0.1, # For DMD, this value is the time step of the training data
             'trim_data_to': 0.7, # Trim data to this fraction of the time series
-            'outputs': ['v'], # Define outputs to be included in surrogate model 
+            'output_keys': ['v'], # Define outputs to be included in surrogate model 
             'training_noise': 0
         }
         options_surrogate_noise = {
             'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
             'dt': 0.1, # For DMD, this value is the time step of the training data
             'trim_data_to': 0.7, # Trim data to this fraction of the time series
-            'outputs': ['v'], # Define outputs to be included in surrogate model 
+            'output_keys': ['v'], # Define outputs to be included in surrogate model 
             'training_noise': 0.02
         }
 
@@ -432,14 +432,14 @@ class TestSurrogate(unittest.TestCase):
         warnings.filterwarnings("error")
 
         try:
-            surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = ['v'], training_noise = 0)
+            surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys = ['v'], training_noise = 0)
             self.fail('warning not raised')
         except Warning:
             pass
 
         try:
             # Set sufficiently large failure tolerance
-            surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', states = ['v'], stability_tol=1e99)
+            surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys = ['v'], stability_tol=1e99)
         except Warning:
             self.fail('Warning raised')
         
