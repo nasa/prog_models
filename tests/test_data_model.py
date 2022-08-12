@@ -71,13 +71,30 @@ class TestDataModel(unittest.TestCase):
         # Create from model
         LSTMStateTransitionModel(m.model, output_keys = ['x'])
 
+        # Test pickling model m
+        import pickle
+        pickled_m = pickle.dumps(m)
+        m2 = pickle.loads(pickled_m)
+        self.assertIsInstance(m2, LSTMStateTransitionModel)
+        self.assertIsInstance(m2, DataModel)
+        self.assertListEqual(m2.outputs, ['x'])
+
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
-        self._test_simple_case(DMDModel, max_error=4)
+        self._test_simple_case(DMDModel, max_error=6)
 
         # Without velocity, DMD doesn't perform well
-        self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
+        m = self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
+
+        # Test pickling model m
+        import pickle
+        pickled_m = pickle.dumps(m)
+        m2 = pickle.loads(pickled_m)
+        self.assertIsInstance(m2, DMDModel)
+        self.assertIsInstance(m2, DataModel)
+        self.assertListEqual(m2.outputs, ['x'])
+
 
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01
