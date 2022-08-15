@@ -5,6 +5,8 @@ import unittest
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel
 from prog_models.models import ThrownObject
+import sys
+from io import StringIO
 
 
 class TestLSTM(unittest.TestCase):
@@ -57,8 +59,17 @@ class TestLSTM(unittest.TestCase):
         # Create from model
         m3 = LSTMStateTransitionModel(m2.model, output_keys = ['x'])
 
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+        actual_out = StringIO()
+        m2.summary(file = actual_out)
+        self.assertEqual(sys.stdout.getvalue(), '')
+        self.assertNotEqual(actual_out.getvalue(), '')
+        sys.stdout = _stdout
+
         # More tests in examples.lstm_model
 
+        
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01
 

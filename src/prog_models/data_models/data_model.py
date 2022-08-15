@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractclassmethod, abstractmethod
 import numpy as np
 
 from .. import PrognosticsModel
@@ -43,7 +43,13 @@ class DataModel(PrognosticsModel, ABC):
                 m = DataModel.from_data(data)
         """
         pass
-
+    
+    def summary(self):
+        """
+        Print a summary of the model
+        """
+        print(self.__class__.__name__)
+        
     @classmethod
     def from_model(cls, m: PrognosticsModel, load_functions: list, **kwargs) -> "DataModel":
         """
