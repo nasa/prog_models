@@ -2,6 +2,10 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from .data_model import DataModel
+from .dmd import DMDModel
 from .lstm_model import LSTMStateTransitionModel
 
-__all__ = ['DataModel', 'LSTMStateTransitionModel']
+SURROAGATE_METHOD_LOOKUP = {
+    'dmd': DMDModel.from_model,
+    'lstm': LSTMStateTransitionModel.from_model
+}

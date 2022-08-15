@@ -3,37 +3,42 @@
 
 import unittest
 
-from prog_models.data_models import LSTMStateTransitionModel, DataModel
+from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
 from prog_models.models import ThrownObject
 import sys
 from io import StringIO
 
-
-class TestLSTM(unittest.TestCase):
-    def test_simple_case(self):
-        TIMESTEP = 0.01
+class TestDataModel(unittest.TestCase):
+    def _test_simple_case(self, 
+        DataModelType, 
+        m = ThrownObject(), 
+        max_error=2, 
+        TIMESTEP = 0.01, 
+        WITH_STATES = True, 
+        **kwargs):
 
         # Step 1: Generate data
-        m = ThrownObject()
-
         def future_loading(t, x=None):
             return m.InputContainer({})  # No input for thrown object 
 
         data = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP, dt=TIMESTEP)
 
+        if WITH_STATES:
+            kwargs['states'] = [data.states]
+
         # Step 2: Generate model
-        m2 = LSTMStateTransitionModel.from_data(
+        m2 = DataModelType.from_data(
+            times = [data.times],
             inputs = [data.inputs],
-            outputs = [data.outputs],  
-            window=5, 
-            epochs=25,
-            output_keys = ['x'])  
-        self.assertIsInstance(m2, LSTMStateTransitionModel)
+            outputs = [data.outputs],
+            event_states = [data.event_states],  
+            output_keys = list(m.outputs),
+            dt = TIMESTEP,
+            save_freq = TIMESTEP,
+            **kwargs)  
+        self.assertIsInstance(m2, DataModelType)
         self.assertIsInstance(m2, DataModel)
-        self.assertListEqual(m2.outputs, ['x'])
-        self.assertListEqual(m2.inputs, ['x_t-1'])
-        # Use set below so there's no issue with ordering
-        self.assertSetEqual(set(m2.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']))
+        self.assertListEqual(m2.outputs, list(m.outputs))
         
         # Step 3: Use model to simulate_to time of threshold
         t_counter = 0
@@ -54,10 +59,7 @@ class TestLSTM(unittest.TestCase):
         # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
         # Compare RMSE of the results to the original data
         error = m.calc_error(results2.times, results2.inputs, results2.outputs)
-        self.assertLess(error, 2)
-
-        # Create from model
-        m3 = LSTMStateTransitionModel(m2.model, output_keys = ['x'])
+        self.assertLess(error, max_error)
 
         _stdout = sys.stdout
         sys.stdout = StringIO()
@@ -67,9 +69,26 @@ class TestLSTM(unittest.TestCase):
         self.assertNotEqual(actual_out.getvalue(), '')
         sys.stdout = _stdout
 
+
+        return m2
+
+    def test_lstm_simple(self):
+        m = self._test_simple_case(LSTMStateTransitionModel, window=5, epochs=20)
+        self.assertListEqual(m.inputs, ['x_t-1'])
+        # Use set below so there's no issue with ordering
+        self.assertSetEqual(set(m.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']))
+
+        # Create from model
+        LSTMStateTransitionModel(m.model, output_keys = ['x'])
+
         # More tests in examples.lstm_model
 
-        
+    def test_dmd_simple(self):
+        self._test_simple_case(DMDModel, max_error=4)
+
+        # Without velocity, DMD doesn't perform well
+        self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
+
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01
 
@@ -83,7 +102,7 @@ class TestLSTM(unittest.TestCase):
             [future_loading for _ in range(5)],
             dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
             window=2, 
-            epochs=30)  
+            epochs=20)  
 
         # Should get keys from original model
         self.assertSetEqual(set(m3.inputs), set(['dt', 'x_t-1']))
@@ -217,8 +236,8 @@ def run_tests():
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting LSTM")
-    result = runner.run(l.loadTestsFromTestCase(TestLSTM)).wasSuccessful()
+    print("\n\nTesting Data Models")
+    result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")
