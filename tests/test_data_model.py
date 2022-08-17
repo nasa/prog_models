@@ -9,32 +9,7 @@ from prog_models.models import ThrownObject
 import sys
 from io import StringIO
 
-class TestDataModel(unittest.TestCase):
-    def _model_tests(self, m, m2, DataModelType, max_error, TIMESTEP, data):
-        self.assertIsInstance(m2, DataModelType)
-        self.assertIsInstance(m2, DataModel)
-        self.assertListEqual(m2.outputs, list(m.outputs))
-        
-        # Step 3: Use model to simulate_to time of threshold
-        t_counter = 0
-        x_counter = m.initialize()
-        def future_loading2(t, x = None):
-            # Future Loading is a bit complicated here 
-            # Loading for the resulting model includes the data inputs, 
-            # and the output from the last timestep
-            nonlocal t_counter, x_counter
-            z = m.output(x_counter)
-            z = m2.InputContainer(z.matrix)
-            x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
-            t_counter = t
-            return z
-        
-        results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
-
-        # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
-        # Compare RMSE of the results to the original data
-        error = m.calc_error(results2.times, results2.inputs, results2.outputs)
-        self.assertLess(error, max_error)
+class TestDataModel(unittest.TestCase):        
 
     def _test_simple_case(self, 
         DataModelType, 
@@ -64,7 +39,30 @@ class TestDataModel(unittest.TestCase):
             save_freq = TIMESTEP,
             **kwargs)  
         
-        self._model_tests(self, m, m2, DataModelType, max_error, TIMESTEP, data)
+        self.assertIsInstance(m2, DataModelType)
+        self.assertIsInstance(m2, DataModel)
+        self.assertListEqual(m2.outputs, list(m.outputs))
+        
+        # Step 3: Use model to simulate_to time of threshold
+        t_counter = 0
+        x_counter = m.initialize()
+        def future_loading2(t, x = None):
+            # Future Loading is a bit complicated here 
+            # Loading for the resulting model includes the data inputs, 
+            # and the output from the last timestep
+            nonlocal t_counter, x_counter
+            z = m.output(x_counter)
+            z = m2.InputContainer(z.matrix)
+            x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
+            t_counter = t
+            return z
+        
+        results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
+
+        # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
+        # Compare RMSE of the results to the original data
+        error = m.calc_error(results2.times, results2.inputs, results2.outputs)
+        self.assertLess(error, max_error)
 
         _stdout = sys.stdout
         sys.stdout = StringIO()
