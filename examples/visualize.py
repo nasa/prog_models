@@ -5,10 +5,9 @@
 Example demonstrating the Visualization Module. 
 """
 
-from re import S
+
 import matplotlib.pyplot as plt
 from prog_models.models.thrown_object import ThrownObject
-from prog_models.sim_result import SimResult
 
 def run_example():
     print('Visualize Module Example')
