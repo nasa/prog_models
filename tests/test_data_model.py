@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 # This ensures that the directory containing examples is in the python search directories 
 
+import pickle
 import unittest
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
@@ -8,6 +9,32 @@ from prog_models.models import ThrownObject
 
 
 class TestDataModel(unittest.TestCase):
+    def _model_tests(self, m, m2, DataModelType, max_error, TIMESTEP, data):
+        self.assertIsInstance(m2, DataModelType)
+        self.assertIsInstance(m2, DataModel)
+        self.assertListEqual(m2.outputs, list(m.outputs))
+        
+        # Step 3: Use model to simulate_to time of threshold
+        t_counter = 0
+        x_counter = m.initialize()
+        def future_loading2(t, x = None):
+            # Future Loading is a bit complicated here 
+            # Loading for the resulting model includes the data inputs, 
+            # and the output from the last timestep
+            nonlocal t_counter, x_counter
+            z = m.output(x_counter)
+            z = m2.InputContainer(z.matrix)
+            x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
+            t_counter = t
+            return z
+        
+        results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
+
+        # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
+        # Compare RMSE of the results to the original data
+        error = m.calc_error(results2.times, results2.inputs, results2.outputs)
+        self.assertLess(error, max_error)
+
     def _test_simple_case(self, 
         DataModelType, 
         m = ThrownObject(), 
@@ -35,30 +62,8 @@ class TestDataModel(unittest.TestCase):
             dt = TIMESTEP,
             save_freq = TIMESTEP,
             **kwargs)  
-        self.assertIsInstance(m2, DataModelType)
-        self.assertIsInstance(m2, DataModel)
-        self.assertListEqual(m2.outputs, list(m.outputs))
         
-        # Step 3: Use model to simulate_to time of threshold
-        t_counter = 0
-        x_counter = m.initialize()
-        def future_loading2(t, x = None):
-            # Future Loading is a bit complicated here 
-            # Loading for the resulting model includes the data inputs, 
-            # and the output from the last timestep
-            nonlocal t_counter, x_counter
-            z = m.output(x_counter)
-            z = m2.InputContainer(z.matrix)
-            x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
-            t_counter = t
-            return z
-        
-        results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
-
-        # Have to do it this way because the other way (i.e., using the LSTM model- the states are not a subset)
-        # Compare RMSE of the results to the original data
-        error = m.calc_error(results2.times, results2.inputs, results2.outputs)
-        self.assertLess(error, max_error)
+        self._model_tests(self, m, m2, DataModelType, max_error, TIMESTEP, data)
 
         return m2
 
@@ -72,7 +77,6 @@ class TestDataModel(unittest.TestCase):
         LSTMStateTransitionModel(m.model, output_keys = ['x'])
 
         # Test pickling model m
-        import pickle
         pickled_m = pickle.dumps(m)
         m2 = pickle.loads(pickled_m)
         self.assertIsInstance(m2, LSTMStateTransitionModel)
@@ -88,7 +92,6 @@ class TestDataModel(unittest.TestCase):
         m = self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
 
         # Test pickling model m
-        import pickle
         pickled_m = pickle.dumps(m)
         m2 = pickle.loads(pickled_m)
         self.assertIsInstance(m2, DMDModel)
