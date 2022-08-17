@@ -5,7 +5,8 @@ import unittest
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
 from prog_models.models import ThrownObject
-
+import sys
+from io import StringIO
 
 class TestDataModel(unittest.TestCase):
     def _test_simple_case(self, 
@@ -59,6 +60,15 @@ class TestDataModel(unittest.TestCase):
         # Compare RMSE of the results to the original data
         error = m.calc_error(results2.times, results2.inputs, results2.outputs)
         self.assertLess(error, max_error)
+
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+        actual_out = StringIO()
+        m2.summary(file = actual_out)
+        self.assertEqual(sys.stdout.getvalue(), '')
+        self.assertNotEqual(actual_out.getvalue(), '')
+        sys.stdout = _stdout
+
 
         return m2
 

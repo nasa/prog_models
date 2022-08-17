@@ -5,7 +5,7 @@ from abc import ABC, abstractclassmethod
 import numpy as np
 
 from .. import PrognosticsModel
-
+import sys
 
 class DataModel(PrognosticsModel, ABC):
     """
@@ -41,7 +41,13 @@ class DataModel(PrognosticsModel, ABC):
                 m = DataModel.from_data(data)
         """
         pass
-
+    
+    def summary(self, file = sys.stdout):
+        """
+        Print a summary of the model
+        """
+        print(self.__class__.__name__, file=file)
+        
     @classmethod
     def from_model(cls, m: PrognosticsModel, load_functions: list, **kwargs) -> "DataModel":
         """
