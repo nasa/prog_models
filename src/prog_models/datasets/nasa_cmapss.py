@@ -12,8 +12,10 @@ URL = "https://ti.arc.nasa.gov/c/6/"
 
 def load_data(dataset_id : int) -> tuple:
     """
+    .. versionadded:: 1.3.0
+    
     Loads data for one CMAPSS trajectory from NASA's PCoE Dataset. See '6. Turbofan Engine Degredation Simulation Data Set' at
-    https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/
+    https://www.nasa.gov/content/prognostics-center-of-excellence-data-set-repository
 
     Data Set: 1
         | Train trajectories: 100

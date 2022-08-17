@@ -76,7 +76,9 @@ def update_AC(params):
 
 class DCMotor(PrognosticsModel):
     """
-    Model of DC Motor.
+    .. versionadded:: 1.3.0
+
+    :term:`Model<model>` of DC Motor.
 
     References:
     Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
@@ -87,39 +89,52 @@ class DCMotor(PrognosticsModel):
 
     This model was developed by NASA's System Wide Safety (SWS) Project. https://www.nasa.gov/aeroresearch/programs/aosp/sws/
 
-    Events: (0)
+    :term:`Events<event>`: (0)
         | None
 
-    Inputs/Loading: (4)
+    :term:`Inputs/Loading<input>`: (4)
         | v_a, v_b, v_c: Voltages at a, b, c
         | t_l: Torque from load
 
-    States: (5)
+    :term:`States<state>`: (5)
         | i_a, i_b, i_c: Currents provided to motor 
         | v_rot: Rotational velocity (rad/sec)
         | theta: Angle of motor (rad)
 
-    Outputs: (2)
+    :term:`Outputs<output>`: (2)
         | v_rot: Rotational velocity (rad/sec)
         | theta: Angle of motor (rad)
 
-    Model Configuration Parameters:
-        | process_noise : Process noise (applied at dx/next_state). 
-                    Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-                    state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist : Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise : Measurement noise (applied in output eqn)
-                    Can be number (e.g., .2) applied to every output, a dictionary of values for each 
-                    output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist : Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | x0: Initial State
-        | L: Inductance (H)
-        | M: Mutual inductance (H)
-        | R: Resistance (Ohm)
-        | K: back emf constant / Torque constant (V/rad/sec)  
-        | B: Friction in motor / Damping (Not a function of thrust) (Nm/(rad/s))
-        | Po: no of poles in rotor 
-        | J: Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+        L : float
+            Inductance (H)
+        M: float
+            Mutual inductance (H)
+        R: float
+            Resistance (Ohm)
+        K: float
+            back emf constant / Torque constant (V/rad/sec)  
+        B: float
+            Friction in motor / Damping (Not a function of thrust) (Nm/(rad/s))
+        Po: float
+            no of poles in rotor 
+        J: float
+            Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
+        x0 : dict[str, float]
+            Initial :term:`state`
     """
     states = ['i_a', 'i_b', 'i_c', 'v_rot', 'theta']
     inputs = ['v_a', 'v_b', 'v_c', 't_l']

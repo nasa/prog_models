@@ -10,7 +10,7 @@ from copy import deepcopy
 
 class SimResult(UserList):
     """
-    `SimResult` is a data structure for the results of a simulation, with time. It is returned from the `simulate_to*` methods for inputs, outputs, states, and event_states for the beginning and ending time step of the simulation, plus any save points indicated by the `savepts` and `save_freq` configuration arguments. The class includes methods for analyzing, manipulating, and visualizing the results of the simulation.
+    `SimResult` is a data structure for the results of a simulation, with time. It is returned from the `simulate_to*` methods for :term:`inputs<input>`, :term:`outputs<output>`, :term:`states<state>`, and :term:`event_states<event state>` for the beginning and ending time step of the simulation, plus any save points indicated by the `savepts` and `save_freq` configuration arguments. The class includes methods for analyzing, manipulating, and visualizing the results of the simulation.
 
     Args:
             times (array[float]): Times for each data point where times[n] corresponds to data[n]
@@ -118,11 +118,11 @@ class SimResult(UserList):
         return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)
 
     def monotonicity(self) -> Dict[str, float]:
-        """Calculate monotonicty for a single prediction. 
+        """
+        Calculate monotonicty for a single prediction. 
         Given a single simulation result, for each event: go through all predicted states and compare those to the next one.
         Calculates monotonicity for each event key using its associated mean value in UncertainData.
-        
-        monotonoicity = |Σsign(i+1 - i) / N-1|
+
         Where N is number of measurements and sign indicates sign of calculation.
         
         Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
@@ -132,6 +132,7 @@ class SimResult(UserList):
 
         Args:
             None
+
         Returns:
             float: Value between [0, 1] indicating monotonicity of a given event for the Prediction.
         """

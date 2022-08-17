@@ -25,23 +25,23 @@ def calc_v(x : float, v : float, dv : float, forces : float, Ls : float, new_x :
 
 class PneumaticValveBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics model for a Pneumatic Valve model as described in the following paper:
+    Prognostics :term:`model` for a Pneumatic Valve model as described in the following paper:
     `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
     
-    Events: (5)
+    :term:`Events<event>`: (5)
         | Bottom Leak: Failure due to a leak at the bottom pneumatic port
         | Top Leak: Failure due to a leak at the top pneumatic port
         | Internal Leak: Failure due to an internal leak at the seal surrounding the piston
         | Spring Failure: Failure due to spring weakening with use
         | Friction Failure: Failure due to increase in friction along the piston with wear
 
-    Inputs/Loading: (4)
+    :term:`Inputs/Loading<input>`: (4)
         | pL: Fluid pressure at the left side of the plug (Pa)
         | pR: Fluid pressure at the right side of the plug (Pa) 
         | uBot: input pressure at the bottom pneumatic port (Pa) 
         | uTop: input pressure at the botton pneumatic port (Pa) 
 
-    States: (10)
+    :term:`States<state>`: (10)
         | Aeb: Area of the leak at the bottom pneumatic port
         | Aet: Area of the leak at the top pneumatic port
         | Ai: Area of the internal leak
@@ -53,7 +53,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         | x: Poisition of the piston (m)
         | pDiff: Difference in pressure between the left and the right
 
-    Outputs/Measurements: 6
+    :term:`Outputs<output>`: 6
         | Q: Flowrate 
         | iB: Is the piston at the bottom (bool)
         | iT: Is the piston at the top (bool)
@@ -63,18 +63,18 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[Srt, float]
-          Process noise (applied at dx/next_state). 
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, String
-          distribution for process noise (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[Srt, float]
-          Measurement noise (applied in output eqn).
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, String
-          distribution for measurement noise (e.g., normal, uniform, triangular)
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         g : float
             Acceleration due to gravity (m/s^2)
         pAtm : float
@@ -360,21 +360,21 @@ def OverwrittenWarning(params):
 
 class PneumaticValveWithWear(PneumaticValveBase):
     """
-    Prognostics model for a pneumatic valve with wear parameters as part of the model state. This is identical to PneumaticValveBase, only PneumaticValveBase has the wear params as parameters instead of states
+    Prognostics :term:`model` for a pneumatic valve with wear parameters as part of the model state. This is identical to PneumaticValveBase, only PneumaticValveBase has the wear params as parameters instead of states
 
     This class implements a Pneumatic Valve model as described in the following paper:
     `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602`
 
-    Events (4) 
+    :term:`Events<event>`: (4) 
         See PneumaticValveBase
 
-    Inputs/Loading: (5)
+    :term:`Inputs/Loading<input>`: (5)
         See PneumaticValveBase
     
-    States: (12)
+    :term:`States<state>`: (12)
         States from PneumaticValveBase +  wb, wi, wk, wr, wt
 
-    Outputs/Measurements: (5)
+    :term:`Outputs<output>`: (5)
         See PneumaticValveBase
 
     Model Configuration Parameters:
