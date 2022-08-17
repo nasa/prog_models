@@ -11,7 +11,9 @@ def update_Cq(params):
 
 class Powertrain(PrognosticsModel):
     """
-    Powertrain model composed of ESC and DC motor (with the option to add propeller load using parameter Cq).
+    .. versionadded:: 1.3.0
+
+    Powertrain :term:`model` composed of ESC and DC motor (with the option to add propeller load using parameter Cq).
     The powertrain model is used to simulate the motor dynamics including the effect of the speed controller and pulse-width modulation.
 
     Parameters for a standard propeller for commercial UAV are also added to the powertrain model, so that the load torque 
@@ -31,14 +33,14 @@ class Powertrain(PrognosticsModel):
 
     This model was developed by NASA's System Wide Safety (SWS) Project. https://www.nasa.gov/aeroresearch/programs/aosp/sws/
 
-    Events: (0)
+    :term:`Events<event>`: (0)
         | None
 
-    Inputs: (2)
+    :term:`Inputs/Loading<input>`: (2)
         | duty :        Duty cycle [-], percentage the input is "on" (i.e., voltage is supplied). 0 = no voltage supply (always closed), 1 = 100% voltage supply (always open).
         | v :           voltage [V], voltage input from Battery (after DC converter, should be constant).
 
-    States: (5)
+    :term:`States<state>`: (5)
         | v_a :         3-phase voltage value, first phase, [V], input to the motor
         | v_b :         3-phase voltage value, second phase, [V], input to the motor
         | v_c :         3-phase voltage value, third phase [V], input to the motor
@@ -49,22 +51,30 @@ class Powertrain(PrognosticsModel):
         | v_rot :       Motor angular velocity [rad/s]
         | theta :       Motor rotor position [rad]
 
-    Outputs: (2)
+    :term:`Outputs<output>`: (2)
         | v_rot :       Motor angular velocity [rad/s]
         | theta :       Motor rotor position [rad]
 
-    Model Configuration Parameters:
-        | process_noise :       Process noise (applied at dx/next_state). 
-                                Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-                                state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        | process_noise_dist :  Optional, distribution for process noise (e.g., normal, uniform, triangular)
-        | measurement_noise :   Measurement noise (applied in output eqn)
-                                Can be number (e.g., .2) applied to every output, a dictionary of values for each 
-                                output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        | measurement_noise_dist :  Optional, distribution for measurement noise (e.g., normal, uniform, triangular)
-        | c_q :                 Dimensionless coefficient of torque of the propeller [-], (APC data, derived).
-        | rho :                 Air density [Kg/m^3].
-        | D:                    Propeller diameter [m].
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for :term:`measurement noise` (e.g., normal, uniform, 
+        c_q : float
+            Dimensionless coefficient of torque of the propeller [-], (APC data, derived).
+        rho : float
+            Air density [Kg/m^3].
+        D: float
+            Propeller diameter [m].
 
     Note:
         This model is known to be sensitive to noise. The process noise and measurement noise should be set to low values.

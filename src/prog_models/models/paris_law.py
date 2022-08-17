@@ -6,7 +6,8 @@ from numpy import inf
 
 class ParisLawCrackGrowth(PrognosticsModel): 
     """
-    A simple Paris Law Model Implementation
+    .. versionadded:: 1.4.0
+    A simple Paris Law Crack Growth :term:`model`
 
     Events: (1)
         CGF :   Crack Growth Fracture 
@@ -21,11 +22,30 @@ class ParisLawCrackGrowth(PrognosticsModel):
     Outputs: (1)
        |c_l :   crack length
 
-    Model Configuration Parameters:
-       |crack_limit : crack length limit after which the crack growth fracture event is triggered
-       |c :     Material Constant
-       |m :     Material Constant
-       |dndt :  cycles per second
+    Keyword Args
+    ------------
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, String
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, String
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+        crack_limit : float
+            crack length limit after which the crack growth fracture event is triggered
+        c : float
+            Material Constant
+        m : float
+            Material Constant
+        dndt : float
+            cycles per second
+        x0 : dict[str, float]
+            Initial :term:`state`
     """ 
     # Event: Crack Growth Fracture
     events = ['CGF']

@@ -16,7 +16,7 @@ class DictLikeMatrixWrapper():
     keys: list
         The keys of the dictionary. e.g., model.states or model.inputs
     data: dict or numpy array
-        The contained data (e.g., input, state, output). If numpy array should be column vector in same order as keys
+        The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
     """
     def __init__(self, keys : list, data : Union[dict, np.array]):
         self._keys = keys.copy()

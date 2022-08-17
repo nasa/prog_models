@@ -8,11 +8,14 @@ import numpy as np
 
 class LinearModel(PrognosticsModel, ABC):
     """
-    A linear prognostics model. Used when behavior can be described using a simple linear time-series model defined by the following equations:
-        * dx/dt = Ax + Bu + E
-        * z = Cx + D
-        * es = Fx + G
-    where x is state, u is input, z is output and es is event state
+    A linear prognostics :term:`model`. Used when behavior can be described using a simple linear time-series model defined by the following equations:
+
+    .. math::
+        \frac{dx}{dt} = Ax + Bu + E
+        z = Cx + D
+        es = Fx + G
+
+    where x is :term:`state`, u is :term:`input`, z is :term:`output` and es is :term:`event state`
 
     Linear Models must inherit from this class and define the following properties:
         * A: 2-d numpy.array[float], dimensions: n_states x n_states
@@ -22,10 +25,10 @@ class LinearModel(PrognosticsModel, ABC):
         * E: 1-d numpy.array[float], optional (zeros by default), dimensions: n_states x 1
         * F: 2-d numpy.array[float], dimensions: n_es x n_states
         * G: 1-d numpy.array[float], optional (zeros by default), dimensions: n_es x 1
-        * inputs:  list[str] - input keys
-        * states:  list[str] - state keys
-        * outputs: list[str] - output keys
-        * events:  list[str] - event keys
+        * inputs:  list[str] - :term:`input` keys
+        * states:  list[str] - :term:`state` keys
+        * outputs: list[str] - :term:`output` keys
+        * events:  list[str] - :term:`event` keys
     """
 
     def __init__(self, **kwargs):
