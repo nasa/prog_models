@@ -77,7 +77,9 @@ class TestDataModel(unittest.TestCase):
         LSTMStateTransitionModel(m.model, output_keys = ['x'])
 
         # Test pickling model m
-        pickled_m = pickle.dumps(m)
+        with self.assertWarns(RuntimeWarning):
+            # Will raise warning suggesting using save and load from keras.
+            pickled_m = pickle.dumps(m)
         m2 = pickle.loads(pickled_m)
         self.assertIsInstance(m2, LSTMStateTransitionModel)
         self.assertIsInstance(m2, DataModel)
