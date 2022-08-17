@@ -6,8 +6,8 @@ Example demonstrating the Visualization Module.
 """
 
 import matplotlib.pyplot as plt
-from prog_models.visualize import plot_timeseries
 from prog_models.models.thrown_object import ThrownObject
+from prog_models.sim_result import SimResult
 
 def run_example():
     print('Visualize Module Example')
@@ -27,12 +27,15 @@ def run_example():
 
     # Display states
     # ==============
-    plot_timeseries(simulated_results.times, simulated_results.states, 
-                          options = {'compact': False, 'suptitle': 'state evolution', 'title': True,
-                                     'xlabel': 'time', 'ylabel': {'x': 'position', 'v': 'velocity'}, 'display_labels': 'minimal'},
-                          legend  = {'display': True, 'display_at_subplot': 'all'} )
-    plot_timeseries(simulated_results.times, simulated_results.states, options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
+
+    simulated_results = SimResult(simulated_results.times, simulated_results.states)
+    simulated_results.plot(compact = False, suptitle = 'state evolution', title = True,
+                                      xlabel = 'time', ylabel = {'x': 'position', 'v': 'velocity'}, display_labels = 'minimal',
+                          legend  = {'display': True , 'display_at_subplot': 'all'} )
+
+    simulated_results.plot(options = {'compact': True, 'suptitle': 'state evolution', 'title': 'example title',
                                                     'xlabel': 'time', 'ylabel':'position'})
+
     plt.show()
 
 if __name__ == '__main__':
