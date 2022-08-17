@@ -66,6 +66,7 @@ class LSTMStateTransitionModel(DataModel):
         self.model = model
 
     def __getstate__(self):
+        warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
         return ((self.model, ), self.parameters.data)
 
     def __eq__(self, other):
