@@ -4,6 +4,7 @@
 from collections.abc import Iterable
 from numbers import Number
 import numpy as np
+import sys
 from tensorflow import keras
 from tensorflow.keras import layers
 from warnings import warn
@@ -113,6 +114,14 @@ class LSTMStateTransitionModel(DataModel):
 
         return self.OutputContainer(m_output.numpy().T)
 
+    def summary(self, file= sys.stdout, expand_nested=False, show_trainable=False):
+        print('LSTM State Transition Model: ', file = file)
+        print("Inputs: ", self.inputs, file = file)
+        print("Outputs: ", self.outputs, file = file)
+        print("Window_size: ", self.parameters['window'], file = file)
+        self.model.summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
+        
+
     @staticmethod
     def pre_process_data(data, window, **kwargs):
         """
@@ -159,6 +168,7 @@ class LSTMStateTransitionModel(DataModel):
             else:
                 raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
 
+
             # Process Output
             if isinstance(z, SimResult):
                 if len(z[0].keys()) == 0:
@@ -201,6 +211,8 @@ class LSTMStateTransitionModel(DataModel):
         u_all = np.array(u_all)
         z_all = np.array(z_all)
         return (u_all, z_all)
+    
+    
 
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
@@ -409,3 +421,4 @@ class LSTMStateTransitionModel(DataModel):
         if 'horizon' in kwargs:
             kwargs['horizon'] = kwargs['horizon'] - t
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
+    

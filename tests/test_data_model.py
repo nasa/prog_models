@@ -6,7 +6,8 @@ import unittest
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
 from prog_models.models import ThrownObject
-
+import sys
+from io import StringIO
 
 class TestDataModel(unittest.TestCase):
     def _model_tests(self, m, m2, DataModelType, max_error, TIMESTEP, data):
@@ -64,6 +65,15 @@ class TestDataModel(unittest.TestCase):
             **kwargs)  
         
         self._model_tests(self, m, m2, DataModelType, max_error, TIMESTEP, data)
+
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+        actual_out = StringIO()
+        m2.summary(file = actual_out)
+        self.assertEqual(sys.stdout.getvalue(), '')
+        self.assertNotEqual(actual_out.getvalue(), '')
+        sys.stdout = _stdout
+
 
         return m2
 
