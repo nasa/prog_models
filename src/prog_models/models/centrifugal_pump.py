@@ -10,23 +10,23 @@ import warnings
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics model for a Centrifugal Pump as described in the following paper:
+    Prognostics :term:`model` for a Centrifugal Pump as described in the following paper:
     `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
 
-    Events (4)
+    :term:`Events<event>`: (4)
         | ImpellerWearFailure: Failure of the impeller due to wear
         | PumpOilOverheat: Overheat of the pump oil
         | RadialBearingOverheat: Overheat of the radial bearing
         | ThrustBearingOverheat: Overhead of the thrust bearing
 
-    Inputs/Loading: (5)
+    :term:`Inputs/Loading<input>`: (5)
         | Tamb: Ambient Temperature (K)
         | V: Voltage
         | pdisch: Discharge Pressure (Pa)
         | psuc: Suction Pressure (Pa)
         | wsync: Synchronous Rotational Speed of Supply Voltage (rad/sec)
 
-    States: (9)
+    :term:`States<state>`: (9)
         | A: Impeller Area (m^2)
         | Q: Flow Rate into Pump (m^3/s)
         | To: Oil Temperature (K)
@@ -37,7 +37,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         | w: Rotational Velocity of Pump (rad/sec)
         | QLeak: Leak Flow Rate (m^3/s)
 
-    Outputs/Measurements: (5)
+    :term:`Outputs<output>`: (5)
         | Qout: Discharge Flow (m^3/s)
         | To: Oil Temperature (K)
         | Tr: Radial Bearing Temperature (K)
@@ -46,18 +46,18 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
     keyword args
     ------------
-        process_noise : Optional, float or Dict[Srt, float]
-          Process noise (applied at dx/next_state). 
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, String
-          distribution for process noise (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[Srt, float]
-          Measurement noise (applied in output eqn).
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, String
-          distribution for measurement noise (e.g., normal, uniform, triangular)
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         pAtm : float
             Atmospheric pressure
         a0, a1, a2 : float
@@ -93,8 +93,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             Wear rates. See also CentrifugalPumpWithWear
         lim : dict
             Parameter limits
-        x0 : dict
-            Initial state
+        x0 : dict[str, float]
+            Initial :term:`state`
     
     See Also
     --------
@@ -269,24 +269,24 @@ def OverwrittenWarning(params):
 
 class CentrifugalPumpWithWear(CentrifugalPumpBase):
     """
-    Prognostics model for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states
+    Prognostics :term:`model` for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states
 
     This class implements a Centrifugal Pump model as described in the following paper:
     `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
 
-    Events (4) 
+    :term:`Events<event>`: (4) 
         See CentrifugalPumpBase
 
-    Inputs/Loading: (5)
+    :term:`Inputs/Loading<input>`: (5)
         See CentrifugalPumpBase
     
-    States: (12)
+    :term:`States<state>`: (12)
         | States from CentrifugalPumpBase +
         | wA: Wear Rate for Impeller Area
         | wRadial: Wear Rate for Radial (thrust) Friction Coefficient
         | wRadial: Wear Rate for Rolling Friction Coefficient
 
-    Outputs/Measurements: (5)
+    :term:`Outputs<output>`: (5)
         See CentrifugalPumpBase
 
     Model Configuration Parameters:

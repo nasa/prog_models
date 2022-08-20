@@ -76,7 +76,7 @@ class TestDataModel(unittest.TestCase):
         return m2
 
     def test_lstm_simple(self):
-        m = self._test_simple_case(LSTMStateTransitionModel, window=5, epochs=20)
+        m = self._test_simple_case(LSTMStateTransitionModel, window=5, epochs=20, max_error=3)
         self.assertListEqual(m.inputs, ['x_t-1'])
         # Use set below so there's no issue with ordering
         self.assertSetEqual(set(m.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']))

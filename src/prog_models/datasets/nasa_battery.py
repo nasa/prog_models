@@ -43,8 +43,11 @@ cache = {}  # Cache for downloaded data
 # Cache is used to prevent files from being downloaded twice
 
 def load_data(batt_id : str) -> tuple:
-    """Loads data for one or more batteries from NASA's PCoE Dataset, '11. Randomized Battery Usage Data Set'
-    https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/
+    """
+    .. versionadded:: 1.3.0
+
+    Loads data for one or more batteries from NASA's PCoE Dataset, '11. Randomized Battery Usage Data Set'
+    https://www.nasa.gov/content/prognostics-center-of-excellence-data-set-repository
 
     Args:
         batt_id (str): Battery name from dataset (RW1-28)
