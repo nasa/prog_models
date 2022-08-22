@@ -9,7 +9,7 @@ class TestTutorials(unittest.TestCase):
 
     def test_tutorial_ipynb(self):
         if importlib.util.find_spec('testbook') is None:
-            warnings.warn('testbook not imported')
+            warnings.warn('testbook not installed')
         else:
             with testbook('./tutorial.ipynb', execute=True) as tb:
                 from testbook import testbook
