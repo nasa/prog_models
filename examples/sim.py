@@ -39,10 +39,10 @@ def run_example():
     # e.g., states = simulated_results.states
 
     # You can also plot the results, for example
-    simulated_results.outputs.plot_results()
+    simulated_results.outputs.plot()
 
     # or 
-    simulated_results.
+    simulated_results.outputs.plot(compact = True, suptitle = 'Outputs', title = 'example title', xlabel = 'time', ylabel = 'output')
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
