@@ -64,6 +64,7 @@ class LSTMStateTransitionModel(DataModel):
 
         # Save Model
         self.model = model
+        self.history = kwargs.get('history', None)
 
     def __getstate__(self):
         warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
@@ -122,7 +123,6 @@ class LSTMStateTransitionModel(DataModel):
         print("Window_size: ", self.parameters['window'], file = file)
         self.model.summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
-
     @staticmethod
     def pre_process_data(data, window, **kwargs):
         """
@@ -212,8 +212,6 @@ class LSTMStateTransitionModel(DataModel):
         u_all = np.array(u_all)
         z_all = np.array(z_all)
         return (u_all, z_all)
-    
-    
 
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
@@ -372,9 +370,9 @@ class LSTMStateTransitionModel(DataModel):
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
-        model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        history = model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return cls(keras.models.load_model("best_model.keras"), **params)
+        return cls(keras.models.load_model("best_model.keras"), history = history, **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
