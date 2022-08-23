@@ -93,6 +93,7 @@ def run_example():
         epochs=30, 
         input_keys = ['dt'],
         output_keys = m.states)
+    m2.plot_history()
 
     # Step 5: Simulate with model
     t_counter = 0
