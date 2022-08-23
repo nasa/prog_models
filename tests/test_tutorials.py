@@ -19,11 +19,10 @@ def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Tutorials")
-    try:
-        result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
-    except Exception as e:
-        if not result:
-            raise Exception("Failed test")
+    result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
+    
+    if not result:
+        raise Exception("Failed test")
           
 
 if __name__ == '__main__':
