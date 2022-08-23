@@ -11,8 +11,8 @@ class TestTutorials(unittest.TestCase):
         if importlib.util.find_spec('testbook') is None:
             warnings.warn('testbook not installed')
         else:
+            from testbook import testbook
             with testbook('./tutorial.ipynb', execute=True) as tb:
-                from testbook import testbook
                 self.assertEqual(tb.__class__.__name__, "TestbookNotebookClient")
 
 def main():
@@ -20,7 +20,7 @@ def main():
     runner = unittest.TextTestRunner()
     print("\n\nTesting Tutorials")
     result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
-    
+
     if not result:
         raise Exception("Failed test")
           
