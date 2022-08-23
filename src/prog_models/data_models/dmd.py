@@ -15,50 +15,43 @@ from . import DataModel
 
 class DMDModel(LinearModel, DataModel):
     """
-    A subclass of LinearModel and DataModel that uses Dynamic Mode Decomposition to simulate a system throughout time.
+    .. versionadded:: 1.3.0
+
+    A subclass of :py:class:`prog_models.LinearModel` and :py:class:`prog_models.data_models.DataModel` that uses Dynamic Mode Decomposition to simulate a system throughout time.
     
-    Given an initial state of the system and the expected inputs throughout time, this class defines a model that can approximate the dynamics of the system throughout time until threshold is met. This model can be fully data-driven (using from_data) or a surrogate of another model (using from_model) where internal states of a high-fidelity model augment the purely data-driven method. 
+    Given an initial :term:`state` of the system and the expected :term:`input` throughout time, this class defines a model that can approximate the dynamics of the system throughout time until threshold is met. This model can be fully data-driven (using from_data) or a :term:`surrogate` of another model (using from_model) where internal states of a high-fidelity model augment the purely data-driven method. 
 
     Args
     ---------
-        dmd_matrix : Matrix used by DMD
+        dmd_matrix : np.ndarray
+            Matrix used by DMD
 
-    Keyword Args
+    Keyword args
     ------------
-        process_noise : Optional, float or Dict[Srt, float]
-        trim_data_to: int, optional
-            Value between 0 and 1 that determines fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-            e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to t=100, the surrogate model is trained on the data from t=0 to t=70 \n   
-            Note: To trim data to a set time, use the 'horizon' parameter\n   
-        stability_tol: int, optional
-            Value that determines the tolerance for DMD matrix stability\n
-        training_noise: int, optional
-            Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise \n
+        input_keys : list[str]
+            List of input keys
+        dt : float
+            Time step
+        output_keys : list[str]
+            List of output keys
+        x0 : dict or StateContainer
+            Initial state of the system
+        state_keys : list[str]
+            List of state keys
+        event_keys : list[str]
+            List of event keys
 
     See Also
     ---------
-        LinearModel, DataModel
 
-    Example
-    --------------------
-       | 
-          Method 1: from data
-          >>> from prog_models.data_models import DMDModel
-          >>> m = DMDModel.from_data(inputs= input_data, outputs = output_data)  # Generating from data
+        :py:class:`LinearModel`
 
-       |
-          Method 2: from a model
-          >>> from prog_models.data_models import DMDModel
-          >>> m = DMDModel.from_model(other_model, loading_equations)
-
-       |
-          Method 3: from DMD Matrix
-          >>> from prog_models.data_models import DMDModel
-          >>> m = DMDModel(DMD_Matrix, input_keys = ['i'], output_keys = ['t', 'v'])
+        :py:class:`DataModel`
 
     Note
     -------
     DMD does not generate accurate approximations for all models, especially highly non-linear sections, and can be sensitive to the training data time step. 
+
     In general, the approximation is less accurate if the DMD matrix is unstable. 
     Additionally, this implementation does not yet include all functionalities of DMD (e.g. reducing the system's dimensions through SVD). Further functionalities will be included in future releases. \n
     """
@@ -75,27 +68,34 @@ class DMDModel(LinearModel, DataModel):
             return cls.from_model(dmd_matrix, args[0], **kwargs) 
         return DataModel.__new__(cls)
 
-    def __init__(self, dmd_matrix, *args, **kwargs):
+    def __getstate__(self):
+        return ((self.dmd_matrix,), self.parameters.data)
+
+    def __getnewargs__(self):
+        return (self.dmd_matrix, )
+
+    def __init__(self, dmd_matrix, *_, **kwargs):
         if isinstance(dmd_matrix, PrognosticsModel):
             # Initialized in __new__
             # Remove in future version
             return
 
+        if 'input_keys' not in kwargs:
+            raise ValueError('input_keys must be specified')
+        if 'dt' not in kwargs:
+            raise ValueError('dt must be specified')
+        if 'output_keys' not in kwargs:
+            raise ValueError('output_keys must be specified')
+        if 'x0' not in kwargs:
+            raise ValueError('x0 must be specified')
+
         params = {
+            'state_keys': [],
             'event_keys': []
         }
         params.update(**kwargs)
-        
-        if 'input_keys' not in params:
-            raise ValueError('input_keys must be specified')
-        if 'dt' not in params:
-            raise ValueError('dt must be specified')
-        if 'state_keys' not in params:
-            raise ValueError('state_keys must be specified')
-        if 'output_keys' not in params:
-            raise ValueError('output_keys must be specified')
-        if 'x0' not in params:
-            raise ValueError('x0 must be specified')
+
+        self.dmd_matrix = dmd_matrix
 
         self.inputs = params['input_keys']
         n_inputs = len(params['input_keys'])
@@ -127,7 +127,48 @@ class DMDModel(LinearModel, DataModel):
 
     @classmethod
     def from_data(cls, times, inputs, outputs, states = None, event_states = None, **kwargs):
+        """
+        Create a DMD model from data
 
+        Args:
+            times (list[list]): 
+                list of input data for use in data. Each element is the times for a single run of size (n_times)
+            inputs (list[np.array]): 
+                list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
+            outputs (list[np.array]): 
+                list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
+            states (list[np.array], optional): 
+                list of :term:`state` data for use in data. Each element is the states for a single run of size (n_times, n_states)
+            event_states (list[np.array], optional): 
+                list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
+
+        Keyword Args:
+            trim_data_to (int, optional): 
+                Fraction (0-1) of data resulting from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold` used to train DMD surrogate model
+                e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to 100, the surrogate model is trained on the data from t=0 to 70 \n   
+                Note: To trim data to a set time, use the 'horizon' parameter  
+            stability_tol (int, optional):
+                Value that determines the tolerance for DMD matrix stability
+            training_noise (int, optional):
+                Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise
+            input_keys (list[str]): 
+                List of :term:`input` keys
+            state_keys (list[str]): 
+                List of :term:`state` keys
+            output_keys (list[str]):
+                List of :term:`output` keys
+            event_keys (list[str]):
+                List of :term:`event` keys
+        
+        Additionally, other keyword arguments from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold`
+
+        Attributes:
+            dmd_matrix (np.array): Dynamic Mode Decomposition Matrix
+            dt (float): Time step of data
+
+        Returns:
+            DMDModel: Model generated from data
+        """
         # Configure
         config = { # Defaults
             'trim_data_to': 1,

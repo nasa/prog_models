@@ -18,7 +18,7 @@ from .utils.parameters import PrognosticsModelParameters
 
 class PrognosticsModel(ABC):
     """
-    A general time-variant state space model of system degradation behavior.
+    A general time-variant state space :term:`model` of system degradation behavior.
 
     The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.
 
@@ -26,19 +26,20 @@ class PrognosticsModel(ABC):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[Srt, float]
-          Process noise (applied at dx/next_state). 
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, String
-          distribution for process noise (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[Srt, float]
-          Measurement noise (applied in output eqn).
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, String
-          distribution for measurement noise (e.g., normal, uniform, triangular)
-        Additional parameters specific to the model
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+    
+    Additional parameters specific to the model
 
     Raises
     ------
@@ -61,21 +62,21 @@ class PrognosticsModel(ABC):
         param_callbacks : dict[str, list[function]], optional
             Callbacks for derived parameters
         inputs: List[str]
-            Identifiers for each input
+            Identifiers for each :term:`input`
         states: List[str]
-            Identifiers for each state
+            Identifiers for each :term:`state`
         outputs: List[str]
-            Identifiers for each output
+            Identifiers for each :term:`output`
         performance_metric_keys: List[str], optional
             Identifiers for each performance metric
         events: List[str], optional
-            Identifiers for each event predicted 
+            Identifiers for each :term:`event` predicted 
         StateContainer : DictLikeMatrixWrapper
-            Class for state container - used for representing state
+            Class for state container - used for representing :term:`state`
         OutputContainer : DictLikeMatrixWrapper
-            Class for output container - used for representing output
+            Class for output container - used for representing :term:`output`
         InputContainer : DictLikeMatrixWrapper
-            Class for input container - used for representing input
+            Class for input container - used for representing :term:`input`
     """
     is_vectorized = False
 
@@ -112,7 +113,7 @@ class PrognosticsModel(ABC):
         except TypeError:
             raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
 
-        self.__setstate__(params)
+        PrognosticsModel.__setstate__(self, params)
 
     def __eq__(self, other : "PrognosticsModel") -> bool:
         """

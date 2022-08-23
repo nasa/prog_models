@@ -9,39 +9,39 @@ import numpy as np
 
 class BatteryCircuit(PrognosticsModel):
     """
-    Vectorized prognostics model for a battery, represented by an equivilant circuit model as described in the following paper:
+    Vectorized prognostics :term:`model` for a battery, represented by an equivilant circuit model as described in the following paper:
     `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253`
     
-    Events: (1)
+    :term:`Events<event>`: (1)
         EOD: End of Discharge
     
-    Inputs/Loading: (1)
+    :term:`Inputs/Loading<input>`: (1)
         i: Current draw on the battery
 
-    States: (4)
+    :term:`States<state>`: (4)
         | tb : Battery Temperature (°C)
         | qb : Charge stored in Capacitor Cb of the equivalent circuit model
         | qcp : Charge stored in Capacitor Ccp of the equivalent circuit model
         | qcs : Charge stored in Capacitor Ccs of the equivalent circuit model
 
-    Outputs: (2)
+    :term:`Outputs<output>`: (2)
         | t: Temperature of battery (°C)
         | v: Voltage supplied by battery
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[Str, float]
-          Process noise (applied at dx/next_state). 
+        process_noise : Optional, float or Dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, String
-          distribution for process noise (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[Srt, float]
-          Measurement noise (applied in output eqn).
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or Dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, String
-          distribution for measurement noise (e.g., normal, uniform, triangular)
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         V0 : float
           Nominal Battery Voltage
         Rp : float
@@ -66,12 +66,12 @@ class BatteryCircuit(PrognosticsModel):
           Heat transfer coefficient parameter
         hcs : float
           Heat transfer coefficient - surface
-        x0 : Dict[Str, float]
-          Initial state
+        x0 : dict[str, float]
+          Initial :term:`state`
     
     Note
     ----
-        This is quicker but also less accurate than the electrochemistry model. We recommend using the electrochemistry model, when possible.
+        This is quicker but also less accurate than the electrochemistry :term:`model` (:py:class:`prog_models.models.BatteryElectroChemEOD`). We recommend using the electrochemistry model, when possible.
     """
     events = ['EOD']
     inputs = ['i']

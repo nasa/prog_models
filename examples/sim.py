@@ -5,6 +5,8 @@
 Example of a battery being simulated for a set period of time and then till threshold is met.
 """
 
+import matplotlib.pyplot as plt
+
 from prog_models.models import BatteryCircuit as Battery
 # VVV Uncomment this to use Electro Chemistry Model VVV
 # from prog_models.models import BatteryElectroChem as Battery
@@ -31,6 +33,16 @@ def run_example():
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
     simulated_results = batt.simulate_to(200, future_loading, print = True, progress = True)
+    # The result of the simulation is now stored in simulated_results.
+    # You can access the results by accessing the individual variables:
+    #   times, inputs, states, outputs, event_states
+    # e.g., states = simulated_results.states
+
+    # You can also plot the results, for example
+    simulated_results.outputs.plot()
+
+    # or 
+    simulated_results.outputs.plot(compact = True, suptitle = 'Outputs', title = 'example title', xlabel = 'time', ylabel = 'output')
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -50,9 +62,15 @@ def run_example():
     simulated_results = batt.simulate_to_threshold(future_loading, **options)
     # Note that even though the step size is 2, the odd points in the save frequency are met perfectly, dt is adjusted automatically to capture the save points
 
+    simulated_results.outputs.plot()
+
     # You can also change the integration method. For example:
     options['integration_method'] = 'rk4'  # Using Runge-Kutta 4th order
     simulated_results_rk4 = batt.simulate_to_threshold(future_loading, **options)
+
+    simulated_results_rk4.outputs.plot()
+
+    plt.show()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':

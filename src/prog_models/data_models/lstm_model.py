@@ -4,6 +4,7 @@
 from collections.abc import Iterable
 from numbers import Number
 import numpy as np
+import sys
 from tensorflow import keras
 from tensorflow.keras import layers
 from warnings import warn
@@ -14,10 +15,12 @@ from ..sim_result import SimResult
 
 class LSTMStateTransitionModel(DataModel):
     """
-    A State Transition Model with no events using an Keras LSTM Model.
-    State transition models map form the inputs at time t and outputs at time t-1 plus historical data from a set window to the outputs at time t.
+    .. versionadded:: 1.4.0
 
-    Most users will use the `LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past inputs are stored in the model's internal state. Actual calculation of output is performed when `output` is called. When using in simulation that may not be until the simulation results are accessed.
+    A State Transition Model with no :term:`event` using an Keras LSTM Model.
+    State transition models map from the :term:`input` at time t and :term:`output` at time t-1 plus historical data from a set window to the :term`output` at time t.
+
+    Most users will use the `LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func`LSTMStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
 
     Args:
         model (keras.Model): Keras model to use for state transition
@@ -26,16 +29,14 @@ class LSTMStateTransitionModel(DataModel):
         input_keys (list[str]): List of input keys
         output_keys (list[str]): List of output keys
 
+    Attributes:
+        model (keras.Model): Keras model to use for state transition
+
     See Also:
         LSTMStateTransitionModel.from_data
         examples.lstm_model
-
-    Examples:
-        :
-            >>> from prog_models import LSTMStateTransitionModel
-            >>> # Generate model from data
-            >>> m = LSTMStateTransitionModel.from_data(inputs, outputs)
     """
+
     default_params = {
         'process_noise': 0,  # Default 0 noise
         'measurement_noise': 0,  # Default 0 noise
@@ -63,6 +64,10 @@ class LSTMStateTransitionModel(DataModel):
 
         # Save Model
         self.model = model
+
+    def __getstate__(self):
+        warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
+        return ((self.model, ), self.parameters.data)
 
     def __eq__(self, other):
         # Needed because we add .model, which is not present in the parent class
@@ -110,6 +115,14 @@ class LSTMStateTransitionModel(DataModel):
 
         return self.OutputContainer(m_output.numpy().T)
 
+    def summary(self, file= sys.stdout, expand_nested=False, show_trainable=False):
+        print('LSTM State Transition Model: ', file = file)
+        print("Inputs: ", self.inputs, file = file)
+        print("Outputs: ", self.outputs, file = file)
+        print("Window_size: ", self.parameters['window'], file = file)
+        self.model.summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
+        
+
     @staticmethod
     def pre_process_data(data, window, **kwargs):
         """
@@ -156,6 +169,7 @@ class LSTMStateTransitionModel(DataModel):
             else:
                 raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
 
+
             # Process Output
             if isinstance(z, SimResult):
                 if len(z[0].keys()) == 0:
@@ -198,36 +212,41 @@ class LSTMStateTransitionModel(DataModel):
         u_all = np.array(u_all)
         z_all = np.array(z_all)
         return (u_all, z_all)
+    
+    
 
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
         """
         Generate a LSTMStateTransitionModel from data
 
+        Args:
+            inputs (list[np.array]): 
+                list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
+            outputs (list[np.array]): 
+                list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
+
         Keyword Args:
-            inputs (List[Array]): REQUIRED, list of input data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
-
-            outputs (List[Array]): REQUIRED, list of output data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
-
-            window (int): Number of historical points used in the model. I.e, if window is 3, the model will map from [t-3, t-2, t-1] to t
-
-            input_keys (List[str]): List of keys to use to identify inputs. If not supplied u[#] will be used to idenfiy inputs
-
-            output_keys (List[str]): List of keys to use to identify outputs. If not supplied z[#] will be used to idenfiy outputs
-
-            validation_percentage (float): Percentage of data to use for validation, between 0-1
-
-            epochs (int): Number of epochs (i.e., iterations) to train the model. More epochs means better results (to a point), but more time to train. Note: large numbers of epochs may result in overfitting.
-
-            layers (int): Number of LSTM layers to use. More layers can represent more complex systems, but are less efficient. Note: 2 layers is typically enough for most complex systems. Default: 1
-
-            units (int or list[int]): number of units (i.e., dimensionality of output state) used in each lstm layer. Using a scalar value will use the same number of units for each layer.
-
-            activation (str or list[str]): Activation function to use for each layer
-
-            dropout (float): Dropout rate to be applied. Dropout helps avoid overfitting
-
-            normalize (bool): If the data should be normalized. This is recommended for most cases.
+            window (int): 
+                Number of historical points used in the model. I.e, if window is 3, the model will map from [t-3, t-2, t-1] to t
+            input_keys (list[str]): 
+                List of keys to use to identify :term:`input`. If not supplied u[#] will be used to idenfiy inputs
+            output_keys (list[str]): 
+                List of keys to use to identify :term:`output`. If not supplied z[#] will be used to idenfiy outputs
+            validation_percentage (float): 
+                Percentage of data to use for validation, between 0-1
+            epochs (int): 
+                Number of epochs (i.e., iterations) to train the model. More epochs means better results (to a point), but more time to train. Note: large numbers of epochs may result in overfitting.
+            layers (int): 
+                Number of LSTM layers to use. More layers can represent more complex systems, but are less efficient. Note: 2 layers is typically enough for most complex systems. Default: 1
+            units (int or list[int]): 
+                number of units (i.e., dimensionality of output state) used in each lstm layer. Using a scalar value will use the same number of units for each layer.
+            activation (str or list[str]): 
+                Activation function to use for each layer
+            dropout (float): 
+                Dropout rate to be applied. Dropout helps avoid overfitting
+            normalize (bool): 
+                If the data should be normalized. This is recommended for most cases.
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -329,7 +348,7 @@ class LSTMStateTransitionModel(DataModel):
         
         # Build model
         callbacks = [
-            keras.callbacks.ModelCheckpoint("jena_sense.keras", save_best_only=True)
+            keras.callbacks.ModelCheckpoint("best_model.keras", save_best_only=True)
         ]
 
         inputs = keras.Input(shape=u_all.shape[1:])
@@ -355,7 +374,7 @@ class LSTMStateTransitionModel(DataModel):
         # Train model
         model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return cls(keras.models.load_model("jena_sense.keras"), **params)
+        return cls(keras.models.load_model("best_model.keras"), **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
@@ -406,3 +425,4 @@ class LSTMStateTransitionModel(DataModel):
         if 'horizon' in kwargs:
             kwargs['horizon'] = kwargs['horizon'] - t
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
+    
