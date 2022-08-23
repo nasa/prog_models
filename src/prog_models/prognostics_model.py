@@ -113,7 +113,7 @@ class PrognosticsModel(ABC):
         except TypeError:
             raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
 
-        self.__setstate__(params)
+        PrognosticsModel.__setstate__(self, params)
 
     def __eq__(self, other : "PrognosticsModel") -> bool:
         """

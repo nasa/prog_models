@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 # This ensures that the directory containing examples is in the python search directories 
 
+import pickle
 import unittest
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
@@ -8,7 +9,8 @@ from prog_models.models import ThrownObject
 import sys
 from io import StringIO
 
-class TestDataModel(unittest.TestCase):
+class TestDataModel(unittest.TestCase):        
+
     def _test_simple_case(self, 
         DataModelType, 
         m = ThrownObject(), 
@@ -36,6 +38,7 @@ class TestDataModel(unittest.TestCase):
             dt = TIMESTEP,
             save_freq = TIMESTEP,
             **kwargs)  
+        
         self.assertIsInstance(m2, DataModelType)
         self.assertIsInstance(m2, DataModel)
         self.assertListEqual(m2.outputs, list(m.outputs))
@@ -81,13 +84,30 @@ class TestDataModel(unittest.TestCase):
         # Create from model
         LSTMStateTransitionModel(m.model, output_keys = ['x'])
 
+        # Test pickling model m
+        with self.assertWarns(RuntimeWarning):
+            # Will raise warning suggesting using save and load from keras.
+            pickled_m = pickle.dumps(m)
+        m2 = pickle.loads(pickled_m)
+        self.assertIsInstance(m2, LSTMStateTransitionModel)
+        self.assertIsInstance(m2, DataModel)
+        self.assertListEqual(m2.outputs, ['x'])
+
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
-        self._test_simple_case(DMDModel, max_error=4)
+        self._test_simple_case(DMDModel, max_error=6)
 
         # Without velocity, DMD doesn't perform well
-        self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
+        m = self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
+
+        # Test pickling model m
+        pickled_m = pickle.dumps(m)
+        m2 = pickle.loads(pickled_m)
+        self.assertIsInstance(m2, DMDModel)
+        self.assertIsInstance(m2, DataModel)
+        self.assertListEqual(m2.outputs, ['x'])
+
 
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01
