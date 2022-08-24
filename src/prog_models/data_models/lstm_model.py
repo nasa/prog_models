@@ -90,7 +90,7 @@ class LSTMStateTransitionModel(DataModel):
         """
         return self.StateContainer(np.array([[None] for _ in self.states]))
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, _):
         # Rotate new input into state
         input_data = u.matrix
             

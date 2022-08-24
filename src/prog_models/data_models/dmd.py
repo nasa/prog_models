@@ -201,7 +201,7 @@ class DMDModel(LinearModel, DataModel):
             config['dt'] = sum(config['dt'])/len(config['dt'])
         elif config['dt'] is None:
             # Use times from data - calculate mean dt
-            dts = [t[j+1] - t[j]  for j in range(len(t)-1) for t in times]
+            dts = [t[j+1] - t[j] for t in times for j in range(len(t)-1)]
             config['dt'] = sum(dts)/len(dts)
         if 'save_freq' not in config:
             config['save_freq'] = config['dt']

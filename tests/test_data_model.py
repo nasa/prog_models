@@ -18,6 +18,7 @@ class TestDataModel(unittest.TestCase):
         max_error=2, 
         TIMESTEP = 0.01, 
         WITH_STATES = True, 
+        WITH_DT = True,
         **kwargs):
 
         # Step 1: Generate data
@@ -29,6 +30,9 @@ class TestDataModel(unittest.TestCase):
         if WITH_STATES:
             kwargs['states'] = [data.states]
 
+        if WITH_DT:
+            kwargs['dt'] = TIMESTEP
+
         # Step 2: Generate model
         m2 = DataModelType.from_data(
             times = [data.times],
@@ -36,7 +40,6 @@ class TestDataModel(unittest.TestCase):
             outputs = [data.outputs],
             event_states = [data.event_states],  
             output_keys = list(m.outputs),
-            dt = TIMESTEP,
             save_freq = TIMESTEP,
             **kwargs)  
         
@@ -100,6 +103,9 @@ class TestDataModel(unittest.TestCase):
 
     def test_dmd_simple(self):
         self._test_simple_case(DMDModel, max_error=6)
+
+        # Inferring dt
+        self._test_simple_case(DMDModel, max_error=6, WITH_DT = False)
 
         # Without velocity, DMD doesn't perform well
         m = self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
