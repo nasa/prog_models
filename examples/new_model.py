@@ -58,7 +58,7 @@ class ThrownObject(PrognosticsModel):
     def event_state(self, x): 
         self.max_x = max(self.max_x, x['x'])  # Maximum altitude
         return {
-            'falling': max(x['v']/self.parameters['x0']['throwing_speed'],0),  # Throwing speed is max speed
+            'falling': max(x['v']/self.parameters['x0']['v'],0),  # Throwing speed is max speed
             'impact': max(x['x']/self.max_x,0)  # 1 until falling begins, then it's fraction of height
         }
 
