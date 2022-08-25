@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from typing import Callable, List
+from typing import Callable, Iterable, List
 from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
 from numbers import Number
@@ -1092,19 +1092,26 @@ class PrognosticsModel(ABC):
         Returns:
             double: Total error
         """
-        params = {
-            'x0': self.initialize(inputs[0], outputs[0]),
-            'dt': 1e99
-        }
-        params.update(kwargs)
-        x = params['x0']
-        t_last = times[0]
-        err_total = 0
+        if isinstance(times[0], Iterable):
+            # Calculate error for each
+            error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
+            return sum(error)/len(error)
+
+        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+        dt = kwargs.get('dt', 1e99)
+
+        if not isinstance(x, self.StateContainer):
+            x = [self.StateContainer(x_i) for x_i in x]
+
+        if not isinstance(inputs[0], self.InputContainer):
+            inputs = [self.InputContainer(u_i) for u_i in inputs]
 
         counter = 0  # Needed to account for skipped (i.e., none) values
+        t_last = times[0]
+        err_total = 0
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
-                t_new = min(t_last + params['dt'], t)
+                t_new = min(t_last + dt, t)
                 x = self.next_state(x, u, t_new-t_last)
                 t_last = t_new
             z_obs = self.output(x)
@@ -1138,9 +1145,26 @@ class PrognosticsModel(ABC):
         }
         config.update(kwargs)
 
+        if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
+            # Convert here so it isn't done every call of calc_error
+            kwargs['x0'] = [self.StateContainer(x_i) for x_i in kwargs['x0']]
+
         # Set noise to 0
         m_noise, self.parameters['measurement_noise'] = self.parameters['measurement_noise'], 0
         p_noise, self.parameters['process_noise'] = self.parameters['process_noise'], 0
+
+        for i, (times, inputs, outputs) in enumerate(runs):
+            has_changed = False
+            if not isinstance(inputs[0], self.InputContainer):
+                inputs = [self.InputContainer(u_i) for u_i in inputs]
+                has_changed = True
+
+            if isinstance(outputs, np.ndarray):
+                outputs = [self.OutputContainer(u_i) for u_i in outputs]
+                has_changed = True
+
+            if has_changed:
+                runs[i] = (times, inputs, outputs)
 
         def optimization_fcn(params):
             for key, param in zip(keys, params):
