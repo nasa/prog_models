@@ -35,6 +35,10 @@ class ThrownObject(PrognosticsModel):
         'g': -9.81,  # Acceleration due to gravity in m/s^2
         'process_noise': 0.0  # amount of noise in each step
     }
+
+    def initialize(self, *args, **kwargs):
+        self.max_x = 0  # Set maximum height
+        return super().initialize(*args, **kwargs)
     
     def dx(self, x, u):
         return self.StateContainer({'x': x['v'],
@@ -54,7 +58,7 @@ class ThrownObject(PrognosticsModel):
     def event_state(self, x): 
         self.max_x = max(self.max_x, x['x'])  # Maximum altitude
         return {
-            'falling': max(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+            'falling': max(x['v']/self.parameters['x0']['throwing_speed'],0),  # Throwing speed is max speed
             'impact': max(x['x']/self.max_x,0)  # 1 until falling begins, then it's fraction of height
         }
 
