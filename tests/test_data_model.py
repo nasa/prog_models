@@ -102,10 +102,10 @@ class TestDataModel(unittest.TestCase):
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
-        self._test_simple_case(DMDModel, max_error=6)
+        self._test_simple_case(DMDModel, max_error=8)
 
         # Inferring dt
-        self._test_simple_case(DMDModel, max_error=6, WITH_DT = False)
+        self._test_simple_case(DMDModel, max_error=8, WITH_DT = False)
 
         # Without velocity, DMD doesn't perform well
         m = self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
