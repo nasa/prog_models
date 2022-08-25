@@ -213,8 +213,6 @@ class LSTMStateTransitionModel(DataModel):
         u_all = np.array(u_all)
         z_all = np.array(z_all)
         return (u_all, z_all)
-    
-    
 
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
@@ -314,8 +312,6 @@ class LSTMStateTransitionModel(DataModel):
             raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(outputs, Iterable):
             raise ValueError(f"outputs must be in format [run1_outputs, ...], got {type(outputs)}")
-        if len(outputs) == 0:
-            raise ValueError("No outputs provided. outputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
