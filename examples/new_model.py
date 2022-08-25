@@ -28,18 +28,13 @@ class ThrownObject(PrognosticsModel):
 
     # The Default parameters. Overwritten by passing parameters dictionary into constructor
     default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
+        'x0': {  # Initial State
+            'x': 1.83,  # Height of thrower (m)
+            'v': 40  # Velocity at which the ball is thrown (m/s)
+        },
         'g': -9.81,  # Acceleration due to gravity in m/s^2
         'process_noise': 0.0  # amount of noise in each step
     }
-
-    def initialize(self, u, z):
-        self.max_x = 0.0
-        return self.StateContainer({
-            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            })
     
     def dx(self, x, u):
         return self.StateContainer({'x': x['v'],
