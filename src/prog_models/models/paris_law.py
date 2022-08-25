@@ -70,9 +70,6 @@ class ParisLawCrackGrowth(PrognosticsModel):
     state_limits = {
         'c_l': (0, inf),
     }
-    
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
 
     # The model equations
     def dx(self, x : dict, u : dict):

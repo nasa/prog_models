@@ -176,9 +176,6 @@ class DCMotor(PrognosticsModel):
         }
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def next_state(self, x, u, dt):
         (F_a, F_b, F_c) = backemf(x['theta'])
 
