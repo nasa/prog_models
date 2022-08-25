@@ -59,6 +59,7 @@ class LSTMStateTransitionModel(DataModel):
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
 
         kwargs['window'] = input_shape[1]
+        kwargs['model'] = model  # Putting it in the parameters dictionary simplifies pickling
 
         super().__init__(**kwargs)
 
@@ -67,7 +68,7 @@ class LSTMStateTransitionModel(DataModel):
 
     def __getstate__(self):
         warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
-        return ((self.model, ), self.parameters.data)
+        return ((), self.parameters.data)
 
     def __eq__(self, other):
         # Needed because we add .model, which is not present in the parent class
