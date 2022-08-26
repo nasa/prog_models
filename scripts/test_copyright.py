@@ -14,7 +14,7 @@ def check_copyright(directory : str, invalid_files : list) -> bool:
         if os.path.isdir(path):
             result = result and check_copyright(path, invalid_files)
         # If path is a file, ensure it is of type py and check for copyright
-        elif os.path.isfile(path) and path[-2:] == "py":
+        elif path.split(".")[-1] in ("py", "pyw", "py3"):
             file = open(path, 'r')
             copyright_met = False
             # Iterate over lines in file, check each line against COPYRIGHT_TAG
