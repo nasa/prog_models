@@ -14,26 +14,32 @@ from .test_surrogates import main as surrogates_main
 from .test_data_model import main as lstm_main
 
 from io import StringIO
+import matplotlib.pyplot as plt
 import sys
+from timeit import timeit
+from unittest.mock import patch
+
 from examples import sim as sim_example
 
 def _test_ex():
-    # set stdout (so it wont print)
-    _stdout = sys.stdout
-    sys.stdout = StringIO()
-
     # Run example
     sim_example.run_example()
-
-    # Reset stdout 
-    sys.stdout = _stdout
 
 if __name__ == '__main__':
     was_successful = True
 
     try:
-        from timeit import timeit
-        print("\nExample Runtime: ", timeit(_test_ex, number=10))
+        # set stdout (so it wont print)
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+        
+        with patch('matplotlib.pyplot.show'):
+            print("\nExample Runtime: ", timeit(_test_ex, number=10))
+
+        plt.close('all')
+        
+        # Reset stdout 
+        sys.stdout = _stdout
     except Exception as e:
         print("\Benchmarking Failed: ", e)
         was_successful = False

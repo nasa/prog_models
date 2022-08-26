@@ -68,9 +68,6 @@ class DMDModel(LinearModel, DataModel):
             return cls.from_model(dmd_matrix, args[0], **kwargs) 
         return DataModel.__new__(cls)
 
-    def __getstate__(self):
-        return ((self.dmd_matrix,), self.parameters.data)
-
     def __getnewargs__(self):
         return (self.dmd_matrix, )
 
@@ -95,8 +92,6 @@ class DMDModel(LinearModel, DataModel):
         }
         params.update(**kwargs)
 
-        self.dmd_matrix = dmd_matrix
-
         self.inputs = params['input_keys']
         n_inputs = len(params['input_keys'])
         
@@ -118,10 +113,13 @@ class DMDModel(LinearModel, DataModel):
         self.F = np.zeros((n_events,n_total))
         for iter2 in range(n_events):
             self.F[iter2,n_states+n_outputs+iter2] = 1 
-        
-        self.dt = params['dt']
 
         super().__init__(**params)
+        
+        self.dt = params['dt']
+        self.dmd_matrix = dmd_matrix
+        self.parameters['dmd_matrix'] = dmd_matrix  # This simplifies pickling (all data in parameters)
+        
         if not isinstance(self.parameters['x0'], bool) and not isinstance(self.parameters['x0'], self.StateContainer):
             self.parameters['x0'] = self.StateContainer(params['x0'])
 
@@ -201,8 +199,7 @@ class DMDModel(LinearModel, DataModel):
             config['dt'] = sum(config['dt'])/len(config['dt'])
         elif config['dt'] is None:
             # Use times from data - calculate mean dt
-            t = times[0]
-            dts = [t[j+1] - t[j]  for j in range(len(t)-1) for t in times]
+            dts = [t[j+1] - t[j] for t in times for j in range(len(t)-1)]
             config['dt'] = sum(dts)/len(dts)
         if 'save_freq' not in config:
             config['save_freq'] = config['dt']

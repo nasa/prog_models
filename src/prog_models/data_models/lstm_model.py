@@ -60,6 +60,7 @@ class LSTMStateTransitionModel(DataModel):
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
 
         kwargs['window'] = input_shape[1]
+        kwargs['model'] = model  # Putting it in the parameters dictionary simplifies pickling
 
         super().__init__(**kwargs)
 
@@ -69,7 +70,7 @@ class LSTMStateTransitionModel(DataModel):
 
     def __getstate__(self):
         warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
-        return ((self.model, ), self.parameters.data)
+        return ((), self.parameters.data)
 
     def __eq__(self, other):
         # Needed because we add .model, which is not present in the parent class
@@ -92,7 +93,7 @@ class LSTMStateTransitionModel(DataModel):
         """
         return self.StateContainer(np.array([[None] for _ in self.states]))
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, _):
         # Rotate new input into state
         input_data = u.matrix
             
@@ -312,8 +313,6 @@ class LSTMStateTransitionModel(DataModel):
             raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(outputs, Iterable):
             raise ValueError(f"outputs must be in format [run1_outputs, ...], got {type(outputs)}")
-        if len(outputs) == 0:
-            raise ValueError("No outputs provided. outputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
