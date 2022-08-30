@@ -28,6 +28,8 @@ class DataModel(PrognosticsModel, ABC):
             states (list[np.array]): list of :term:`state` data for use in data. Each element is the states for a single run of size (n_times, n_states)
             outputs (list[np.array]): list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
             event_states (list[np.array]): list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
+            event_time (list[np.array]): list of time of event 
+
             input_keys (list[str]): 
                 List of :term:`input` keys
             state_keys (list[str]): 
