@@ -2,6 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from collections.abc import Iterable
+import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
 import sys
@@ -65,6 +66,7 @@ class LSTMStateTransitionModel(DataModel):
 
         # Save Model
         self.model = model
+        self.history = kwargs.get('history', None)
 
     def __getstate__(self):
         warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
@@ -123,7 +125,6 @@ class LSTMStateTransitionModel(DataModel):
         print("Window_size: ", self.parameters['window'], file = file)
         self.model.summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
-
     @staticmethod
     def pre_process_data(data, window, **kwargs):
         """
@@ -213,8 +214,6 @@ class LSTMStateTransitionModel(DataModel):
         u_all = np.array(u_all)
         z_all = np.array(z_all)
         return (u_all, z_all)
-    
-    
 
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
@@ -314,8 +313,6 @@ class LSTMStateTransitionModel(DataModel):
             raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(outputs, Iterable):
             raise ValueError(f"outputs must be in format [run1_outputs, ...], got {type(outputs)}")
-        if len(outputs) == 0:
-            raise ValueError("No outputs provided. outputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
@@ -373,9 +370,9 @@ class LSTMStateTransitionModel(DataModel):
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
-        model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        history = model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return cls(keras.models.load_model("best_model.keras"), **params)
+        return cls(keras.models.load_model("best_model.keras"), history = history, **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
@@ -427,3 +424,30 @@ class LSTMStateTransitionModel(DataModel):
             kwargs['horizon'] = kwargs['horizon'] - t
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
     
+    def plot_history(self, metrics = None):
+        """
+        Plot the trianing history for the keras model. 
+
+        Args:
+            metrics (list[str], optional): Metrics to plot (e.g., [loss]). Defaults to all metrics in history.
+
+        Raises:
+            Exception: No history is available (e.g., because you supplied a model to the constructor but didn't provide the history as a kwarg)
+
+        Returns:
+            list[plt.figure]: List of Figures, one for each metric
+        """
+        if self.history is None:
+            raise Exception("Cannot plot history- no history is available")
+
+        if metrics is None: 
+            metrics = self.history.history.keys()
+        
+        plts = []
+        for key in metrics:
+            plts.append(plt.figure())
+            plt.plot(self.history.history[key])
+            plt.xlabel('epochs')
+            plt.ylabel(key)
+        
+        return plts

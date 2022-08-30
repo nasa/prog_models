@@ -45,6 +45,12 @@ def run_example():
         window=4, 
         epochs=30,
         output_keys = ['x'])    
+
+    # We can see the training history
+    # Should show the model progressively getting better (i.e., the loss going down).
+    # If val_loss starts going up again, then we may be overtraining
+    m2.plot_history()
+    plt.show()
     
     # Step 3: Use model to simulate_to time of threshold
     print('Simulating with generated model...')
@@ -104,7 +110,7 @@ def run_example():
         window=4, 
         epochs=30, 
         input_keys = ['dt'],
-        output_keys = ['x'])  
+        output_keys = ['x']) 
     # Note, since we're generating from a model, we could also have done this:
     # m3 = LSTMStateTransitionModel.from_model(
     #     m,
@@ -112,6 +118,10 @@ def run_example():
     #     dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
     #     window=4, 
     #     epochs=30)  
+
+    # Take a look at the training history
+    m3.plot_history()
+    plt.show() 
 
     # Step 4: Simulate with model
     t_counter = 0
@@ -165,6 +175,10 @@ def run_example():
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
         output_keys = ['t', 'v']) 
+
+    # Take a look at the training history.
+    m_batt.plot_history()
+    plt.show()
 
     # Step 3: Simulate with model
     t_counter = 0
