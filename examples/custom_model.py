@@ -25,7 +25,6 @@ def run_example():
     future_loading_eqns = [lambda t, x=None: batt.InputContainer({'i': 1+1.5*load}) for load in range(6)]
     # Generate data with different loading and step sizes
     # Adding the step size as an element of the output
-    training_data = []
     input_data = []
     output_data = []
     for i in range(9):
@@ -34,7 +33,7 @@ def run_example():
             d = batt.simulate_to_threshold(loading_eqn, save_freq=dt, dt=dt) 
             u = np.array([np.hstack((u_i.matrix[:][0].T, [dt])) for u_i in d.inputs], dtype=float)
             z = d.outputs
-            training_data.append((u, z))
+
             input_data.append(u)
             output_data.append(z)
 
@@ -52,10 +51,10 @@ def run_example():
 
     # Step 3: Build custom model
     print('Building custom model...')
-    (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(training_data, window=12)
+    (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(input_data, output_data, window=12)
     
     # Normalize
-    n_inputs = len(training_data[0][0][0])
+    n_inputs = len(input_data[0][0])
     u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
     u_std = np.std(u_all[:,0,:n_inputs], axis=0)
     # If there's no variation- dont normalize 
