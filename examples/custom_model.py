@@ -47,7 +47,8 @@ def run_example():
         epochs=30, 
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
-        output_keys = ['t', 'v'])   
+        output_keys = ['t', 'v'])
+    m_batt.plot_history() 
 
     # Step 3: Build custom model
     print('Building custom model...')
@@ -84,14 +85,15 @@ def run_example():
     x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
     model = keras.Model(inputs, x)
     model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
-    model.fit(u_all, z_all, epochs=30, callbacks = callbacks, validation_split = 0.1)
+    history = model.fit(u_all, z_all, epochs=30, callbacks = callbacks, validation_split = 0.1)
 
     # Step 4: Build LSTMStateTransitionModel
     m_custom = LSTMStateTransitionModel(model, 
         normalization=normalization, 
         input_keys = ['i', 'dt'],
-        output_keys = ['t', 'v']
+        output_keys = ['t', 'v'], history=history  # Provide history so plot_history will work
     )
+    m_custom.plot_history()
 
     # Step 5: Simulate
     print('Simulating...')
