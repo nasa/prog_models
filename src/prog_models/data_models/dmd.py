@@ -414,9 +414,6 @@ class DMDModel(LinearModel, DataModel):
 
         return m_dmd
 
-    def initialize(self, u=None, z=None):
-        return self.parameters['x0']
-
     def next_state(self, x, u, _):   
         x.matrix = np.matmul(self.A, x.matrix) + self.E
         if self.B.shape[1] != 0:

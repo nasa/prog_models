@@ -182,10 +182,9 @@ class PrognosticsModel(ABC):
 
         self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
     
-    @abstractmethod
     def initialize(self, u : dict = None, z :dict = None) -> dict:
         """
-        Calculate initial state given inputs and outputs
+        Calculate initial state given inputs and outputs. If not defined for a model, it will return parameters['x0']
 
         Parameters
         ----------
@@ -210,7 +209,7 @@ class PrognosticsModel(ABC):
                 z = {'z1': 2.2}
                 x = m.initialize(u, z) # Initialize first state
         """
-        return {}
+        return self.StateContainer(self.parameters['x0'])
 
     def apply_measurement_noise(self, z : dict) -> dict:
         """
