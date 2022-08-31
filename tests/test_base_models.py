@@ -220,11 +220,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = missing_initiialize()
-            self.fail("Should not have worked, missing 'initialize' method")
-        except TypeError:
-            pass
+        m = missing_initiialize()
+        # Should work- initialize is now optional
 
         try: 
             m = missing_output()
