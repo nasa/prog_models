@@ -50,16 +50,19 @@ class TestDataModel(unittest.TestCase):
         # Step 3: Use model to simulate_to time of threshold
         t_counter = 0
         x_counter = m.initialize()
-        def future_loading2(t, x = None):
-            # Future Loading is a bit complicated here 
-            # Loading for the resulting model includes the data inputs, 
-            # and the output from the last timestep
-            nonlocal t_counter, x_counter
-            z = m.output(x_counter)
-            z = m2.InputContainer(z.matrix)
-            x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
-            t_counter = t
-            return z
+        if isinstance(m2, DMDModel):
+            future_loading2 = future_loading
+        else:
+            def future_loading2(t, x = None):
+                # Future Loading is a bit complicated here 
+                # Loading for the resulting model includes the data inputs, 
+                # and the output from the last timestep
+                nonlocal t_counter, x_counter
+                z = m.output(x_counter)
+                z = m2.InputContainer(z.matrix)
+                x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
+                t_counter = t
+                return z
         
         results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
 

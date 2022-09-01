@@ -262,9 +262,6 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def dx(self, x : dict, u : dict):
         params = self.parameters
         # Negative Surface
@@ -503,9 +500,6 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'qMax': (0, np.inf)
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def dx(self, _, u : dict):
         params = self.parameters
 
@@ -592,9 +586,6 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['tDiffusion'] = [OverwrittenWarning]
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
-
-    def initialize(self, u : dict = {}, z : dict = {}):
-        return self.StateContainer(self.parameters['x0'])
 
     def dx(self, x : dict, u : dict):
         # Set EOD Parameters (corresponding to health)
