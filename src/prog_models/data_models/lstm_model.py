@@ -109,7 +109,7 @@ class LSTMStateTransitionModel(DataModel):
         # Format input into np array with shape (1, window, num_inputs)
         m_input = x.matrix[:self.parameters['window']*len(self.inputs)].reshape(1, self.parameters['window'], len(self.inputs))
 
-        # Pass into model to calculate outp        
+        # Pass into model to calculate output       
         m_output = self.model(m_input)
 
         if 'normalization' in self.parameters:
