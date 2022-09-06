@@ -44,7 +44,7 @@ def run_example():
         outputs = [data.outputs],  
         window=4, 
         epochs=30,
-        output_keys = ['x'])    
+        output_keys = ['x'])
 
     # We can see the training history
     # Should show the model progressively getting better (i.e., the loss going down).
