@@ -1,7 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections.abc import Iterable
 import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
@@ -126,23 +125,26 @@ class LSTMStateTransitionModel(DataModel):
         self.model.summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
     @staticmethod
-    def pre_process_data(data, window, **kwargs):
+    def pre_process_data(inputs, outputs, window, **kwargs):
         """
         Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
 
         Args:
-            data (List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))): Data to be processed. each element is of format (input, output), where input and output can be ndarray or SimulationResult
+            inputs (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
+            outputs (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
             window (int): Length of a single sequence
 
         Returns:
             Tuple[ndarray, ndarray]: pre-processed data (input, output). Where input is of size (num_sequences, window, num_inputs) and output is of size (num_sequences, num_outputs)
         """
-        # Data is a List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))
-        # Tuple is (input, output)
 
         u_all = []
         z_all = []
-        for (u, z) in data:
+
+        if len(inputs) != len(outputs):
+            raise ValueError("Inputs must be same length as outputs")
+
+        for (u, z) in zip(inputs, outputs):
             # Each item (u, z) is a 1-d array, a 2-d array, or a SimResult
 
             # Process Input
@@ -305,26 +307,17 @@ class LSTMStateTransitionModel(DataModel):
             inputs = [inputs]
         if np.isscalar(outputs):
             outputs = [outputs]
-        if len(inputs) != len(outputs):
-            raise ValueError("Inputs must be same length as outputs")
-        if not isinstance(inputs, Iterable):
-            raise ValueError(f"inputs must be in format [run1_inputs, ...], got {type(inputs)}")
         if len(inputs) == 0:
             raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
-        if not isinstance(outputs, Iterable):
-            raise ValueError(f"outputs must be in format [run1_outputs, ...], got {type(outputs)}")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
-        # Convert to previous format - used below
-        data = [(u, z) for u, z in zip(inputs, outputs)]
-
         # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
+        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, **params)
 
         # Normalize
         if params['normalize']:
-            n_inputs = len(data[0][0][0])
+            n_inputs = len(inputs[0][0])
             u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
             u_std = np.std(u_all[:,0,:n_inputs], axis=0)
             # If there's no variation- dont normalize 
