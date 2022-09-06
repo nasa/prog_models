@@ -1,7 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections.abc import Iterable
 import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
@@ -141,7 +140,7 @@ class LSTMStateTransitionModel(DataModel):
 
         u_all = []
         z_all = []
-        
+
         if len(inputs) != len(outputs):
             raise ValueError("Inputs must be same length as outputs")
 
