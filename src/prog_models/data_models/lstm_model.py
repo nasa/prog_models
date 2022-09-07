@@ -23,7 +23,8 @@ class LSTMStateTransitionModel(DataModel):
     Most users will use the `LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func`LSTMStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
 
     Args:
-        model (keras.Model): Keras model to use for state transition
+        output_model (keras.Model): If a state model is present, mapps from the state_model outputs to model outputs. Otherwise, maps from model inputs to model outputs
+        state_model (keras.Model): Keras model to use for state transition, optional
 
     Keyword Args:
         input_keys (list[str]): List of input keys
@@ -42,12 +43,15 @@ class LSTMStateTransitionModel(DataModel):
         'measurement_noise': 0,  # Default 0 noise
     }
 
-    def __init__(self, state_model, output_model, **kwargs):
-        # Setup inputs, outputs, states 
-        self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(output_model.output.shape[1])])
+    def __init__(self, output_model, state_model = None, **kwargs):
+        n_outputs = output_model.output.shape[1]
+        n_internal = 0 if state_model is None else state_model.output.shape[1]
+        input_shape = output_model.input.shape if state_model is None else state_model.input.shape
+        n_inputs = input_shape[-1]-n_outputs
 
-        input_shape = state_model.input.shape
-        input_keys = kwargs.get('input_keys', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
+        # Setup inputs, outputs, states 
+        self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(n_outputs)])
+        input_keys = kwargs.get('input_keys', [f'u{i}' for i in range(n_inputs)])
         self.inputs = input_keys.copy()
         # Outputs from the last step are part of input
         self.inputs.extend([f'{z_key}_t-1' for z_key in self.outputs])
@@ -57,7 +61,7 @@ class LSTMStateTransitionModel(DataModel):
         for j in range(input_shape[1]-1, -1, -1):
             self.states.extend([f'{input_i}_t-{j}' for input_i in input_keys])
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
-        self.states.extend([f'_model_output{i}' for i in range(state_model.output.shape[1])])
+        self.states.extend([f'_model_output{i}' for i in range(n_internal)])
 
         kwargs['window'] = input_shape[1]
         kwargs['state_model'] = state_model  
@@ -97,12 +101,16 @@ class LSTMStateTransitionModel(DataModel):
     def next_state(self, x, u, _):
         # Rotate new input into state
         input_data = u.matrix
+
+        if self.parameters['state_model'] is None:
+            states = x.matrix[len(input_data):]
+            return self.StateContainer(np.vstack((states, input_data)))
             
         states = x.matrix[len(input_data):-self.parameters['state_model'].output_shape[1]]
         states = np.vstack((states, input_data))
 
-        if states[0] is None:
-            return self.StateContainer(states)
+        if states[0,0] is None:
+            return self.StateContainer(np.vstack((states, x.matrix[-self.parameters['state_model'].output_shape[1]:])))
         else:
             # Enough data has been received to calculate output
             # Format input into np array with shape (1, window, num_inputs)
@@ -118,7 +126,11 @@ class LSTMStateTransitionModel(DataModel):
 
         # Enough data has been received to calculate output
         # Pass internal states into model to calculate output
-        internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
+        if self.parameters['state_model'] is None:
+            m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
+            internal_states = np.array(m_input, dtype=np.float)
+        else:
+            internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
         m_output = self.parameters['output_model'](internal_states)
 
         if 'normalization' in self.parameters:
@@ -384,7 +396,7 @@ class LSTMStateTransitionModel(DataModel):
         state_model = keras.Model(model.input, model.layers[n_state_layers-1].output)
         output_model = keras.Model(output_layer_input, output_layer)
 
-        return cls(state_model, output_model, history = history, **params)
+        return cls(output_model, state_model, history = history, **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
