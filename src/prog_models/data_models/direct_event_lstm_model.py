@@ -5,10 +5,10 @@ from collections.abc import Iterable
 from numbers import Number
 import numpy as np
 from tensorflow import keras
+from prog_models.data_models.lstm_model import LSTMStateTransitionModel
 from tensorflow.keras import layers
 
 from . import DataModel
-from ..sim_result import SimResult
 
 
 class LSTMDirectModel(DataModel):
@@ -53,98 +53,6 @@ class LSTMDirectModel(DataModel):
         """
         return self.StateContainer(np.array([[None] for _ in self.states]))
     
-    # TODO(CT): Output
-
-    @staticmethod
-    def pre_process_data(data, window, **kwargs):
-        """
-        Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
-
-        Args:
-            data (List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))): Data to be processed. each element is of format (input, output), where input and output can be ndarray or SimulationResult
-            window (int): Length of a single sequence
-
-        Returns:
-            Tuple[ndarray, ndarray]: pre-processed data (input, output). Where input is of size (num_sequences, window, num_inputs) and output is of size (num_sequences, num_outputs)
-        """
-        # Data is a List[Tuple] or Tuple (where Tuple is equivilant to [Tuple]))
-        # Tuple is (input, output)
-
-        u_all = []
-        z_all = []
-        for (u, z) in data:
-            # Each item (u, z) is a 1-d array, a 2-d array, or a SimResult
-
-            # Process Input
-            if isinstance(u, SimResult):
-                if len(u[0].keys()) == 0:
-                    # No inputs
-                    u = []
-                else:
-                    u = np.array([u_i.matrix[:,0] for u_i in u])
-
-            if isinstance(u, (list, np.ndarray)):
-                if len(u) == 0:
-                    # No inputs
-                    u_i = []
-                elif np.isscalar(u[0]):
-                    # Input is 1-d array (i.e., 1 input)
-                    # Note: 1 is added to account for current time (current input used to predict output at time i)
-                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window-1)]
-                elif isinstance(u[0], (list, np.ndarray)):
-                    # Input is d-d array
-                    # Note: 1 is added to account for current time (current input used to predict output at time i)
-                    n_inputs = len(u[0])
-                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window-1)]
-                else:
-                    raise TypeError(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
-            else:
-                raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
-
-
-            # Process Output
-            if isinstance(z, SimResult):
-                if len(z[0].keys()) == 0:
-                    # No outputs
-                    z = []
-                else:
-                    z = np.array([z_i.matrix[:,0] for z_i in z])
-
-            if isinstance(z, (list, np.ndarray)):
-                if len(z) != len(u) and len(u) != 0 and len(z) != 0:
-                    # Checked here to avoid SimResults from accidentially triggering this check
-                    raise IndexError(f"Number of outputs ({len(z)}) does not match number of inputs ({len(u)})")
-
-                if len(z) == 0:
-                    # No outputs
-                    z_i = []
-                elif np.isscalar(z[0]):
-                    # Output is 1-d array (i.e., 1 output)
-                    z_i = [[z[i]] for i in range(window+1, len(z))]
-                elif isinstance(z[0], (list, np.ndarray)):
-                    # Input is d-d array
-                    n_outputs = len(z[0])
-                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window+1, len(z))]
-                else:
-                    raise TypeError(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
-
-                # Also add to input (past outputs are part of input)
-                if len(u_i) == 0:
-                    u_i = [[z_ii for _ in range(window)] for z_ii in z_i]
-                else:
-                    for i in range(len(z_i)):
-                        for j in range(window):
-                            u_i[i][j].extend(z_i[i])
-            else:
-                raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
-            
-            u_all.extend(u_i)
-            z_all.extend(z_i)
-        
-        u_all = np.array(u_all)
-        z_all = np.array(z_all)
-        return (u_all, z_all)
-
     @classmethod
     def from_data(cls, inputs, outputs, event_times, **kwargs):
         params = { # default_params
@@ -200,14 +108,8 @@ class LSTMDirectModel(DataModel):
             inputs = [inputs]
         if np.isscalar(outputs):
             outputs = [outputs]
-        if len(inputs) != len(outputs):
-            raise ValueError("Inputs must be same length as outputs")
-        if not isinstance(inputs, Iterable):
-            raise ValueError(f"inputs must be in format [run1_inputs, ...], got {type(inputs)}")
         if len(inputs) == 0:
             raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
-        if not isinstance(outputs, Iterable):
-            raise ValueError(f"outputs must be in format [run1_outputs, ...], got {type(outputs)}")
         if len(inputs) != len(event_times):
             raise ValueError("Event Times must be same length as inputs")
         if not isinstance(event_times, Iterable):
@@ -215,15 +117,12 @@ class LSTMDirectModel(DataModel):
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
-        # Convert to previous format - used below
-        data = [(u, z) for u, z in zip(inputs, outputs)]
-
         # Prepare datasets
-        (u_all, z_all) = LSTMDirectModel.pre_process_data(data, **params)
+        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, **params)
 
         # Normalize
         if params['normalize']:
-            n_inputs = len(data[0][0][0])
+            n_inputs = len(inputs[0][0])
             u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
             u_std = np.std(u_all[:,0,:n_inputs], axis=0)
             # If there's no variation- dont normalize 
