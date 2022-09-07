@@ -73,7 +73,7 @@ class PrognosticsModel(ABC):
         events: List[str], optional
             Identifiers for each :term:`event` predicted 
         StateContainer : DictLikeMatrixWrapper
-            Class for state container - used for representing :state:`state`
+            Class for state container - used for representing :term:`state`
         OutputContainer : DictLikeMatrixWrapper
             Class for output container - used for representing :term:`output`
         InputContainer : DictLikeMatrixWrapper
