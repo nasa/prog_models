@@ -42,11 +42,11 @@ class LSTMStateTransitionModel(DataModel):
         'measurement_noise': 0,  # Default 0 noise
     }
 
-    def __init__(self, model, **kwargs):
+    def __init__(self, state_model, output_model, **kwargs):
         # Setup inputs, outputs, states 
-        self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(model.output.shape[1])])
+        self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(output_model.output.shape[1])])
 
-        input_shape = model.input.shape
+        input_shape = state_model.input.shape
         input_keys = kwargs.get('input_keys', [f'u{i}' for i in range(input_shape[2]-len(self.outputs))])
         self.inputs = input_keys.copy()
         # Outputs from the last step are part of input
@@ -57,14 +57,16 @@ class LSTMStateTransitionModel(DataModel):
         for j in range(input_shape[1]-1, -1, -1):
             self.states.extend([f'{input_i}_t-{j}' for input_i in input_keys])
             self.states.extend([f'{output_i}_t-{j+1}' for output_i in self.outputs])
+        self.states.extend([f'_model_output{i}' for i in range(state_model.output.shape[1])])
 
         kwargs['window'] = input_shape[1]
-        kwargs['model'] = model  # Putting it in the parameters dictionary simplifies pickling
+        kwargs['state_model'] = state_model  
+        kwargs['output_model'] = output_model
+        # Putting it in the parameters dictionary simplifies pickling
 
         super().__init__(**kwargs)
 
         # Save Model
-        self.model = model
         self.history = kwargs.get('history', None)
 
     def __getstate__(self):
@@ -96,8 +98,18 @@ class LSTMStateTransitionModel(DataModel):
         # Rotate new input into state
         input_data = u.matrix
             
-        states = x.matrix[len(input_data):]
-        return self.StateContainer(np.vstack((states, input_data)))
+        states = x.matrix[len(input_data):-self.parameters['state_model'].output_shape[1]]
+        states = np.vstack((states, input_data))
+
+        if states[0] is None:
+            return self.StateContainer(states)
+        else:
+            # Enough data has been received to calculate output
+            # Format input into np array with shape (1, window, num_inputs)
+            m_input = states.reshape(1, self.parameters['window'], len(self.inputs))
+            m_input = np.array(m_input, dtype=np.float)
+            internal_states = self.parameters['state_model'](m_input).numpy().T
+        return self.StateContainer(np.vstack((states, internal_states)))
 
     def output(self, x):
         if x.matrix[0,0] is None:
@@ -105,11 +117,9 @@ class LSTMStateTransitionModel(DataModel):
             return self.OutputContainer(np.array([[None] for _ in self.outputs]))
 
         # Enough data has been received to calculate output
-        # Format input into np array with shape (1, window, num_inputs)
-        m_input = x.matrix[:self.parameters['window']*len(self.inputs)].reshape(1, self.parameters['window'], len(self.inputs))
-
-        # Pass into model to calculate output       
-        m_output = self.model(m_input)
+        # Pass internal states into model to calculate output
+        internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
+        m_output = self.parameters['output_model'](internal_states)
 
         if 'normalization' in self.parameters:
             m_output *= self.parameters['normalization'][1]
@@ -358,14 +368,23 @@ class LSTMStateTransitionModel(DataModel):
             # Dropout prevents overfitting
             x = layers.Dropout(params['dropout'])(x)
 
-        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
+        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1, name='output')(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
         history = model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        return cls(keras.models.load_model("best_model.keras"), history = history, **params)
+        model = keras.models.load_model("best_model.keras")
+
+        # Split model into separate models
+        n_state_layers = params['layers'] + 1 + (params['dropout'] > 0) + (params['normalize'])
+        output_layer_input = layers.Input(model.layers[n_state_layers-1].output.shape[1:])
+        output_layer = model.get_layer('output')(output_layer_input)
+        state_model = keras.Model(model.input, model.layers[n_state_layers-1].output)
+        output_model = keras.Model(output_layer_input, output_layer)
+
+        return cls(state_model, output_model, history = history, **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
