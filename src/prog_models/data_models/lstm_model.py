@@ -145,10 +145,10 @@ class LSTMStateTransitionModel(DataModel):
         print("Outputs: ", self.outputs, file = file)
         print("Window_size: ", self.parameters['window'], file = file)
         if 'state_model' in self.parameters:
-            print('\nState Model: ')
+            print('\nState Model: ', file = file)
             self.parameters['state_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
-        print('\nOutput Model: ')
+        print('\nOutput Model: ', file = file)
         self.parameters['output_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
         

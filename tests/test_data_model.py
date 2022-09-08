@@ -86,10 +86,12 @@ class TestDataModel(unittest.TestCase):
         m = self._test_simple_case(LSTMStateTransitionModel, window=5, epochs=20, max_error=3)
         self.assertListEqual(m.inputs, ['x_t-1'])
         # Use set below so there's no issue with ordering
-        self.assertSetEqual(set(m.states), set(['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']))
+        keys = ['x_t-1', 'x_t-2', 'x_t-3', 'x_t-4', 'x_t-5']
+        keys.extend([f'_model_output{i}' for i in range(16)])
+        self.assertSetEqual(set(m.states), set(keys))
 
         # Create from model
-        LSTMStateTransitionModel(m.model, output_keys = ['x'])
+        LSTMStateTransitionModel(m.parameters['output_model'], m.parameters['state_model'], output_keys = ['x'])
         try:
         # Test pickling model m
             with self.assertWarns(RuntimeWarning):
