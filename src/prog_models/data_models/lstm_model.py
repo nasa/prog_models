@@ -144,7 +144,13 @@ class LSTMStateTransitionModel(DataModel):
         print("Inputs: ", self.inputs, file = file)
         print("Outputs: ", self.outputs, file = file)
         print("Window_size: ", self.parameters['window'], file = file)
-        self.model.summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
+        if 'state_model' in self.parameters:
+            print('\nState Model: ')
+            self.parameters['state_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
+        
+        print('\nOutput Model: ')
+        self.parameters['output_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
+        
         
     @staticmethod
     def pre_process_data(inputs, outputs, window, **kwargs):
