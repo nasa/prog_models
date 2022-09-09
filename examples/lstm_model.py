@@ -43,7 +43,7 @@ def run_example():
         inputs = [data.inputs],
         outputs = [data.outputs],  
         window=4, 
-        epochs=30,
+        epochs=30,  # Maximum number of epochs, may stop earlier if early stopping enabled
         output_keys = ['x'])
 
     # We can see the training history
@@ -149,6 +149,7 @@ def run_example():
     # Example 3- More complicated system
     # Here we will create a model for a more complicated system
     # For this example we will use the BatteryElectroChemEOD model
+    # We also include the event state (SOC)
     # -----------------------------------------------------
     print('\n------------------------------------------\nExample 3...')
     print('Generating data...')
@@ -177,7 +178,8 @@ def run_example():
         epochs=5, 
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
-        output_keys = ['t', 'v']) 
+        output_keys = ['t', 'v'],
+        event_keys=['EOD']) 
 
     # Take a look at the training history.
     m_batt.plot_history()
@@ -208,6 +210,8 @@ def run_example():
     print('Comparing results...')
     data.outputs.plot(title='original model', compact=False)
     results.outputs.plot(title='generated model', compact=False)
+    data.event_states.plot(title='original model', compact=False)
+    results.event_states.plot(title='generated model', compact=False)
     plt.show()
 
     # This last example isn't a perfect fit, but it matches the behavior pretty well
