@@ -251,6 +251,8 @@ class LSTMStateTransitionModel(DataModel):
                 If the data should be normalized. This is recommended for most cases.
             early_stopping (bool):
                 If early stopping is desired. Default is True
+            early_stop.cfg (dict):
+                Configuration to pass into early stopping callback (if enabled). See keras documentation (https://keras.io/api/callbacks/early_stopping) for options. E.g., {'patience': 5}
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -268,7 +270,8 @@ class LSTMStateTransitionModel(DataModel):
             'activation': 'tanh',
             'dropout': 0.1,
             'normalize': True,
-            'early_stop': True
+            'early_stop': True,
+            'early_stop.cfg': {'patience': 3, 'monitor': 'loss'}
         }.copy()  # Copy is needed to avoid updating default
 
         params.update(LSTMStateTransitionModel.default_params)
@@ -346,7 +349,7 @@ class LSTMStateTransitionModel(DataModel):
         ]
 
         if params['early_stop']:
-            callbacks.append(keras.callbacks.EarlyStopping(monitor='loss', patience=3))
+            callbacks.append(keras.callbacks.EarlyStopping(**params['early_stop.cfg']))
 
         inputs = keras.Input(shape=u_all.shape[1:])
         x = inputs
