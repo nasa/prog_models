@@ -158,20 +158,23 @@ def run_example():
     # Adding the step size as an element of the output
     input_data = []
     output_data = []
+    es_data = []
     for i in range(9):
         dt = i/3+0.25
         for loading_eqn in future_loading_eqns:
             d = batt.simulate_to_threshold(loading_eqn, save_freq=dt, dt=dt) 
             input_data.append(np.array([np.hstack((u_i.matrix[:][0].T, [dt])) for u_i in d.inputs], dtype=float))
             output_data.append(d.outputs)
+            es_data.append(d.event_states)
   
     # Step 2: Generate Model
     print('Building model...') 
     m_batt = LSTMStateTransitionModel.from_data(
         inputs = input_data,
         outputs = output_data,
+        event_states = es_data,
         window=12, 
-        epochs=3, 
+        epochs=5, 
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
         output_keys = ['t', 'v']) 
