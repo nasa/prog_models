@@ -23,6 +23,8 @@ class DictLikeMatrixWrapper():
         if isinstance(data, np.matrix):
             self.matrix = np.array(data, dtype=np.float64)
         elif isinstance(data, np.ndarray):
+            if data.ndim == 1:
+                data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
             self.matrix = np.array(

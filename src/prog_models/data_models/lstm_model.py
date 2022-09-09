@@ -232,8 +232,7 @@ class LSTMStateTransitionModel(DataModel):
         es_all = []
         t_all = []
 
-        if len(inputs) != len(outputs):
-            raise ValueError("Inputs must be same length as outputs")
+        DataModel.check_data_format(inputs, outputs)
 
         if event_states is not None and len(inputs) != len(event_states):
             raise ValueError("Inputs must be same length as event_states")
@@ -420,6 +419,10 @@ class LSTMStateTransitionModel(DataModel):
                 Dropout rate to be applied. Dropout helps avoid overfitting
             normalize (bool): 
                 If the data should be normalized. This is recommended for most cases.
+            early_stopping (bool):
+                If early stopping is desired. Default is True
+            early_stop.cfg (dict):
+                Configuration to pass into early stopping callback (if enabled). See keras documentation (https://keras.io/api/callbacks/early_stopping) for options. E.g., {'patience': 5}
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -436,7 +439,9 @@ class LSTMStateTransitionModel(DataModel):
             'units': 16,
             'activation': 'tanh',
             'dropout': 0.1,
-            'normalize': True
+            'normalize': True,
+            'early_stop': True,
+            'early_stop.cfg': {'patience': 3, 'monitor': 'loss'}
         }.copy()  # Copy is needed to avoid updating default
 
         params.update(LSTMStateTransitionModel.default_params)
@@ -478,8 +483,6 @@ class LSTMStateTransitionModel(DataModel):
             inputs = [inputs]
         if np.isscalar(outputs):
             outputs = [outputs]
-        if len(inputs) == 0:
-            raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
@@ -512,6 +515,9 @@ class LSTMStateTransitionModel(DataModel):
         callbacks = [
             keras.callbacks.ModelCheckpoint("best_model.keras", save_best_only=True)
         ]
+
+        if params['early_stop']:
+            callbacks.append(keras.callbacks.EarlyStopping(**params['early_stop.cfg']))
 
         inputs = keras.Input(shape=u_all.shape[1:])
         x = inputs
