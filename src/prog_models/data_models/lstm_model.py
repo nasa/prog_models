@@ -23,12 +23,15 @@ class LSTMStateTransitionModel(DataModel):
     Most users will use the `LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func`LSTMStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
 
     Args:
-        output_model (keras.Model): If a state model is present, mapps from the state_model outputs to model outputs. Otherwise, maps from model inputs to model outputs
-        state_model (keras.Model): Keras model to use for state transition, optional
+        output_model (keras.Model): If a state model is present, maps from the state_model outputs to model :term:`output`. Otherwise, maps from model inputs to model :term:`output`
+        state_model (keras.Model, optional): Keras model to use for state transition
+        event_state_model (keras.Model, optional): If a state model is present, maps from the state_model outputs to :term:`event state`. Otherwise, maps from model inputs to :term:`event state`
+        t_met_model (keras.Model, optional): If a state model is present, maps from the state_model outputs to if the threshold has been met. Otherwise, maps from model inputs to if the threshold has not been met
 
     Keyword Args:
         input_keys (list[str]): List of input keys
         output_keys (list[str]): List of output keys
+        event_keys (list[str]): List of event keys
 
     Attributes:
         model (keras.Model): Keras model to use for state transition
