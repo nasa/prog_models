@@ -173,6 +173,26 @@ class LSTMStateTransitionModel(DataModel):
 
         return {key: value for key, value in zip(self.events, m_event_state[0])}
 
+    def threshold_met(self, x):
+        if self.parameters['t_met_model'] is None:
+            warn('No threshold met model exists- returning empty t_met')
+            return {}
+        
+        if x.matrix[0,0] is None:
+            warn(f"Threshold met estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
+            return {key: None for key in self.events}
+
+        # Enough data has been received to calculate output
+        # Pass internal states into model to calculate output
+        if self.parameters['state_model'] is None:
+            m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
+            internal_states = np.array(m_input, dtype=np.float)
+        else:
+            internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
+        m_t_met = self.parameters['t_met_model'](internal_states)
+
+        return {key: (value < 0.5) for key, value in zip(self.events, m_t_met[0])}
+
     def summary(self, file= sys.stdout, expand_nested=False, show_trainable=False):
         print('LSTM State Transition Model: ', file = file)
         print("Inputs: ", self.inputs, file = file)
