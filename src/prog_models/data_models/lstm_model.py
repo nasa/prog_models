@@ -144,7 +144,7 @@ class LSTMStateTransitionModel(DataModel):
         print("Inputs: ", self.inputs, file = file)
         print("Outputs: ", self.outputs, file = file)
         print("Window_size: ", self.parameters['window'], file = file)
-        if 'state_model' in self.parameters:
+        if self.parameters['state_model'] is not None:
             print('\nState Model: ', file = file)
             self.parameters['state_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
@@ -226,7 +226,7 @@ class LSTMStateTransitionModel(DataModel):
                     n_outputs = len(z[0])
                     z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window+1, len(z))]
                 else:
-                    raise TypeError(f"Unsupported input type: {type(z)} for internal element (data[0][i]")  
+                    raise TypeError(f"Unsupported input type: {type(z)} for internal element (output[i])")  
 
                 # Also add to input (past outputs are part of input)
                 if len(u_i) == 0:
