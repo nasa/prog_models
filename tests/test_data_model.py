@@ -89,7 +89,7 @@ class TestDataModel(unittest.TestCase):
             'dt': 0.1,
             'save_freq': 0.1,
             'window': 4,
-            'epochs': 30
+            'epochs': 40
         }
 
         # No early stopping 
@@ -97,16 +97,16 @@ class TestDataModel(unittest.TestCase):
         sys.stdout = StringIO()
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], early_stop=False, **cfg)
         end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
-        value = int(end.split('/30', 1)[0])
-        self.assertEqual(value, 30)
+        value = int(end.split('/40', 1)[0])
+        self.assertEqual(value, 40)
 
         # With early stopping (default)
         sys.stdout = StringIO()
         # Default = True
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], **cfg)
         end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
-        value = int(end.split('/30', 1)[0])
-        self.assertNotEqual(value, 30)
+        value = int(end.split('/40', 1)[0])
+        self.assertNotEqual(value, 40)
         sys.stdout = _stdout
 
     def test_lstm_simple(self):
@@ -132,7 +132,7 @@ class TestDataModel(unittest.TestCase):
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
-        self._test_simple_case(DMDModel, max_error=8)
+        self._test_simple_case(DMDModel, max_error=20)
 
         # Inferring dt
         self._test_simple_case(DMDModel, max_error=8, WITH_DT = False)
