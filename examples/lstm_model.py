@@ -175,7 +175,7 @@ def run_example():
         outputs = output_data,
         event_states = es_data,
         window=12, 
-        epochs=5, 
+        epochs=10, 
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
         output_keys = ['t', 'v'],
