@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from itertools import chain
 import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
@@ -53,10 +54,10 @@ class LSTMStateTransitionModel(DataModel):
         n_inputs = input_shape[-1]-n_outputs
         if event_state_model is not None:
             n_events = event_state_model.output.shape[-1]
-            if t_met_model is not None and t_met_model.output.shape[-1] != n_events:
-                raise ValueError("t_met and event_state models must have the same output shape")
+            if t_met_model is not None and t_met_model.output.shape[-1]/2 != n_events:
+                raise ValueError("t_met output length must be twice that of event state")
         elif t_met_model is not None:
-            n_events = t_met_model.output.shape[-1]
+            n_events = t_met_model.output.shape[-1]/2
         else:
             n_events = 0
 
@@ -190,8 +191,9 @@ class LSTMStateTransitionModel(DataModel):
         else:
             internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
         m_t_met = self.parameters['t_met_model'](internal_states)
+        m_t_met = [np.argmax(m_t_met[0][i*2:(i+1)*2]) == 0 for i in range(len(self.events))]
 
-        return {key: (value < 0.5) for key, value in zip(self.events, m_t_met[0])}
+        return {key: value for key, value in zip(self.events, m_t_met)}
 
     def summary(self, file= sys.stdout, expand_nested=False, show_trainable=False):
         print('LSTM State Transition Model: ', file = file)
@@ -355,11 +357,12 @@ class LSTMStateTransitionModel(DataModel):
                         t_i = []
                     elif np.isscalar(t[0]):
                         # Output is 1-d array (i.e., 1 output)
-                        t_i = [[t[i]] for i in range(window+1, len(t))]
+                        t_i = [[1, 0] if t[i] else [0, 1] for i in range(window+1, len(t))]
                     elif isinstance(t[0], (list, np.ndarray)):
                         # Input is d-d array
                         n_events = len(t[0])
-                        t_i = [[t[i][k] for k in range(n_events)] for i in range(window+1, len(t))]
+                        # True = 1, 0; False = 0, 1
+                        t_i = [list(chain.from_iterable((1, 0) if t[i][k] else (0, 1) for k in range(n_events))) for i in range(window+1, len(t))]
                     else:
                         raise TypeError(f"Unsupported input type: {type(t[0])} for internal element (t[i])")  
 
@@ -373,10 +376,10 @@ class LSTMStateTransitionModel(DataModel):
             es_all.extend(es_i)
             t_all.extend(t_i)
         
-        u_all = np.array(u_all)
-        z_all = np.array(z_all)
-        es_all = np.array(es_all)
-        t_all = np.array(t_all)
+        u_all = np.array(u_all, dtype=np.float)
+        z_all = np.array(z_all, dtype=np.float)
+        es_all = np.array(es_all, dtype=np.float)
+        t_all = np.array(t_all, dtype=np.float)
         return (u_all, z_all, es_all, t_all)
 
     @classmethod
@@ -533,8 +536,16 @@ class LSTMStateTransitionModel(DataModel):
             outputs.append(layers.Dense(es_all.shape[1] if es_all.ndim == 2 else 1, name='event_state')(x))
             output_data.append(es_all)
         
-        if t_met is not None:
-            outputs.append(layers.Dense(t_all.shape[1] if t_all.ndim == 2 else 1, name='t_met')(x))
+        if t_met is not None and t_all.shape[1] > 0:
+            n_events = round(t_all.shape[1]/2)
+            # Layer for each event
+            t_met_layers = [layers.Dense(2, activation="softmax") for _ in range(n_events)]
+            t_met_layers_output = [layer(x) for layer in t_met_layers]
+            if len(t_met_layers) == 1:
+                outputs.append(t_met_layers_output[-1])
+            else:
+                # Concatenate layers
+                outputs.append(layers.Concatenate(name='t_met')(t_met_layers_output))
             output_data.append(t_all)
         
         model = keras.Model(inputs, outputs)
@@ -560,7 +571,11 @@ class LSTMStateTransitionModel(DataModel):
         if t_met is None:
             t_met_model = None
         else:
-            t_met_layer = model.get_layer('t_met')(output_layer_input)
+            t_met_layers = [layer(output_layer_input) for layer in t_met_layers]
+            if len(t_met_layers) == 1:
+                t_met_layer = t_met_layers[0]
+            else:  # Concat layer exists
+                t_met_layer = model.get_layer('t_met')(t_met_layers)
             t_met_model = keras.Model(output_layer_input, t_met_layer)  
 
         return cls(output_model, state_model, event_state_model, t_met_model, history = history, **params)
