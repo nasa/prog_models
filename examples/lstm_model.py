@@ -160,6 +160,7 @@ def run_example():
     input_data = []
     output_data = []
     es_data = []
+    t_met_data = []
     for i in range(9):
         dt = i/3+0.25
         for loading_eqn in future_loading_eqns:
@@ -167,6 +168,9 @@ def run_example():
             input_data.append(np.array([np.hstack((u_i.matrix[:][0].T, [dt])) for u_i in d.inputs], dtype=float))
             output_data.append(d.outputs)
             es_data.append(d.event_states)
+            t_met = [[False]for _ in d.times]
+            t_met[-1][0] = True  # Threshold has been met at the last timestep
+            t_met_data.append(t_met)
   
     # Step 2: Generate Model
     print('Building model...') 
@@ -174,6 +178,7 @@ def run_example():
         inputs = input_data,
         outputs = output_data,
         event_states = es_data,
+        t_met = t_met_data,
         window=12, 
         epochs=10, 
         units=64,  # Additional units given the increased complexity of the system
@@ -204,7 +209,7 @@ def run_example():
     # Using a dt not used in training will demonstrate the model's 
     # ability to handle different timesteps not part of training set
     data = batt.simulate_to_threshold(future_loading, dt=1, save_freq=1)
-    results = m_batt.simulate_to(data.times[-1], future_loading2, dt=1, save_freq=1)
+    results = m_batt.simulate_to_threshold(future_loading2, dt=1, save_freq=1)
 
     # Step 5: Compare Results
     print('Comparing results...')

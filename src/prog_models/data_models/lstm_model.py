@@ -156,7 +156,7 @@ class LSTMStateTransitionModel(DataModel):
     def event_state(self, x):
         if self.parameters['event_state_model'] is None:
             warn('No event state model exists- returning empty event state')
-            return {}
+            return {key: None for key in self.events}
         
         if x.matrix[0,0] is None:
             warn(f"Event state estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
@@ -176,7 +176,7 @@ class LSTMStateTransitionModel(DataModel):
     def threshold_met(self, x):
         if self.parameters['t_met_model'] is None:
             warn('No threshold met model exists- returning empty t_met')
-            return {}
+            return {key: None for key in self.events}
         
         if x.matrix[0,0] is None:
             warn(f"Threshold met estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
@@ -361,7 +361,7 @@ class LSTMStateTransitionModel(DataModel):
                         n_events = len(t[0])
                         t_i = [[t[i][k] for k in range(n_events)] for i in range(window+1, len(t))]
                     else:
-                        raise TypeError(f"Unsupported input type: {type(t)} for internal element (t[i])")  
+                        raise TypeError(f"Unsupported input type: {type(t[0])} for internal element (t[i])")  
 
                 else:
                     raise TypeError(f"Unsupported data type: {type(t)}. t_met must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
@@ -563,7 +563,7 @@ class LSTMStateTransitionModel(DataModel):
             t_met_layer = model.get_layer('t_met')(output_layer_input)
             t_met_model = keras.Model(output_layer_input, t_met_layer)  
 
-        return cls(output_model, state_model, event_state_model, history = history, **params)
+        return cls(output_model, state_model, event_state_model, t_met_model, history = history, **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
