@@ -187,12 +187,7 @@ class DMDModel(LinearModel, DataModel):
             raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
         if not isinstance(config['training_noise'], Number) or config['training_noise'] < 0:
             raise ProgModelInputException(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")
-        if (
-            len(inputs) != len(outputs) or 
-            (states is not None and len(inputs) != len(states)) or 
-            (event_states is not None and len(event_states) != len(inputs))
-            ):
-            raise ProgModelInputException("Must have same number of runs for inputs, states, and outputs")
+        DataModel.check_data_format(inputs, outputs, states, event_states)
         if isinstance(config['dt'], list):
             # This means one dt for each run
             # Use mean

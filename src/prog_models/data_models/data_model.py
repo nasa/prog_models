@@ -66,6 +66,19 @@ class DataModel(PrognosticsModel, ABC):
         Print a summary of the model
         """
         print(self.__class__.__name__, file=file)
+
+    @staticmethod
+    def check_data_format(inputs, outputs, states = None, event_states = None, t_mets = None):
+        if len(inputs) == 0:
+            raise ValueError("No data provided. inputs must be in format [run1_inputs, ...] and have at least one element")
+        if len(inputs) != len(outputs):
+            raise ValueError("Inputs must be same length as outputs")
+        if states is not None and len(inputs) != len(states):
+            raise ValueError("System States must be same length as inputs")
+        if event_states is not None and len(inputs) != len(event_states):
+            raise ValueError("Event States must be same length as inputs")
+        if t_mets is not None and len(inputs) != len(t_mets):
+            raise ValueError("Thresholds met must be same length as inputs")
         
     @classmethod
     def from_model(cls, m: PrognosticsModel, load_functions: list, **kwargs) -> "DataModel":

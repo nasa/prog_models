@@ -141,8 +141,7 @@ class LSTMStateTransitionModel(DataModel):
         u_all = []
         z_all = []
 
-        if len(inputs) != len(outputs):
-            raise ValueError("Inputs must be same length as outputs")
+        DataModel.check_data_format(inputs, outputs)
 
         for (u, z) in zip(inputs, outputs):
             # Each item (u, z) is a 1-d array, a 2-d array, or a SimResult
@@ -313,8 +312,6 @@ class LSTMStateTransitionModel(DataModel):
             inputs = [inputs]
         if np.isscalar(outputs):
             outputs = [outputs]
-        if len(inputs) == 0:
-            raise ValueError("No inputs provided. inputs must be in format [run1_inputs, ...] and have at least one element")
         if not isinstance(params['normalize'], bool):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
