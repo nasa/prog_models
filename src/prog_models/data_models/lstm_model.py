@@ -163,10 +163,6 @@ class LSTMStateTransitionModel(DataModel):
             internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
         m_event_state = self.parameters['event_state_model'](internal_states)
 
-        if 'normalization' in self.parameters:
-            m_event_state *= self.parameters['normalization'][3]
-            m_event_state += self.parameters['normalization'][2]
-
         return {key: value for key, value in zip(self.events, m_event_state[0])}
 
     def summary(self, file= sys.stdout, expand_nested=False, show_trainable=False):
@@ -439,13 +435,9 @@ class LSTMStateTransitionModel(DataModel):
 
             z_all = (z_all - z_mean)/z_std
 
-            es_mean = np.mean(es_all, axis=0)
-            es_std = np.std(es_all, axis=0)
-            es_all = (es_all - es_mean)/es_std
-
             # u_mean and u_std act on the column vector form (from inputcontainer)
             # so we need to transpose them to a column vector
-            params['normalization'] = (z_mean, z_std, es_mean, es_std)
+            params['normalization'] = (z_mean, z_std)
         
         # Build model
         callbacks = [
