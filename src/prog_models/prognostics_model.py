@@ -182,10 +182,9 @@ class PrognosticsModel(ABC):
 
         self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
     
-    @abstractmethod
     def initialize(self, u : dict = None, z :dict = None) -> dict:
         """
-        Calculate initial state given inputs and outputs
+        Calculate initial state given inputs and outputs. If not defined for a model, it will return parameters['x0']
 
         Parameters
         ----------
@@ -210,7 +209,7 @@ class PrognosticsModel(ABC):
                 z = {'z1': 2.2}
                 x = m.initialize(u, z) # Initialize first state
         """
-        return {}
+        return self.StateContainer(self.parameters['x0'])
 
     def apply_measurement_noise(self, z : dict) -> dict:
         """
@@ -1105,21 +1104,27 @@ class PrognosticsModel(ABC):
 
         if not isinstance(inputs[0], self.InputContainer):
             inputs = [self.InputContainer(u_i) for u_i in inputs]
+        
+        if not isinstance(outputs[0], self.OutputContainer):
+            outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
+        z_obs = self.output(x)  # Initialize
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + dt, t)
                 x = self.next_state(x, u, t_new-t_last)
-                t_last = t_new
-            z_obs = self.output(x)
-            if any([np.isnan(z_i) for z_i in z_obs.values() if z_i is not None]):
-                warn("Model unstable- NaN reached in simulation (t={})".format(t))
-                break
-            if not (None in z_obs.values() or None in z.values()):
-                err_total += sum([(z[key] - z_obs[key])**2 for key in z.keys()])
+                t_last = t
+                if t >= t_last:
+                    # Only recalculate if required
+                    z_obs = self.output(x)
+            if not (None in z_obs.matrix or None in z.matrix):
+                if any(np.isnan(z_obs.matrix)):
+                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    break
+                err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
                 counter += 1
 
         return err_total/counter

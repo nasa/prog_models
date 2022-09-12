@@ -119,9 +119,6 @@ class BatteryCircuit(PrognosticsModel):
         'qb': (0, inf)
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def dx(self, x : dict, u : dict):
         # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         parameters = self.parameters

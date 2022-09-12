@@ -11,7 +11,6 @@ import sys
 from io import StringIO
 
 class TestDataModel(unittest.TestCase):        
-
     def _test_simple_case(self, 
         DataModelType, 
         m = ThrownObject(), 
@@ -50,16 +49,19 @@ class TestDataModel(unittest.TestCase):
         # Step 3: Use model to simulate_to time of threshold
         t_counter = 0
         x_counter = m.initialize()
-        def future_loading2(t, x = None):
-            # Future Loading is a bit complicated here 
-            # Loading for the resulting model includes the data inputs, 
-            # and the output from the last timestep
-            nonlocal t_counter, x_counter
-            z = m.output(x_counter)
-            z = m2.InputContainer(z.matrix)
-            x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
-            t_counter = t
-            return z
+        if isinstance(m2, DMDModel):
+            future_loading2 = future_loading
+        else:
+            def future_loading2(t, x = None):
+                # Future Loading is a bit complicated here 
+                # Loading for the resulting model includes the data inputs, 
+                # and the output from the last timestep
+                nonlocal t_counter, x_counter
+                z = m.output(x_counter)
+                z = m2.InputContainer(z.matrix)
+                x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
+                t_counter = t
+                return z
         
         results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
 
@@ -76,8 +78,36 @@ class TestDataModel(unittest.TestCase):
         self.assertNotEqual(actual_out.getvalue(), '')
         sys.stdout = _stdout
 
-
         return m2
+
+    def test_early_stopping(self):
+        m = ThrownObject()
+        def future_loading(t, x=None):
+            return m.InputContainer({})  # No input for thrown object 
+
+        cfg = {
+            'dt': 0.1,
+            'save_freq': 0.1,
+            'window': 4,
+            'epochs': 40
+        }
+
+        # No early stopping 
+        _stdout = sys.stdout
+        sys.stdout = StringIO()
+        m2 = LSTMStateTransitionModel.from_model(m, [future_loading], early_stop=False, **cfg)
+        end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
+        value = int(end.split('/40', 1)[0])
+        self.assertEqual(value, 40)
+
+        # With early stopping (default)
+        sys.stdout = StringIO()
+        # Default = True
+        m2 = LSTMStateTransitionModel.from_model(m, [future_loading], **cfg)
+        end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
+        value = int(end.split('/40', 1)[0])
+        self.assertNotEqual(value, 40)
+        sys.stdout = _stdout
 
     def test_lstm_simple(self):
         m = self._test_simple_case(LSTMStateTransitionModel, window=5, epochs=20, max_error=3)
@@ -102,7 +132,7 @@ class TestDataModel(unittest.TestCase):
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
-        self._test_simple_case(DMDModel, max_error=8)
+        self._test_simple_case(DMDModel, max_error=20)
 
         # Inferring dt
         self._test_simple_case(DMDModel, max_error=8, WITH_DT = False)
@@ -116,7 +146,6 @@ class TestDataModel(unittest.TestCase):
         self.assertIsInstance(m2, DMDModel)
         self.assertIsInstance(m2, DataModel)
         self.assertListEqual(m2.outputs, ['x'])
-
 
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01

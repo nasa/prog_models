@@ -43,8 +43,8 @@ def run_example():
         inputs = [data.inputs],
         outputs = [data.outputs],  
         window=4, 
-        epochs=30,
-        output_keys = ['x'])    
+        epochs=30,  # Maximum number of epochs, may stop earlier if early stopping enabled
+        output_keys = ['x'])
 
     # We can see the training history
     # Should show the model progressively getting better (i.e., the loss going down).
