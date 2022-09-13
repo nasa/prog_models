@@ -171,7 +171,7 @@ def run_example():
         inputs = input_data,
         outputs = output_data,
         window=12, 
-        epochs=3, 
+        epochs=5, 
         units=64,  # Additional units given the increased complexity of the system
         input_keys = ['i', 'dt'],
         output_keys = ['t', 'v']) 
