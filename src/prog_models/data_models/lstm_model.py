@@ -12,7 +12,97 @@ from warnings import warn
 from . import DataModel
 from ..sim_result import SimResult
 
+class CustomDataGen(keras.utils.Sequence):
+    def __init__(self, inputs, outputs, window, *args, **kwargs):
+        DataModel.check_data_format(inputs, outputs)
+        
+        self.n = 0
+        u_all = []
+        z_all = []
+        for i in range(len(inputs)):
+            u = inputs[i]
+            self.n += len(u)-window
 
+            if isinstance(u, SimResult):
+                if len(u[0].keys()) == 0:
+                    # No inputs
+                    inputs[i] = []
+                else:
+                    inputs[i] = np.array([u_i.matrix[:,0] for u_i in u])
+
+            z = outputs[i]
+            if isinstance(z, SimResult):
+                if len(z[0].keys()) == 0:
+                    # No inputs
+                    outputs[i] = []
+                else:
+                    outputs[i] = np.array([z_i.matrix[:,0] for z_i in z])
+
+            if kwargs['normalize']:
+                u_all.extend(inputs[i])
+                z_all.extend(outputs[i])
+
+        # Normalize
+        if kwargs['normalize']:
+            if len(u_all) > 0:
+                u_mean = np.mean(u_all, axis=0)
+                u_std = np.std(u_all, axis=0)
+                # If there's no variation- dont normalize 
+                u_std[u_std == 0] = 1
+            else:
+                u_mean, u_std = [], []
+            
+            if len(z_all) > 0:
+                z_mean = np.mean(z_all, axis=0)
+                z_std = np.std(z_all, axis=0)
+                # If there's no variation- dont normalize 
+                z_std[z_std == 0] = 1
+            else:
+                z_mean, z_std = [], []
+
+            # Add output (since z_t-1 is last input)
+            u_mean = np.hstack((u_mean, z_mean))
+            u_std = np.hstack((u_std, z_std))
+
+            for i in range(len(outputs)):
+                outputs[i] = (outputs[i] - z_mean)/z_std
+
+            # u_mean and u_std act on the column vector form (from inputcontainer)
+            # so we need to transpose them to a column vector
+
+            self.norm = (u_mean, u_std, z_mean, z_std)
+
+        self.n_inputs = 0 if len(inputs[0]) == 0 else len(inputs[0][0])
+        self.n_outputs = 0 if len(outputs[0]) == 0 else len(outputs[0][0])
+        self.input_shape = (window, self.n_inputs + self.n_outputs)
+
+        self.inputs = inputs
+        self.outputs = outputs
+        self.window = window
+    
+    @staticmethod
+    def _get_value(inputs, n_inputs, window, index):
+        if n_inputs == 0: 
+            return [[[]] for _ in range(window)]
+        for u in inputs:
+            if index <= len(u) - window:
+                if np.isscalar(u[0]):
+                    # Input is 1-d array (i.e., 1 input)
+                    return [[u[index+j]] for j in range(window)]
+                
+                # Input is d-d array
+                return [[u[index+j]] for j in range(window)]
+            index -= len(u) - window
+        raise IndexError("Index out of bounds")
+    
+    def __getitem__(self, index):
+        u = self._get_value(self.inputs, self.n_inputs, self.window, index)
+        z = np.array(self._get_value(self.outputs, self.n_outputs, self.window, index), dtype=np.float)
+        u = np.array(np.concatenate((u, z), axis=2), dtype=np.float)
+        return (u, z)
+    
+    def __len__(self):
+        self.n 
 class LSTMStateTransitionModel(DataModel):
     """
     .. versionadded:: 1.4.0
@@ -316,29 +406,11 @@ class LSTMStateTransitionModel(DataModel):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
         # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, **params)
-
-        # Normalize
+        gen = CustomDataGen(inputs, outputs, **params)
         if params['normalize']:
-            n_inputs = len(inputs[0][0])
-            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
-            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
-            u_std[u_std == 0] = 1
-            z_mean = np.mean(z_all, axis=0)
-            z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
-            z_std[z_std == 0] = 1
-
-            # Add output (since z_t-1 is last input)
-            u_mean = np.hstack((u_mean, z_mean))
-            u_std = np.hstack((u_std, z_std))
-
-            z_all = (z_all - z_mean)/z_std
-
-            # u_mean and u_std act on the column vector form (from inputcontainer)
-            # so we need to transpose them to a column vector
+            (u_mean, u_std, z_mean, z_std) = gen.norm
             params['normalization'] = (z_mean, z_std)
+        # (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, **params)
         
         # Build model
         callbacks = [
@@ -348,7 +420,7 @@ class LSTMStateTransitionModel(DataModel):
         if params['early_stop']:
             callbacks.append(keras.callbacks.EarlyStopping(**params['early_stop.cfg']))
 
-        inputs = keras.Input(shape=u_all.shape[1:])
+        inputs = keras.Input(shape=gen.input_shape)
         x = inputs
         if params['normalize']:
             x = layers.Normalization(mean = u_mean, variance = u_std**2)(inputs)
@@ -364,12 +436,13 @@ class LSTMStateTransitionModel(DataModel):
             # Dropout prevents overfitting
             x = layers.Dropout(params['dropout'])(x)
 
-        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1)(x)
+        x = layers.Dense(gen.n_outputs)(x)
         model = keras.Model(inputs, x)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
-        history = model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        d = gen[0]
+        history = model.fit(gen, epochs=params['epochs'], callbacks = callbacks)#,validation_split = params['validation_split'])
 
         return cls(keras.models.load_model("best_model.keras"), history = history, **params)
         
