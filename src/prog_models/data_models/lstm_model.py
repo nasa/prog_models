@@ -560,7 +560,7 @@ class LSTMStateTransitionModel(DataModel):
         # Train model
         history = model.fit(u_all, output_data, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
-        # model = keras.models.load_model("best_model.keras")
+        model = keras.models.load_model("best_model.keras")
 
         # Split model into separate models
         n_state_layers = params['layers'] + 1 + (params['dropout'] > 0) + (params['normalize'])
