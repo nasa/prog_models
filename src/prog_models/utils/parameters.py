@@ -6,9 +6,13 @@ from copy import deepcopy
 from numbers import Number
 import types
 from typing import Callable
+import numpy as np
+import pickle
+import json
 
 from .noise_functions import measurement_noise_functions, process_noise_functions
 from ..exceptions import ProgModelTypeError
+from ..utils.containers import DictLikeMatrixWrapper
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
@@ -135,3 +139,29 @@ class PrognosticsModelParameters(UserDict):
         if key in self:
             updates = callback(self[key])
             self.update(updates)
+
+    class CustomEncoder(json.JSONEncoder):
+        """
+        Custom encoder to serialize parameters 
+        """
+        def default(self, o):
+            if isinstance(o, np.ndarray):
+                return {'original_type': 'ndarray', 'data': o.tolist()}
+            elif isinstance(o, DictLikeMatrixWrapper):
+                dict_temp = {o.keys()[iter]: o[o.keys()[iter]] for iter in range(len(o.keys()))}
+                dict_temp['original_type'] = 'DictLikeMatrixWrapper'
+                return dict_temp 
+            else: 
+                from base64 import b64encode
+                pkl_temp = b64encode(pickle.dumps(o))
+                save_temp = {}
+                save_temp['data'] = pkl_temp.decode()
+                save_temp['original_type'] = 'pickled'
+                return save_temp
+
+    def to_json(self):
+        """
+        Serialize parameters to save as JSON objects 
+        """
+
+        return json.dumps(self.data, cls=self.CustomEncoder)

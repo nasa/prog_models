@@ -6,11 +6,13 @@ import numpy as np
 from scipy.interpolate import interp1d
 import types
 from warnings import warn
+import json 
 
 from ..exceptions import ProgModelInputException
 from ..sim_result import SimResult, LazySimResult
 from .. import LinearModel, PrognosticsModel
 from . import DataModel
+from ..utils.containers import DictLikeMatrixWrapper
 
 
 class DMDModel(LinearModel, DataModel):
@@ -388,7 +390,7 @@ class DMDModel(LinearModel, DataModel):
         process_noise_temp = {key: 0 for key in m.events}
         config = {
             'add_dt': False,
-            'x0': True,  # Set it to anything not None since we define our own function
+            # 'x0': True,  # Set it to anything not None since we define our own function
             'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
             'measurement_noise': m.parameters['measurement_noise'],
             'process_noise_dist': m.parameters.get('process_noise_dist', 'normal'),
@@ -408,6 +410,41 @@ class DMDModel(LinearModel, DataModel):
         m_dmd.initialize = types.MethodType(init_dmd, m_dmd)
 
         return m_dmd
+
+    @classmethod
+    def from_json(cls,data):
+        """
+        Create a DMD model from a previously generated surrogate model that was serialized as a JSON object
+
+        Args:
+            data: 
+                JSON serialized parameters necessary to build a surrogate model 
+                See to_json method in PrognosticsModelParameters class 
+
+        Returns:
+            DMDModel: Model generated from serialized parameters 
+        """
+        def custom_decoder(o):
+            """
+            Custom decoder to deserialize parameters 
+            """
+            if isinstance(o,dict) and 'original_type' in o.keys():
+                if o['original_type'] == 'ndarray':
+                    return np.array(o['data'])
+                elif o['original_type'] == 'DictLikeMatrixWrapper':
+                    del o['original_type']
+                    return DictLikeMatrixWrapper(list(o.keys()),o)
+                elif o['original_type'] == 'pickled':
+                    import pickle
+                    from base64 import b64decode
+                    pkl_temp1 = o['data'].encode()
+                    pkl_temp2 = b64decode(pkl_temp1)
+                    return pickle.loads(pkl_temp2)
+            return o
+
+        extract_parameters = json.loads(data, object_hook = custom_decoder)
+ 
+        return DMDModel(**extract_parameters)
 
     def next_state(self, x, u, _):   
         x.matrix = np.matmul(self.A, x.matrix) + self.E
