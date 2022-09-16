@@ -154,6 +154,6 @@ class DataModel(PrognosticsModel, ABC):
         outputs = [d.outputs for d in data]
         states = [d.states for d in data]
         event_states = [d.event_states for d in data]
-        t_met = [m.threshold_met(x) for x in states]
+        t_met = [[list(m.threshold_met(x).values()) for x in state] for state in states]
 
         return cls.from_data(times = times, inputs = inputs, states = states, outputs = outputs, event_states = event_states, t_met= t_met, **config)
