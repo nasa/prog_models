@@ -886,6 +886,7 @@ class PrognosticsModel(ABC):
         # Auto Container wrapping
         dt0 = next_time(t, x) - t
         if not isinstance(u, self.InputContainer):
+            # Wrapper around the future loading equation
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
@@ -893,6 +894,7 @@ class PrognosticsModel(ABC):
         if not isinstance(self.next_state(x, u, dt0), self.StateContainer):
             # Wrapper around next_state
             def next_state(x, u, dt):
+                # Calculate next state, and convert
                 x_new = self.next_state(x, u, dt)
                 x_new = self.StateContainer(x_new)
 
@@ -903,8 +905,9 @@ class PrognosticsModel(ABC):
                 return self.apply_limits(next_state)
 
         if not isinstance(self.output(x), self.OutputContainer):
+            # Wrapper around the output equation
             def output(x):
-                # Calculate next state, forward one timestep
+                # Calculate output, convert to outputcontainer
                 z = self.output(x)
                 z = self.OutputContainer(z)
 
