@@ -63,7 +63,9 @@ class LSTMStateTransitionModel(DataModel):
 
         # Setup inputs, outputs, states 
         self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(n_outputs)])
-        self.events = kwargs.get('event_keys', [f'event{i}' for i in range(n_events)])
+        self.events = kwargs.get(
+            'event_keys', 
+            getattr(self, 'events', [f'event{i}' for i in range(n_events)])) # If overridden- use that
         input_keys = kwargs.get('input_keys', [f'u{i}' for i in range(n_inputs)])
         self.inputs = input_keys.copy()
         # Outputs from the last step are part of input
@@ -77,16 +79,20 @@ class LSTMStateTransitionModel(DataModel):
         self.states.extend([f'_model_output{i}' for i in range(n_internal)])
 
         kwargs['window'] = input_shape[1]
-        kwargs['state_model'] = state_model  
-        kwargs['output_model'] = output_model
-        kwargs['event_state_model'] = event_state_model
-        kwargs['t_met_model'] = t_met_model
-        # Putting it in the parameters dictionary simplifies pickling
+        self.history = kwargs.get('history', None)
+        if 'history' in kwargs:
+            # Delete to prevent copying below
+            del kwargs['history']
 
         super().__init__(**kwargs)
 
-        # Save Model
-        self.history = kwargs.get('history', None)
+        # Set parameters without copying
+        # Putting it in the parameters dictionary simplifies pickling
+        self.parameters.__setitem__('state_model', state_model, _copy = False)
+        self.parameters.__setitem__('output_model', output_model, _copy = False)
+        self.parameters.__setitem__('event_state_model', event_state_model, _copy = False)
+        self.parameters.__setitem__('t_met_model', t_met_model, _copy = False)
+        self.parameters.__setitem__('history', self.history, _copy = False)        
 
     def __getstate__(self):
         warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
