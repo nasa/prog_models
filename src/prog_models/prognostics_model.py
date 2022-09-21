@@ -932,9 +932,8 @@ class PrognosticsModel(ABC):
             apply_limits = self.apply_limits
             apply_process_noise = self.apply_process_noise
             StateContainer = self.StateContainer
-            
             def next_state(x, u, dt):
-                dx1 = dx(x, u)
+                dx1 = StateContainer(dx(x, u))
                 
                 x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
                 dx2 = dx(x2, u)
