@@ -785,13 +785,19 @@ class PrognosticsModel(ABC):
             x = deepcopy(config['x'])
         else:
             x = self.initialize(u, first_output)
+
+        if not isinstance(x, self.StateContainer):
+            x = self.StateContainer(x)
         
         # Optimization
         next_state = self.__next_state
         output = self.__output
         thresthold_met_eqn = self.threshold_met
         event_state = self.event_state
+        load_eqn = future_loading_eqn
         progress = config['progress']
+
+        # Threshold Met Equations
         def check_thresholds(thresholds_met):
             t_met = [thresholds_met[key] for key in threshold_keys]
             if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
@@ -877,6 +883,34 @@ class PrognosticsModel(ABC):
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
+        # Auto Container wrapping
+        dt0 = next_time(t, x) - t
+        if not isinstance(u, self.InputContainer):
+            def load_eqn(t, x):
+                u = future_loading_eqn(t, x)
+                return self.InputContainer(u)
+
+        if not isinstance(self.next_state(x, u, dt0), self.StateContainer):
+            # Wrapper around next_state
+            def next_state(x, u, dt):
+                x_new = self.next_state(x, u, dt)
+                x_new = self.StateContainer(x_new)
+
+                # Calculate next state and add process noise
+                next_state = self.apply_process_noise(x_new, dt)
+
+                # Apply Limits
+                return self.apply_limits(next_state)
+
+        if not isinstance(self.output(x), self.OutputContainer):
+            def output(x):
+                # Calculate next state, forward one timestep
+                z = self.output(x)
+                z = self.OutputContainer(z)
+
+                # Add measurement noise
+                return self.apply_measurement_noise(z)
+
         # Simulate
         update_all()
         if progress:
@@ -888,15 +922,16 @@ class PrognosticsModel(ABC):
             dx = self.dx
 
             try:
-                dx(x, future_loading_eqn(t, x))
+                dx(x, u)
             except ProgModelException:
                 raise ProgModelException("dx(x, u) must be defined to use RK4 method")
 
             apply_limits = self.apply_limits
             apply_process_noise = self.apply_process_noise
             StateContainer = self.StateContainer
+            
             def next_state(x, u, dt):
-                dx1 = StateContainer(dx(x, u))
+                dx1 = dx(x, u)
                 
                 x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
                 dx2 = dx(x2, u)
@@ -909,6 +944,7 @@ class PrognosticsModel(ABC):
 
                 x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
                 return apply_limits(apply_process_noise(x))
+
         elif config['integration_method'] != 'euler':
             raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
@@ -917,7 +953,7 @@ class PrognosticsModel(ABC):
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
             # This is sometimes referred to as 'leapfrog integration'
-            u = future_loading_eqn(t, x)
+            u = load_eqn(t, x)
             t = t + dt/2
             x = next_state(x, u, dt)
 
@@ -952,7 +988,7 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
+            saved_outputs = LazySimResult(output, saved_times, saved_states) 
             saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
