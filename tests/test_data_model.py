@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 # This ensures that the directory containing examples is in the python search directories 
 
+from copy import deepcopy
 import pickle
 import unittest
 
@@ -131,6 +132,9 @@ class TestDataModel(unittest.TestCase):
         except:
             warnings.warn("Pickling not supported for LSTMStateTransitionModel on this system")
             pass
+
+        # Deepcopy test
+        m3 = deepcopy(m2)
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
@@ -148,6 +152,9 @@ class TestDataModel(unittest.TestCase):
         self.assertIsInstance(m2, DMDModel)
         self.assertIsInstance(m2, DataModel)
         self.assertListEqual(m2.outputs, ['x'])
+
+        # Deepcopy test
+        m3 = deepcopy(m2)
 
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01
