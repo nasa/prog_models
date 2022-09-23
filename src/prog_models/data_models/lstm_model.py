@@ -10,6 +10,8 @@ from warnings import warn
 from . import DataModel
 from ..sim_result import SimResult
 
+from copy import deepcopy
+
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
@@ -183,7 +185,120 @@ class LSTMStateTransitionModel(DataModel):
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
 
 
-    def reduce(self, data, log_dir='logs'):
+
+    def creduce(self, data, log_dir='logs', epochs=1, **kwargs):
+        # Preprocess data
+
+        new_model = deepcopy(self)
+
+        params = new_model.params
+
+        # Normalize
+        if params['normalize']:
+
+            # Prepare datasets
+            (u_all, z_all, normalize) = LSTMStateTransitionModel.pre_process_data(data, **params)
+
+            # u_mean and u_std act on the column vector form (from inputcontainer)
+            # so we need to transpose them to a column vector
+            params['normalization'] = (normalize[0][np.newaxis].T, normalize[1][np.newaxis].T, normalize[2], normalize[3])
+
+        else:
+            (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(data, **params)
+
+        # Create reduced model
+        # Note: needs some # of inputs & outputs - 
+
+                # Build model
+        callbacks=[pruning_callbacks.UpdatePruningStep(), 
+                    pruning_callbacks.PruningSummaries(log_dir=log_dir)]
+        
+
+        name = 'pruned'
+        pruned = prune.prune_low_magnitude(new_model.model, pruning_schedule.PolynomialDecay(
+            initial_sparsity=0.3, final_sparsity=0.7, begin_step = 100, end_step = 10000))
+
+        if params['optimizer'] == 'adam':
+            optimizer = keras.optimizers.Adam(learning_rate=params['learning_rate'])
+        elif params['optimizer'] == 'rmsprop':
+            optimizer = keras.optimizers.RMSprop(learning_rate=params['learning_rate'])
+
+        pruned.compile(optimizer=optimizer, loss="mse", metrics=[keras.metrics.RootMeanSquaredError()])
+
+        # Train model
+        pruned.fit(u_all, z_all, epochs=epochs, callbacks = callbacks, validation_split = params['validation_split'])
+
+        pruned = tfmot.sparsity.keras.strip_pruning(pruned)
+
+        #pruned.save(f'{name}.h5', save_format='h5')
+        #tf.keras.models.save_model(pruned, f'{name}.h5', include_optimizer=False)
+
+        new_model.pruned = pruned
+
+        converter = tf.lite.TFLiteConverter.from_keras_model(pruned)
+        converter.target_spec.supported_ops = [
+            tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+            tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+        ]
+        converter._experimental_lower_tensor_list_ops = False
+        pruned_bytes = converter.convert()
+
+        # with open(f'{name}.tflite', 'wb') as f:
+        #     f.write(pruned_bytes)
+
+        new_model.pruned_bytes = pruned_bytes
+
+        converter = tf.lite.TFLiteConverter.from_keras_model(new_model.pruned)
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.target_spec.supported_ops = [
+            tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+            tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+        ]
+        converter._experimental_lower_tensor_list_ops = False
+        quantized_bytes = converter.convert()
+
+        new_model.quantized_bytes = quantized_bytes
+
+        def reduced_output(self, x):
+            if x.matrix[0,0] is None:
+                warn(f"Output estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
+                return self.OutputContainer(np.array([[None] for _ in self.outputs]))
+
+            # Enough data has been received to calculate output
+            # Format input into np array with shape (1, window, num_inputs)
+            m_input = x.matrix[:self.parameters['window']*len(self.inputs)].reshape(1, self.parameters['window'], len(self.inputs))
+            m_input = np.array(m_input, dtype=np.float)
+
+            # Pass into model to calculate output   
+            # m_output = self.model(m_input)    
+            # TODO(CT): REPLACE WITH TFLITE INFERENCE 
+
+            interpreter = tf.lite.Interpreter(model_content=m_batt.pruned_bytes)
+            interpreter.allocate_tensors()
+            input_details = interpreter.get_input_details()
+            output_details = interpreter.get_output_details()
+            input_shape = input_details[0]['shape']
+
+            #input_data = x_test[i].reshape(1,-1).astype('float32')
+            interpreter.set_tensor(input_details[0]['index'], m_input)
+            interpreter.invoke()
+            m_output = interpreter.get_tensor(output_details[0]['index'])
+
+            if 'normalization' in self.parameters:
+                m_output *= self.parameters['normalization'][1]
+                m_output += self.parameters['normalization'][0]
+
+            return self.OutputContainer(m_output.numpy().T)
+            # tflite version of using the model
+
+        new_model.output = MethodType(reduced_output, self)
+
+        return new_model
+
+
+
+
+    def reduce(self, data, log_dir='logs', epochs=1):
         print('reducing model size')
         params = self.params
 
@@ -218,7 +333,7 @@ class LSTMStateTransitionModel(DataModel):
         pruned.compile(optimizer=optimizer, loss="mse", metrics=[keras.metrics.RootMeanSquaredError()])
 
         # Train model
-        pruned.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        pruned.fit(u_all, z_all, epochs=epochs, callbacks = callbacks, validation_split = params['validation_split'])
 
         pruned = tfmot.sparsity.keras.strip_pruning(pruned)
 
@@ -240,8 +355,6 @@ class LSTMStateTransitionModel(DataModel):
 
         self.pruned_bytes = pruned_bytes
 
-
-
         converter = tf.lite.TFLiteConverter.from_keras_model(self.pruned)
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.target_spec.supported_ops = [
@@ -252,8 +365,6 @@ class LSTMStateTransitionModel(DataModel):
         quantized_bytes = converter.convert()
 
         name = 'quantized'
-        with open(f'{name}.tflite', 'wb') as f:
-            f.write(quantized_bytes)
 
         self.quantized_bytes = quantized_bytes
         
