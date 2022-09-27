@@ -93,6 +93,61 @@ def update_qnSBmax(params : dict) -> dict:
         }
     }
 
+def update_v0(params: dict) -> dict:
+    # update the initial voltage 
+
+    if 'qnS' not in params['x0']:
+        # qnS not yet set
+        return {}
+
+    An = params['An']
+    # Negative Surface
+    xnS = params['x0']['qnS']/params['qSMax']
+    xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+    one_minus_xnS = 1 - xnS
+    xnS2_minus_1 = xnS2 - 1
+    VenParts = [
+        An[0] *xnS2_minus_1/F,  # Ven0
+        An[1] *(xnS2_minus_1**2  - (xnS2*one_minus_xnS))/F,  # Ven1
+        An[2] *(xnS2_minus_1**3  - (4 *xnS*one_minus_xnS)*xnS2_minus_1)/F,  #Ven2
+        An[3] *(xnS2_minus_1**4  - (6 *xnS*one_minus_xnS)*xnS2_minus_1**2) /F,  #Ven3
+        An[4] *(xnS2_minus_1**5  - (8 *xnS*one_minus_xnS)*xnS2_minus_1**3) /F,  #Ven4
+        An[5] *(xnS2_minus_1**6  - (10*xnS*one_minus_xnS)*xnS2_minus_1**4) /F,  #Ven5
+        An[6] *(xnS2_minus_1**7  - (12*xnS*one_minus_xnS)*xnS2_minus_1**5) /F,  #Ven6
+        An[7] *(xnS2_minus_1**8  - (14*xnS*one_minus_xnS)*xnS2_minus_1**6) /F,  #Ven7
+        An[8] *(xnS2_minus_1**9  - (16*xnS*one_minus_xnS)*xnS2_minus_1**7) /F,  #Ven8
+        An[9] *(xnS2_minus_1**10 - (18*xnS*one_minus_xnS)*xnS2_minus_1**8) /F,  #Ven9
+        An[10]*(xnS2_minus_1**11 - (20*xnS*one_minus_xnS)*xnS2_minus_1**9) /F,  #Ven10
+        An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
+        An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
+    ]
+    Ven = params['U0n'] + R*params['x0']['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
+
+    # Positive Surface
+    Ap = params['Ap']
+    xpS = params['x0']['qpS']/params['qSMax']
+    xpS2 = xpS + xpS
+    VepParts = [
+        Ap[0] *(xpS2-1)/F,  #Vep0
+        Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
+        Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
+        Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
+        Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
+        Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
+        Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
+        Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
+        Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
+        Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
+        Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
+        Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
+        Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+    ]
+    Vep = params['U0p'] + R*params['x0']['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+
+    return {
+        'v0': Vep - Ven - params['x0']['Vo'] - params['x0']['Vsn'] - params['x0']['Vsp']
+    }
+
 def update_qSBmax(params : dict) -> dict:
     # max charge at surface, bulk (pos and neg)
     return {
@@ -106,10 +161,14 @@ class BatteryElectroChemEOD(PrognosticsModel):
     Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in the following paper:
     `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`. This model predicts the end of discharge event. 
 
+    This model has 2 primary events: discharge and lowvoltage, and a third EOD event that combines the two (kept for backwards compatability). Discharge event occurs when the battery is fully discharged (i.e., there is no charge remaining), while lowvoltage occurs when the voltage falls below an acceptable threshold.
+
     The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
 
-    :term:`Events<event>`: (1)
-        EOD: End of Discharge
+    :term:`Events<event>`: (3)
+        EOD: Original End of discharge event - combination of discharge and lowvoltage events
+        discharge: Battery is fully discharged
+        lowvoltage: Voltage falls below minimum threshold
 
     :term:`Inputs/Loading<input>`: (1)
         i: Current draw on the battery
@@ -185,14 +244,23 @@ class BatteryElectroChemEOD(PrognosticsModel):
             Redlich-Kister parameter (- electrode)
         VEOD : float
             End of Discharge Voltage Threshold
+        QEOD : float
+            Charge at which discharge has occurred
+        VDropoff : float
+            Voltage (above VEOD) at which voltage starts playing a role in EOD event state
         x0 : dict[str, float]
             Initial :term:`state`
+        v0 : Initial voltage
 
     See Also
     --------
     BatteryElectroChemEOL, BatteryElectroChem, BatteryElectroChemEODEOL
+
+    Note
+    --------
+    lowvoltage can occur either when the battery is discharge (i.e., discharge :term:`event state` is approaching 0), or when there is a high current draw. If the discharge :term:`event state` is still high and the lowvoltage :term:`event` is occuring, decreasing the current draw will fix the lowvoltage issue. Maximum sustainable current without triggering lowvoltage decreases as the battery discharges. 
     """
-    events = ['EOD']
+    events = ['discharge', 'lowvoltage', 'EOD']
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
@@ -238,9 +306,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         'process_noise': 1e-3,
 
-        # End of discharge voltage threshold
         'VEOD': 3.0, 
-        'VDropoff': 0.1 # Voltage above EOD after which voltage will be considered in SOC calculation
+        'QEOD': 500, 
+        'VDropoff': 0.1
     }
 
     state_limits = {
@@ -252,7 +320,13 @@ class BatteryElectroChemEOD(PrognosticsModel):
     }
 
     param_callbacks = {  # Callbacks for derived parameters
+        'An': [update_v0],
+        'Ap': [update_v0],
+        'x0': [update_v0],
+        'qSMax': [update_v0], 
         'qMobile': [update_qmax],
+        'U0n': [update_v0],
+        'U0p': [update_v0],
         'VolSFraction': [update_vols, update_qpSBmin, update_qpSBmax, update_qSBmax],
         'Vol': [update_vols],
         'qMax': [update_qpmin, update_qpmax, update_qpSBmin, update_qpSBmax, update_qnmin, update_qnmax, update_qpSBmin, update_qpSBmax, update_qSBmax],
@@ -369,9 +443,12 @@ class BatteryElectroChemEOD(PrognosticsModel):
         v = Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
 
         charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
-        voltage_EOD = (v - self.parameters['VEOD'])/self.parameters['VDropoff'] 
+        voltage_EOD = (v - self.parameters['VEOD'])/(self.parameters['v0'] - self.parameters['VEOD'])
+        voltage_EOD_old = (v - self.parameters['VEOD'])/self.parameters['VDropoff']
         return {
-            'EOD': min(charge_EOD, voltage_EOD)
+            'discharge': max(min(charge_EOD, 1),0),
+            'lowvoltage': max(min(voltage_EOD, 1),0),
+            'EOD': max(min(min(charge_EOD, voltage_EOD_old), 1), 0)
         }
 
     def output(self, x : dict):
@@ -430,7 +507,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
         # Return true if voltage is less than the voltage threshold
         return {
-             'EOD': z['v'] < self.parameters['VEOD']
+            'EOD': z['v'] < self.parameters['VEOD'],
+            'discharge': (x['qnB'] + x['qnS']) < self.parameters['QEOD'],
+            'lowvoltage': z['v'] < self.parameters['VEOD']
         }
 
 
