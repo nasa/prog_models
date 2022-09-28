@@ -13,7 +13,7 @@ from prog_models.models import BatteryCircuit as Battery
 
 def run_example(): 
     # Step 1: Create a model object
-    batt = Battery()
+    batt = Battery(process_noise_dist='none')
 
     # Step 2: Define future loading function 
     def future_loading(t, x=None):
@@ -63,6 +63,8 @@ def run_example():
     # Note that even though the step size is 2, the odd points in the save frequency are met perfectly, dt is adjusted automatically to capture the save points
 
     simulated_results.outputs.plot()
+
+    simulated_results.event_states.plot()
 
     # You can also change the integration method. For example:
     options['integration_method'] = 'rk4'  # Using Runge-Kutta 4th order
