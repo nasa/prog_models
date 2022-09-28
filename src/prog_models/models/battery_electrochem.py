@@ -148,6 +148,12 @@ def update_v0(params: dict) -> dict:
         'v0': Vep - Ven - params['x0']['Vo'] - params['x0']['Vsn'] - params['x0']['Vsp']
     }
 
+def update_QEOD(params: dict) -> dict:
+    # Update the charge after which the battery is considered discharged
+    return {
+        'QEOD': params['qnMax']*params['SOC_Thresh']
+    }
+
 def update_qSBmax(params : dict) -> dict:
     # max charge at surface, bulk (pos and neg)
     return {
@@ -244,8 +250,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
             Redlich-Kister parameter (- electrode)
         VEOD : float
             End of Discharge Voltage Threshold
-        QEOD : float
-            Charge at which discharge has occurred
+        SOC_Thresh : float
+            Percentage of initial qnB + qnS (0-1) that defines the minimum charge, after which the battery is considered discharged. Used to calculate apparent soc. 
         VDropoff : float
             Voltage (above VEOD) at which voltage starts playing a role in EOD event state
         x0 : dict[str, float]
@@ -307,7 +313,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'process_noise': 1e-3,
 
         'VEOD': 3.0, 
-        'QEOD': 500, 
+        'SOC_Thresh': 0.05, 
         'VDropoff': 0.1
     }
 
@@ -323,6 +329,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'An': [update_v0],
         'Ap': [update_v0],
         'x0': [update_v0],
+        'qnMax': [update_QEOD],
         'qSMax': [update_v0], 
         'qMobile': [update_qmax],
         'U0n': [update_v0],
@@ -442,7 +449,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
         v = Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
 
-        charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
+        charge_EOD = (x['qnS'] + x['qnB']-params['QEOD'])/(self.parameters['qnMax']-params['QEOD'])
         voltage_EOD = (v - self.parameters['VEOD'])/(self.parameters['v0'] - self.parameters['VEOD'])
         voltage_EOD_old = (v - self.parameters['VEOD'])/self.parameters['VDropoff']
         return {
