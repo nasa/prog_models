@@ -120,9 +120,21 @@ class TrajGen(PrognosticsModel):
         # }
 
     def output(self, x : dict):
-        pass
-        # return self.OutputContainer(np.array([
-        #     np.atleast_1d(x['tb']))]))   # v
+        # Currently, output is the same as the state vector
+        return self.OutputContainer({
+            'x': x['x'],
+            'y': x['y'],
+            'z': x['z'],
+            'phi': x['phi'],
+            'theta': x['theta'],
+            'psi': x['psi'],
+            'vx': x['vx'],
+            'vy': x['vy'],
+            'vz': x['vz'],
+            'p': x['p'],
+            'q': x['q'],
+            'r': x['r']
+            })
 
     def threshold_met(self, x : dict) -> dict:
         pass
