@@ -9,7 +9,8 @@ from prog_models.models.trajectory_generation.vehicles import AircraftModels
 from prog_models.models.trajectory_generation.vehicles.control import allocation_functions
 
 import numpy as np
-
+import prog_models.models.trajectory_generation.utilities.geometry as geom
+from warnings import warn
 
 class TrajGen(PrognosticsModel):
     """
@@ -108,10 +109,85 @@ class TrajGen(PrognosticsModel):
             })
 
     def dx(self, x : dict, u : dict):
-        pass 
-        # return self.StateContainer(np.array([
-        #     np.atleast_1d(state1),  # fill in, one for each dx state 
-        # ]))
+        # Extract params
+        # -------------
+        # wind = self.parameters['wind']
+        wx = 0 #wind['u']
+        wy = 0 #wind['v']
+
+        # Extract values from vectors
+        # --------------------------------
+        m = self.vehicle_model.mass['total']  # vehicle mass
+        T, tp, tq, tr = u       # extract control input
+        Ixx, Iyy, Izz = self.vehicle_model.mass['Ixx'], self.vehicle_model.mass['Iyy'], self.vehicle_model.mass['Izz']    # vehicle inertia
+
+        # Extract state variables from current state vector
+        # -------------------------------------------------
+        phi = x['phi'] #x.matrix[3][0]
+        theta = x['theta'] #x.matrix[4][0]
+        psi = x['psi']
+        vx_a = x['vx']
+        vy_a = x['vy']
+        vz_a = x['vz']
+        p = x['p']
+        q = x['q']
+        r = x['r']
+        # phi, theta, psi  = x.matrix[3:6][0]
+        # p, q, r          = x.matrix[-3:]
+        # vx_a, vy_a, vz_a = x.matrix[6:9]
+
+        # Pre-compute Trigonometric values
+        # --------------------------------
+        sin_phi   = np.sin(phi)
+        cos_phi   = np.cos(phi)
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        tan_theta = np.tan(theta)
+        sin_psi   = np.sin(psi)
+        cos_psi   = np.cos(psi)
+        
+        # Compute drag forces
+        # -------------------
+        v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
+                        np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
+        v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
+        fb_drag = self.vehicle_model.aero['drag'](v_body)
+        fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
+        
+        # Update state vector
+        # -------------------
+        dxdt     = np.zeros((len(x),))
+        
+        dxdt[0] = vx_a + wx   # add wind u-component to generate ground speed
+        dxdt[1] = vy_a + wy   # add wind v-component to generate ground speed
+        dxdt[2] = vz_a
+        
+        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
+        dxdt[4]  = q * cos_phi - r * sin_phi
+        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta
+        
+        dxdt[6]  = (sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T / m - 1.0/m * fe_drag[0]
+        dxdt[7]  = (sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T / m - 1.0/m * fe_drag[1]
+        dxdt[8]  = - self.parameters['gravity'] + cos_phi * cos_theta  * T / m - 1.0/m * fe_drag[2]
+
+        dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.vehicle_model.geom['arm_length'] / Ixx
+        dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.vehicle_model.geom['arm_length'] / Iyy
+        dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
+
+        return self.StateContainer(np.array([
+            np.atleast_1d(dxdt[0]),
+            np.atleast_1d(dxdt[1]),
+            np.atleast_1d(dxdt[2]),
+            np.atleast_1d(dxdt[3]),
+            np.atleast_1d(dxdt[4]),
+            np.atleast_1d(dxdt[5]),
+            np.atleast_1d(dxdt[6]),
+            np.atleast_1d(dxdt[7]),
+            np.atleast_1d(dxdt[8]),
+            np.atleast_1d(dxdt[9]),
+            np.atleast_1d(dxdt[10]),
+            np.atleast_1d(dxdt[11]),
+        ]))
     
     def event_state(self, x : dict) -> dict:
         pass
@@ -141,3 +217,43 @@ class TrajGen(PrognosticsModel):
         # return {
         #      'EOD': V < parameters['VEOD']
         # }
+
+    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+        
+        if kwargs['dt'] != self.parameters['dt']:
+            warn("dt must be equal to simulation dt value. To change the simulate_to time step, change the simulation parameter 'dt' value")
+        kwargs['dt'] = self.parameters['dt']
+        kwargs['save_freq'] = self.parameters['dt']
+
+        ref_times = self.ref_traj.time.tolist()
+        def future_loading_new(t, x=None): 
+            if t == 0:
+                ref_now = np.concatenate((self.ref_traj.cartesian_pos[0,:], self.ref_traj.attitude[0,:], 
+                                    self.ref_traj.velocity[0,:], self.ref_traj.angular_velocity[0,:]), axis=0)
+                
+                u = self.vehicle_model.control_scheduled(self.vehicle_model.state - ref_now)
+                u[0]      += self.vehicle_model.steadystate_input
+                u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])
+                return u # self.InputContainer({'u': u})
+            else:
+                t_temp = np.round(t - self.parameters['dt']/2,1) # THIS NEEDS HELP
+                for time_ind in range(len(ref_times)):
+                    if t_temp >= ref_times[-1]:
+                        ref_now = np.concatenate((self.ref_traj.cartesian_pos[-1,:], self.ref_traj.attitude[-1,:], 
+                                        self.ref_traj.velocity[-1,:], self.ref_traj.angular_velocity[-1,:]), axis=0)
+                        break
+                    if t_temp <= ref_times[time_ind]:
+                        ref_now = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
+                                        self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
+                        break
+
+                # Define controller
+                x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix))])
+                u = self.vehicle_model.control_scheduled(x_temp - ref_now) # self.vehicle_model.state - ref_now)
+                u[0]      += self.vehicle_model.steadystate_input
+                u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])
+                return u # self.InputContainer({'u': u})
+
+        # Simulate to threshold at DMD time step
+        results = super().simulate_to_threshold(future_loading_new,first_output, threshold_keys, **kwargs)
+        return results 
