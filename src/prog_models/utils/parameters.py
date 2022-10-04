@@ -149,17 +149,17 @@ class PrognosticsModelParameters(UserDict):
         """
         def default(self, o):
             if isinstance(o, np.ndarray):
-                return {'original_type': 'ndarray', 'data': o.tolist()}
+                return {'_original_type': 'ndarray', '_data': o.tolist()}
             elif isinstance(o, DictLikeMatrixWrapper):
-                dict_temp = {o.keys()[iter]: o[o.keys()[iter]] for iter in range(len(o.keys()))}
-                dict_temp['original_type'] = 'DictLikeMatrixWrapper'
+                dict_temp = dict_temp = {k: v for k, v in o.items()}
+                dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
                 return dict_temp 
             else: 
                 from base64 import b64encode
                 pkl_temp = b64encode(pickle.dumps(o))
                 save_temp = {}
-                save_temp['data'] = pkl_temp.decode()
-                save_temp['original_type'] = 'pickled'
+                save_temp['_data'] = pkl_temp.decode()
+                save_temp['_original_type'] = 'pickled'
                 return save_temp
 
     def to_json(self):

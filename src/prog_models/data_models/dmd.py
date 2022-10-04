@@ -122,7 +122,7 @@ class DMDModel(LinearModel, DataModel):
         self.dmd_matrix = dmd_matrix
         self.parameters['dmd_matrix'] = dmd_matrix  # This simplifies pickling (all data in parameters)
         
-        if not isinstance(self.parameters['x0'], bool) and not isinstance(self.parameters['x0'], self.StateContainer):
+        if 'x0' in self.parameters and not isinstance(self.parameters['x0'], self.StateContainer):
             self.parameters['x0'] = self.StateContainer(params['x0'])
 
     @classmethod
@@ -390,7 +390,6 @@ class DMDModel(LinearModel, DataModel):
         process_noise_temp = {key: 0 for key in m.events}
         config = {
             'add_dt': False,
-            # 'x0': True,  # Set it to anything not None since we define our own function
             'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
             'measurement_noise': m.parameters['measurement_noise'],
             'process_noise_dist': m.parameters.get('process_noise_dist', 'normal'),
@@ -428,16 +427,16 @@ class DMDModel(LinearModel, DataModel):
             """
             Custom decoder to deserialize parameters 
             """
-            if isinstance(o,dict) and 'original_type' in o.keys():
-                if o['original_type'] == 'ndarray':
-                    return np.array(o['data'])
-                elif o['original_type'] == 'DictLikeMatrixWrapper':
-                    del o['original_type']
+            if isinstance(o,dict) and '_original_type' in o.keys():
+                if o['_original_type'] == 'ndarray':
+                    return np.array(o['_data'])
+                elif o['_original_type'] == 'DictLikeMatrixWrapper':
+                    del o['_original_type']
                     return DictLikeMatrixWrapper(list(o.keys()),o)
-                elif o['original_type'] == 'pickled':
+                elif o['_original_type'] == 'pickled':
                     import pickle
                     from base64 import b64decode
-                    pkl_temp1 = o['data'].encode()
+                    pkl_temp1 = o['_data'].encode()
                     pkl_temp2 = b64decode(pkl_temp1)
                     return pickle.loads(pkl_temp2)
             return o

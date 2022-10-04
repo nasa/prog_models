@@ -56,23 +56,13 @@ class TestSerialization(unittest.TestCase):
         # Generate new surrogated with serialized version
         new_model = DMDModel.from_json(save_json_dict)
 
-        # Check serialization 
-        self.assertEqual(surrogate_orig.parameters['process_noise'], new_model.parameters['process_noise'])
-        self.assertEqual(surrogate_orig.parameters['process_noise_dist'], new_model.parameters['process_noise_dist'])
-        self.assertEqual(surrogate_orig.parameters['measurement_noise'], new_model.parameters['measurement_noise'])
-        self.assertEqual(surrogate_orig.parameters['measurement_noise_dist'], new_model.parameters['measurement_noise_dist'])
-        self.assertEqual(surrogate_orig.parameters['state_keys'], new_model.parameters['state_keys'])
-        self.assertEqual(surrogate_orig.parameters['input_keys'], new_model.parameters['input_keys'])
-        self.assertEqual(surrogate_orig.parameters['event_keys'], new_model.parameters['event_keys'])
-        self.assertEqual(surrogate_orig.parameters['output_keys'], new_model.parameters['output_keys'])
-        self.assertEqual(surrogate_orig.parameters['dt'], new_model.parameters['dt'])
-        self.assertEqual(surrogate_orig.parameters['trim_data_to'], new_model.parameters['trim_data_to'])
-        self.assertEqual(surrogate_orig.parameters['training_noise'], new_model.parameters['training_noise'])
-        self.assertEqual(surrogate_orig.parameters['add_dt'], new_model.parameters['add_dt'])
-        self.assertEqual(surrogate_orig.parameters['save_freq'], new_model.parameters['save_freq'])
-        self.assertEqual(surrogate_orig.parameters['x0'], new_model.parameters['x0'])
-        self.assertEqual((surrogate_orig.parameters['dmd_matrix']==new_model.parameters['dmd_matrix']).all(), True)
-
+        # Check serialization
+        for key in surrogate_orig.parameters.keys():
+            if key != 'dmd_matrix':
+                self.assertEqual(surrogate_orig.parameters[key], new_model.parameters[key]) 
+            else: 
+                self.assertEqual((surrogate_orig.parameters['dmd_matrix']==new_model.parameters['dmd_matrix']).all(), True)
+        
         # Check deserialization
         options_sim = {
             'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
@@ -96,21 +86,14 @@ class TestSerialization(unittest.TestCase):
 
         for i in range(min(len(surrogate_results.times), len(new_results.times))):
             self.assertEqual(surrogate_results.times[i], new_results.times[i])
-            self.assertAlmostEqual(surrogate_results.states[i]['tb'], new_results.states[i]['tb'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['Vo'], new_results.states[i]['Vo'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['Vsn'], new_results.states[i]['Vsn'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['Vsp'], new_results.states[i]['Vsp'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['qnB'], new_results.states[i]['qnB'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['qnS'], new_results.states[i]['qnS'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['qpB'], new_results.states[i]['qpB'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['qpS'], new_results.states[i]['qpS'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['t'], new_results.states[i]['t'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['v'], new_results.states[i]['v'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.states[i]['EOD'], new_results.states[i]['EOD'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.inputs[i]['i'], new_results.inputs[i]['i'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.outputs[i]['t'], new_results.outputs[i]['t'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.outputs[i]['v'], new_results.outputs[i]['v'],delta = 3e-01)
-            self.assertAlmostEqual(surrogate_results.event_states[i]['EOD'], new_results.event_states[i]['EOD'],delta = 3e-01)
+            for key in surrogate_results.states[0].keys():
+                self.assertAlmostEqual(surrogate_results.states[i][key], new_results.states[i][key], delta = 3e-01)
+            for key in surrogate_results.inputs[0].keys():
+                self.assertAlmostEqual(surrogate_results.inputs[i][key], new_results.inputs[i][key], delta = 3e-01)
+            for key in surrogate_results.outputs[0].keys():
+                self.assertAlmostEqual(surrogate_results.outputs[i][key], new_results.outputs[i][key], delta = 3e-01)
+            for key in surrogate_results.event_states[0].keys():
+                self.assertAlmostEqual(surrogate_results.event_states[i][key], new_results.event_states[i][key], delta = 3e-01)
 
 # This allows the module to be executed directly
 def run_tests():

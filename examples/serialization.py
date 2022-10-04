@@ -2,13 +2,14 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of serializing and de-serializing a surrogate model 
+Example of serializing and de-serializing a surrogate model using JSON and pickling methods
 """
 
 from prog_models.models import BatteryElectroChemEOD as Battery
 from prog_models.data_models import DMDModel
 
 import matplotlib.pyplot as plt
+import pickle
 
 def run_example():  
     ## Step 1: Create a model object
@@ -56,6 +57,7 @@ def run_example():
     # Generate surrogate model  
     surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
 
+    # METHOD 1: Serialize with JSON 
     ### Step 4: serialize model for future use 
     save_surrogate = surrogate_orig.parameters.to_json()
 
@@ -63,14 +65,18 @@ def run_example():
     surrogate_serial_1 = DMDModel.from_json(save_surrogate)
 
     # Serialized result can also be saved to a text file and uploaded later using the following code:
-    txtFile = open("surrogate_model_save.txt", "w")
+    txtFile = open("surrogate_model_save_json.txt", "w")
     txtFile.write(save_surrogate)
     txtFile.close() 
 
-    with open('surrogate_model_save.txt') as infile: 
-        load_surrogate = infile.read()
+    with open('surrogate_model_save_json.txt') as infile: 
+        load_surrogate_json = infile.read()
 
-    surrogate_serial_2 = DMDModel.from_json(load_surrogate)
+    surrogate_serial_2 = DMDModel.from_json(load_surrogate_json)
+
+    # METHOD 2: Serialize by pickling
+    pickle.dump(surrogate_orig, open('surrogate_model_save_pkl.pkl','wb'))
+    surrogate_pkl = pickle.load(open('surrogate_model_save_pkl.pkl','rb'))
 
     ## Step 4: Simulate to threshold and compare results
     # Simulation options for implementation of surrogate model
@@ -94,15 +100,18 @@ def run_example():
     results_orig = surrogate_orig.simulate_to_threshold(future_loading,**options_sim)
     results_serial_1 = surrogate_serial_1.simulate_to_threshold(future_loading, **options_sim)
     results_serial_2 = surrogate_serial_2.simulate_to_threshold(future_loading, **options_sim)
+    results_serial_3 = surrogate_pkl.simulate_to_threshold(future_loading, **options_sim)
 
     # Plot results for comparison
     voltage_orig = [results_orig.outputs[iter]['v'] for iter in range(len(results_orig.times))]
     voltage_serial_1 = [results_serial_1.outputs[iter]['v'] for iter in range(len(results_serial_1.times))]
     voltage_serial_2 = [results_serial_2.outputs[iter]['v'] for iter in range(len(results_serial_2.times))]
+    voltage_serial_3 = [results_serial_3.outputs[iter]['v'] for iter in range(len(results_serial_3.times))]
 
     plt.plot(results_orig.times,voltage_orig,'-b',label='Original surrogate') 
-    plt.plot(results_serial_1.times,voltage_serial_1,'--r',label='First serialized surrogate') 
-    plt.plot(results_serial_2.times,voltage_serial_2,'-.g',label='Second serialized surrogate') 
+    plt.plot(results_serial_1.times,voltage_serial_1,'--r',label='First JSON serialized surrogate') 
+    plt.plot(results_serial_2.times,voltage_serial_2,'-.g',label='Second JSON serialized surrogate') 
+    plt.plot(results_serial_3.times, voltage_serial_3, '--y', label='Pickled serialized surrogate')
     plt.legend()
     plt.xlabel('Time (sec)')
     plt.ylabel('Voltage (volts)')
