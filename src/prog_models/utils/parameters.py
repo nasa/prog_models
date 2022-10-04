@@ -6,13 +6,9 @@ from copy import deepcopy
 from numbers import Number
 import types
 from typing import Callable
-import numpy as np
-import pickle
-import json
 
 from .noise_functions import measurement_noise_functions, process_noise_functions
 from ..exceptions import ProgModelTypeError
-from ..utils.containers import DictLikeMatrixWrapper
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init

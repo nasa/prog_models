@@ -6,14 +6,11 @@ import numpy as np
 from scipy.interpolate import interp1d
 import types
 from warnings import warn
-import json 
 
 from ..exceptions import ProgModelInputException
 from ..sim_result import SimResult, LazySimResult
 from .. import LinearModel, PrognosticsModel
 from . import DataModel
-from ..utils.containers import DictLikeMatrixWrapper
-
 
 class DMDModel(LinearModel, DataModel):
     """
