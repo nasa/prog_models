@@ -14,6 +14,8 @@ from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
+import json
+import pickle
 
 
 class PrognosticsModel(ABC):
@@ -1296,3 +1298,64 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
+
+    class CustomEncoder(json.JSONEncoder):
+        """
+        Custom encoder to serialize parameters 
+        """
+        def default(self, o):
+            if isinstance(o, np.ndarray):
+                return {'original_type': 'ndarray', 'data': o.tolist()}
+            elif isinstance(o, DictLikeMatrixWrapper):
+                dict_temp = {o.keys()[iter]: o[o.keys()[iter]] for iter in range(len(o.keys()))}
+                dict_temp['original_type'] = 'DictLikeMatrixWrapper'
+                return dict_temp 
+            else: 
+                from base64 import b64encode
+                pkl_temp = b64encode(pickle.dumps(o))
+                save_temp = {}
+                save_temp['data'] = pkl_temp.decode()
+                save_temp['original_type'] = 'pickled'
+                return save_temp
+    
+    def to_json(self):
+        """
+        Serialize parameters to save as JSON objects 
+        """
+
+        return json.dumps(self.parameters, cls=self.CustomEncoder)
+
+    @classmethod
+    def from_json(cls,data):
+        """
+        Create a DMD model from a previously generated surrogate model that was serialized as a JSON object
+
+        Args:
+            data: 
+                JSON serialized parameters necessary to build a surrogate model 
+                See to_json method in PrognosticsModelParameters class 
+
+        Returns:
+            DMDModel: Model generated from serialized parameters 
+        """
+        def custom_decoder(o):
+            """
+            Custom decoder to deserialize parameters 
+            """
+            if isinstance(o,dict) and '_original_type' in o.keys():
+                if o['_original_type'] == 'ndarray':
+                    return np.array(o['_data'])
+                elif o['_original_type'] == 'DictLikeMatrixWrapper':
+                    del o['_original_type']
+                    return DictLikeMatrixWrapper(list(o.keys()),o)
+                elif o['_original_type'] == 'pickled':
+                    import pickle
+                    from base64 import b64decode
+                    pkl_temp1 = o['_data'].encode()
+                    pkl_temp2 = b64decode(pkl_temp1)
+                    return pickle.loads(pkl_temp2)
+            return o
+
+        extract_parameters = json.loads(data, object_hook = custom_decoder)
+ 
+        return cls(**extract_parameters) # PrognosticsModel(**extract_parameters)
