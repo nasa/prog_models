@@ -1321,41 +1321,52 @@ class PrognosticsModel(ABC):
     def to_json(self):
         """
         Serialize parameters to save as JSON objects 
+
+        Note
+        ----
+        This method only serializes the values in the parameters class of the prognostics model
         """
+        parameters_dict = {}
+        for key in self.parameters.keys():
+            parameters_dict[key] = self.parameters[key]
 
-        return json.dumps(self.parameters, cls=self.CustomEncoder)
-
+        return json.dumps(parameters_dict, cls=self.CustomEncoder)
+    
     @classmethod
     def from_json(cls,data):
         """
-        Create a DMD model from a previously generated surrogate model that was serialized as a JSON object
+        Create a prognostics model model from a previously generated model that was serialized as a JSON object
 
         Args:
             data: 
-                JSON serialized parameters necessary to build a surrogate model 
-                See to_json method in PrognosticsModelParameters class 
+                JSON serialized parameters necessary to build a model 
+                See to_json method 
 
         Returns:
-            DMDModel: Model generated from serialized parameters 
+            PrognosticsModel: Model generated from serialized parameters 
+
+        Note
+        ----
+        This serialization only works for models that include all parameters necessary to generate the model in the parameters class. 
         """
         def custom_decoder(o):
             """
             Custom decoder to deserialize parameters 
             """
-            if isinstance(o,dict) and '_original_type' in o.keys():
-                if o['_original_type'] == 'ndarray':
-                    return np.array(o['_data'])
-                elif o['_original_type'] == 'DictLikeMatrixWrapper':
-                    del o['_original_type']
+            if isinstance(o,dict) and 'original_type' in o.keys():
+                if o['original_type'] == 'ndarray':
+                    return np.array(o['data'])
+                elif o['original_type'] == 'DictLikeMatrixWrapper':
+                    del o['original_type']
                     return DictLikeMatrixWrapper(list(o.keys()),o)
-                elif o['_original_type'] == 'pickled':
+                elif o['original_type'] == 'pickled':
                     import pickle
                     from base64 import b64decode
-                    pkl_temp1 = o['_data'].encode()
+                    pkl_temp1 = o['data'].encode()
                     pkl_temp2 = b64decode(pkl_temp1)
                     return pickle.loads(pkl_temp2)
             return o
 
         extract_parameters = json.loads(data, object_hook = custom_decoder)
  
-        return cls(**extract_parameters) # PrognosticsModel(**extract_parameters)
+        return cls(**extract_parameters)

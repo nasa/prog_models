@@ -410,41 +410,6 @@ class DMDModel(LinearModel, DataModel):
 
         return m_dmd
 
-    # @classmethod
-    # def from_json(cls,data):
-    #     """
-    #     Create a DMD model from a previously generated surrogate model that was serialized as a JSON object
-    # 
-    #     Args:
-    #         data: 
-    #             JSON serialized parameters necessary to build a surrogate model 
-    #             See to_json method in PrognosticsModelParameters class 
-    # 
-    #     Returns:
-    #         DMDModel: Model generated from serialized parameters 
-    #     """
-    #     def custom_decoder(o):
-    #         """
-    #         Custom decoder to deserialize parameters 
-    #         """
-    #         if isinstance(o,dict) and '_original_type' in o.keys():
-    #             if o['_original_type'] == 'ndarray':
-    #                 return np.array(o['_data'])
-    #             elif o['_original_type'] == 'DictLikeMatrixWrapper':
-    #                 del o['_original_type']
-    #                 return DictLikeMatrixWrapper(list(o.keys()),o)
-    #             elif o['_original_type'] == 'pickled':
-    #                 import pickle
-    #                 from base64 import b64decode
-    #                 pkl_temp1 = o['_data'].encode()
-    #                 pkl_temp2 = b64decode(pkl_temp1)
-    #                 return pickle.loads(pkl_temp2)
-    #         return o
-    # 
-    #     extract_parameters = json.loads(data, object_hook = custom_decoder)
-    # 
-    #     return DMDModel(**extract_parameters)
-
     def next_state(self, x, u, _):   
         x.matrix = np.matmul(self.A, x.matrix) + self.E
         if self.B.shape[1] != 0:

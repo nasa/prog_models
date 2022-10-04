@@ -142,29 +142,3 @@ class PrognosticsModelParameters(UserDict):
         if key in self:
             updates = callback(self[key])
             self.update(updates)
-
-    class CustomEncoder(json.JSONEncoder):
-        """
-        Custom encoder to serialize parameters 
-        """
-        def default(self, o):
-            if isinstance(o, np.ndarray):
-                return {'_original_type': 'ndarray', '_data': o.tolist()}
-            elif isinstance(o, DictLikeMatrixWrapper):
-                dict_temp = dict_temp = {k: v for k, v in o.items()}
-                dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
-                return dict_temp 
-            else: 
-                from base64 import b64encode
-                pkl_temp = b64encode(pickle.dumps(o))
-                save_temp = {}
-                save_temp['_data'] = pkl_temp.decode()
-                save_temp['_original_type'] = 'pickled'
-                return save_temp
-
-    def to_json(self):
-        """
-        Serialize parameters to save as JSON objects 
-        """
-
-        return json.dumps(self.data, cls=self.CustomEncoder)

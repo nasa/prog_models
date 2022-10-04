@@ -57,13 +57,12 @@ def run_example():
     # Generate surrogate model  
     surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
 
-    # METHOD 1: Serialize with JSON 
     ### Step 4: serialize model for future use 
-    save_surrogate = surrogate_orig.parameters.to_json()
-    # save_surrogate = surrogate_orig.to_json()
+    # METHOD 1: Serialize with JSON 
+    save_surrogate = surrogate_orig.to_json()
 
     # DMDModel can be called directly with serialized result
-    # surrogate_serial_1 = DMDModel.from_json(save_surrogate)
+    surrogate_serial_1 = DMDModel.from_json(save_surrogate)
 
     # Serialized result can also be saved to a text file and uploaded later using the following code:
     txtFile = open("surrogate_model_save_json.txt", "w")
@@ -79,7 +78,7 @@ def run_example():
     pickle.dump(surrogate_orig, open('surrogate_model_save_pkl.pkl','wb'))
     surrogate_pkl = pickle.load(open('surrogate_model_save_pkl.pkl','rb'))
 
-    ## Step 4: Simulate to threshold and compare results
+    ## Step 5: Simulate to threshold and compare results
     # Simulation options for implementation of surrogate model
     options_sim = {
         'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results

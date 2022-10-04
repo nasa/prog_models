@@ -51,7 +51,7 @@ class TestSerialization(unittest.TestCase):
         surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
 
         # Serialize parameters
-        save_json_dict = surrogate_orig.parameters.to_json()
+        save_json_dict = surrogate_orig.to_json()
 
         # Generate new surrogated with serialized version
         new_model = DMDModel.from_json(save_json_dict)
