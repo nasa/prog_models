@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from itertools import chain
 import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
@@ -25,10 +26,13 @@ class LSTMStateTransitionModel(DataModel):
     Args:
         output_model (keras.Model): If a state model is present, maps from the state_model outputs to model :term:`output`. Otherwise, maps from model inputs to model :term:`output`
         state_model (keras.Model, optional): Keras model to use for state transition
+        event_state_model (keras.Model, optional): If a state model is present, maps from the state_model outputs to :term:`event state`. Otherwise, maps from model inputs to :term:`event state`
+        t_met_model (keras.Model, optional): If a state model is present, maps from the state_model outputs to if the threshold has been met. Otherwise, maps from model inputs to if the threshold has not been met
 
     Keyword Args:
         input_keys (list[str]): List of input keys
         output_keys (list[str]): List of output keys
+        event_keys (list[str]): List of event keys
 
     Attributes:
         model (keras.Model): Keras model to use for state transition
@@ -43,14 +47,25 @@ class LSTMStateTransitionModel(DataModel):
         'measurement_noise': 0,  # Default 0 noise
     }
 
-    def __init__(self, output_model, state_model = None, **kwargs):
+    def __init__(self, output_model, state_model = None, event_state_model = None, t_met_model=None, **kwargs):
         n_outputs = output_model.output.shape[1]
         n_internal = 0 if state_model is None else state_model.output.shape[1]
         input_shape = output_model.input.shape if state_model is None else state_model.input.shape
         n_inputs = input_shape[-1]-n_outputs
+        if event_state_model is not None:
+            n_events = event_state_model.output.shape[-1]
+            if t_met_model is not None and t_met_model.output.shape[-1]/2 != n_events:
+                raise ValueError("t_met output length must be twice that of event state")
+        elif t_met_model is not None:
+            n_events = t_met_model.output.shape[-1]/2
+        else:
+            n_events = 0
 
         # Setup inputs, outputs, states 
         self.outputs = kwargs.get('output_keys', [f'z{i}' for i in range(n_outputs)])
+        self.events = kwargs.get(
+            'event_keys', 
+            getattr(self, 'events', [f'event{i}' for i in range(n_events)])) # If overridden- use that
         input_keys = kwargs.get('input_keys', [f'u{i}' for i in range(n_inputs)])
         self.inputs = input_keys.copy()
         # Outputs from the last step are part of input
@@ -64,14 +79,20 @@ class LSTMStateTransitionModel(DataModel):
         self.states.extend([f'_model_output{i}' for i in range(n_internal)])
 
         kwargs['window'] = input_shape[1]
-        kwargs['state_model'] = state_model  
-        kwargs['output_model'] = output_model
-        # Putting it in the parameters dictionary simplifies pickling
+        self.history = kwargs.get('history', None)
+        if 'history' in kwargs:
+            # Delete to prevent copying below
+            del kwargs['history']
 
         super().__init__(**kwargs)
 
-        # Save Model
-        self.history = kwargs.get('history', None)
+        # Set parameters without copying
+        # Putting it in the parameters dictionary simplifies pickling
+        self.parameters.__setitem__('state_model', state_model, _copy = False)
+        self.parameters.__setitem__('output_model', output_model, _copy = False)
+        self.parameters.__setitem__('event_state_model', event_state_model, _copy = False)
+        self.parameters.__setitem__('t_met_model', t_met_model, _copy = False)
+        self.parameters.__setitem__('history', self.history, _copy = False)        
 
     def __getstate__(self):
         warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
@@ -139,6 +160,47 @@ class LSTMStateTransitionModel(DataModel):
 
         return self.OutputContainer(m_output.numpy().T)
 
+    def event_state(self, x):
+        if self.parameters['event_state_model'] is None:
+            warn('No event state model exists- returning empty event state')
+            return {key: None for key in self.events}
+        
+        if x.matrix[0,0] is None:
+            warn(f"Event state estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
+            return {key: None for key in self.events}
+
+        # Enough data has been received to calculate output
+        # Pass internal states into model to calculate output
+        if self.parameters['state_model'] is None:
+            m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
+            internal_states = np.array(m_input, dtype=np.float)
+        else:
+            internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
+        m_event_state = self.parameters['event_state_model'](internal_states)
+
+        return {key: value for key, value in zip(self.events, m_event_state[0])}
+
+    def threshold_met(self, x):
+        if self.parameters['t_met_model'] is None:
+            warn('No threshold met model exists- returning empty t_met')
+            return {key: None for key in self.events}
+        
+        if x.matrix[0,0] is None:
+            warn(f"Threshold met estimation is not available until at least {1+self.parameters['window']} timesteps have passed.")
+            return {key: None for key in self.events}
+
+        # Enough data has been received to calculate output
+        # Pass internal states into model to calculate output
+        if self.parameters['state_model'] is None:
+            m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
+            internal_states = np.array(m_input, dtype=np.float)
+        else:
+            internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
+        m_t_met = self.parameters['t_met_model'](internal_states)
+        m_t_met = [np.argmax(m_t_met[0][i*2:(i+1)*2]) == 0 for i in range(len(self.events))]
+
+        return {key: value for key, value in zip(self.events, m_t_met)}
+
     def summary(self, file= sys.stdout, expand_nested=False, show_trainable=False):
         print('LSTM State Transition Model: ', file = file)
         print("Inputs: ", self.inputs, file = file)
@@ -150,16 +212,21 @@ class LSTMStateTransitionModel(DataModel):
         
         print('\nOutput Model: ', file = file)
         self.parameters['output_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
-        
+
+        if self.parameters['event_state_model'] is not None:
+            print('\nEvent State Model: ', file = file)
+            self.parameters['event_state_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
         
     @staticmethod
-    def pre_process_data(inputs, outputs, window, **kwargs):
+    def pre_process_data(inputs, outputs, event_states=None, t_met = None, window=10, **kwargs):
         """
         Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
 
         Args:
             inputs (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
             outputs (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
+            event_states (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
+            t_met (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
             window (int): Length of a single sequence
 
         Returns:
@@ -168,13 +235,19 @@ class LSTMStateTransitionModel(DataModel):
 
         u_all = []
         z_all = []
+        es_all = []
+        t_all = []
 
         DataModel.check_data_format(inputs, outputs)
 
-        for (u, z) in zip(inputs, outputs):
+        if event_states is not None and len(inputs) != len(event_states):
+            raise ValueError("Inputs must be same length as event_states")
+
+        for i in range(len(inputs)):
             # Each item (u, z) is a 1-d array, a 2-d array, or a SimResult
 
             # Process Input
+            u = inputs[i]
             if isinstance(u, SimResult):
                 if len(u[0].keys()) == 0:
                     # No inputs
@@ -189,12 +262,12 @@ class LSTMStateTransitionModel(DataModel):
                 elif np.isscalar(u[0]):
                     # Input is 1-d array (i.e., 1 input)
                     # Note: 1 is added to account for current time (current input used to predict output at time i)
-                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window-1)]
+                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window)]
                 elif isinstance(u[0], (list, np.ndarray)):
                     # Input is d-d array
-                    # Note: 1 is added to account for current time (current input used to predict output at time i)
+                    # Note: 1 is added to account for current time (current input used to predict output at time i) 
                     n_inputs = len(u[0])
-                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window-1)]
+                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window)]
                 else:
                     raise TypeError(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
             else:
@@ -202,6 +275,7 @@ class LSTMStateTransitionModel(DataModel):
 
 
             # Process Output
+            z = outputs[i]
             if isinstance(z, SimResult):
                 if len(z[0].keys()) == 0:
                     # No outputs
@@ -219,33 +293,104 @@ class LSTMStateTransitionModel(DataModel):
                     z_i = []
                 elif np.isscalar(z[0]):
                     # Output is 1-d array (i.e., 1 output)
-                    z_i = [[z[i]] for i in range(window+1, len(z))]
+                    z_i = [[z[i]] for i in range(window, len(z))]
                 elif isinstance(z[0], (list, np.ndarray)):
                     # Input is d-d array
                     n_outputs = len(z[0])
-                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window+1, len(z))]
+                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window, len(z))]
                 else:
                     raise TypeError(f"Unsupported input type: {type(z)} for internal element (output[i])")  
 
                 # Also add to input (past outputs are part of input)
+                z_ii = [[z[i+j] for j in range(window)] for i in range(len(z_i))]
+                # ISSUE- TODO z_ii has too many dimensions
                 if len(u_i) == 0:
-                    u_i = [[z_ii for _ in range(window)] for z_ii in z_i]
+                    u_i = z_ii
                 else:
-                    for i in range(len(z_i)):
+                    for k in range(len(z_ii)):
                         for j in range(window):
-                            u_i[i][j].extend(z_i[i])
+                            u_i[k][j].extend(z_ii[k][j])
             else:
-                raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+                raise TypeError(f"Unsupported data type: {type(z)}. output z must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
             
+            if event_states is not None:
+                es = event_states[i]
+                if isinstance(es, SimResult):
+                    if len(es[0].keys()) == 0:
+                        # No event_states
+                        es = []
+                    else:
+                        es = np.array([[es_i[key] for key in es_i.keys()] for es_i in es])
+
+                if isinstance(es, (list, np.ndarray)):
+                    if len(es) != len(u) and len(u) != 0 and len(es) != 0:
+                        # Checked here to avoid SimResults from accidentially triggering this check
+                        raise IndexError(f"Number of event_states ({len(es)}) does not match number of inputs ({len(u)})")
+
+                    if len(es) == 0:
+                        # No outputs
+                        es_i = []
+                    elif np.isscalar(es[0]):
+                        # Output is 1-d array (i.e., 1 output)
+                        es_i = [[es[i]] for i in range(window, len(es))]
+                    elif isinstance(es[0], (list, np.ndarray)):
+                        # Input is d-d array
+                        n_events = len(es[0])
+                        es_i = [[es[i][k] for k in range(n_events)] for i in range(window, len(es))]
+                    else:
+                        raise TypeError(f"Unsupported input type: {type(es)} for internal element (es[i])")  
+
+                else:
+                    raise TypeError(f"Unsupported data type: {type(es)}. event state must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+            else:
+                es_i = []
+
+            if t_met is not None:
+                t = t_met[i]
+                if isinstance(t, SimResult):
+                    if len(t[0].keys()) == 0:
+                        # No event_states
+                        t = []
+                    else:
+                        t = np.array([[t_i[key] for key in t_i.keys()] for t_i in t])
+
+                if isinstance(t, (list, np.ndarray)):
+                    if len(t) != len(u) and len(u) != 0 and len(t) != 0:
+                        # Checked here to avoid SimResults from accidentially triggering this check
+                        raise IndexError(f"Number of t_met ({len(t)}) does not match number of inputs ({len(u)})")
+
+                    if len(t) == 0:
+                        # No outputs
+                        t_i = []
+                    elif np.isscalar(t[0]):
+                        # Output is 1-d array (i.e., 1 output)
+                        t_i = [[1, 0] if t[i] else [0, 1] for i in range(window, len(t))]
+                    elif isinstance(t[0], (list, np.ndarray)):
+                        # Input is d-d array
+                        n_events = len(t[0])
+                        # True = 1, 0; False = 0, 1
+                        t_i = [list(chain.from_iterable((1, 0) if t[i][k] else (0, 1) for k in range(n_events))) for i in range(window, len(t))]
+                    else:
+                        raise TypeError(f"Unsupported input type: {type(t[0])} for internal element (t[i])")  
+
+                else:
+                    raise TypeError(f"Unsupported data type: {type(t)}. t_met must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
+            else:
+                t_i = []
+
             u_all.extend(u_i)
             z_all.extend(z_i)
+            es_all.extend(es_i)
+            t_all.extend(t_i)
         
-        u_all = np.array(u_all)
-        z_all = np.array(z_all)
-        return (u_all, z_all)
+        u_all = np.array(u_all, dtype=np.float)
+        z_all = np.array(z_all, dtype=np.float)
+        es_all = np.array(es_all, dtype=np.float)
+        t_all = np.array(t_all, dtype=np.float)
+        return (u_all, z_all, es_all, t_all)
 
     @classmethod
-    def from_data(cls, inputs, outputs, event_states = None, thresh_met = None, **kwargs):
+    def from_data(cls, inputs, outputs, event_states = None, t_met = None, **kwargs):
         """
         Generate a LSTMStateTransitionModel from data
 
@@ -254,6 +399,10 @@ class LSTMStateTransitionModel(DataModel):
                 list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
             outputs (list[np.array]): 
                 list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
+            event_states (list[np.array], optional): 
+                list of :term:`event state` data for use in data. Each element is the event state for a single run of size (n_times, n_events)
+            t_met (list[np.array], optional): 
+                list of :term:`threshold met` data for use in data. Each element is if the threshold has been met for a single run of size (n_times, n_events) 
 
         Keyword Args:
             window (int): 
@@ -262,6 +411,8 @@ class LSTMStateTransitionModel(DataModel):
                 List of keys to use to identify :term:`input`. If not supplied u[#] will be used to idenfiy inputs
             output_keys (list[str]): 
                 List of keys to use to identify :term:`output`. If not supplied z[#] will be used to idenfiy outputs
+            event_keys (list[str]):
+                List of keys to use to identify events for :term:`event state` and :term:`threshold met`. If not supplied event[#] will be used to idenfiy events
             validation_percentage (float): 
                 Percentage of data to use for validation, between 0-1
             epochs (int): 
@@ -290,7 +441,7 @@ class LSTMStateTransitionModel(DataModel):
         params = { # default_params
             'window': 128,
             'validation_split': 0.25,
-            'epochs': 2,
+            'epochs': 100,
             'prediction_steps': 1,
             'layers': 1,
             'units': 16,
@@ -344,7 +495,7 @@ class LSTMStateTransitionModel(DataModel):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
         # Prepare datasets
-        (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, **params)
+        (u_all, z_all, es_all, t_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, event_states = event_states, t_met = t_met, **params)
 
         # Normalize
         if params['normalize']:
@@ -392,12 +543,30 @@ class LSTMStateTransitionModel(DataModel):
             # Dropout prevents overfitting
             x = layers.Dropout(params['dropout'])(x)
 
-        x = layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1, name='output')(x)
-        model = keras.Model(inputs, x)
+        outputs = [layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1, name='output')(x)]
+        output_data = [z_all]
+        
+        if event_states is not None:
+            outputs.append(layers.Dense(es_all.shape[1] if es_all.ndim == 2 else 1, name='event_state')(x))
+            output_data.append(es_all)
+        
+        if t_met is not None and t_all.shape[1] > 0:
+            n_events = round(t_all.shape[1]/2)
+            # Layer for each event
+            t_met_layers = [layers.Dense(2, activation="softmax") for _ in range(n_events)]
+            t_met_layers_output = [layer(x) for layer in t_met_layers]
+            if len(t_met_layers) == 1:
+                outputs.append(t_met_layers_output[-1])
+            else:
+                # Concatenate layers
+                outputs.append(layers.Concatenate(name='t_met')(t_met_layers_output))
+            output_data.append(t_all)
+        
+        model = keras.Model(inputs, outputs)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
-        history = model.fit(u_all, z_all, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        history = model.fit(u_all, output_data, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
 
         model = keras.models.load_model("best_model.keras")
 
@@ -407,8 +576,23 @@ class LSTMStateTransitionModel(DataModel):
         output_layer = model.get_layer('output')(output_layer_input)
         state_model = keras.Model(model.input, model.layers[n_state_layers-1].output)
         output_model = keras.Model(output_layer_input, output_layer)
+        if event_states is None:
+            event_state_model = None
+        else:
+            event_state_layer = model.get_layer('event_state')(output_layer_input)
+            event_state_model = keras.Model(output_layer_input, event_state_layer)            
 
-        return cls(output_model, state_model, history = history, **params)
+        if t_met is None:
+            t_met_model = None
+        else:
+            t_met_layers = [layer(output_layer_input) for layer in t_met_layers]
+            if len(t_met_layers) == 1:
+                t_met_layer = t_met_layers[0]
+            else:  # Concat layer exists
+                t_met_layer = model.get_layer('t_met')(t_met_layers)
+            t_met_model = keras.Model(output_layer_input, t_met_layer)  
+
+        return cls(output_model, state_model, event_state_model, t_met_model, history = history, **params)
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)

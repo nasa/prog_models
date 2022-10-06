@@ -1,14 +1,18 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 # This ensures that the directory containing examples is in the python search directories 
 
+from copy import deepcopy
+from io import StringIO
+import matplotlib.pyplot as plt
 import pickle
+import sys
 import unittest
+from unittest.mock import patch
+import warnings
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
 from prog_models.models import ThrownObject
-import warnings
-import sys
-from io import StringIO
+
 
 class TestDataModel(unittest.TestCase):        
     def _test_simple_case(self, 
@@ -27,19 +31,20 @@ class TestDataModel(unittest.TestCase):
         data = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP, dt=TIMESTEP)
 
         if WITH_STATES:
-            kwargs['states'] = [data.states]
+            kwargs['states'] = [data.states, data.states]
 
         if WITH_DT:
             kwargs['dt'] = TIMESTEP
 
         # Step 2: Generate model
         m2 = DataModelType.from_data(
-            times = [data.times],
-            inputs = [data.inputs],
-            outputs = [data.outputs],
-            event_states = [data.event_states],  
+            times = [data.times, data.times],
+            inputs = [data.inputs, data.inputs],
+            outputs = [data.outputs, data.outputs],
+            event_states = [data.event_states, data.event_states],  
             output_keys = list(m.outputs),
             save_freq = TIMESTEP,
+            validation_split=0.5,
             **kwargs)  
         
         self.assertIsInstance(m2, DataModelType)
@@ -89,7 +94,7 @@ class TestDataModel(unittest.TestCase):
             'dt': 0.1,
             'save_freq': 0.1,
             'window': 4,
-            'epochs': 40
+            'epochs': 60
         }
 
         # No early stopping 
@@ -97,16 +102,16 @@ class TestDataModel(unittest.TestCase):
         sys.stdout = StringIO()
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], early_stop=False, **cfg)
         end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
-        value = int(end.split('/40', 1)[0])
-        self.assertEqual(value, 40)
+        value = int(end.split(f"/{cfg['epochs']}", 1)[0])
+        self.assertEqual(value, cfg['epochs'])
 
         # With early stopping (default)
         sys.stdout = StringIO()
         # Default = True
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], **cfg)
         end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
-        value = int(end.split('/40', 1)[0])
-        self.assertNotEqual(value, 40)
+        value = int(end.split(f"/{cfg['epochs']}", 1)[0])
+        self.assertNotEqual(value, cfg['epochs'])
         sys.stdout = _stdout
 
     def test_lstm_simple(self):
@@ -131,6 +136,9 @@ class TestDataModel(unittest.TestCase):
         except:
             warnings.warn("Pickling not supported for LSTMStateTransitionModel on this system")
             pass
+
+        # Deepcopy test
+        m3 = deepcopy(m2)
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
@@ -148,6 +156,9 @@ class TestDataModel(unittest.TestCase):
         self.assertIsInstance(m2, DMDModel)
         self.assertIsInstance(m2, DataModel)
         self.assertListEqual(m2.outputs, ['x'])
+
+        # Deepcopy test
+        m3 = deepcopy(m2)
 
     def test_lstm_from_model_thrown_object(self):
         TIMESTEP = 0.01
@@ -297,7 +308,13 @@ def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Data Models")
-    result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
+
+    _stdout = sys.stdout
+    sys.stdout = StringIO()
+    with patch('matplotlib.pyplot.show'):
+        result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
+    plt.close('all')
+    sys.stdout = _stdout
 
     if not result:
         raise Exception("Failed test")

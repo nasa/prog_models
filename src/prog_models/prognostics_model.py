@@ -792,7 +792,7 @@ class PrognosticsModel(ABC):
         # Optimization
         next_state = self.__next_state
         output = self.__output
-        thresthold_met_eqn = self.threshold_met
+        threshold_met_eqn = self.threshold_met
         event_state = self.event_state
         load_eqn = future_loading_eqn
         progress = config['progress']
@@ -980,7 +980,7 @@ class PrognosticsModel(ABC):
                     last_percentage = converted_iteration
 
             # Check thresholds
-            if check_thresholds(thresthold_met_eqn(x)):
+            if check_thresholds(threshold_met_eqn(x)):
                 break
         
         # Save final state
