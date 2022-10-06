@@ -31,19 +31,20 @@ class TestDataModel(unittest.TestCase):
         data = m.simulate_to_threshold(future_loading, threshold_keys='impact', save_freq=TIMESTEP, dt=TIMESTEP)
 
         if WITH_STATES:
-            kwargs['states'] = [data.states]
+            kwargs['states'] = [data.states, data.states]
 
         if WITH_DT:
             kwargs['dt'] = TIMESTEP
 
         # Step 2: Generate model
         m2 = DataModelType.from_data(
-            times = [data.times],
-            inputs = [data.inputs],
-            outputs = [data.outputs],
-            event_states = [data.event_states],  
+            times = [data.times, data.times],
+            inputs = [data.inputs, data.inputs],
+            outputs = [data.outputs, data.outputs],
+            event_states = [data.event_states, data.event_states],  
             output_keys = list(m.outputs),
             save_freq = TIMESTEP,
+            validation_split=0.5,
             **kwargs)  
         
         self.assertIsInstance(m2, DataModelType)
