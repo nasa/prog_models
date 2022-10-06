@@ -2,11 +2,10 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of serializing and de-serializing a surrogate model using JSON and pickling methods
+Example of serializing and de-serializing a battery model using JSON and pickling methods
 """
 
 from prog_models.models import BatteryElectroChemEOD as Battery
-from prog_models.data_models import DMDModel
 
 import matplotlib.pyplot as plt
 import pickle
@@ -15,71 +14,33 @@ def run_example():
     ## Step 1: Create a model object
     batt = Battery()
 
-    ## Step 2: Define future loading functions for training data 
-    def future_loading_1(t, x=None):
-        # Variable (piece-wise) future loading scheme 
-        if (t < 500):
-            i = 3
-        elif (t < 1000):
-            i = 2
-        elif (t < 1500):
-            i = 0.5
-        else:
-            i = 4.5
-        return batt.InputContainer({'i': i})
-    
-    def future_loading_2(t, x=None):
-        # Variable (piece-wise) future loading scheme 
-        if (t < 300):
-            i = 2
-        elif (t < 800):
-            i = 3.5
-        elif (t < 1300):
-            i = 4
-        elif (t < 1600):
-            i = 1.5
-        else:
-            i = 5
-        return batt.InputContainer({'i': i})
-    
-    load_functions = [future_loading_1, future_loading_2]
-
-    ## Step 3: Create surrogate model 
-    options_surrogate = {
-        'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
-        'dt': 0.1, # For DMD, this value is the time step of the training data
-        'trim_data_to': 0.7 # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-    }
-
-    # Set noise in Prognostics Model, default for surrogate model is also this value. Set to 0 to illustrate match between original surrogate and serialized version
+    # Set process nosie to 0 to illustrate match between original and serialized versions
     batt.parameters['process_noise'] = 0 
 
-    # Generate surrogate model  
-    surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
-
-    ### Step 4: serialize model for future use 
+    ### Step 2: serialize model for future use
+    # Note: Model serialization has a lot of purposes, like saving a specific model to a file to be loaded later or sending a model to another machine over a network connection.
+    
     # METHOD 1: Serialize with JSON 
-    save_surrogate = surrogate_orig.to_json()
+    save_json = batt.to_json()
 
-    # DMDModel can be called directly with serialized result
-    surrogate_serial_1 = DMDModel.from_json(save_surrogate)
+    # Model can be called directly with serialized result
+    serial_1 = Battery.from_json(save_json)
 
     # Serialized result can also be saved to a text file and uploaded later using the following code:
-    txtFile = open("surrogate_model_save_json.txt", "w")
-    txtFile.write(save_surrogate)
+    txtFile = open("model_save_json.txt", "w")
+    txtFile.write(save_json)
     txtFile.close() 
 
-    with open('surrogate_model_save_json.txt') as infile: 
-        load_surrogate_json = infile.read()
+    with open('model_save_json.txt') as infile: 
+        load_json = infile.read()
 
-    surrogate_serial_2 = DMDModel.from_json(load_surrogate_json)
+    serial_2 = Battery.from_json(load_json)
 
     # METHOD 2: Serialize by pickling
-    pickle.dump(surrogate_orig, open('surrogate_model_save_pkl.pkl','wb'))
-    surrogate_pkl = pickle.load(open('surrogate_model_save_pkl.pkl','rb'))
+    pickle.dump(batt, open('model_save_pkl.pkl','wb'))
+    load_pkl = pickle.load(open('model_save_pkl.pkl','rb'))
 
-    ## Step 5: Simulate to threshold and compare results
-    # Simulation options for implementation of surrogate model
+    ## Step 3: Simulate to threshold and compare results
     options_sim = {
         'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
     }
@@ -97,10 +58,10 @@ def run_example():
         return batt.InputContainer({'i': i})
 
     # Simulate to threshold 
-    results_orig = surrogate_orig.simulate_to_threshold(future_loading,**options_sim)
-    results_serial_1 = surrogate_serial_1.simulate_to_threshold(future_loading, **options_sim)
-    results_serial_2 = surrogate_serial_2.simulate_to_threshold(future_loading, **options_sim)
-    results_serial_3 = surrogate_pkl.simulate_to_threshold(future_loading, **options_sim)
+    results_orig = batt.simulate_to_threshold(future_loading,**options_sim)
+    results_serial_1 = serial_1.simulate_to_threshold(future_loading, **options_sim)
+    results_serial_2 = serial_2.simulate_to_threshold(future_loading, **options_sim)
+    results_serial_3 = load_pkl.simulate_to_threshold(future_loading, **options_sim)
 
     # Plot results for comparison
     voltage_orig = [results_orig.outputs[iter]['v'] for iter in range(len(results_orig.times))]
