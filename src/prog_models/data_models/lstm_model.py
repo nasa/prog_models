@@ -441,7 +441,7 @@ class LSTMStateTransitionModel(DataModel):
         params = { # default_params
             'window': 128,
             'validation_split': 0.25,
-            'epochs': 2,
+            'epochs': 100,
             'prediction_steps': 1,
             'layers': 1,
             'units': 16,
