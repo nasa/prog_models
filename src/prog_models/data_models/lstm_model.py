@@ -262,12 +262,12 @@ class LSTMStateTransitionModel(DataModel):
                 elif np.isscalar(u[0]):
                     # Input is 1-d array (i.e., 1 input)
                     # Note: 1 is added to account for current time (current input used to predict output at time i)
-                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window-1)]
+                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window)]
                 elif isinstance(u[0], (list, np.ndarray)):
                     # Input is d-d array
-                    # Note: 1 is added to account for current time (current input used to predict output at time i)
+                    # Note: 1 is added to account for current time (current input used to predict output at time i) 
                     n_inputs = len(u[0])
-                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window-1)]
+                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window)]
                 else:
                     raise TypeError(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
             else:
@@ -293,21 +293,23 @@ class LSTMStateTransitionModel(DataModel):
                     z_i = []
                 elif np.isscalar(z[0]):
                     # Output is 1-d array (i.e., 1 output)
-                    z_i = [[z[i]] for i in range(window+1, len(z))]
+                    z_i = [[z[i]] for i in range(window, len(z))]
                 elif isinstance(z[0], (list, np.ndarray)):
                     # Input is d-d array
                     n_outputs = len(z[0])
-                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window+1, len(z))]
+                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window, len(z))]
                 else:
                     raise TypeError(f"Unsupported input type: {type(z)} for internal element (output[i])")  
 
                 # Also add to input (past outputs are part of input)
+                z_ii = [[z[i+j] for j in range(window)] for i in range(len(z_i))]
+                # ISSUE- TODO z_ii has too many dimensions
                 if len(u_i) == 0:
-                    u_i = [[z_ii for _ in range(window)] for z_ii in z_i]
+                    u_i = z_ii
                 else:
-                    for k in range(len(z_i)):
+                    for k in range(len(z_ii)):
                         for j in range(window):
-                            u_i[k][j].extend(z_i[k])
+                            u_i[k][j].extend(z_ii[k][j])
             else:
                 raise TypeError(f"Unsupported data type: {type(z)}. output z must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
             
@@ -330,11 +332,11 @@ class LSTMStateTransitionModel(DataModel):
                         es_i = []
                     elif np.isscalar(es[0]):
                         # Output is 1-d array (i.e., 1 output)
-                        es_i = [[es[i]] for i in range(window+1, len(es))]
+                        es_i = [[es[i]] for i in range(window, len(es))]
                     elif isinstance(es[0], (list, np.ndarray)):
                         # Input is d-d array
                         n_events = len(es[0])
-                        es_i = [[es[i][k] for k in range(n_events)] for i in range(window+1, len(es))]
+                        es_i = [[es[i][k] for k in range(n_events)] for i in range(window, len(es))]
                     else:
                         raise TypeError(f"Unsupported input type: {type(es)} for internal element (es[i])")  
 
@@ -362,12 +364,12 @@ class LSTMStateTransitionModel(DataModel):
                         t_i = []
                     elif np.isscalar(t[0]):
                         # Output is 1-d array (i.e., 1 output)
-                        t_i = [[1, 0] if t[i] else [0, 1] for i in range(window+1, len(t))]
+                        t_i = [[1, 0] if t[i] else [0, 1] for i in range(window, len(t))]
                     elif isinstance(t[0], (list, np.ndarray)):
                         # Input is d-d array
                         n_events = len(t[0])
                         # True = 1, 0; False = 0, 1
-                        t_i = [list(chain.from_iterable((1, 0) if t[i][k] else (0, 1) for k in range(n_events))) for i in range(window+1, len(t))]
+                        t_i = [list(chain.from_iterable((1, 0) if t[i][k] else (0, 1) for k in range(n_events))) for i in range(window, len(t))]
                     else:
                         raise TypeError(f"Unsupported input type: {type(t[0])} for internal element (t[i])")  
 
