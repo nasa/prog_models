@@ -15,8 +15,6 @@ from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
 import json
-import pickle
-
 
 class PrognosticsModel(ABC):
     """
