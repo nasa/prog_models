@@ -98,7 +98,7 @@ class ProgModelTemplate(PrognosticsModel):
 
         Note 
         ----
-        To use the JSON serialization capabilities in to_json and from_json, the keyword arguments must include everything necessary for init
+        To use the JSON serialization capabilities in to_json and from_json, model.parameters must include everything necessary for initialize, including any keyword arguments.
         """
         # ADD OPTIONS CHECKS HERE
 

@@ -15,8 +15,6 @@ from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
 import json
-import pickle
-
 
 class PrognosticsModel(ABC):
     """
@@ -1305,26 +1303,26 @@ class PrognosticsModel(ABC):
         """
         def default(self, o):
             if isinstance(o, np.ndarray):
-                return {'original_type': 'ndarray', 'data': o.tolist()}
+                return {'_original_type': 'ndarray', '_data': o.tolist()}
             elif isinstance(o, DictLikeMatrixWrapper):
-                dict_temp = {o.keys()[iter]: o[o.keys()[iter]] for iter in range(len(o.keys()))}
-                dict_temp['original_type'] = 'DictLikeMatrixWrapper'
+                dict_temp = {k: v for k, v in o.items()}
+                dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
                 return dict_temp 
             else: 
                 from base64 import b64encode
                 pkl_temp = b64encode(pickle.dumps(o))
                 save_temp = {}
-                save_temp['data'] = pkl_temp.decode()
-                save_temp['original_type'] = 'pickled'
+                save_temp['_data'] = pkl_temp.decode()
+                save_temp['_original_type'] = 'pickled'
                 return save_temp
     
     def to_json(self):
         """
-        Serialize parameters to save as JSON objects 
+        Serialize parameters as JSON objects 
 
         Note
         ----
-        This method only serializes the values in the parameters class of the prognostics model
+        This method only serializes the values of the prognostics model parameters (model.parameters)
         """
         parameters_dict = {}
         for key in self.parameters.keys():
@@ -1335,7 +1333,7 @@ class PrognosticsModel(ABC):
     @classmethod
     def from_json(cls,data):
         """
-        Create a prognostics model model from a previously generated model that was serialized as a JSON object
+        Create a new prognostics model from a previously generated model that was serialized as a JSON object
 
         Args:
             data: 
@@ -1347,24 +1345,26 @@ class PrognosticsModel(ABC):
 
         Note
         ----
-        This serialization only works for models that include all parameters necessary to generate the model in the parameters class. 
+        This serialization only works for models that include all parameters necessary to generate the model in model.parameters. 
         """
         def custom_decoder(o):
             """
             Custom decoder to deserialize parameters 
             """
-            if isinstance(o,dict) and 'original_type' in o.keys():
-                if o['original_type'] == 'ndarray':
-                    return np.array(o['data'])
-                elif o['original_type'] == 'DictLikeMatrixWrapper':
-                    del o['original_type']
+            if isinstance(o,dict) and '_original_type' in o.keys():
+                if o['_original_type'] == 'ndarray':
+                    return np.array(o['_data'])
+                elif o['_original_type'] == 'DictLikeMatrixWrapper':
+                    del o['_original_type']
                     return DictLikeMatrixWrapper(list(o.keys()),o)
-                elif o['original_type'] == 'pickled':
+                elif o['_original_type'] == 'pickled':
                     import pickle
                     from base64 import b64decode
-                    pkl_temp1 = o['data'].encode()
+                    pkl_temp1 = o['_data'].encode()
                     pkl_temp2 = b64decode(pkl_temp1)
                     return pickle.loads(pkl_temp2)
+                else: 
+                    raise ProgModelException(f"Type {o['_original_type']} not supported by PrognosticsModel json decoder")
             return o
 
         extract_parameters = json.loads(data, object_hook = custom_decoder)
