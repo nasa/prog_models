@@ -14,7 +14,7 @@ from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
-
+import json
 
 class PrognosticsModel(ABC):
     """
@@ -1296,3 +1296,77 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
+
+    class CustomEncoder(json.JSONEncoder):
+        """
+        Custom encoder to serialize parameters 
+        """
+        def default(self, o):
+            if isinstance(o, np.ndarray):
+                return {'_original_type': 'ndarray', '_data': o.tolist()}
+            elif isinstance(o, DictLikeMatrixWrapper):
+                dict_temp = {k: v for k, v in o.items()}
+                dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
+                return dict_temp 
+            else: 
+                from base64 import b64encode
+                pkl_temp = b64encode(pickle.dumps(o))
+                save_temp = {}
+                save_temp['_data'] = pkl_temp.decode()
+                save_temp['_original_type'] = 'pickled'
+                return save_temp
+    
+    def to_json(self):
+        """
+        Serialize parameters as JSON objects 
+
+        Note
+        ----
+        This method only serializes the values of the prognostics model parameters (model.parameters)
+        """
+        parameters_dict = {}
+        for key in self.parameters.keys():
+            parameters_dict[key] = self.parameters[key]
+
+        return json.dumps(parameters_dict, cls=self.CustomEncoder)
+    
+    @classmethod
+    def from_json(cls,data):
+        """
+        Create a new prognostics model from a previously generated model that was serialized as a JSON object
+
+        Args:
+            data: 
+                JSON serialized parameters necessary to build a model 
+                See to_json method 
+
+        Returns:
+            PrognosticsModel: Model generated from serialized parameters 
+
+        Note
+        ----
+        This serialization only works for models that include all parameters necessary to generate the model in model.parameters. 
+        """
+        def custom_decoder(o):
+            """
+            Custom decoder to deserialize parameters 
+            """
+            if isinstance(o,dict) and '_original_type' in o.keys():
+                if o['_original_type'] == 'ndarray':
+                    return np.array(o['_data'])
+                elif o['_original_type'] == 'DictLikeMatrixWrapper':
+                    del o['_original_type']
+                    return DictLikeMatrixWrapper(list(o.keys()),o)
+                elif o['_original_type'] == 'pickled':
+                    import pickle
+                    from base64 import b64decode
+                    pkl_temp1 = o['_data'].encode()
+                    pkl_temp2 = b64decode(pkl_temp1)
+                    return pickle.loads(pkl_temp2)
+                else: 
+                    raise ProgModelException(f"Type {o['_original_type']} not supported by PrognosticsModel json decoder")
+            return o
+
+        extract_parameters = json.loads(data, object_hook = custom_decoder)
+ 
+        return cls(**extract_parameters)
