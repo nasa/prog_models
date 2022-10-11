@@ -1307,7 +1307,13 @@ class PrognosticsModel(ABC):
             elif isinstance(o, DictLikeMatrixWrapper):
                 dict_temp = {k: v for k, v in o.items()}
                 dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
-                return dict_temp 
+                return dict_temp
+            elif isinstance(o,np.bool_):
+                if o == False:
+                    o = False
+                else: 
+                    o = True
+                return o 
             else: 
                 import pickle
                 from base64 import b64encode
