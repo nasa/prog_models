@@ -1309,6 +1309,7 @@ class PrognosticsModel(ABC):
                 dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
                 return dict_temp 
             else: 
+                import pickle
                 from base64 import b64encode
                 pkl_temp = b64encode(pickle.dumps(o))
                 save_temp = {}
