@@ -100,8 +100,15 @@ class DMDModel(LinearModel, DataModel):
         self.outputs = params['output_keys']
         n_outputs = len(params['output_keys'])
         
-        self.events = params['event_keys']
-        n_events = len(params['event_keys'])
+        has_overwritten_threshold_eqn = hasattr(self, 'events')
+        if has_overwritten_threshold_eqn: 
+             # To support overridding to add custom threshold equation
+            n_events = 0
+        else:
+            self.events = params['event_keys']
+            n_events = len(self.events)
+
+
         n_total = n_states + n_outputs + n_events
 
         self.A = dmd_matrix[:,0:n_total]
@@ -109,7 +116,8 @@ class DMDModel(LinearModel, DataModel):
         self.C = np.zeros((n_outputs,n_total))
         for iter1 in range(n_outputs):
             self.C[iter1,n_states+iter1] = 1 
-        self.F = np.zeros((n_events,n_total))
+        if not has_overwritten_threshold_eqn:
+            self.F = np.zeros((n_events,n_total))
         for iter2 in range(n_events):
             self.F[iter2,n_states+n_outputs+iter2] = 1 
 
