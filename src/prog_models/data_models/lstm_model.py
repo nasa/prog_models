@@ -599,7 +599,7 @@ class LSTMStateTransitionModel(DataModel):
         
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         t = kwargs.get('t0', 0)
-        dt = kwargs.get('dt', 0)
+        dt = kwargs.get('dt', 0.1)
         x = kwargs.get('x', self.initialize(future_loading_eqn(t), first_output))
 
         # configuring next_time function to define prediction time step, default is constant dt
