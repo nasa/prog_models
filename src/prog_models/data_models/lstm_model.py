@@ -255,6 +255,9 @@ class LSTMStateTransitionModel(DataModel):
                 else:
                     u = np.array([u_i.matrix[:,0] for u_i in u])
 
+                if len(u) > window:
+                    raise TypeError(f"Not enough data for window size {window}. Only {len(u)} elements present.")
+
             if isinstance(u, (list, np.ndarray)):
                 if len(u) == 0:
                     # No inputs
@@ -641,6 +644,8 @@ class LSTMStateTransitionModel(DataModel):
         x.matrix = np.array(x.matrix, dtype=np.float)
         kwargs['x'] = x
         if 'horizon' in kwargs:
+            if kwargs['horizon'] < t:
+                raise ValueError('Prediction horizon does not allow enough steps to fully initialize model')
             kwargs['horizon'] = kwargs['horizon'] - t
         return super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
     
