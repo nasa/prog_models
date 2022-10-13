@@ -768,7 +768,7 @@ class PrognosticsModel(ABC):
         if not isinstance(config['horizon'], Number):
             raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['horizon']))
+            raise ProgModelInputException("'horizon' must be positive, was {}".format(config['horizon']))
         if 'x' in config and not all([state in config['x'] for state in self.states]):
             raise ProgModelInputException("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
