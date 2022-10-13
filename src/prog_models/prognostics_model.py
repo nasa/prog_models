@@ -810,7 +810,7 @@ class PrognosticsModel(ABC):
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
         elif len(threshold_keys) == 0:
-            check_thresholds = lambda thresholds_met: False
+            check_thresholds = lambda _: False
 
         # Initialization of save arrays
         saved_times = []
@@ -885,13 +885,13 @@ class PrognosticsModel(ABC):
         
         # Auto Container wrapping
         dt0 = next_time(t, x) - t
-        if not isinstance(u, self.InputContainer):
+        if not isinstance(u, DictLikeMatrixWrapper):
             # Wrapper around the future loading equation
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
-        if not isinstance(self.next_state(x, u, dt0), self.StateContainer):
+        if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around next_state
             def next_state(x, u, dt):
                 # Calculate next state, and convert
@@ -904,7 +904,7 @@ class PrognosticsModel(ABC):
                 # Apply Limits
                 return self.apply_limits(next_state)
 
-        if not isinstance(self.output(x), self.OutputContainer):
+        if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
             def output(x):
                 # Calculate output, convert to outputcontainer
@@ -989,7 +989,7 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(output, saved_times, saved_states) 
+            saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
             saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
