@@ -22,13 +22,15 @@ class MockModel():
         return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
-        x['a']+= u['i1']*dt
-        x['c']-= u['i2']
-        x['t']+= dt
-        return x
+        return self.StateContainer({
+                    'a': x['a'] + u['i1']*dt,
+                    'b': x['b'],
+                    'c': x['c'] - u['i2'],
+                    't': x['t'] + dt
+                })
 
     def output(self, x):
-        return {'o1': x['a'] + x['b'] + x['c']}
+        return self.OutputContainer({'o1': x['a'] + x['b'] + x['c']})
 
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
@@ -103,6 +105,42 @@ class MockModelWithDerived(MockProgModel):
 
 
 class TestModels(unittest.TestCase):
+    def test_non_container(self):
+        class MockProgModelStateDict(MockProgModel):
+            def next_state(self, x, u, dt):
+                return {
+                    'a': x['a'] + u['i1']*dt,
+                    'b': x['b'],
+                    'c': x['c'] - u['i2'],
+                    't': x['t'] + dt
+                }
+        
+        m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+        self.assertAlmostEqual(outputs[-1]['o1'], -13.2)
+        self.assertIsInstance(outputs[-1], m.OutputContainer)
+
+        class MockProgModelStateNdarray(MockProgModel):
+            def next_state(self, x, u, dt):
+                return np.array([
+                    [x['a'] + u['i1']*dt],
+                    [x['b']],
+                    [x['c'] - u['i2']],
+                    [x['t'] + dt]]
+                )
+
+        m = MockProgModelStateNdarray(process_noise_dist='none', measurement_noise_dist='none')
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+
+
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
@@ -683,7 +721,9 @@ class TestModels(unittest.TestCase):
         # Check inputs
         self.assertEqual(len(inputs), 5)
         for i in inputs:
-            self.assertDictEqual(i, {'i1': 1, 'i2': 2.1}, "Future loading error")
+            i0 = {'i1': 1, 'i2': 2.1}
+            for key in i.keys():
+                self.assertEqual(i[key], i0[key], "Future loading error")
 
         # Check states
         self.assertEqual(len(states), 5)
