@@ -768,7 +768,7 @@ class PrognosticsModel(ABC):
         if not isinstance(config['horizon'], Number):
             raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['horizon']))
+            raise ProgModelInputException("'horizon' must be positive, was {}".format(config['horizon']))
         if 'x' in config and not all([state in config['x'] for state in self.states]):
             raise ProgModelInputException("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
@@ -785,13 +785,19 @@ class PrognosticsModel(ABC):
             x = deepcopy(config['x'])
         else:
             x = self.initialize(u, first_output)
+
+        if not isinstance(x, self.StateContainer):
+            x = self.StateContainer(x)
         
         # Optimization
         next_state = self.__next_state
         output = self.__output
         threshold_met_eqn = self.threshold_met
         event_state = self.event_state
+        load_eqn = future_loading_eqn
         progress = config['progress']
+
+        # Threshold Met Equations
         def check_thresholds(thresholds_met):
             t_met = [thresholds_met[key] for key in threshold_keys]
             if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
@@ -804,7 +810,7 @@ class PrognosticsModel(ABC):
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
         elif len(threshold_keys) == 0:
-            check_thresholds = lambda thresholds_met: False
+            check_thresholds = lambda _: False
 
         # Initialization of save arrays
         saved_times = []
@@ -877,6 +883,37 @@ class PrognosticsModel(ABC):
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
+        # Auto Container wrapping
+        dt0 = next_time(t, x) - t
+        if not isinstance(u, DictLikeMatrixWrapper):
+            # Wrapper around the future loading equation
+            def load_eqn(t, x):
+                u = future_loading_eqn(t, x)
+                return self.InputContainer(u)
+
+        if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
+            # Wrapper around next_state
+            def next_state(x, u, dt):
+                # Calculate next state, and convert
+                x_new = self.next_state(x, u, dt)
+                x_new = self.StateContainer(x_new)
+
+                # Calculate next state and add process noise
+                next_state = self.apply_process_noise(x_new, dt)
+
+                # Apply Limits
+                return self.apply_limits(next_state)
+
+        if not isinstance(self.output(x), DictLikeMatrixWrapper):
+            # Wrapper around the output equation
+            def output(x):
+                # Calculate output, convert to outputcontainer
+                z = self.output(x)
+                z = self.OutputContainer(z)
+
+                # Add measurement noise
+                return self.apply_measurement_noise(z)
+
         # Simulate
         update_all()
         if progress:
@@ -888,7 +925,7 @@ class PrognosticsModel(ABC):
             dx = self.dx
 
             try:
-                dx(x, future_loading_eqn(t, x))
+                dx(x, load_eqn(t, x))
             except ProgModelException:
                 raise ProgModelException("dx(x, u) must be defined to use RK4 method")
 
@@ -917,7 +954,7 @@ class PrognosticsModel(ABC):
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
             # This is sometimes referred to as 'leapfrog integration'
-            u = future_loading_eqn(t, x)
+            u = load_eqn(t, x)
             t = t + dt/2
             x = next_state(x, u, dt)
 
