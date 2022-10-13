@@ -925,7 +925,7 @@ class PrognosticsModel(ABC):
             dx = self.dx
 
             try:
-                dx(x, u)
+                dx(x, load_eqn(t, x))
             except ProgModelException:
                 raise ProgModelException("dx(x, u) must be defined to use RK4 method")
 
@@ -946,7 +946,6 @@ class PrognosticsModel(ABC):
 
                 x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
                 return apply_limits(apply_process_noise(x))
-
         elif config['integration_method'] != 'euler':
             raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
