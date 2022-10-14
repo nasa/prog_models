@@ -4,6 +4,7 @@
 from copy import deepcopy
 from io import StringIO
 import matplotlib.pyplot as plt
+import numpy as np
 import pickle
 import sys
 import unittest
@@ -12,6 +13,9 @@ import warnings
 
 from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDModel
 from prog_models.models import ThrownObject
+from prog_models.sim_result import SimResult
+from prog_models.utils.window_data_generator import WindowDataGenerator
+from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class TestDataModel(unittest.TestCase):        
@@ -298,8 +302,154 @@ class TestDataModel(unittest.TestCase):
         with self.assertRaises(ValueError, msg="Negative Validation Split"):
             LSTMStateTransitionModel.from_data([1], [2], validation_split = -1e-5)    
         with self.assertRaises(ValueError, msg="Validation Split of 1"):
-            LSTMStateTransitionModel.from_data([1], [2], validation_split = 1.0)    
+            LSTMStateTransitionModel.from_data([1], [2], validation_split = 1.0)
 
+    def test_data_generator(self):
+        #  a. 1 dataset
+        #   i. 1 dimension
+        WINDOW = 2
+        u = list(range(10))
+        z = list(range(10, 20))
+
+        def test_1d(u, z):
+            g = WindowDataGenerator([u], [z], window=WINDOW)
+            
+            self.assertEqual(len(g), len(u)-WINDOW)
+            for i, e in enumerate(g):
+                self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+10], [i+2, i+11]])))
+                self.assertEqual(e[1][0], i+12)
+            (u_mean, u_std, z_mean, z_std) = g.calculate_normalization()
+            self.assertTrue(np.all(u_mean == np.array([np.mean(u[1:]), np.mean(z[WINDOW:])])))
+            self.assertTrue(np.all(u_std == np.array([np.std(u[1:]), np.std(z[WINDOW:])])))
+            self.assertEqual(z_mean[0], np.mean(z[WINDOW:]))
+            self.assertEqual(z_std[0], np.std(z[WINDOW:]))
+
+            g.normalize_outputs(z_mean, z_std)
+            for i, e in enumerate(g):
+                self.assertTrue(np.all(e[0] == np.array([[i+1, i+10], [i+2, i+11]])))
+                self.assertEqual(e[1][0],(i+12-z_mean[0])/z_std[0])
+
+            (g, v) = g.split_validation()
+
+            tmp = round((len(u)-WINDOW)*0.8)
+            self.assertEqual(len(g), tmp)
+            for i, e in enumerate(g):
+                self.assertTrue(np.all(e[0] == np.array([[i+1, i+10], [i+2, i+11]])))
+                self.assertEqual(e[1][0], (i+12-z_mean[0])/z_std[0])
+            self.assertEqual(len(v), round((len(u)-WINDOW)*0.2))
+            for i, e in enumerate(v):
+                self.assertTrue(np.all(e[0] == np.array([[i+1+tmp, i+10+tmp], [i+2+tmp, i+11+tmp]])))
+                self.assertEqual(e[1][0], (i+12+tmp-z_mean[0])/z_std[0])
+        test_1d(u, z)
+
+        #  b. array
+        u = np.array(u)
+        z = np.array(z)
+        test_1d(u, z)
+
+        #  c. 2d lists
+        u = [[i, i+0.5] for i in range(10)]
+        z = [[j, j+0.5, j+0.75] for j in range(10, 20)]
+        
+        def test_2d(u, z):
+            g = WindowDataGenerator([u], [z], window=WINDOW)
+            
+            self.assertEqual(len(g), len(u)-WINDOW)
+            for i, e in enumerate(g):
+                self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+                self.assertListEqual(list(e[1]), [i+12, i+12.5, i+12.75])
+            (u_mean, u_std, z_mean, z_std) = g.calculate_normalization()
+            self.assertTrue(np.all(u_mean == np.hstack([np.mean(u[1:], axis=0), np.mean(z[WINDOW:], axis=0)])))
+            self.assertTrue(np.all(u_std == np.hstack([np.std(u[1:], axis=0), np.std(z[WINDOW:], axis=0)])))
+            self.assertTrue(np.all(z_mean== np.mean(z[WINDOW:], axis=0)))
+            self.assertTrue(np.all(z_std == np.std(z[WINDOW:], axis=0)))
+
+            g.normalize_outputs(z_mean, z_std)
+            for i, e in enumerate(g):
+                self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+                self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([i+12, i+12.5, i+12.75])])
+
+            (g, v) = g.split_validation()
+
+            tmp = round((len(u)-WINDOW)*0.8)
+            self.assertEqual(len(g), tmp)
+            for i, e in enumerate(g):
+                self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+                self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([i+12, i+12.5, i+12.75])])
+            self.assertEqual(len(v), round((len(u)-WINDOW)*0.2))
+            for i, e in enumerate(v):
+                self.assertTrue(np.all(e[0][0] == np.array([[i+tmp+1, i+tmp+1.5, i+tmp+10, i +tmp+ 10.5, i+tmp+10.75], [i+tmp+2, i+tmp+2.5, i+tmp+11, i+tmp+11.5, i+tmp+11.75]])))
+                self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([i+tmp+12, i+tmp+12.5, i+tmp+12.75])])
+        test_2d(u, z)
+
+        #  d. 2d arrays
+        u = np.array(u)
+        z = np.array(z)
+        test_2d(u, z)
+        
+
+        # 2. multiple 2d arrays
+        u = [[[i*k, k*i+0.5] for i in range(10)] for k in [1, -1]]
+        z = [[[k*j, k*j+0.5, k*j+0.75] for j in range(10, 20)] for k in [1, -1]]
+        g = WindowDataGenerator(u, z, window=WINDOW)
+        self.assertEqual(len(g), 2*(len(u[0])-WINDOW))
+        for i in range(len(u[0])-WINDOW):
+            e = g[i]
+            self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+            self.assertListEqual(list(e[1]), [i+12, i+12.5, i+12.75])
+            e = g[i+len(u[0])-WINDOW]
+            self.assertTrue(np.all(e[0][0] == np.array([[-(i+1), -(i+1)+.5, -(i+10), -(i + 10)+.5, -(i+10)+.75], [-(i+2), -(i+2)+.5, -(i+11), -(i+11)+.5, -(i+11)+.75]])))
+            self.assertListEqual(list(e[1]), [-(i+12), -(i+12)+.5, -(i+12)+.75])
+        (u_mean, u_std, z_mean, z_std) = g.calculate_normalization()
+        self.assertTrue(np.all(u_mean == np.hstack([np.mean(u, axis=(0,1)), np.mean(z, axis=(0,1))])))
+        self.assertTrue(np.all(u_std == np.hstack([np.std(np.array(u)[:, 1:], axis=(0,1)), np.std(np.array(z)[:, WINDOW:], axis=(0,1))])))
+        self.assertTrue(np.all(z_mean== np.mean(np.array(z)[:, WINDOW:], axis=(0,1))))
+        self.assertTrue(np.all(z_std == np.std(np.array(z)[:, WINDOW:], axis=(0,1))))
+
+        g.normalize_outputs(z_mean, z_std)
+        for i in range(len(u[0])-WINDOW):
+            e = g[i]
+            self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+            self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([i+12, i+12.5, i+12.75])])
+            e = g[i+len(u[0])-WINDOW]
+            self.assertTrue(np.all(e[0][0] == np.array([[-(i+1), -(i+1)+.5, -(i+10), -(i + 10)+.5, -(i+10)+.75], [-(i+2), -(i+2)+.5, -(i+11), -(i+11)+.5, -(i+11)+.75]])))
+            self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([-(i+12), -(i+12)+.5, -(i+12)+.75])])
+
+        tmp = round(len(g)*0.8)
+        tmp2 = round(len(g)*0.2)
+        (g, v) = g.split_validation()
+
+        self.assertEqual(len(g), tmp)
+        for i in range(min(len(u[0])-WINDOW, tmp)):
+            e = g[i]
+            self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+            self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([i+12, i+12.5, i+12.75])])
+        for i in range(tmp-(len(u[0])-WINDOW)):
+            e = g[i+(len(u[0])-WINDOW)]
+            self.assertTrue(np.all(e[0][0] == np.array([[-(i+1), -(i+1)+.5, -(i+10), -(i + 10)+.5, -(i+10)+.75], [-(i+2), -(i+2)+.5, -(i+11), -(i+11)+.5, -(i+11)+.75]])))
+            self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([-(i+12), -(i+12)+.5, -(i+12)+.75])])
+        self.assertEqual(len(v), tmp2)
+        for j in range(tmp2):
+            e = v[j]
+            i = tmp-(len(u[0])-WINDOW) + j
+            self.assertTrue(np.all(e[0][0] == np.array([[-(i+1), -(i+1)+.5, -(i+10), -(i + 10)+.5, -(i+10)+.75], [-(i+2), -(i+2)+.5, -(i+11), -(i+11)+.5, -(i+11)+.75]])))
+            self.assertListEqual(list(e[1]), [(k-z_mean[j])/z_std[j] for j, k in enumerate([-(i+12), -(i+12)+.5, -(i+12)+.75])])
+
+        # SimResult 
+        NUM_ELEMENTS = 10
+        time = list(range(NUM_ELEMENTS))
+        u = [DictLikeMatrixWrapper(['a', 'b'], {'a': i, 'b': i + 0.5}) for i in range(NUM_ELEMENTS)]
+        u = SimResult(time, u)
+        z = [DictLikeMatrixWrapper(['c', 'd', 'e'], {'c': i+10, 'd': i + 10.5, 'e': i+10.75}) for i in range(NUM_ELEMENTS)]
+        z = SimResult(time, z)
+        g = WindowDataGenerator([u], [z], window=WINDOW)
+            
+        self.assertEqual(len(g), len(u)-WINDOW)
+        for i, e in enumerate(g):
+            self.assertTrue(np.all(e[0][0] == np.array([[i+1, i+1.5, i+10, i + 10.5, i+10.75], [i+2, i+2.5, i+11, i+11.5, i+11.75]])))
+            self.assertListEqual(list(e[1]), [i+12, i+12.5, i+12.75])
+        (u_mean, u_std, z_mean, z_std) = g.calculate_normalization()
+    
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
