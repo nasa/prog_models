@@ -75,6 +75,13 @@ def run_example():
     data.outputs.plot(title='original model')
     results2.outputs.plot(title='generated model')
     plt.show()
+    
+    # Note- it doens't actually capture the ending behavior very well. 
+    # This is partially because the training set is only part of the data that we sent.
+    # The last section is used for validation, so this is left out of the training set, 
+    # causing end behavior to not be captured well
+
+    # In the next section, we will have more data, so it will capture the behavior better
 
     # -----------------------------------------------------
     # Example 2- variable timestep 
