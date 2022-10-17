@@ -14,7 +14,7 @@ from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
-
+import json
 
 class PrognosticsModel(ABC):
     """
@@ -768,7 +768,7 @@ class PrognosticsModel(ABC):
         if not isinstance(config['horizon'], Number):
             raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['horizon']))
+            raise ProgModelInputException("'horizon' must be positive, was {}".format(config['horizon']))
         if 'x' in config and not all([state in config['x'] for state in self.states]):
             raise ProgModelInputException("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
@@ -785,13 +785,19 @@ class PrognosticsModel(ABC):
             x = deepcopy(config['x'])
         else:
             x = self.initialize(u, first_output)
+
+        if not isinstance(x, self.StateContainer):
+            x = self.StateContainer(x)
         
         # Optimization
         next_state = self.__next_state
         output = self.__output
         threshold_met_eqn = self.threshold_met
         event_state = self.event_state
+        load_eqn = future_loading_eqn
         progress = config['progress']
+
+        # Threshold Met Equations
         def check_thresholds(thresholds_met):
             t_met = [thresholds_met[key] for key in threshold_keys]
             if len(t_met) > 0 and not np.isscalar(list(t_met)[0]):
@@ -804,7 +810,7 @@ class PrognosticsModel(ABC):
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
         elif len(threshold_keys) == 0:
-            check_thresholds = lambda thresholds_met: False
+            check_thresholds = lambda _: False
 
         # Initialization of save arrays
         saved_times = []
@@ -877,6 +883,37 @@ class PrognosticsModel(ABC):
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
+        # Auto Container wrapping
+        dt0 = next_time(t, x) - t
+        if not isinstance(u, DictLikeMatrixWrapper):
+            # Wrapper around the future loading equation
+            def load_eqn(t, x):
+                u = future_loading_eqn(t, x)
+                return self.InputContainer(u)
+
+        if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
+            # Wrapper around next_state
+            def next_state(x, u, dt):
+                # Calculate next state, and convert
+                x_new = self.next_state(x, u, dt)
+                x_new = self.StateContainer(x_new)
+
+                # Calculate next state and add process noise
+                next_state = self.apply_process_noise(x_new, dt)
+
+                # Apply Limits
+                return self.apply_limits(next_state)
+
+        if not isinstance(self.output(x), DictLikeMatrixWrapper):
+            # Wrapper around the output equation
+            def output(x):
+                # Calculate output, convert to outputcontainer
+                z = self.output(x)
+                z = self.OutputContainer(z)
+
+                # Add measurement noise
+                return self.apply_measurement_noise(z)
+
         # Simulate
         update_all()
         if progress:
@@ -888,7 +925,7 @@ class PrognosticsModel(ABC):
             dx = self.dx
 
             try:
-                dx(x, future_loading_eqn(t, x))
+                dx(x, load_eqn(t, x))
             except ProgModelException:
                 raise ProgModelException("dx(x, u) must be defined to use RK4 method")
 
@@ -917,7 +954,7 @@ class PrognosticsModel(ABC):
             t = t + dt/2
             # Use state at midpoint of step to best represent the load during the duration of the step
             # This is sometimes referred to as 'leapfrog integration'
-            u = future_loading_eqn(t, x)
+            u = load_eqn(t, x)
             t = t + dt/2
             x = next_state(x, u, dt)
 
@@ -1296,3 +1333,80 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
+
+    class CustomEncoder(json.JSONEncoder):
+        """
+        Custom encoder to serialize parameters 
+        """
+        def default(self, o):
+            if isinstance(o, np.ndarray):
+                return {'_original_type': 'ndarray', '_data': o.tolist()}
+            elif isinstance(o, DictLikeMatrixWrapper):
+                dict_temp = {k: v for k, v in o.items()}
+                dict_temp['_original_type'] = 'DictLikeMatrixWrapper'
+                return dict_temp
+            elif isinstance(o,np.bool_):
+                return bool(o) 
+            else: 
+                import pickle
+                from base64 import b64encode
+                pkl_temp = b64encode(pickle.dumps(o))
+                save_temp = {}
+                save_temp['_data'] = pkl_temp.decode()
+                save_temp['_original_type'] = 'pickled'
+                return save_temp
+    
+    def to_json(self):
+        """
+        Serialize parameters as JSON objects 
+
+        Note
+        ----
+        This method only serializes the values of the prognostics model parameters (model.parameters)
+        """
+        parameters_dict = {}
+        for key in self.parameters.keys():
+            parameters_dict[key] = self.parameters[key]
+
+        return json.dumps(parameters_dict, cls=self.CustomEncoder)
+    
+    @classmethod
+    def from_json(cls,data):
+        """
+        Create a new prognostics model from a previously generated model that was serialized as a JSON object
+
+        Args:
+            data: 
+                JSON serialized parameters necessary to build a model 
+                See to_json method 
+
+        Returns:
+            PrognosticsModel: Model generated from serialized parameters 
+
+        Note
+        ----
+        This serialization only works for models that include all parameters necessary to generate the model in model.parameters. 
+        """
+        def custom_decoder(o):
+            """
+            Custom decoder to deserialize parameters 
+            """
+            if isinstance(o,dict) and '_original_type' in o.keys():
+                if o['_original_type'] == 'ndarray':
+                    return np.array(o['_data'])
+                elif o['_original_type'] == 'DictLikeMatrixWrapper':
+                    del o['_original_type']
+                    return DictLikeMatrixWrapper(list(o.keys()),o)
+                elif o['_original_type'] == 'pickled':
+                    import pickle
+                    from base64 import b64decode
+                    pkl_temp1 = o['_data'].encode()
+                    pkl_temp2 = b64decode(pkl_temp1)
+                    return pickle.loads(pkl_temp2)
+                else: 
+                    raise ProgModelException(f"Type {o['_original_type']} not supported by PrognosticsModel json decoder")
+            return o
+
+        extract_parameters = json.loads(data, object_hook = custom_decoder)
+ 
+        return cls(**extract_parameters)

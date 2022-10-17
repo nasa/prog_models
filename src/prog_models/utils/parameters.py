@@ -24,14 +24,13 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}):
+    def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}, _copy: bool = True):
         super().__init__()
         self._m = model
         self.callbacks = {}
         # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
         for (key, value) in dict_in.items():
-            # Deepcopy is needed here to force copying when value is an object (e.g., dict)
-            self[key] = deepcopy(value)
+            self.__setitem__(key, value, _copy=_copy)
 
         # Add and run callbacks
         # Has to be done here so the base parameters are all set 
@@ -42,7 +41,7 @@ class PrognosticsModelParameters(UserDict):
                     changes = callback(self)
                     self.update(changes)
 
-    def __setitem__(self, key : str, value : float) -> None:
+    def __setitem__(self, key : str, value : float, _copy : bool = True) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
@@ -52,6 +51,10 @@ class PrognosticsModelParameters(UserDict):
         Raises:
             ProgModelTypeError: Improper configuration for a model
         """
+        # Deepcopy is needed here to force copying when value is an object (e.g., dict)
+        if _copy:
+            value = deepcopy(value)
+        
         super().__setitem__(key, value)
 
         if key in self.callbacks:

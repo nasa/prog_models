@@ -51,7 +51,7 @@ def run_example():
 
     # Step 3: Build custom model
     print('Building custom model...')
-    (u_all, z_all) = LSTMStateTransitionModel.pre_process_data(input_data, output_data, window=12)
+    (u_all, z_all, _, _) = LSTMStateTransitionModel.pre_process_data(input_data, output_data, window=12)
     
     # Normalize
     n_inputs = len(input_data[0][0])
