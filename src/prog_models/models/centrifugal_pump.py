@@ -60,8 +60,12 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         pAtm : float
             Atmospheric pressure
-        a0, a1, a2 : float
-            empirical coefficients for flow torque eqn
+        a0 : float
+            empirical coefficient for flow torque eqn
+        a1 : float
+            empirical coefficient for flow torque eqn
+        a2 : float
+            empirical coefficient for flow torque eqn
         A : float
             impeller blade area
         b : float
@@ -73,7 +77,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             impeller/shaft/motor lumped inertia
         r : float 
             lumped friction parameter (minus bearing friction)
-        R1, R2 : float
+        R1 : float
+        R2 : float
         L1 : float
         FluidI: float
             Pump fluid inertia
@@ -89,7 +94,11 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         HRadial1, HRadial2 : float
         mcOil : float
         HOil1, HOil2, HOil3 : float
-        wA, wRadial, wThrust : float
+        wA : float
+            Wear rates. See also CentrifugalPumpWithWear
+        wRadial : float
+            Wear rates. See also CentrifugalPumpWithWear
+        wThrust : float
             Wear rates. See also CentrifugalPumpWithWear
         lim : dict
             Parameter limits
