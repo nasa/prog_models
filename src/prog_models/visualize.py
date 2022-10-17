@@ -85,9 +85,9 @@ def set_plot_options(opt : dict) -> dict:
           * 'xlabel'  : string, label for the x-axis. Default is 'time'
           * 'ylabel'  : string, label for the y-axis. Default is 'state'
           * 'title'   : string or empty list or None, plot title. Default is empty list (no title)
-          * 'title_fontsize' : string or float, plot title fontsixe. Default is 'x-large'
+          * 'title_fontsize' : string or float, plot title fontsize. Default is 'x-large'
           * 'suptitle'       : string or empty list or None, plot suptitle. Default is empty list (no suptitle)
-          * 'ticklabel_fontsize' : string or float, tick label font sizes. Defaullt is 'small'
+          * 'ticklabel_fontsize' : string or float, tick label font sizes. Default is 'small'
           * 'tight_layout' : Boolean, whether to use tight layout (minimize figure blank space around the graph)
           * 'display_labels' : string, whether to display x and y-labels in the figure.
           * 'keys' : list of keys to plot. If not provided, all keys in the series are plotted.
