@@ -95,6 +95,10 @@ class ProgModelTemplate(PrognosticsModel):
     def __init__(self, **kwargs):
         """
         Constructor for model
+
+        Note 
+        ----
+        To use the JSON serialization capabilities in to_json and from_json, model.parameters must include everything necessary for initialize, including any keyword arguments.
         """
         # ADD OPTIONS CHECKS HERE
 
