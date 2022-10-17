@@ -1,7 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-# from .. import prognostics_model
 from prog_models import PrognosticsModel
 import math
 import numpy as np
