@@ -434,6 +434,8 @@ class LSTMStateTransitionModel(DataModel):
                 If early stopping is desired. Default is True
             early_stop.cfg (dict):
                 Configuration to pass into early stopping callback (if enabled). See keras documentation (https://keras.io/api/callbacks/early_stopping) for options. E.g., {'patience': 5}
+            workers (int):
+                Number of workers to use when training. One worker indicates no multiprocessing
 
         Returns:
             LSTMStateTransitionModel: Generated Model
@@ -452,7 +454,8 @@ class LSTMStateTransitionModel(DataModel):
             'dropout': 0.1,
             'normalize': True,
             'early_stop': True,
-            'early_stop.cfg': {'patience': 3, 'monitor': 'loss'}
+            'early_stop.cfg': {'patience': 3, 'monitor': 'loss'},
+            'workers': 1
         }.copy()  # Copy is needed to avoid updating default
 
         params.update(LSTMStateTransitionModel.default_params)
@@ -490,6 +493,10 @@ class LSTMStateTransitionModel(DataModel):
             raise TypeError(f"epochs must be an integer greater than 0, not {type(params['epochs'])}")
         if params['epochs'] < 1:
             raise ValueError(f"epochs must be greater than 0, got {params['epochs']}")
+        if not isinstance(params['workers'], int):
+            raise TypeError(f"workers must be positive integer, got {type(params['workers'])}")
+        if params['workers'] < 1:
+            raise ValueError(f"workers must be positive integer, got {params['workers']}")
         if np.isscalar(inputs):  # Is scalar (e.g., SimResult)
             inputs = [inputs]
         if np.isscalar(outputs):
@@ -569,7 +576,7 @@ class LSTMStateTransitionModel(DataModel):
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
-        history = model.fit(u_all, output_data, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'])
+        history = model.fit(data_gen, epochs=params['epochs'], callbacks = callbacks, validation_data = val_data_gen, workers = params['workers'],  use_multiprocessing = params['workers'] > 1)
 
         model = keras.models.load_model("best_model.keras")
 
