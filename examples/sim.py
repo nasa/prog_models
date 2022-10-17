@@ -42,8 +42,8 @@ def run_example():
     # You can also plot the results, for example
     simulated_results.outputs.plot()
 
-    # or 
-    simulated_results.outputs.plot(compact = True, suptitle = 'Outputs', title = 'example title', xlabel = 'time', ylabel = 'output')
+    # or, with configuration
+    simulated_results.outputs.plot(compact = False, suptitle = 'Outputs', title = 'example title', xlabel = 'time', ylabel = 'output')
 
     # Simulate to threshold
     print('\n\n------------------------------------------------')
@@ -67,8 +67,8 @@ def run_example():
 
     if isinstance(batt, BatteryElectroChem):
         # Plotting max current with time
-        # This is the maximum sustainable current that can be
-        # drawn from the battery. It decreases with discharge
+        # This is the maximum sustainable current that can be drawn
+        # from the battery at steady-state. It decreases with discharge
         # This information can be used to inform planning
         pm = [batt.performance_metrics(x)['max_i'][0] for x in simulated_results.states]
         plt.figure()
@@ -80,7 +80,7 @@ def run_example():
     options['integration_method'] = 'rk4'  # Using Runge-Kutta 4th order
     simulated_results_rk4 = batt.simulate_to_threshold(future_loading, **options)
 
-    simulated_results_rk4.outputs.plot()
+    simulated_results_rk4.outputs.plot(compact=False)
 
     plt.show()
 
