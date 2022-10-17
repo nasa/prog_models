@@ -24,7 +24,7 @@ def run_example():
         else:
             t_l = 1e-5 * x['v_rot']**2.0
         return motor.InputContainer({
-            'v': 10.0 + 2.0 * math.sin(2.0 * math.pi * f * t),
+            'v': 10.0 + 2.0 * math.sin(math.tau * f * t),
             't_l': t_l  # assuming constant load (simple)
             })
 
