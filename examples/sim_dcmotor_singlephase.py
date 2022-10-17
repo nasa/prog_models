@@ -6,11 +6,7 @@ Example of a DC motor being simulated for a set amount of time, using the single
 """
 
 from prog_models.models import dcmotor_singlephase
-
 import math
-import matplotlib.pyplot as plt
-import numpy as np
-
 
 def run_example():
 
@@ -18,26 +14,22 @@ def run_example():
     
     def future_loading(t, x=None):
         f = 0.5
-        # load proportional to rotor speed
+        
+        # Simple load proportional to rotor speed. 
+        # This is a typical, hyper-simplified model of a fixed-pitch propeller directly attached to the motor shaft such that the resistant torque
+        # becomes: Cq * omega^2, where Cq is a (assumed to be) constant depending on the propeller profile and omega is the rotor speed.
+        # Since there's no transmission, omega is exactly the speed of the motor shaft.
         if x is None:
             t_l = 0.0
         else:
             t_l = 1e-5 * x['v_rot']**2.0
         return motor.InputContainer({
-            'v': 10.0 + 2.0 * math.sin(math.tau * f * t),
+            'v': 10.0 + 2.0 * math.sin(math.tau * f * t),   # voltage input assumed sinusoidal just to show variations in the input. No physical meaning.
             't_l': t_l  # assuming constant load (simple)
             })
 
     simulated_results = motor.simulate_to(2.0, future_loading, dt=1e-3, save_freq=0.1, print=True)
-
-    current_vals = np.array([simulated_results[2][i]['i'] for i in range(len(simulated_results[2]))])
-    rotorspeed_vals = np.array([simulated_results[2][i]['v_rot'] for i in range(len(simulated_results[2]))])
-    plt.figure()
-    plt.subplot(211)
-    plt.plot(current_vals, '-o')
-    plt.subplot(212)
-    plt.plot(rotorspeed_vals, '-o')
-    plt.show()
+    simulated_results.states.plot(compact=False)
     return
 
 
