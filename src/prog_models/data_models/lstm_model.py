@@ -382,8 +382,8 @@ class LSTMStateTransitionModel(DataModel):
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
         
         # Train model
-        history = model.fit(u_all, output_data, epochs=params['epochs'], callbacks = callbacks, validation_split = params['validation_split'], workers = params['workers'],  use_multiprocessing = params['workers'] > 1)
-
+        history = model.fit(data_gen, epochs=params['epochs'], callbacks = callbacks, validation_data = val_data_gen, workers = params['workers'],  use_multiprocessing = params['workers'] > 1)
+        
         model = keras.models.load_model("best_model.keras")
 
         # Split model into separate models
