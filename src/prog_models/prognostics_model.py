@@ -549,7 +549,7 @@ class PrognosticsModel(ABC):
         threshold_met
         """
         if type(self).threshold_met == PrognosticsModel.threshold_met:
-            # Threshold Met and Event States are both not overridden
+            # Neither Threshold Met nor Event States are overridden
             return {}
         
         return {key: 1.0-float(t_met) \
@@ -588,7 +588,7 @@ class PrognosticsModel(ABC):
         event_state
         """
         if type(self).event_state == PrognosticsModel.event_state:
-            # Threshold Met and Event States are both not overridden
+            # Neither Threshold Met nor Event States are overridden
             return {}
 
         return {key: event_state <= 0 \
