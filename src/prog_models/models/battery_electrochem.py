@@ -5,6 +5,7 @@ from .. import PrognosticsModel
 
 from copy import deepcopy
 import numpy as np
+from scipy.optimize import fsolve
 import warnings
 
 
@@ -126,23 +127,25 @@ def update_v0(params: dict) -> dict:
     # Positive Surface
     Ap = params['Ap']
     xpS = params['x0']['qpS']/params['qSMax']
+    one_minus_xpS = (1 - xpS)
     xpS2 = xpS + xpS
+    xpS2_minus_1 = xpS2 - 1
     VepParts = [
-        Ap[0] *(xpS2-1)/F,  #Vep0
-        Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
-        Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
-        Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
-        Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
-        Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
-        Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
-        Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
-        Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
-        Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
-        Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
-        Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
-        Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+        Ap[0] *(xpS2_minus_1)/F,  #Vep0
+        Ap[1] *((xpS2_minus_1)**2  - (xpS2*one_minus_xpS))/F,  #Vep1 
+        Ap[2] *((xpS2_minus_1)**3  - (4 *xpS*one_minus_xpS)*(xpS2_minus_1)) /F,  #Vep2
+        Ap[3] *((xpS2_minus_1)**4  - (6 *xpS*one_minus_xpS)*(xpS2_minus_1)**(2)) /F,  #Vep3
+        Ap[4] *((xpS2_minus_1)**5  - (8 *xpS*one_minus_xpS)*(xpS2_minus_1)**(3)) /F,  #Vep4
+        Ap[5] *((xpS2_minus_1)**6  - (10*xpS*one_minus_xpS)*(xpS2_minus_1)**(4)) /F,  #Vep5
+        Ap[6] *((xpS2_minus_1)**7  - (12*xpS*one_minus_xpS)*(xpS2_minus_1)**(5)) /F,  #Vep6
+        Ap[7] *((xpS2_minus_1)**8  - (14*xpS*one_minus_xpS)*(xpS2_minus_1)**(6)) /F,  #Vep7
+        Ap[8] *((xpS2_minus_1)**9  - (16*xpS*one_minus_xpS)*(xpS2_minus_1)**(7)) /F,  #Vep8
+        Ap[9] *((xpS2_minus_1)**10 - (18*xpS*one_minus_xpS)*(xpS2_minus_1)**(8)) /F,  #Vep9
+        Ap[10]*((xpS2_minus_1)**11 - (20*xpS*one_minus_xpS)*(xpS2_minus_1)**(9)) /F,  #Vep10
+        Ap[11]*((xpS2_minus_1)**12 - (22*xpS*one_minus_xpS)*(xpS2_minus_1)**(10))/F,  #Vep11
+        Ap[12]*((xpS2_minus_1)**13 - (24*xpS*one_minus_xpS)*(xpS2_minus_1)**(11))/F   #Vep12
     ]
-    Vep = params['U0p'] + R*params['x0']['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+    Vep = params['U0p'] + R*params['x0']['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
 
     return {
         'v0': Vep - Ven - params['x0']['Vo'] - params['x0']['Vsn'] - params['x0']['Vsp']
@@ -192,6 +195,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
     :term:`Outputs<output>`: (2)
         | t: Temperature of battery (°C) 
         | v: Voltage supplied by battery
+
+    :term:`Performance Metrics<performance metric>`: (1)
+        | max_i : The maximum current (amps) that can be sustained before steady-state voltage falls below VEOD. Decreases with discharge 
 
     Keyword Args
     ------------
@@ -270,6 +276,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
+    performance_metric_keys = ['max_i']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
@@ -396,6 +403,67 @@ class BatteryElectroChemEOD(PrognosticsModel):
             np.atleast_1d(qpBdot),
             np.atleast_1d(qpSdot)
         ]))
+
+    def performance_metrics(self, x):
+        params = self.parameters
+        An = params['An']
+        # Negative Surface
+        xnS = x['qnS']/params['qSMax']
+        xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+        one_minus_xnS = 1 - xnS
+        xnS2_minus_1 = xnS2 - 1
+        VenParts = [
+            An[0] *xnS2_minus_1/F,  # Ven0
+            An[1] *(xnS2_minus_1**2  - (xnS2*one_minus_xnS))/F,  # Ven1
+            An[2] *(xnS2_minus_1**3  - (4 *xnS*one_minus_xnS)*xnS2_minus_1)/F,  #Ven2
+            An[3] *(xnS2_minus_1**4  - (6 *xnS*one_minus_xnS)*xnS2_minus_1**2) /F,  #Ven3
+            An[4] *(xnS2_minus_1**5  - (8 *xnS*one_minus_xnS)*xnS2_minus_1**3) /F,  #Ven4
+            An[5] *(xnS2_minus_1**6  - (10*xnS*one_minus_xnS)*xnS2_minus_1**4) /F,  #Ven5
+            An[6] *(xnS2_minus_1**7  - (12*xnS*one_minus_xnS)*xnS2_minus_1**5) /F,  #Ven6
+            An[7] *(xnS2_minus_1**8  - (14*xnS*one_minus_xnS)*xnS2_minus_1**6) /F,  #Ven7
+            An[8] *(xnS2_minus_1**9  - (16*xnS*one_minus_xnS)*xnS2_minus_1**7) /F,  #Ven8
+            An[9] *(xnS2_minus_1**10 - (18*xnS*one_minus_xnS)*xnS2_minus_1**8) /F,  #Ven9
+            An[10]*(xnS2_minus_1**11 - (20*xnS*one_minus_xnS)*xnS2_minus_1**9) /F,  #Ven10
+            An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
+            An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
+        ]
+        Ven = params['U0n'] + R*x['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
+
+        # Positive Surface
+        Ap = params['Ap']
+        xpS = x['qpS']/params['qSMax']
+        one_minus_xpS = 1 - xpS
+        xpS2 = xpS + xpS
+        xpS2_minus_1 = xpS2 - 1
+        VepParts = [
+            Ap[0] *(xpS2_minus_1)/F,  #Vep0
+            Ap[1] *((xpS2_minus_1)**2  - xpS2*one_minus_xpS)/F,  #Vep1 
+            Ap[2] *((xpS2_minus_1)**3  - 4 *xpS*one_minus_xpS*xpS2_minus_1)/F,  #Vep2
+            Ap[3] *((xpS2_minus_1)**4  - 6 *xpS*one_minus_xpS*xpS2_minus_1**2) /F,  #Vep3
+            Ap[4] *((xpS2_minus_1)**5  - 8 *xpS*one_minus_xpS*xpS2_minus_1**3) /F,  #Vep4
+            Ap[5] *((xpS2_minus_1)**6  - 10*xpS*one_minus_xpS*xpS2_minus_1**4) /F,  #Vep5
+            Ap[6] *((xpS2_minus_1)**7  - 12*xpS*one_minus_xpS*xpS2_minus_1**5) /F,  #Vep6
+            Ap[7] *((xpS2_minus_1)**8  - 14*xpS*one_minus_xpS*xpS2_minus_1**6) /F,  #Vep7
+            Ap[8] *((xpS2_minus_1)**9  - 16*xpS*one_minus_xpS*xpS2_minus_1**7) /F,  #Vep8
+            Ap[9] *((xpS2_minus_1)**10 - 18*xpS*one_minus_xpS*xpS2_minus_1**8) /F,  #Vep9
+            Ap[10]*((xpS2_minus_1)**11 - 20*xpS*one_minus_xpS*xpS2_minus_1**9) /F,  #Vep10
+            Ap[11]*((xpS2_minus_1)**12 - 22*xpS*one_minus_xpS*xpS2_minus_1**10)/F,  #Vep11
+            Ap[12]*((xpS2_minus_1)**13 - 24*xpS*one_minus_xpS*xpS2_minus_1**11)/F   #Vep12
+        ]
+        Vep = params['U0p'] + R*x['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
+
+        v_part = R_F*x['tb']/params['alpha']
+        Jp0 = params['kp']*(one_minus_xpS*xpS)**params['alpha']
+        Jn0 = params['kn']*(one_minus_xnS*xnS)**params['alpha']
+
+        C1 = params['Sn']*(2*Jn0)
+        C2 = params['Sp']*(2*Jp0)
+        
+        # Solve for the current that would cause the steady state voltage to hit VEOD
+        def f(i):
+            return Vep - Ven - i*params['Ro'] - v_part*(np.arcsinh(i/C1) + np.arcsinh(i/C2)) - params['VEOD']
+        
+        return {'max_i': fsolve(f, [3])}
         
     def event_state(self, x : dict) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
@@ -430,23 +498,25 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # Positive Surface
         Ap = params['Ap']
         xpS = x['qpS']/params['qSMax']
+        one_minus_xpS = 1 - xpS
         xpS2 = xpS + xpS
+        xpS2_minus_1 = xpS2 - 1
         VepParts = [
-            Ap[0] *(xpS2-1)/F,  #Vep0
-            Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
-            Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
-            Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
-            Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
-            Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
-            Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
-            Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
-            Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
-            Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
-            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
-            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
-            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+            Ap[0] *(xpS2_minus_1)/F,  #Vep0
+            Ap[1] *((xpS2_minus_1)**2  - (xpS2*one_minus_xpS))/F,  #Vep1 
+            Ap[2] *((xpS2_minus_1)**3  - (4 *xpS*one_minus_xpS)*(xpS2_minus_1)) /F,  #Vep2
+            Ap[3] *((xpS2_minus_1)**4  - (6 *xpS*one_minus_xpS)*(xpS2_minus_1)**(2)) /F,  #Vep3
+            Ap[4] *((xpS2_minus_1)**5  - (8 *xpS*one_minus_xpS)*(xpS2_minus_1)**(3)) /F,  #Vep4
+            Ap[5] *((xpS2_minus_1)**6  - (10*xpS*one_minus_xpS)*(xpS2_minus_1)**(4)) /F,  #Vep5
+            Ap[6] *((xpS2_minus_1)**7  - (12*xpS*one_minus_xpS)*(xpS2_minus_1)**(5)) /F,  #Vep6
+            Ap[7] *((xpS2_minus_1)**8  - (14*xpS*one_minus_xpS)*(xpS2_minus_1)**(6)) /F,  #Vep7
+            Ap[8] *((xpS2_minus_1)**9  - (16*xpS*one_minus_xpS)*(xpS2_minus_1)**(7)) /F,  #Vep8
+            Ap[9] *((xpS2_minus_1)**10 - (18*xpS*one_minus_xpS)*(xpS2_minus_1)**(8)) /F,  #Vep9
+            Ap[10]*((xpS2_minus_1)**11 - (20*xpS*one_minus_xpS)*(xpS2_minus_1)**(9)) /F,  #Vep10
+            Ap[11]*((xpS2_minus_1)**12 - (22*xpS*one_minus_xpS)*(xpS2_minus_1)**(10))/F,  #Vep11
+            Ap[12]*((xpS2_minus_1)**13 - (24*xpS*one_minus_xpS)*(xpS2_minus_1)**(11))/F   #Vep12
         ]
-        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
         v = Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
 
         charge_EOD = (x['qnS'] + x['qnB']-params['QEOD'])/(self.parameters['qnMax']-params['QEOD'])
@@ -486,23 +556,25 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # Positive Surface
         Ap = params['Ap']
         xpS = x['qpS']/params['qSMax']
+        one_minus_xpS = 1 - xpS
         xpS2 = xpS + xpS
+        xpS2_minus_1 = xpS2 - 1
         VepParts = [
-            Ap[0] *(xpS2-1)/F,  #Vep0
-            Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
-            Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
-            Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
-            Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
-            Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
-            Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
-            Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
-            Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
-            Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
-            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
-            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
-            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+            Ap[0] *(xpS2_minus_1)/F,  #Vep0
+            Ap[1] *((xpS2_minus_1)**2  - (xpS2*one_minus_xpS))/F,  #Vep1 
+            Ap[2] *((xpS2_minus_1)**3  - (4 *xpS*one_minus_xpS)*(xpS2_minus_1)) /F,  #Vep2
+            Ap[3] *((xpS2_minus_1)**4  - (6 *xpS*one_minus_xpS)*(xpS2_minus_1)**(2)) /F,  #Vep3
+            Ap[4] *((xpS2_minus_1)**5  - (8 *xpS*one_minus_xpS)*(xpS2_minus_1)**(3)) /F,  #Vep4
+            Ap[5] *((xpS2_minus_1)**6  - (10*xpS*one_minus_xpS)*(xpS2_minus_1)**(4)) /F,  #Vep5
+            Ap[6] *((xpS2_minus_1)**7  - (12*xpS*one_minus_xpS)*(xpS2_minus_1)**(5)) /F,  #Vep6
+            Ap[7] *((xpS2_minus_1)**8  - (14*xpS*one_minus_xpS)*(xpS2_minus_1)**(6)) /F,  #Vep7
+            Ap[8] *((xpS2_minus_1)**9  - (16*xpS*one_minus_xpS)*(xpS2_minus_1)**(7)) /F,  #Vep8
+            Ap[9] *((xpS2_minus_1)**10 - (18*xpS*one_minus_xpS)*(xpS2_minus_1)**(8)) /F,  #Vep9
+            Ap[10]*((xpS2_minus_1)**11 - (20*xpS*one_minus_xpS)*(xpS2_minus_1)**(9)) /F,  #Vep10
+            Ap[11]*((xpS2_minus_1)**12 - (22*xpS*one_minus_xpS)*(xpS2_minus_1)**(10))/F,  #Vep11
+            Ap[12]*((xpS2_minus_1)**13 - (24*xpS*one_minus_xpS)*(xpS2_minus_1)**(11))/F   #Vep12
         ]
-        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
 
         return self.OutputContainer(np.array([
             np.atleast_1d(x['tb'] - 273.15),
