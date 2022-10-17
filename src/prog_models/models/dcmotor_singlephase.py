@@ -33,7 +33,9 @@ def update_B(params):
 
 class DCMotorSP(PrognosticsModel):
     """
-    DC single-phase motor model
+    .. versionadded:: 1.4.0
+
+    :term:`Model<model>` of single-phase DC Motor, as defined by the following equations:
 
     d i     1
     ---  = --- * ( V - E - R * i )
