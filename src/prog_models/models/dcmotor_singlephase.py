@@ -116,7 +116,6 @@ class DCMotorSP(PrognosticsModel):
 
     default_parameters = dict(L=83.0e-6,                      # H, self-inductance
                               M=0.0,                          # H, mutual inductance
-                              L1=83.0e-6 - 0.0,               # H, defined as L - M
                               R=0.081,                        # Ohm, armature resistance
                               Kt=0.0265258,                   # V/(rad/s), back emf constant // Nm/A, torque constant
                               Kv=400.0,                       # (rad/s)/V, inverse of Kt
