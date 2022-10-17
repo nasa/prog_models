@@ -186,7 +186,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         | v: Voltage supplied by battery
 
     :term:`Performance Metrics<performance metric>`: (1)
-        | max_i : The maximum current (amps) that can be sustained before voltage falls below VEOD. Decreases with discharge 
+        | max_i : The maximum current (amps) that can be sustained before steady-state voltage falls below VEOD. Decreases with discharge 
 
     Keyword Args
     ------------
