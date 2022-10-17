@@ -86,7 +86,7 @@ class DCMotorSP(PrognosticsModel):
         measurement_noise_dist : Optional, String
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         L : float
-            Inductance (H)
+            Self-inductance (H)
         M: float
             Mutual inductance (H)
         R: float
