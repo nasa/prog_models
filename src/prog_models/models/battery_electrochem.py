@@ -597,7 +597,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
           distribution for measurement noise (e.g., normal, uniform, triangular)
         qMaxThreshold : float
             Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occured. Note: Battery manufacturers specify a threshold of 70-80% of qMax
-        wq, wr, wd : float
+        wq : float
+            Wear rate for qMax, Ro, and D respectively
+        wr : float
+            Wear rate for qMax, Ro, and D respectively
+        wd : float
             Wear rate for qMax, Ro, and D respectively
         x0 : dict[str, float]
             Initial :term:`state`

@@ -52,9 +52,27 @@ class BatteryCircuit(PrognosticsModel):
           Maximum Capacity
         VEOD : float
           End of Discharge Voltage Threshold
-        Cb0, Cbp0, Cbp1, Cbp2, Cbp3 : float 
-          Battery Capacity Parameters
-        Rs, Cs, Rcp0, Rcp1, Rcp2, Ccp : float
+        Cb0 : float 
+          Battery Capacity Parameter
+        Cbp0 : float 
+          Battery Capacity Parameter
+        Cbp1 : float 
+          Battery Capacity Parameter
+        Cbp2 : float 
+          Battery Capacity Parameter
+        Cbp3 : float 
+          Battery Capacity Parameter
+        Rs : float
+          R-C Pair Parameter
+        Cs : float
+          R-C Pair Parameter
+        Rcp0 : float
+          R-C Pair Parameter
+        Rcp1 : float
+          R-C Pair Parameter
+        Rcp2 : float
+          R-C Pair Parameter
+        Ccp : float
           R-C Pair Parameter
         Ta : float
           Ambient Temperature
