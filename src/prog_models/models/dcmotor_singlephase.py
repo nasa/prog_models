@@ -31,8 +31,6 @@ def update_B(params):
     }
 
 
-# CLASS: DC Motor, Single-Phase model
-# ==================================
 class DCMotorSP(PrognosticsModel):
     """
     DC single-phase motor model
