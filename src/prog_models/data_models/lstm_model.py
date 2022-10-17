@@ -1,7 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from itertools import chain
 import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
@@ -11,7 +10,7 @@ from tensorflow.keras import layers
 from warnings import warn
 
 from . import DataModel
-from ..sim_result import SimResult
+from ..utils.window_data_generator import WindowDataGenerator
 
 
 class LSTMStateTransitionModel(DataModel):
@@ -216,181 +215,6 @@ class LSTMStateTransitionModel(DataModel):
         if self.parameters['event_state_model'] is not None:
             print('\nEvent State Model: ', file = file)
             self.parameters['event_state_model'].summary(print_fn= file.write, expand_nested = expand_nested, show_trainable = show_trainable)
-        
-    @staticmethod
-    def pre_process_data(inputs, outputs, event_states=None, t_met = None, window=10, **kwargs):
-        """
-        Pre-process data for the LSTMStateTransitionModel. This is run inside from_data to convert the data into the desired format 
-
-        Args:
-            inputs (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
-            outputs (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
-            event_states (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
-            t_met (List[ndarray or SimulationResult]): Data to be processed. Each element is of format, ndarray or SimulationResult
-            window (int): Length of a single sequence
-
-        Returns:
-            Tuple[ndarray, ndarray]: pre-processed data (input, output). Where input is of size (num_sequences, window, num_inputs) and output is of size (num_sequences, num_outputs)
-        """
-
-        u_all = []
-        z_all = []
-        es_all = []
-        t_all = []
-
-        DataModel.check_data_format(inputs, outputs)
-
-        if event_states is not None and len(inputs) != len(event_states):
-            raise ValueError("Inputs must be same length as event_states")
-
-        for i in range(len(inputs)):
-            # Each item (u, z) is a 1-d array, a 2-d array, or a SimResult
-
-            # Process Input
-            u = inputs[i]
-            if isinstance(u, SimResult):
-                if len(u[0].keys()) == 0:
-                    # No inputs
-                    u = []
-                else:
-                    u = np.array([u_i.matrix[:,0] for u_i in u])
-
-                if len(u) > window:
-                    raise TypeError(f"Not enough data for window size {window}. Only {len(u)} elements present.")
-
-            if isinstance(u, (list, np.ndarray)):
-                if len(u) == 0:
-                    # No inputs
-                    u_i = []
-                elif np.isscalar(u[0]):
-                    # Input is 1-d array (i.e., 1 input)
-                    # Note: 1 is added to account for current time (current input used to predict output at time i)
-                    u_i = [[[u[i+j]] for j in range(1, window+1)] for i in range(len(u)-window)]
-                elif isinstance(u[0], (list, np.ndarray)):
-                    # Input is d-d array
-                    # Note: 1 is added to account for current time (current input used to predict output at time i) 
-                    n_inputs = len(u[0])
-                    u_i = [[[u[i+j][k] for k in range(n_inputs)] for j in range(1,window+1)] for i in range(len(u)-window)]
-                else:
-                    raise TypeError(f"Unsupported input type: {type(u)} for internal element (data[0][i]")  
-            else:
-                raise TypeError(f"Unsupported data type: {type(u)}. input u must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
-
-
-            # Process Output
-            z = outputs[i]
-            if isinstance(z, SimResult):
-                if len(z[0].keys()) == 0:
-                    # No outputs
-                    z = []
-                else:
-                    z = np.array([z_i.matrix[:,0] for z_i in z])
-
-            if isinstance(z, (list, np.ndarray)):
-                if len(z) != len(u) and len(u) != 0 and len(z) != 0:
-                    # Checked here to avoid SimResults from accidentially triggering this check
-                    raise IndexError(f"Number of outputs ({len(z)}) does not match number of inputs ({len(u)})")
-
-                if len(z) == 0:
-                    # No outputs
-                    z_i = []
-                elif np.isscalar(z[0]):
-                    # Output is 1-d array (i.e., 1 output)
-                    z_i = [[z[i]] for i in range(window, len(z))]
-                elif isinstance(z[0], (list, np.ndarray)):
-                    # Input is d-d array
-                    n_outputs = len(z[0])
-                    z_i = [[z[i][k] for k in range(n_outputs)] for i in range(window, len(z))]
-                else:
-                    raise TypeError(f"Unsupported input type: {type(z)} for internal element (output[i])")  
-
-                # Also add to input (past outputs are part of input)
-                z_ii = [[z[i+j] for j in range(window)] for i in range(len(z_i))]
-                # ISSUE- TODO z_ii has too many dimensions
-                if len(u_i) == 0:
-                    u_i = z_ii
-                else:
-                    for k in range(len(z_ii)):
-                        for j in range(window):
-                            u_i[k][j].extend(z_ii[k][j])
-            else:
-                raise TypeError(f"Unsupported data type: {type(z)}. output z must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
-            
-            if event_states is not None:
-                es = event_states[i]
-                if isinstance(es, SimResult):
-                    if len(es[0].keys()) == 0:
-                        # No event_states
-                        es = []
-                    else:
-                        es = np.array([[es_i[key] for key in es_i.keys()] for es_i in es])
-
-                if isinstance(es, (list, np.ndarray)):
-                    if len(es) != len(u) and len(u) != 0 and len(es) != 0:
-                        # Checked here to avoid SimResults from accidentially triggering this check
-                        raise IndexError(f"Number of event_states ({len(es)}) does not match number of inputs ({len(u)})")
-
-                    if len(es) == 0:
-                        # No outputs
-                        es_i = []
-                    elif np.isscalar(es[0]):
-                        # Output is 1-d array (i.e., 1 output)
-                        es_i = [[es[i]] for i in range(window, len(es))]
-                    elif isinstance(es[0], (list, np.ndarray)):
-                        # Input is d-d array
-                        n_events = len(es[0])
-                        es_i = [[es[i][k] for k in range(n_events)] for i in range(window, len(es))]
-                    else:
-                        raise TypeError(f"Unsupported input type: {type(es)} for internal element (es[i])")  
-
-                else:
-                    raise TypeError(f"Unsupported data type: {type(es)}. event state must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
-            else:
-                es_i = []
-
-            if t_met is not None:
-                t = t_met[i]
-                if isinstance(t, SimResult):
-                    if len(t[0].keys()) == 0:
-                        # No event_states
-                        t = []
-                    else:
-                        t = np.array([[t_i[key] for key in t_i.keys()] for t_i in t])
-
-                if isinstance(t, (list, np.ndarray)):
-                    if len(t) != len(u) and len(u) != 0 and len(t) != 0:
-                        # Checked here to avoid SimResults from accidentially triggering this check
-                        raise IndexError(f"Number of t_met ({len(t)}) does not match number of inputs ({len(u)})")
-
-                    if len(t) == 0:
-                        # No outputs
-                        t_i = []
-                    elif np.isscalar(t[0]):
-                        # Output is 1-d array (i.e., 1 output)
-                        t_i = [[1, 0] if t[i] else [0, 1] for i in range(window, len(t))]
-                    elif isinstance(t[0], (list, np.ndarray)):
-                        # Input is d-d array
-                        n_events = len(t[0])
-                        # True = 1, 0; False = 0, 1
-                        t_i = [list(chain.from_iterable((1, 0) if t[i][k] else (0, 1) for k in range(n_events))) for i in range(window, len(t))]
-                    else:
-                        raise TypeError(f"Unsupported input type: {type(t[0])} for internal element (t[i])")  
-
-                else:
-                    raise TypeError(f"Unsupported data type: {type(t)}. t_met must be in format List[Tuple[np.array, np.array]] or List[Tuple[SimResult, SimResult]]")
-            else:
-                t_i = []
-
-            u_all.extend(u_i)
-            z_all.extend(z_i)
-            es_all.extend(es_i)
-            t_all.extend(t_i)
-        
-        u_all = np.array(u_all, dtype=np.float)
-        z_all = np.array(z_all, dtype=np.float)
-        es_all = np.array(es_all, dtype=np.float)
-        t_all = np.array(t_all, dtype=np.float)
-        return (u_all, z_all, es_all, t_all)
 
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, t_met = None, **kwargs):
@@ -505,30 +329,16 @@ class LSTMStateTransitionModel(DataModel):
             raise TypeError(f"normalize must be a boolean, not {type(params['normalize'])}")
 
         # Prepare datasets
-        (u_all, z_all, es_all, t_all) = LSTMStateTransitionModel.pre_process_data(inputs, outputs, event_states = event_states, t_met = t_met, **params)
+        data_gen = WindowDataGenerator(inputs, outputs, event_states = event_states, t_met = t_met, **params)
 
         # Normalize
         if params['normalize']:
-            n_inputs = len(inputs[0][0])
-            u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
-            u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
-            u_std[u_std == 0] = 1
-            z_mean = np.mean(z_all, axis=0)
-            z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
-            z_std[z_std == 0] = 1
-
-            # Add output (since z_t-1 is last input)
-            u_mean = np.hstack((u_mean, z_mean))
-            u_std = np.hstack((u_std, z_std))
-
-            z_all = (z_all - z_mean)/z_std
-
-            # u_mean and u_std act on the column vector form (from inputcontainer)
-            # so we need to transpose them to a column vector
+            (u_mean, u_std, z_mean, z_std) = data_gen.calculate_normalization()
+            data_gen.normalize_outputs(z_mean, z_std)
             params['normalization'] = (z_mean, z_std)
         
+        (data_gen, val_data_gen) = data_gen.split_validation()
+
         # Build model
         callbacks = [
             keras.callbacks.ModelCheckpoint("best_model.keras", save_best_only=True)
@@ -537,7 +347,7 @@ class LSTMStateTransitionModel(DataModel):
         if params['early_stop']:
             callbacks.append(keras.callbacks.EarlyStopping(**params['early_stop.cfg']))
 
-        inputs = keras.Input(shape=u_all.shape[1:])
+        inputs = keras.Input(shape=(data_gen.window, data_gen.n_inputs+data_gen.n_outputs))
         x = inputs
         if params['normalize']:
             x = layers.Normalization(mean = u_mean, variance = u_std**2)(inputs)
@@ -553,24 +363,20 @@ class LSTMStateTransitionModel(DataModel):
             # Dropout prevents overfitting
             x = layers.Dropout(params['dropout'])(x)
 
-        outputs = [layers.Dense(z_all.shape[1] if z_all.ndim == 2 else 1, name='output')(x)]
-        output_data = [z_all]
+        outputs = [layers.Dense(data_gen.n_outputs, name='output')(x)]
         
         if event_states is not None:
-            outputs.append(layers.Dense(es_all.shape[1] if es_all.ndim == 2 else 1, name='event_state')(x))
-            output_data.append(es_all)
+            outputs.append(layers.Dense(data_gen.n_event_states, name='event_state')(x))
         
-        if t_met is not None and t_all.shape[1] > 0:
-            n_events = round(t_all.shape[1]/2)
+        if t_met is not None and data_gen.n_thresholds > 0:
             # Layer for each event
-            t_met_layers = [layers.Dense(2, activation="softmax") for _ in range(n_events)]
+            t_met_layers = [layers.Dense(2, activation="softmax") for _ in range(data_gen.n_thresholds)]
             t_met_layers_output = [layer(x) for layer in t_met_layers]
             if len(t_met_layers) == 1:
                 outputs.append(t_met_layers_output[-1])
             else:
                 # Concatenate layers
                 outputs.append(layers.Concatenate(name='t_met')(t_met_layers_output))
-            output_data.append(t_all)
         
         model = keras.Model(inputs, outputs)
         model.compile(optimizer="rmsprop", loss="mse", metrics=["mae"])
