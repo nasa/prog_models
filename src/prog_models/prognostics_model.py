@@ -542,13 +542,18 @@ class PrognosticsModel(ABC):
 
         Note
         ----
-        Default is to return an empty array (for system models that do not include any events)
+        If not overridden, will return 0.0 if threshold_met returns True, otherwise 1.0. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
         
         See Also
         --------
         threshold_met
         """
-        return {}
+        if type(self).threshold_met == PrognosticsModel.threshold_met:
+            # Neither Threshold Met nor Event States are overridden
+            return {}
+        
+        return {key: 1.0-float(t_met) \
+            for (key, t_met) in self.threshold_met(x).items()} 
     
     def threshold_met(self, x : dict) -> dict:
         """
@@ -576,12 +581,16 @@ class PrognosticsModel(ABC):
 
         Note
         ----
-        If not overwritten, the default behavior is to say the threshold is met if the event state is <= 0
+        If not overridden, will return True if event_state is <= 0, otherwise False. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
         
         See Also
         --------
         event_state
         """
+        if type(self).event_state == PrognosticsModel.event_state:
+            # Neither Threshold Met nor Event States are overridden
+            return {}
+
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
