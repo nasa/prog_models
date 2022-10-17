@@ -548,7 +548,12 @@ class PrognosticsModel(ABC):
         --------
         threshold_met
         """
-        return {}
+        if type(self).threshold_met == PrognosticsModel.threshold_met:
+            # Threshold Met and Event States are both not overridden
+            return {}
+        
+        return {key: 1.0-float(t_met) \
+            for (key, t_met) in self.threshold_met(x).items()} 
     
     def threshold_met(self, x : dict) -> dict:
         """
@@ -582,6 +587,10 @@ class PrognosticsModel(ABC):
         --------
         event_state
         """
+        if type(self).event_state == PrognosticsModel.event_state:
+            # Threshold Met and Event States are both not overridden
+            return {}
+
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
