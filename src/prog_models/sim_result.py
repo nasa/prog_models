@@ -138,8 +138,18 @@ class SimResult(UserList):
         """
         Plot the simresult as a line plot
 
-        Args: 
-            kwargs: Configuration parameters for plot_timeseries
+        Keyword Args: 
+            keys (list[str]): list of keys to plot. If not provided, all keys in the series are plotted.
+            figsize (tuple[float, float]): width and height of the figure
+            compact (bool): whether to plot a "compact" figure. If compact, all time series are displayed in one plot (multiple colored lines)
+            xlabel (str) : label for the x-axis. Default is 'time'
+            ylabel (str) : label for the y-axis. Default is 'state'
+            title (str) : plot title. Default is no title
+            title_fontsize (str or float): plot title fontsize. Default is 'x-large'
+            suptitle (str) : plot suptitle. Default is no suptitle
+            ticklabel_fontsize (str or float): tick label font sizes. Default is 'small'
+            tight_layout (bool): whether to use tight layout (minimize figure blank space around the graph)
+            display_labels (str): whether to display x and y-labels in the figure (['no', 'minimal', 'all'])
 
         Returns:
             Figure
