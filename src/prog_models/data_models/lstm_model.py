@@ -671,7 +671,7 @@ class LSTMStateTransitionModel(DataModel):
         plts = []
         for key in metrics:
             if key[:4] == 'val_':
-                plt.figure(plts[list(metrics).index(key[4:])])
+                plt.figure(plts[list(metrics).index(key[4:])].number)
             else:
                 plts.append(plt.figure())
             plt.plot(self.history.history[key], label = key)
