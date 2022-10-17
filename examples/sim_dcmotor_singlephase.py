@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of a DC motor being simulated for a set amount of time. 
+Example of a DC motor being simulated for a set amount of time, using the single-phase dcmotor model. 
 """
 
 from prog_models.models import dcmotor_singlephase
