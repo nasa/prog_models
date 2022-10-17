@@ -352,6 +352,39 @@ class TestModels(unittest.TestCase):
         t = m.threshold_met({'t': 10})
         self.assertTrue(t['e1'])
 
+    def test_default_es_and_tm(self):
+        # Test 1: TM only
+        class NoES(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1', 'e2']
+
+            def threshold_met(self, _):
+                return {'e1': False, 'e2': True}
+
+        m = NoES()
+
+        self.assertDictEqual(m.threshold_met({}), {'e1': False, 'e2': True})
+        self.assertDictEqual(m.event_state({}), {'e1': 1.0, 'e2': 0.0})
+
+        # Test 2: ES only
+        class NoTM(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1', 'e2']
+
+            def event_state(self, _):
+                return {'e1': 0.0, 'e2': 1.0}
+        
+        m = NoTM()
+
+        self.assertDictEqual(m.threshold_met({}), {'e1': True, 'e2': False})
+        self.assertDictEqual(m.event_state({}), {'e1': 0.0, 'e2': 1.0})
+
+        # Test 3: Neither ES or TM 
+        class NoESTM(MockModel, prognostics_model.PrognosticsModel):
+            events = []
+
+        m = NoESTM()
+        self.assertDictEqual(m.threshold_met({}), {})
+        self.assertDictEqual(m.event_state({}), {})
+
     def test_model_gen(self):
         keys = {
             'states': ['a', 'b', 'c', 't'],

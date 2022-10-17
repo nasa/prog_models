@@ -107,7 +107,10 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             Temperature of supply gas (K)
         gas_gamma, gas_z, gas_R : float
             Supply gas parameters
-        At, Ct, Ab, Cb : float
+        At : float
+        Ct : float
+        Ab : float
+        Cb : float
         AbMax : float
             Max limit for state Aeb
         AtMax : float

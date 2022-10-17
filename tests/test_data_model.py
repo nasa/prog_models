@@ -94,7 +94,7 @@ class TestDataModel(unittest.TestCase):
             'dt': 0.1,
             'save_freq': 0.1,
             'window': 4,
-            'epochs': 60
+            'epochs': 75
         }
 
         # No early stopping 
@@ -142,7 +142,7 @@ class TestDataModel(unittest.TestCase):
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
-        self._test_simple_case(DMDModel, max_error=20)
+        self._test_simple_case(DMDModel, max_error=25)
 
         # Inferring dt
         self._test_simple_case(DMDModel, max_error=8, WITH_DT = False)
