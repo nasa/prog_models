@@ -46,6 +46,8 @@ def load_data(batt_id : str) -> tuple:
     """
     .. versionadded:: 1.3.0
 
+    BATTERY DATA IS CURRENTLY UNAVAILABLE
+
     Loads data for one or more batteries from NASA's PCoE Dataset, '11. Randomized Battery Usage Data Set'
     https://www.nasa.gov/content/prognostics-center-of-excellence-data-set-repository
 
@@ -67,6 +69,7 @@ def load_data(batt_id : str) -> tuple:
     
         In all other instances of connection error or failed downloading, please submit an issue on the repository page (https://github.com/nasa/prog_models/issues) for our team to look into.
     """
+    raise NotImplementedError("Battery data is currently unavailable. Access will be restored in a future release.")
     if isinstance(batt_id, int):
         # Convert to string
         batt_id = 'RW' + str(batt_id)
