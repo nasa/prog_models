@@ -25,7 +25,6 @@ Here is the directory structure for the github repository
 &nbsp;&nbsp; |-`prognostics_model.py` - Physics-based model superclass of degraded system behavior<br />
 &nbsp;&nbsp; |-`sim_result.py` - Class for storing the result of a simulation (used by `prognostics_model`)<br />
 `docs/` - Project documentation<br />
-`sphinx_config/` - Configuration for automatic documentation generation<br />
 `examples/` - Example Python scripts using prog_models<br />
 `tests/` - Tests for prog_models<br />
 `README.md` - The readme (this file)<br />
