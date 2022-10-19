@@ -5,15 +5,16 @@ import unittest
 
 class TestDatasets(unittest.TestCase):
     # Bad URL tests
-    # def test_nasa_battery_bad_url_download(self):
-    #     from prog_models.datasets import nasa_battery
-    #     nasa_battery.urls = {'RW1':"https://BADURLTEST"}
-    #     with self.assertRaises(ConnectionError):
-    #         (desc, data) = nasa_battery.load_data(1)
-    #     # Legit website, but it's not the repos
-    #     nasa_battery.urls = {'RW1':"https://github.com/nasa/prog_models"}
-    #     with self.assertRaises(ConnectionError):
-    #         (desc, data) = nasa_battery.load_data(1)
+    @unittest.skip
+    def test_nasa_battery_bad_url_download(self):
+        from prog_models.datasets import nasa_battery
+        nasa_battery.urls = {'RW1':"https://BADURLTEST"}
+        with self.assertRaises(ConnectionError):
+            (desc, data) = nasa_battery.load_data(1)
+        # Legit website, but it's not the repos
+        nasa_battery.urls = {'RW1':"https://github.com/nasa/prog_models"}
+        with self.assertRaises(ConnectionError):
+            (desc, data) = nasa_battery.load_data(1)
 
     def test_nasa_cmapss_bad_url_download(self):
         from prog_models.datasets import nasa_cmapss
