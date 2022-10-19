@@ -1,8 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from prog_models import PrognosticsModel
 import numpy as np
+
+from prog_models import PrognosticsModel
 
 RAD_TO_DEG = 180/np.pi
 PI2 = 2 * np.pi

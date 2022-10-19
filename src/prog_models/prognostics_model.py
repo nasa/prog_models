@@ -1,20 +1,22 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from typing import Callable, Iterable, List
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from abc import abstractmethod, ABC
-from numbers import Number
-import numpy as np
+from collections import abc, namedtuple
 from copy import deepcopy
 import itertools
+import json
+from numbers import Number
+import numpy as np
+from typing import Callable, Iterable, List
 from warnings import warn
-from collections import abc, namedtuple
+
+from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from .sim_result import SimResult, LazySimResult
 from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
-import json
+
 
 class PrognosticsModel(ABC):
     """

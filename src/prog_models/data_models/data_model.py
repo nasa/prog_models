@@ -3,9 +3,10 @@
 
 from abc import ABC, abstractclassmethod
 import numpy as np
+import sys
 
 from .. import PrognosticsModel
-import sys
+
 
 class DataModel(PrognosticsModel, ABC):
     """

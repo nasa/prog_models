@@ -1,10 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
 from copy import deepcopy
 import numpy as np
 import warnings
+
+from .. import prognostics_model
 
 def calc_x(x : float, forces : float, Ls : float, new_x : float) -> float:
     lower_wall = (x==0 and forces<0) or (new_x<0)
