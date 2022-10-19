@@ -7,7 +7,7 @@ import requests
 import zipfile
 
 cache = None
-URL = "https://ti.arc.nasa.gov/c/6/"
+URL = "https://data.nasa.gov/download/ff5v-kuh6/application%2Fzip"
 
 
 def load_data(dataset_id : int) -> tuple:
