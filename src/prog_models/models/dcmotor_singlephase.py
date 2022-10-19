@@ -6,27 +6,28 @@ import numpy as np
 
 from prog_models import PrognosticsModel
 
-
 # Derived Paramaters
 def update_L1(params):
     return {
         'L1': params['L'] - params['M']
     }
 
-
 def update_Kv(params):
+    # (rad/s)/V, inverse of Kt
     return {
         'Kv':    1.0 / params['Kt']
     }
 
-
 def update_Km(params):
+    # Nm/sqrt(W), motor constant, will be calculated on next line
     return {
         'Km': params['Kt'] / math.sqrt(params['R'])
     }
 
-
 def update_B(params):
+    # Estimate B according to empirical model 0.0051 * Km^1.9485 from:
+    # Jeong et al., Improvement of Electric Propulsion System Model for Performance Analysis of Large-Size Multicopter UAVs. MDPI Applied Sciences.
+    # This paper was for "large multicopter UAVs." 
     return {
         'B': 0.0051 * params['Km']**1.9485
     }
@@ -91,7 +92,7 @@ class DCMotorSP(PrognosticsModel):
         M: float
             Mutual inductance (H)
         R: float
-            Resistance (Ohm)
+            Armature Resistance (Ohm)
         Kt: float
             back emf constant / Torque constant (V/rad/sec)  
         B: float
@@ -114,25 +115,14 @@ class DCMotorSP(PrognosticsModel):
         'Km': [update_B]
         }
 
-    default_parameters = dict(L=83.0e-6,                      # H, self-inductance
-                              M=0.0,                          # H, mutual inductance
-                              R=0.081,                        # Ohm, armature resistance
-                              Kt=0.0265258,                   # V/(rad/s), back emf constant // Nm/A, torque constant
-                              Kv=400.0,                       # (rad/s)/V, inverse of Kt
-                              Km=0.0265258/math.sqrt(0.081),  # Nm/sqrt(W), motor constant, will be calculated on next line
-                              B=0.0051 * (0.0265258/math.sqrt(0.081))**1.9485,  # Nm/(rad/s), friction coefficient. Estimate B according to empirical model 0.0051 * Km^1.9485 from:
-                                                                                # Jeong et al., Improvement of Electric Propulsion System Model for Performance Analysis of Large-Size Multicopter UAVs. MDPI Applied Sciences.
-                                                                                # This paper was for "large multicopter UAVs." 
-                              J=2.69e-5,                      # kg*m^2, rotor inertia
+    default_parameters = dict(L=83.0e-6,
+                              M=0.0,
+                              R=0.081,
+                              Kt=0.0265258,
+                              J=2.69e-5,
                               Jp=1e-4,
-                              motor_weight=0.230,             # kg, total with wires and bullets
-                              x0={'i': 0.0, 'v_rot': 0.0}     # [A, rad/s], initial state values
+                              x0={'i': 0.0, 'v_rot': 0.0}
                               )
-
-    state_limits = {
-        'i': (-math.inf, math.inf),           # undefined -- current can be very high if for a short perior of time. Max current of 38A is for 180s
-        'v_rot': (-math.inf, math.inf),       # upper limit to be defined based on parameters (equivalent to rotor speed at 0 load)
-    }
 
     def dx(self, x: dict, u: dict):
         
