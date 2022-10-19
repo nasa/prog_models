@@ -243,12 +243,37 @@ class WindowDataGenerator(keras.utils.Sequence):
         self.n_thresholds = n_thresholds
 
     def split_validation(self, validation_split = 0.2):
+        """
+        Splits data generator into training and validation data generators
+
+        Args:
+            validation_split (float, optional): Percentage of training data to split out. Defaults to 0.2.
+
+        Returns:
+            tuple[WindowDataGenerator, WindowDataGenerator]: training and validation data generators
+        """
         return (self, WindowDataGenerator(self, validation_split, _validation=True))
 
     def normalize_outputs(self, z_mean, z_std):
+        """
+        Normalize the outputs
+
+        Args:
+            z_mean (np.ndarray): Mean outputs
+            z_std (np.ndarray): Standard deviation of outputs
+        """
         self.z_all = [(z-z_mean)/z_std for z in self.z_all]
 
     def calculate_normalization(self):
+        """
+        Calculate the mean and standard deviations for normalization
+
+        Returns:
+            tuple(np.ndarray, np.ndarray, np.ndarray, np.ndarray): (mean inputs, standard deviation of inputs, mean outputs, standard deviation of outputs)
+
+        Example:
+            (u_mean, u_std, z_mean, z_std) = gen.calculate_normalization()
+        """
         u_in = [u_i[:self.n_inputs] for u in self.u_all for u_i in u]
         u_mean = np.mean(u_in, axis=0)
         u_std = np.std(u_in, axis=0)
