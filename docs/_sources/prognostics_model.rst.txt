@@ -1,6 +1,4 @@
 Prognostics Model
 =======================
 
-.. autoclass:: prog_models.PrognosticsModel
-   :members:
-   :inherited-members:
+Documentation moved to https://nasa.github.io/progpy
