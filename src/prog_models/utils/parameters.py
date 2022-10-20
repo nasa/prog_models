@@ -144,29 +144,21 @@ class PrognosticsModelParameters(UserDict):
     def to_json(self):
         """
         Serialize parameters as JSON objects 
-
-        Note
-        ----
-        This method only serializes the values of the prognostics model parameters (model.parameters)
         """
         return json.dumps(self.data, cls=CustomEncoder)
     
     @classmethod
     def from_json(cls, data):
         """
-        Create a new prognostics model from a previously generated model that was serialized as a JSON object
+        Create a new parameters object from parameters that were serialized as a JSON object
 
         Args:
             data: 
-                JSON serialized parameters necessary to build a model 
+                JSON serialized parameters necessary to build parameters 
                 See to_json method 
 
         Returns:
-            PrognosticsModel: Model generated from serialized parameters 
-
-        Note
-        ----
-        This serialization only works for models that include all parameters necessary to generate the model in model.parameters. 
+            Parameters: Parameters generated from serialized parameters 
         """
 
         extract_parameters = json.loads(data, object_hook = custom_decoder)
