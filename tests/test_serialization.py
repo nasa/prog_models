@@ -7,7 +7,6 @@ from prog_models.models import BatteryElectroChemEOD as Battery
 from prog_models.data_models import DMDModel
 
 class TestSerialization(unittest.TestCase):
-
     def test_serialization_basic(self):
         batt = Battery()
 

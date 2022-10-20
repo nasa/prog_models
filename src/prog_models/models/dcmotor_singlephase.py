@@ -48,17 +48,27 @@ class DCMotorSP(PrognosticsModel):
       dt       Jt
 
     where:
-        i       current, A
-        omega   rotor speed, rad/s
-        V       input voltage, V
-        E       back-emf voltage, V
-        R       armature resistance, Ohm
-        Jt      total inertia (rotor + propeller or load), kg*m^2
-        T_e     driving torque (electrical), Nm
-        T_l     load torque (mechanical), Nm
-        B       friction coefficient, Nm/(rad/s)
-        t       time, s
-    
+
+    * i       current, A
+
+    * :math:`\omega`   rotor speed, rad/s
+
+    * V       input voltage, V
+
+    * E       back-emf voltage, V
+
+    * R       armature resistance, Ohm
+
+    * Jt      total inertia (rotor + propeller or load), kg*m^2
+
+    * :math:`T_e`     driving torque (electrical), Nm
+
+    * :math:`T_l`     load torque (mechanical), Nm
+
+    * B       friction coefficient, Nm/(rad/s)
+
+    * t       time, s
+
     :term:`Events<event>`: (0)
         | None
 
@@ -76,17 +86,17 @@ class DCMotorSP(PrognosticsModel):
     Keyword Args
     ------------
         process_noise : Optional, float or Dict[str, float]
-          :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+            :term:`Process noise<process noise>` (applied at dx/next_state). 
+            Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+            state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, String
-          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+            distribution for :term:`process noise` (e.g., normal, uniform, triangular)
         measurement_noise : Optional, float or Dict[str, float]
-          :term:`Measurement noise<measurement noise>` (applied in output eqn).
-          Can be number (e.g., .2) applied to every output, a dictionary of values for each
-          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+            :term:`Measurement noise<measurement noise>` (applied in output eqn).
+            Can be number (e.g., .2) applied to every output, a dictionary of values for each
+            output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, String
-          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+            distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         L : float
             Self-inductance (H)
         M: float
@@ -101,7 +111,6 @@ class DCMotorSP(PrognosticsModel):
             Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
         x0 : dict[str, float]
             Initial :term:`state`
-
     """
     states  = ['i', 'v_rot']
     inputs  = ['v', 't_l']
