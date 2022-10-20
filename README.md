@@ -46,7 +46,7 @@ C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Py
 
 Alternatively, if using both prog_models and prog_algs, you can cite the combined package as
 
-C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, ProgPy Prognostics Python Packages, v1.4, October 2022. URL https://github.com/nasa/prog_models.
+C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, ProgPy Prognostics Python Packages, v1.4, October 2022. URL https://nasa.github.io/progpy.
 
 ## Contributing Organizations
 ProgPy was created by a partnership of multiple organizations, working together to build a set of high-quality prognostic tools for the wider PHM Community. We would like to give a big thank you for the ProgPy community, especially the following contributing organizations:

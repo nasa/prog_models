@@ -4,11 +4,13 @@
 """
 Example building a custom model with LSTMStateTransitionModel.
 
-For most cases, you will be able to use the standard LSTMStateTransitionModel.from_data class with configuration (see the LSTMStateTransitionModel class for more details). However, sometimes you might want to add custom layers, or other complex components. In that case, you will build a custom model and pass it into LSTMStateTransitionModel.
+.. collapse:: More details
 
-In this example, we generate fake data using the BatteryElectroChemEOD model. This is a case where we're generating a surrogate model from the physics-based model. For cases where you're generating a model from data (e.g., collected from a testbed or a real-world environment), you'll replace that generated data with your own. 
+    For most cases, you will be able to use the standard LSTMStateTransitionModel.from_data class with configuration (see the LSTMStateTransitionModel class for more details). However, sometimes you might want to add custom layers, or other complex components. In that case, you will build a custom model and pass it into LSTMStateTransitionModel.
 
-We build and fit a custom model using keras.layers. Finally, we compare performance to the standard format and the original model.
+    In this example, we generate fake data using the BatteryElectroChemEOD model. This is a case where we're generating a surrogate model from the physics-based model. For cases where you're generating a model from data (e.g., collected from a testbed or a real-world environment), you'll replace that generated data with your own. 
+
+    We build and fit a custom model using keras.layers. Finally, we compare performance to the standard format and the original model.
 """
 
 import matplotlib.pyplot as plt

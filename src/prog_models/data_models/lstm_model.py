@@ -405,7 +405,7 @@ class LSTMStateTransitionModel(DataModel):
             event_states (list[np.array], optional): 
                 list of :term:`event state` data for use in data. Each element is the event state for a single run of size (n_times, n_events)
             t_met (list[np.array], optional): 
-                list of :term:`threshold met` data for use in data. Each element is if the threshold has been met for a single run of size (n_times, n_events) 
+                list of :term:`threshold` met data for use in data. Each element is if the threshold has been met for a single run of size (n_times, n_events) 
 
         Keyword Args:
             window (int): 
@@ -415,7 +415,7 @@ class LSTMStateTransitionModel(DataModel):
             output_keys (list[str]): 
                 List of keys to use to identify :term:`output`. If not supplied z[#] will be used to idenfiy outputs
             event_keys (list[str]):
-                List of keys to use to identify events for :term:`event state` and :term:`threshold met`. If not supplied event[#] will be used to idenfiy events
+                List of keys to use to identify events for :term:`event state` and :term:`threshold` met. If not supplied event[#] will be used to identify events
             validation_percentage (float): 
                 Percentage of data to use for validation, between 0-1
             epochs (int): 
