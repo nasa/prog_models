@@ -3,9 +3,9 @@
 import sys
 import unittest
 
+
 class TestDatasets(unittest.TestCase):
     # Bad URL tests
-    @unittest.skip
     def test_nasa_battery_bad_url_download(self):
         from prog_models.datasets import nasa_battery
         nasa_battery.urls = {'RW1':"https://BADURLTEST"}
