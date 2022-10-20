@@ -6,6 +6,8 @@ import numpy as np
 
 from .containers import DictLikeMatrixWrapper
 
+__all__ = ['CustomEncoder', 'custom_decoder']
+
 class CustomEncoder(json.JSONEncoder):
     """
     Custom encoder to serialize parameters 
