@@ -5,10 +5,10 @@
  Example demonstrating the Paris Law Crack Growth Equation
 """
 
-from prog_models.models.paris_law import ParisLawCrackGrowth 
-import matplotlib.pyplot as plt
 import csv
+import matplotlib.pyplot as plt
 import os
+from prog_models.models.paris_law import ParisLawCrackGrowth 
 
 def run_example(): 
     # Step 1: Create a model object

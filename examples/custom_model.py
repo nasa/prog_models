@@ -15,11 +15,10 @@ Example building a custom model with LSTMStateTransitionModel.
 
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers
-
 from prog_models.data_models import LSTMStateTransitionModel
 from prog_models.models import BatteryElectroChemEOD
+from tensorflow import keras
+from tensorflow.keras import layers
 
 def run_example():
     print('Generating data...')

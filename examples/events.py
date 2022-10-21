@@ -15,6 +15,7 @@ Example further illustrating the concept of 'events' which generalizes EOL.
 
     This example demonstrates how events can be used in your applications. 
 """
+import matplotlib.pyplot as plt
 from prog_models.models import BatteryElectroChemEOD
 
 def run_example():
@@ -85,7 +86,6 @@ def run_example():
 
     # 2c: Plot results
     simulated_results.event_states.plot()
-    import matplotlib.pyplot as plt
     plt.show()
 
 # This allows the module to be executed directly 
