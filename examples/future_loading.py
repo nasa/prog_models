@@ -5,9 +5,10 @@
 Example demonstrating ways to use future loading. 
 """
 
+import matplotlib.pyplot as plt
+from numpy.random import normal
 from prog_models.models import BatteryCircuit
 from statistics import mean
-from numpy.random import normal
 
 def run_example(): 
     m = BatteryCircuit()
@@ -168,7 +169,6 @@ def run_example():
     # In this example future_loading.t has to be updated with current time before each prediction.
 
     # Show plots
-    import matplotlib.pyplot as plt
     plt.show()
 
 # This allows the module to be executed directly 

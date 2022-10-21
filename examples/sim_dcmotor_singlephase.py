@@ -6,7 +6,6 @@ Example of a DC motor being simulated for a set amount of time, using the single
 """
 
 import math
-
 from prog_models.models import dcmotor_singlephase
 
 def run_example():
