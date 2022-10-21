@@ -30,16 +30,15 @@ if __name__ == '__main__':
 
     try:
         # set stdout (so it wont print)
-        _stdout = sys.stdout
         sys.stdout = StringIO()
         
         with patch('matplotlib.pyplot.show'):
-            print("\nExample Runtime: ", timeit(_test_ex, number=10))
+            runtime = timeit(_test_ex, number=10)
+            plt.close('all')
 
-        plt.close('all')
-        
         # Reset stdout 
-        sys.stdout = _stdout
+        sys.stdout = sys.__stdout__
+        print(f"\nExample Runtime: {runtime}")
     except Exception as e:
         print("\Benchmarking Failed: ", e)
         was_successful = False

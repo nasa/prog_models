@@ -32,6 +32,12 @@ def update_B(params):
         'B': 0.0051 * params['Km']**1.9485
     }
 
+def update_J(params):
+    # J is the sum of Jl (load) and Js (shaft)
+    return {
+        'J': params['Jl'] + params['Js']
+    }
+
 
 class DCMotorSP(PrognosticsModel):
     """
@@ -108,7 +114,11 @@ class DCMotorSP(PrognosticsModel):
         B: float
             Friction in motor / Damping (Not a function of thrust) (Nm/(rad/s))
         J: float
-            Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
+            Total load moment of inertia (motor shaft + load) (Kg*m^2) - alternately, you can set these separately as Js and Jl
+        Js: float
+            Moment of inertia of motor shaft (kg*m^2) - one component of J
+        Jl: float
+            Moment of inertia from load (kg*m^2) - one component of J. Note load is whatever the motor is attached to (e.g., propeller, valve, axil, etc.)
         x0 : dict[str, float]
             Initial :term:`state`
     """
@@ -121,15 +131,17 @@ class DCMotorSP(PrognosticsModel):
         'M': [update_L1],
         'R': [update_Km, update_B],
         'Kt': [update_Kv, update_Km, update_B],
-        'Km': [update_B]
+        'Km': [update_B],
+        'Js': [update_J],
+        'Jl': [update_J]
         }
 
     default_parameters = dict(L=83.0e-6,
                               M=0.0,
                               R=0.081,
                               Kt=0.0265258,
-                              J=2.69e-5,
-                              Jp=1e-4,
+                              Js=2.69e-5,
+                              Jl=1e-4,
                               x0={'i': 0.0, 'v_rot': 0.0}
                               )
 
@@ -138,7 +150,7 @@ class DCMotorSP(PrognosticsModel):
         # Get parameters
         parameters     = self.parameters
         friction_coeff = parameters['B']
-        inertia        = parameters['J'] + parameters['Jp']
+        inertia        = parameters['J']
         inductance     = parameters['L']
 
         # Get input

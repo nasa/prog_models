@@ -40,7 +40,7 @@ def run_example():
 
     ## Example 2: Moving Average loading 
     # This is useful in cases where you are running reoccuring simulations, and are measuring the actual load on the system, 
-    # but dont have a good way of predicting it, and you expect loading to be steady
+    # but don't have a good way of predicting it, and you expect loading to be steady
 
     def future_loading(t, x=None):
         return future_loading.load

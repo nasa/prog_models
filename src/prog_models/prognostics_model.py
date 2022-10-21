@@ -30,8 +30,8 @@ class PrognosticsModel(ABC):
     Keyword Args
     ------------
         process_noise : Optional, float or Dict[str, float]
-          :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          :term:`Process noise<process noise>` (applied at dx/next_state).
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, String
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
@@ -41,7 +41,7 @@ class PrognosticsModel(ABC):
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, String
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
-    
+
     Additional parameters specific to the model
 
     Raises
@@ -73,7 +73,7 @@ class PrognosticsModel(ABC):
         performance_metric_keys: List[str], optional
             Identifiers for each performance metric
         events: List[str], optional
-            Identifiers for each :term:`event` predicted 
+            Identifiers for each :term:`event` predicted
         StateContainer : DictLikeMatrixWrapper
             Class for state container - used for representing :term:`state`
         OutputContainer : DictLikeMatrixWrapper
@@ -100,10 +100,10 @@ class PrognosticsModel(ABC):
     # performance_metric_keys = []  # Identifies for each performance metric
     # events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
-      
+
     SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
-    def __init__(self, **kwargs):                
+    def __init__(self, **kwargs):
         # Default params for any model
         params = PrognosticsModel.default_parameters.copy()
 
@@ -123,7 +123,7 @@ class PrognosticsModel(ABC):
         Check if two models are equal
         """
         return self.__class__ == other.__class__ and self.parameters == other.parameters
-    
+
     def __str__(self) -> str:
         return "{} Prognostics Model (Events: {})".format(type(self).__name__, self.events)
 
@@ -131,8 +131,8 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, params : dict) -> None:
-        # This method is called when depickling and in construction. It builds the model from the parameters 
-        
+        # This method is called when depickling and in construction. It builds the model from the parameters
+
         if not hasattr(self, 'inputs'):
             self.inputs = []
         self.n_inputs = len(self.inputs)
@@ -148,7 +148,7 @@ class PrognosticsModel(ABC):
         self.n_states = len(self.states)
 
         if not hasattr(self, 'events'):
-            self.events = []  
+            self.events = []
         self.n_events = len(self.events)
 
         if not hasattr(self, 'outputs'):
@@ -163,28 +163,31 @@ class PrognosticsModel(ABC):
             self.performance_metric_keys = []
         self.n_performance = len(self.performance_metric_keys)
 
-        # Setup Containers 
+        # Setup Containers
         # These containers should be used instead of dictionaries for models that use the internal matrix state
         states = self.states
+
         class StateContainer(DictLikeMatrixWrapper):
             def __init__(self, data):
                 super().__init__(states, data)
         self.StateContainer = StateContainer
 
         inputs = self.inputs
+
         class InputContainer(DictLikeMatrixWrapper):
             def __init__(self, data):
                 super().__init__(inputs, data)
         self.InputContainer = InputContainer
 
         outputs = self.outputs
+
         class OutputContainer(DictLikeMatrixWrapper):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
 
         self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
-    
+
     def initialize(self, u : dict = None, z :dict = None) -> dict:
         """
         Calculate initial state given inputs and outputs. If not defined for a model, it will return parameters['x0']
@@ -223,7 +226,7 @@ class PrognosticsModel(ABC):
         z : dict
             output, with keys defined by model.outputs \n
             e.g., z = {'abc': 332.1, 'def': 221.003} given outputs = ['abc', 'def']
- 
+
         Returns
         -------
         z : dict
@@ -242,8 +245,8 @@ class PrognosticsModel(ABC):
         """
         z.matrix += np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape)
         return z
-        
-    def apply_process_noise(self, x : dict, dt : int =1) -> dict:
+
+    def apply_process_noise(self, x : dict, dt : int = 1) -> dict:
         """
         Apply process noise to the state
 
@@ -267,7 +270,7 @@ class PrognosticsModel(ABC):
         | u = {'u1': 3.2}
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
-        | x = m.apply_process_noise(x) 
+        | x = m.apply_process_noise(x)
 
         Note
         ----
@@ -294,7 +297,7 @@ class PrognosticsModel(ABC):
         dx : dict
             First derivitive of state, with keys defined by model.states \n
             e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
-        
+
         Example
         -------
         | m = DerivProgModel() # Replace with specific model being simulated
@@ -302,7 +305,7 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         | dx = m.dx(x, u) # Returns first derivative of state given input u
-        
+
         See Also
         --------
         next_state
@@ -313,8 +316,8 @@ class PrognosticsModel(ABC):
         and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
         raise ProgModelException('dx not defined - please use next_state()')
-        
-    def next_state(self, x : dict, u : dict, dt : int) -> dict: 
+
+    def next_state(self, x : dict, u : dict, dt : int) -> dict:
         """
         State transition equation: Calculate next state
 
@@ -329,7 +332,6 @@ class PrognosticsModel(ABC):
         dt : number
             Timestep size in seconds (≥ 0) \n
             e.g., dt = 0.1
-        
 
         Returns
         -------
@@ -344,7 +346,7 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         | x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u
-        
+
         See Also
         --------
         dx
@@ -353,7 +355,6 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        
         # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
         if isinstance(x, DictLikeMatrixWrapper) and isinstance(dx, DictLikeMatrixWrapper):
@@ -361,7 +362,7 @@ class PrognosticsModel(ABC):
         elif isinstance(dx, dict) or isinstance(x, dict):
             return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
         else:
-            raise ValueError(f"ValueError: Argument must be of type StateContainer")
+            raise ValueError(f"ValueError: dx return must be of type StateContainer, was {type(dx)}")
 
     def apply_limits(self, x : dict) -> dict:
         """
@@ -388,7 +389,6 @@ class PrognosticsModel(ABC):
                 x[key] = limit[1]
         return x
 
-    
     def __next_state(self, x : dict, u : dict, dt : int) -> dict:
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
@@ -418,7 +418,7 @@ class PrognosticsModel(ABC):
         | z = {'z1': 2.2}
         | x = m.initialize(u, z) # Initialize first state
         | x = m.__next_state(x, u, 0.1) # Returns state, with noise, at 3.1 seconds given input u
-        
+
         See Also
         --------
         next_state
@@ -428,7 +428,6 @@ class PrognosticsModel(ABC):
         A model should not overwrite '__next_state'
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
         """
-        
         # Calculate next state and add process noise
         next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
 
@@ -460,8 +459,8 @@ class PrognosticsModel(ABC):
         | pm = m.performance_metrics(x) # Returns {'tMax':33, 'iMax':19}
         """
         return {}
-    
-    observables = performance_metrics
+
+    observables = performance_metrics  # For backwards compatibility
 
     @abstractmethod
     def output(self, x : dict) -> dict:
@@ -473,7 +472,7 @@ class PrognosticsModel(ABC):
         x : dict
             state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-        
+
         Returns
         -------
         z : dict
@@ -499,7 +498,7 @@ class PrognosticsModel(ABC):
         x : dict
             state, with keys defined by model.states \n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-        
+
         Returns
         -------
         z : dict
@@ -521,14 +520,14 @@ class PrognosticsModel(ABC):
 
     def event_state(self, x : dict) -> dict:
         """
-        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
+        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occurred))
 
         Parameters
         ----------
         x : dict
             state, with keys defined by model.states\n
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-        
+
         Returns
         -------
         event_state : dict
@@ -546,7 +545,7 @@ class PrognosticsModel(ABC):
         Note
         ----
         If not overridden, will return 0.0 if threshold_met returns True, otherwise 1.0. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
-        
+
         See Also
         --------
         threshold_met
@@ -554,7 +553,7 @@ class PrognosticsModel(ABC):
         if type(self).threshold_met == PrognosticsModel.threshold_met:
             # Neither Threshold Met nor Event States are overridden
             return {}
-        
+
         return {key: 1.0-float(t_met) \
             for (key, t_met) in self.threshold_met(x).items()} 
     
@@ -609,7 +608,7 @@ class PrognosticsModel(ABC):
         future_loading_eqn : callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : dict, optional
-            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
+            First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
         options: kwargs, optional
             Configuration options for the simulation \n
             Note: configuration of the model is set through model.parameters \n
@@ -626,7 +625,7 @@ class PrognosticsModel(ABC):
         outputs: [dict]
             Estimated outputs for each time in times
         event_states: [dict]
-            Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
+            Estimated event state (e.g., SOH), between 1-0 where 0 is event occurrence, for each time in times
         
         Raises
         ------
@@ -647,7 +646,6 @@ class PrognosticsModel(ABC):
         | m = PrognosticsModel() # Replace with specific model being simulated
         | (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
         """
-        
         # Input Validation
         if not isinstance(time, Number) or time < 0:
             raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
@@ -688,7 +686,7 @@ class PrognosticsModel(ABC):
         horizon : Number, optional
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : dict, optional
-            First measured output, needed to initialize state for some classes. Can be omitted for classes that dont use this
+            First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
         threshold_keys: List[str] or str, optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
@@ -713,7 +711,7 @@ class PrognosticsModel(ABC):
         outputs: SimResult
             Estimated outputs for each time in times
         event_states: SimResult
-            Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times
+            Estimated event state (e.g., SOH), between 1-0 where 0 is event occurrence, for each time in times
         
         Raises
         ------
@@ -1130,12 +1128,13 @@ class PrognosticsModel(ABC):
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
-            times ([double]): array of times for each sample
-            inputs ([dict]): array of input dictionaries where input[x] corresponds to time[x]
-            outputs ([dict]): array of output dictionaries where output[x] corresponds to time[x]
-            kwargs: Configuration parameters, such as:\n
-             | x0 [dict]: Initial state
-             | dt [double] : time step
+            times (list[float]): array of times for each sample
+            inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
+            outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        
+        Keyword Args:
+            x0 (dict, optional): Initial state
+            dt (double, optional): time step
 
         Returns:
             double: Total error
@@ -1229,7 +1228,7 @@ class PrognosticsModel(ABC):
                     err += self.calc_error(run[0], run[1], run[2], **kwargs)
                 except Exception:
                     return 1e99 
-                    # If it doesn't work (i.e., throws an error), dont use it
+                    # If it doesn't work (i.e., throws an error), don't use it
             return err
         
         params = np.array([self.parameters[key] for key in keys])

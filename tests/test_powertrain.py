@@ -1,10 +1,20 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from io import StringIO
+import sys
 import unittest
+
 from prog_models.models import ESC, DCMotor, Powertrain
 
 
 class TestPowertrain(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+    
     def test_powertrain(self):
         esc = ESC()
         motor = DCMotor()

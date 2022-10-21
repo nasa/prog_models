@@ -512,11 +512,11 @@ class LSTMStateTransitionModel(DataModel):
             n_inputs = len(inputs[0][0])
             u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
             u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
+            # If there's no variation- don't normalize 
             u_std[u_std == 0] = 1
             z_mean = np.mean(z_all, axis=0)
             z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
+            # If there's no variation- don't normalize 
             z_std[z_std == 0] = 1
 
             # Add output (since z_t-1 is last input)

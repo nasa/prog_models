@@ -53,7 +53,7 @@ class DataModel(PrognosticsModel, ABC):
 
     def __setstate__(self, state):
         # Set the state (after un-pickling)
-        # If you use the __getstate__ method format below, you dont have to override setstate
+        # If you use the __getstate__ method format below, you don't have to override setstate
         (args, config) = state
         self.__init__(*args, **config)
 

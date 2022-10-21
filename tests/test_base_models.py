@@ -1,12 +1,18 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from copy import deepcopy
 import io
+import numpy as np
+from os.path import dirname, join
+import pickle
 import sys
 import unittest
-import numpy as np
+
+# This ensures that the directory containing ProgModelTemplate is in the python search directory
+sys.path.append(join(dirname(__file__), ".."))
+
 from prog_models import *
 from prog_models.models import *
-from copy import deepcopy
 
 
 class MockModel():
@@ -105,6 +111,13 @@ class MockModelWithDerived(MockProgModel):
 
 
 class TestModels(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = io.StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+
     def test_non_container(self):
         class MockProgModelStateDict(MockProgModel):
             def next_state(self, x, u, dt):
@@ -617,7 +630,6 @@ class TestModels(unittest.TestCase):
 
     def test_pickle(self):
         m = MockProgModel(p1 = 1.3)
-        import pickle
         pickle.dump(m, open('model_test.pkl', 'wb'))
         m2 = pickle.load(open('model_test.pkl', 'rb'))
         isinstance(m2, MockProgModel)
@@ -813,11 +825,10 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
-        from numpy import array
-        a = array([1, 2, 3, 4, 4.5])
-        b = array([5]*5)
-        c = array([-3.2, -7.4, -11.6, -15.8, -17.9])
-        t = array([0, 0.5, 1, 1.5, 2])
+        a = np.array([1, 2, 3, 4, 4.5])
+        b = np.array([5]*5)
+        c = np.array([-3.2, -7.4, -11.6, -15.8, -17.9])
+        t = np.array([0, 0.5, 1, 1.5, 2])
         dt = 0.5
         x0 = {'a': deepcopy(a), 'b': deepcopy(b), 'c': deepcopy(c), 't': deepcopy(t)}
         x = m.next_state(x0, load(0), dt)
@@ -1317,7 +1328,6 @@ class TestModels(unittest.TestCase):
 
         # Test progress bar matching
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
-        sys.stdout = sys.__stdout__
         capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l][:11]
         percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
         for i in range(len(capture_split)):
@@ -1377,10 +1387,6 @@ def run_tests():
     unittest.main()
     
 def main():
-    # This ensures that the directory containing ProgModelTemplate is in the python search directory
-    from os.path import dirname, join
-    sys.path.append(join(dirname(__file__), ".."))
-
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Base Models")
