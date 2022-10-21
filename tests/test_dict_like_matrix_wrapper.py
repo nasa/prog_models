@@ -1,13 +1,23 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-import unittest
+from io import StringIO
 import numpy as np
+import pickle
+import sys
+import unittest
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models import ProgModelTypeError
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+    
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
         self.assertListEqual(list(c1.values()), [1, 2])
@@ -33,7 +43,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertEqual(c1['b'], -2)
 
         # Pickling
-        import pickle
         c2 = pickle.loads(pickle.dumps(c1))
         self.assertTrue((c2.matrix == np.array([[-1], [-2]])).all())
         self.assertEqual(c2['a'], -1)
@@ -84,7 +93,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
     def test_pickle(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
-        import pickle
         c2 = pickle.loads(pickle.dumps(c1))
         self.assertTrue((c2.matrix == np.array([[1], [2]])).all())
 

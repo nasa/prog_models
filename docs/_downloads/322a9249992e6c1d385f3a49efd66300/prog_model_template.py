@@ -239,7 +239,7 @@ class ProgModelTemplate(PrognosticsModel):
 
     def event_state(self, t, x):
         """
-        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
+        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occurred))
 
         Parameters
         ----------
