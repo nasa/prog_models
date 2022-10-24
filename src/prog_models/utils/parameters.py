@@ -3,11 +3,13 @@
 
 from collections import UserDict
 from copy import deepcopy
+import json
 from numbers import Number
 import types
 from typing import Callable
 
 from .noise_functions import measurement_noise_functions, process_noise_functions
+from .serialization import *
 from ..exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
@@ -139,3 +141,27 @@ class PrognosticsModelParameters(UserDict):
         if key in self:
             updates = callback(self[key])
             self.update(updates)
+
+    def to_json(self):
+        """
+        Serialize parameters as JSON objects 
+        """
+        return json.dumps(self.data, cls=CustomEncoder)
+    
+    @classmethod
+    def from_json(cls, data):
+        """
+        Create a new parameters object from parameters that were serialized as a JSON object
+
+        Args:
+            data: 
+                JSON serialized parameters necessary to build parameters 
+                See to_json method 
+
+        Returns:
+            Parameters: Parameters generated from serialized parameters 
+        """
+
+        extract_parameters = json.loads(data, object_hook = custom_decoder)
+ 
+        return cls(**extract_parameters)
