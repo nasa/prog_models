@@ -4,7 +4,7 @@
 """
 Example demonstrating using matrix input, states, and outputs in models
 
-.. collapse:: More details
+.. dropdown:: More details
 
     This example shows the use of the advanced feature - matrix models. Matrix models represent the state of the system using matricies instead of dictionaries. The provided model.StateContainer, InputContainer, and OutputContainer can be treated as dictionaries but use an underly matrix. This is important for some applications like surrogate and machine-learned models where the state is represented by a tensor, and operations by matrix operations. Simulation functions propogate the state using the matrix form, preventing the inefficiency of having to convert to and from dictionaries.
 

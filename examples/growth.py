@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
- Example demonstrating the Paris Law Crack Growth Equation
+Example demonstrating the Paris Law Crack Growth Equation
 """
 
 import csv

@@ -4,7 +4,7 @@
 """
 Example downloading and using a NASA prognostics dataset.
 
-.. collapse:: More details
+.. dropdown:: More details
 
     In this example, a battery dataset is downloaded from the NASA PCoE data repository. This dataset is then accessed and plotted. 
 """
