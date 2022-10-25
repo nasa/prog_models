@@ -45,19 +45,15 @@ class DCMotorSP(PrognosticsModel):
 
     :term:`Model<model>` of single-phase DC Motor, as defined by the following equations:
 
-    d i     1
-    ---  = --- * ( V - E - R * i )
-    dt      L1
+    .. math:: \dfrac{d_i}{dt} = \dfrac{1}{L1}*(V-E-R*i)
 
-    d omega    1
-    ------- = --- * (T_e - T_l - B * omega)
-      dt       Jt
+    .. math:: \dfrac{d_{\omega}}{dt} = \dfrac{1}{J_t} * (T_e - T_l - B * \omega)
 
     where:
 
     * i       current, A
 
-    * :math:`\omega`   rotor speed, rad/s
+    * :math:`\omega`   rotor speed, :math:`\dfrac{rad}{s}`
 
     * V       input voltage, V
 
@@ -65,15 +61,15 @@ class DCMotorSP(PrognosticsModel):
 
     * R       armature resistance, Ohm
 
-    * Jt      total inertia (rotor + propeller or load), kg*m^2
+    * :math:`J_t`      total inertia (rotor + propeller or load), :math:`kg*m^2`
 
-    * :math:`T_e`     driving torque (electrical), Nm
+    * :math:`T_e`     driving torque (electrical), :math:`N*m`
 
-    * :math:`T_l`     load torque (mechanical), Nm
+    * :math:`T_l`     load torque (mechanical), :math:`N*m`
 
-    * B       friction coefficient, Nm/(rad/s)
+    * B       friction coefficient, :math:`\dfrac{N*m}{rad/s}`
 
-    * t       time, s
+    * t       time, :math:`s`
 
     :term:`Events<event>`: (0)
         | None

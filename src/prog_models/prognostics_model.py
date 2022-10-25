@@ -930,7 +930,7 @@ class PrognosticsModel(ABC):
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
 
-        if config['integration_method'] == 'rk4':
+        if config['integration_method'].lower() == 'rk4':
             # Using RK4 Method
             dx = self.dx
 
@@ -956,7 +956,7 @@ class PrognosticsModel(ABC):
 
                 x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
                 return apply_limits(apply_process_noise(x))
-        elif config['integration_method'] != 'euler':
+        elif config['integration_method'].lower() != 'euler':
             raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
         while t < horizon:

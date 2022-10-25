@@ -31,12 +31,7 @@ class ESC(PrognosticsModel):
     This model replicates the behavior of the speed controller with pulse-width modulation (PWM) and commutation matrix.
     Duty cycle simulated with a square wave using scipy signal.square function. 
 
-    References:
-    Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
-    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
-
-    George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
-    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
+    References: [0]_, [1]_.
 
     This model was developed by NASA's System Wide Safety (SWS) Project. https://www.nasa.gov/aeroresearch/programs/aosp/sws/
 
@@ -78,6 +73,13 @@ class ESC(PrognosticsModel):
             Frequency of PWM signal [Hz], default value in default_parameters.
         x0 : dict[str, float]
             Initial :term:`state`
+
+    References
+    ----------
+    .. [0] Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
+    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
+    .. [1] George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
+    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
     """
     default_parameters = {
         'sawtooth_freq': 16000, # Hz

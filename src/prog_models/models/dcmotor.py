@@ -81,12 +81,7 @@ class DCMotor(PrognosticsModel):
 
     :term:`Model<model>` of DC Motor.
 
-    References:
-    Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
-    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
-
-    George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
-    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
+    References: [0]_, [1]_.
 
     This model was developed by NASA's System Wide Safety (SWS) Project. https://www.nasa.gov/aeroresearch/programs/aosp/sws/
 
@@ -136,6 +131,13 @@ class DCMotor(PrognosticsModel):
             Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
         x0 : dict[str, float]
             Initial :term:`state`
+
+    References
+    ----------
+    .. [0] Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
+    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
+    .. [1] George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
+    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
     """
     states = ['i_a', 'i_b', 'i_c', 'v_rot', 'theta']
     inputs = ['v_a', 'v_b', 'v_c', 't_l']
