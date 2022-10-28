@@ -3,11 +3,32 @@
 
 from setuptools import setup, find_packages
 import pathlib
+import os
 
 here = pathlib.Path(__file__).parent.resolve()
 
 # Get the long description from the README file
 long_description = (here / 'README.md').read_text(encoding='utf-8')
+
+INSTALL_REQS = [
+        'scipy',
+        'pandas',
+        'matplotlib',
+        'requests'
+    ]
+
+import subprocess
+
+try:
+    os.system('sysctl -n machdep.cpu.brand_string')
+    proc = subprocess.Popen('sysctl -n machdep.cpu.brand_string', stdout=subprocess.PIPE, shell=True)
+    (out, err) = proc.communicate()
+    if out.decode('utf-8')[:7] == 'Apple M':
+        INSTALL_REQS.append('tensorflow-macos')
+    else:
+        INSTALL_REQS.append('tensorflow')  
+except:
+    INSTALL_REQS.append('tensorflow')
 
 setup(
     name = 'prog_models',
@@ -38,12 +59,7 @@ setup(
     package_dir = {"":"src"},
     packages = find_packages(where = 'src'),
     python_requires='>=3.7, <3.11',
-    install_requires = [
-        'scipy',
-        'pandas',
-        'matplotlib',
-        'tensorflow'
-    ],
+    install_requires = INSTALL_REQS,
     license = 'NOSA',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/nasa/prog_models/issues',
