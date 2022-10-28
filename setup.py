@@ -14,25 +14,14 @@ INSTALL_REQS = [
         'scipy',
         'pandas',
         'matplotlib',
-        'requests'
+        'requests',
+        "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'",
+        "tensorflow-macos; platform_system=='Darwin' or platform_machine=='arm64'",
     ]
-
-import subprocess
-
-try:
-    os.system('sysctl -n machdep.cpu.brand_string')
-    proc = subprocess.Popen('sysctl -n machdep.cpu.brand_string', stdout=subprocess.PIPE, shell=True)
-    (out, err) = proc.communicate()
-    if out.decode('utf-8')[:7] == 'Apple M':
-        INSTALL_REQS.append('tensorflow-macos')
-    else:
-        INSTALL_REQS.append('tensorflow')  
-except:
-    INSTALL_REQS.append('tensorflow')
 
 setup(
     name = 'prog_models',
-    version = '1.4.0', #pkg_resources.require("prog_models")[0].version,
+    version = '1.4.2', #pkg_resources.require("prog_models")[0].version,
     description = 'The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',
