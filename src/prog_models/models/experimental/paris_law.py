@@ -15,28 +15,28 @@ class ParisLawCrackGrowth(PrognosticsModel):
         CGF :   Crack Growth Fracture 
 
     Inputs/Loading: (2)
-      |k_max :  Maximum crack growth 
-      |k_min :  Minimum crack growth 
+        |k_max :  Maximum crack growth 
+        |k_min :  Minimum crack growth 
 
     States: (1)
-      |c_l :    crack length
+        |c_l :   crack length
   
     Outputs: (1)
-       |c_l :   crack length
+        |c_l :   crack length
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         crack_limit : float
             crack length limit after which the crack growth fracture event is triggered

@@ -39,35 +39,35 @@ class ESC(PrognosticsModel):
         | None
     
     :term:`Inputs/Loading<input>`: (3)
-        | duty :        Duty cycle [-], percentage the input is "on" (i.e., voltage is supplied). 0 = no voltage supply (always closed), 1 = 100% voltage supply (always open).
-        | theta :       rotor position [rad].
-        | v :           voltage [V], voltage input from Battery (after DC converter, should be constant).
+        | duty :        Duty cycle (unitless), percentage the input is "on" (i.e., voltage is supplied). 0 = no voltage supply (always closed), 1 = 100% voltage supply (always open).
+        | theta :       rotor position (rad).
+        | v :           voltage (V), voltage input from Battery (after DC converter, should be constant).
 
     :term:`States<state>`: (4)
-        | v_a :         3-phase voltage value, first phase, [V], input to the motor
-        | v_b :         3-phase voltage value, second phase, [V], input to the motor
-        | v_c :         3-phase voltage value, third phase [V], input to the motor
-        | t :           time value [s].
+        | v_a :         3-phase voltage value, first phase, (V), input to the motor
+        | v_b :         3-phase voltage value, second phase, (V), input to the motor
+        | v_c :         3-phase voltage value, third phase (V), input to the motor
+        | t :           time value (s).
 
     :term:`Outputs<output>`: (4)
-        | v_a :         3-phase voltage value, first phase, [V], input to the motor
-        | v_b :         3-phase voltage value, second phase, [V], input to the motor
-        | v_c :         3-phase voltage value, third phase [V], input to the motor
-        | t :           time value [s].
+        | v_a :         3-phase voltage value, first phase, (V), input to the motor
+        | v_b :         3-phase voltage value, second phase, (V), input to the motor
+        | v_c :         3-phase voltage value, third phase (V), input to the motor
+        | t :           time value (s).
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         sawtooth_freq : float
             Frequency of PWM signal [Hz], default value in default_parameters.

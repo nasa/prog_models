@@ -84,7 +84,7 @@ class DataModel(PrognosticsModel, ABC):
     @classmethod
     def from_model(cls, m: PrognosticsModel, load_functions: list, **kwargs) -> "DataModel":
         """
-        Create a Data Model from an existing PrognosticsModel (i.e., a surrogate model). Generates data through simulation with supplied load functions. Then calls :py:func:`from_data` to generate the model.
+        Create a Data Model from an existing PrognosticsModel (i.e., a :term:`surrogate` model). Generates data through simulation with supplied load functions. Then calls :py:func:`from_data` to generate the model.
 
         Args:
             m (PrognosticsModel): 

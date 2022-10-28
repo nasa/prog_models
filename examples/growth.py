@@ -8,7 +8,7 @@ Example demonstrating the Paris Law Crack Growth Equation
 import csv
 import matplotlib.pyplot as plt
 import os
-from prog_models.models.paris_law import ParisLawCrackGrowth 
+from prog_models.models.experimental.paris_law import ParisLawCrackGrowth 
 
 def run_example(): 
     # Step 1: Create a model object

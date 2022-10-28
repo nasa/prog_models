@@ -148,21 +148,21 @@ class DMDModel(LinearModel, DataModel):
                 list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
 
         Keyword Args:
-            trim_data_to (int, optional): 
+            trim_data_to (float, optional): 
                 Fraction (0-1) of data resulting from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold` used to train DMD surrogate model
                 e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to 100, the surrogate model is trained on the data from t=0 to 70 \n   
                 Note: To trim data to a set time, use the 'horizon' parameter  
-            stability_tol (int, optional):
+            stability_tol (float, optional):
                 Value that determines the tolerance for DMD matrix stability
-            training_noise (int, optional):
-                Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise
-            input_keys (list[str]): 
+            training_noise (float, optional):
+                Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise. Adding noise to the training data results in a slight perturbation that removes any linear dependencies among the data
+            input_keys (list[str], optional): 
                 List of :term:`input` keys
-            state_keys (list[str]): 
+            state_keys (list[str], optional): 
                 List of :term:`state` keys
-            output_keys (list[str]):
+            output_keys (list[str], optional):
                 List of :term:`output` keys
-            event_keys (list[str]):
+            event_keys (list[str], optional):
                 List of :term:`event` keys
         
         Additionally, other keyword arguments from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold`

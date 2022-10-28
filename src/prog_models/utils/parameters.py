@@ -48,7 +48,7 @@ class PrognosticsModelParameters(UserDict):
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
-            key (string): configuration key to set
+            key (str): configuration key to set
             value: value to set that configuration value to
 
         Raises:
@@ -129,7 +129,7 @@ class PrognosticsModelParameters(UserDict):
         """Register a new callback for derived parameters
 
         Args:
-            key (string): key for which the callback is triggered
+            key (str): key for which the callback is triggered
             callback (function): callback function f(parameters) -> updates (dict)
         """
         if key in self.callbacks:

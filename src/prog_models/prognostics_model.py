@@ -29,24 +29,24 @@ class PrognosticsModel(ABC):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state).
           Can be number (e.g., .2) applied to every state, a dictionary of values for each
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
 
     Additional parameters specific to the model
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException
+        ProgModelTypeError, ProgModelInputException, ProgModelException 
 
     Example
     -------
@@ -64,15 +64,15 @@ class PrognosticsModel(ABC):
             Limits on the state variables format {'state_name': (lower_limit, upper_limit)}
         param_callbacks : dict[str, list[function]], optional
             Callbacks for derived parameters
-        inputs: List[str]
+        inputs: list[str]
             Identifiers for each :term:`input`
-        states: List[str]
+        states: list[str]
             Identifiers for each :term:`state`
-        outputs: List[str]
+        outputs: list[str]
             Identifiers for each :term:`output`
-        performance_metric_keys: List[str], optional
+        performance_metric_keys: list[str], optional
             Identifiers for each performance metric
-        events: List[str], optional
+        events: list[str], optional
             Identifiers for each :term:`event` predicted
         StateContainer : DictLikeMatrixWrapper
             Class for state container - used for representing :term:`state`
@@ -255,7 +255,7 @@ class PrognosticsModel(ABC):
         x : StateContainer
             state, with keys defined by model.states \n
             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-        dt : Number, optional
+        dt : float, optional
             Time step (e.g., dt = 0.1)
 
         Returns
@@ -329,7 +329,7 @@ class PrognosticsModel(ABC):
         u : InputContainer
             Inputs, with keys defined by model.inputs \n
             e.g., u = m.InputContainer({'i':3.2}) given inputs = ['i']
-        dt : number
+        dt : float
             Timestep size in seconds (≥ 0) \n
             e.g., dt = 0.1
 
@@ -401,7 +401,7 @@ class PrognosticsModel(ABC):
         u : InputContainer
             Inputs, with keys defined by model.inputs \n
             e.g., u = m.InputContainer({'i':3.2}) given inputs = ['i']
-        dt : number
+        dt : float
             Timestep size in seconds (≥ 0) \n
             e.g., dt = 0.1
 
@@ -604,7 +604,7 @@ class PrognosticsModel(ABC):
 
         Parameters
         ----------
-        time : number
+        time : float
             Time to which the model will be simulated in seconds (≥ 0.0) \n
             e.g., time = 200
         future_loading_eqn : callable
@@ -672,24 +672,24 @@ class PrognosticsModel(ABC):
 
         Keyword Arguments
         -----------------
-        t0 : Number, optional
+        t0 : float, optional
             Starting time for simulation in seconds (default: 0.0) \n
-        dt : Number, tuple, string, or function, optional
-            Number: constant time step (s), e.g. dt = 0.1\n
+        dt : float, tuple, str, or function, optional
+            float: constant time step (s), e.g. dt = 0.1\n
             function (t, x) -> dt\n
-            Tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
-            string: mode - 'auto' or 'constant'\n
-        integration_method: String, optional
+            tuple: (mode, dt), where modes could be constant or auto. If auto, dt is maximum step size\n
+            str: mode - 'auto' or 'constant'\n
+        integration_method: str, optional
             Integration method, e.g. 'rk4' or 'euler' (default: 'euler')
-        save_freq : Number, optional
+        save_freq : float, optional
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
-        save_pts : List[Number], optional
+        save_pts : list[float], optional
             Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
-        horizon : Number, optional
+        horizon : float, optional
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : OutputContainer, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
-        threshold_keys: List[str] or str, optional
+        threshold_keys: list[str] or str, optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
         x : StateContainer, optional
@@ -1183,11 +1183,11 @@ class PrognosticsModel(ABC):
         """Estimate the model parameters given data. Overrides model parameters
 
         Args:
-            runs (array[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
-            keys ([string]): Parameter keys to optimize
+            runs (list[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
+            keys (list[str]): Parameter keys to optimize
         
         Keyword Args: 
-            method (string, optional): Optimization method- see scipy.optimize.minimize for options
+            method (str, optional): Optimization method- see scipy.optimize.minimize for options
             bounds (tuple): Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...)
             options (dict): Options passed to optimizer. see scipy.optimize.minimize for options
 
@@ -1254,13 +1254,13 @@ class PrognosticsModel(ABC):
         load_functions : list of callable functions
             Each index is a callable loading function of (t, x = None) -> z used to predict future loading (output) at a given time (t) and state (x)
         method : str, optional
-            String indicating surrogate modeling method to be used 
+            list[ indicating surrogate modeling method to be used 
 
         Keyword Arguments
         -----------------
-        dt : Number or function, optional
+        dt : float or function, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
-        save_freq : Number, optional
+        save_freq : float, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
         state_keys: list, optional
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
