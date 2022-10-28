@@ -5,8 +5,8 @@
 Example using simulate_to_threshold with vectorized states. In this example we are using the thrown_object model to simulate multiple thrown objects
 """
 
-from prog_models.models.thrown_object import ThrownObject
 from numpy import array, all
+from prog_models.models.thrown_object import ThrownObject
 
 def run_example():
     # Step 1: Setup object

@@ -1,10 +1,21 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-import unittest
-from prog_models.models.pneumatic_valve import PneumaticValve, PneumaticValveWithWear, PneumaticValveBase
+from io import StringIO
 from numpy import array
+import sys
+import unittest
+
+from prog_models.models.pneumatic_valve import PneumaticValve, PneumaticValveWithWear, PneumaticValveBase
+
 
 class TestPneumaticValve(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+
     def test_pneumatic_valve_vectorized(self):
         m = PneumaticValveWithWear(process_noise= 0)    
 

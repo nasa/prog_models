@@ -18,7 +18,7 @@ Optional, Solution that is proposed. Requirement can be met with other solutions
 
 **DoD**
 edit this to be a list of tasks that need to be completed
- - [ ] Implement feture
+ - [ ] Implement feature
  - [ ] Add to example 
  - [ ] Add to tutorial
  - [ ] Add tests 

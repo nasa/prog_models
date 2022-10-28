@@ -106,3 +106,7 @@ model_test.pkl
 battery123.cfg
 
 dataset_1.pkl
+
+*.keras
+
+.VSCodeCounter/

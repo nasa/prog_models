@@ -1,10 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import PrognosticsModel
-
 from math import inf
 import numpy as np
+
+from .. import PrognosticsModel
 
 
 class BatteryCircuit(PrognosticsModel):
@@ -52,9 +52,27 @@ class BatteryCircuit(PrognosticsModel):
           Maximum Capacity
         VEOD : float
           End of Discharge Voltage Threshold
-        Cb0, Cbp0, Cbp1, Cbp2, Cbp3 : float 
-          Battery Capacity Parameters
-        Rs, Cs, Rcp0, Rcp1, Rcp2, Ccp : float
+        Cb0 : float 
+          Battery Capacity Parameter
+        Cbp0 : float 
+          Battery Capacity Parameter
+        Cbp1 : float 
+          Battery Capacity Parameter
+        Cbp2 : float 
+          Battery Capacity Parameter
+        Cbp3 : float 
+          Battery Capacity Parameter
+        Rs : float
+          R-C Pair Parameter
+        Cs : float
+          R-C Pair Parameter
+        Rcp0 : float
+          R-C Pair Parameter
+        Rcp1 : float
+          R-C Pair Parameter
+        Rcp2 : float
+          R-C Pair Parameter
+        Ccp : float
           R-C Pair Parameter
         Ta : float
           Ambient Temperature
@@ -119,9 +137,6 @@ class BatteryCircuit(PrognosticsModel):
         'qb': (0, inf)
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def dx(self, x : dict, u : dict):
         # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         parameters = self.parameters
@@ -144,10 +159,10 @@ class BatteryCircuit(PrognosticsModel):
         ics = ib - Vcs/Rs
 
         return self.StateContainer(np.array([
-            [Tbdot],  # tb
-            [-ib],    # qb
-            [icp],    # qcp
-            [ics]     # qcs
+            np.atleast_1d(Tbdot),  # tb
+            np.atleast_1d(-ib),    # qb
+            np.atleast_1d(icp),    # qcp
+            np.atleast_1d(ics)     # qcs
         ]))
     
     def event_state(self, x : dict) -> dict:
@@ -175,8 +190,8 @@ class BatteryCircuit(PrognosticsModel):
         Vb = x['qb']/Cb
 
         return self.OutputContainer(np.array([
-            [x['tb']],            # t
-            [Vb - Vcp - Vcs]]))   # v
+            np.atleast_1d(x['tb']),            # t
+            np.atleast_1d(Vb - Vcp - Vcs)]))   # v
 
     def threshold_met(self, x : dict) -> dict:
         parameters = self.parameters

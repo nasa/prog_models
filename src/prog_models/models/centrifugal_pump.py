@@ -1,17 +1,16 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
-
 from copy import deepcopy
 import numpy as np
 import warnings
 
+from .. import prognostics_model
+
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics :term:`model` for a Centrifugal Pump as described in the following paper:
-    `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
+    Prognostics :term:`model` for a Centrifugal Pump as described in [0]_.
 
     :term:`Events<event>`: (4)
         | ImpellerWearFailure: Failure of the impeller due to wear
@@ -60,8 +59,12 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         pAtm : float
             Atmospheric pressure
-        a0, a1, a2 : float
-            empirical coefficients for flow torque eqn
+        a0 : float
+            empirical coefficient for flow torque eqn
+        a1 : float
+            empirical coefficient for flow torque eqn
+        a2 : float
+            empirical coefficient for flow torque eqn
         A : float
             impeller blade area
         b : float
@@ -73,7 +76,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             impeller/shaft/motor lumped inertia
         r : float 
             lumped friction parameter (minus bearing friction)
-        R1, R2 : float
+        R1 : float
+        R2 : float
         L1 : float
         FluidI: float
             Pump fluid inertia
@@ -89,7 +93,11 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         HRadial1, HRadial2 : float
         mcOil : float
         HOil1, HOil2, HOil3 : float
-        wA, wRadial, wThrust : float
+        wA : float
+            Wear rates. See also CentrifugalPumpWithWear
+        wRadial : float
+            Wear rates. See also CentrifugalPumpWithWear
+        wThrust : float
             Wear rates. See also CentrifugalPumpWithWear
         lim : dict
             Parameter limits
@@ -99,6 +107,10 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     See Also
     --------
     CentrifugalPumpWithWear
+
+    References
+    ----------
+    .. [0] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
     """
     events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
@@ -221,15 +233,15 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
         return self.StateContainer(np.array([
-            [x['w'] + wdot * dt],
-            [x['Q'] + Qdot * dt],
-            [x['Tt'] + Ttdot * dt],
-            [x['Tr'] + Trdot * dt],
-            [x['To'] + Todot * dt],
-            [x['A'] + Adot * dt],
-            [x['rRadial'] + rRadialdot * dt],
-            [x['rThrust'] + rThrustdot * dt],
-            [QLeak]
+            np.atleast_1d(x['w'] + wdot * dt),
+            np.atleast_1d(x['Q'] + Qdot * dt),
+            np.atleast_1d(x['Tt'] + Ttdot * dt),
+            np.atleast_1d(x['Tr'] + Trdot * dt),
+            np.atleast_1d(x['To'] + Todot * dt),
+            np.atleast_1d(x['A'] + Adot * dt),
+            np.atleast_1d(x['rRadial'] + rRadialdot * dt),
+            np.atleast_1d(x['rThrust'] + rThrustdot * dt),
+            np.atleast_1d(QLeak)
         ]))
 
     def output(self, x : dict):
@@ -271,8 +283,7 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     """
     Prognostics :term:`model` for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states
 
-    This class implements a Centrifugal Pump model as described in the following paper:
-    `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
+    This class implements a Centrifugal Pump model as described in [0]_.
 
     :term:`Events<event>`: (4) 
         See CentrifugalPumpBase
@@ -295,6 +306,10 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     See Also
     --------
     CentrifugalPumpBase
+
+    References
+    ----------
+    .. [0] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
     """
     inputs = CentrifugalPumpBase.inputs
     outputs = CentrifugalPumpBase.outputs
@@ -324,9 +339,9 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
 
         next_x.matrix = np.vstack((next_x.matrix, np.array([
-            [x['wA']],
-            [x['wRadial']],
-            [x['wThrust']]
+            np.atleast_1d(x['wA']),
+            np.atleast_1d(x['wRadial']),
+            np.atleast_1d(x['wThrust'])
         ])))
         return next_x
 

@@ -1,10 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from typing import Union
-from ..exceptions import ProgModelTypeError
-
 import numpy as np
+from typing import Union
+
+from ..exceptions import ProgModelTypeError
 
 
 class DictLikeMatrixWrapper():
@@ -23,9 +23,14 @@ class DictLikeMatrixWrapper():
         if isinstance(data, np.matrix):
             self.matrix = np.array(data, dtype=np.float64)
         elif isinstance(data, np.ndarray):
+            if data.ndim == 1:
+                data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            self.matrix = np.array([[data[key]] for key in keys], dtype=np.float64)
+            self.matrix = np.array(
+                [
+                    [data[key]] if key in data else [None] for key in keys
+                ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
 
@@ -33,7 +38,10 @@ class DictLikeMatrixWrapper():
         return (DictLikeMatrixWrapper, (self._keys, self.matrix))
 
     def __getitem__(self, key : str) -> int:
-        return self.matrix[self._keys.index(key)][0]
+        row = self.matrix[self._keys.index(key)]
+        if len(row) == 1:
+            return self.matrix[self._keys.index(key)][0]
+        return self.matrix[self._keys.index(key)]
 
     def __setitem__(self, key : str, value : int) -> None:
         self.matrix[self._keys.index(key)] = np.atleast_1d(value)
@@ -69,10 +77,14 @@ class DictLikeMatrixWrapper():
         return self._keys
 
     def values(self) -> np.array:
-        return np.array([value[0] for value in self.matrix])
+        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
+            return np.array([value[0] for value in self.matrix])
+        return self.matrix
 
     def items(self) -> zip:
-        return zip(self._keys, np.array([value[0] for value in self.matrix]))
+        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
+            return zip(self._keys, np.array([value[0] for value in self.matrix]))
+        return zip(self._keys, self.matrix)
 
     def update(self, other : "DictLikeMatrixWrapper") -> None:
         for key in other.keys():
@@ -88,4 +100,6 @@ class DictLikeMatrixWrapper():
         return key in self._keys
 
     def __repr__(self) -> str:
-        return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
+        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
+            return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
+        return str(dict(zip(self._keys, self.matrix)))

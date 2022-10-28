@@ -1,12 +1,12 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import PrognosticsModel
-
 from copy import deepcopy
 import numpy as np
+from scipy.optimize import fsolve
 import warnings
 
+from .. import PrognosticsModel
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -93,6 +93,63 @@ def update_qnSBmax(params : dict) -> dict:
         }
     }
 
+def update_v0(params: dict) -> dict:
+    # update the initial voltage 
+
+    if 'qnS' not in params['x0']:
+        # qnS not yet set
+        return {}
+
+    An = params['An']
+    # Negative Surface
+    xnS = params['x0']['qnS']/params['qSMax']
+    xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+    one_minus_xnS = 1 - xnS
+    xnS2_minus_1 = xnS2 - 1
+    VenParts = [
+        An[0] *xnS2_minus_1/F,  # Ven0
+        An[1] *(xnS2_minus_1**2  - (xnS2*one_minus_xnS))/F,  # Ven1
+        An[2] *(xnS2_minus_1**3  - (4 *xnS*one_minus_xnS)*xnS2_minus_1)/F,  #Ven2
+        An[3] *(xnS2_minus_1**4  - (6 *xnS*one_minus_xnS)*xnS2_minus_1**2) /F,  #Ven3
+        An[4] *(xnS2_minus_1**5  - (8 *xnS*one_minus_xnS)*xnS2_minus_1**3) /F,  #Ven4
+        An[5] *(xnS2_minus_1**6  - (10*xnS*one_minus_xnS)*xnS2_minus_1**4) /F,  #Ven5
+        An[6] *(xnS2_minus_1**7  - (12*xnS*one_minus_xnS)*xnS2_minus_1**5) /F,  #Ven6
+        An[7] *(xnS2_minus_1**8  - (14*xnS*one_minus_xnS)*xnS2_minus_1**6) /F,  #Ven7
+        An[8] *(xnS2_minus_1**9  - (16*xnS*one_minus_xnS)*xnS2_minus_1**7) /F,  #Ven8
+        An[9] *(xnS2_minus_1**10 - (18*xnS*one_minus_xnS)*xnS2_minus_1**8) /F,  #Ven9
+        An[10]*(xnS2_minus_1**11 - (20*xnS*one_minus_xnS)*xnS2_minus_1**9) /F,  #Ven10
+        An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
+        An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
+    ]
+    Ven = params['U0n'] + R*params['x0']['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
+
+    # Positive Surface
+    Ap = params['Ap']
+    xpS = params['x0']['qpS']/params['qSMax']
+    one_minus_xpS = (1 - xpS)
+    xpS2 = xpS + xpS
+    xpS2_minus_1 = xpS2 - 1
+    VepParts = [
+        Ap[0] *(xpS2_minus_1)/F,  #Vep0
+        Ap[1] *((xpS2_minus_1)**2  - (xpS2*one_minus_xpS))/F,  #Vep1 
+        Ap[2] *((xpS2_minus_1)**3  - (4 *xpS*one_minus_xpS)*(xpS2_minus_1)) /F,  #Vep2
+        Ap[3] *((xpS2_minus_1)**4  - (6 *xpS*one_minus_xpS)*(xpS2_minus_1)**(2)) /F,  #Vep3
+        Ap[4] *((xpS2_minus_1)**5  - (8 *xpS*one_minus_xpS)*(xpS2_minus_1)**(3)) /F,  #Vep4
+        Ap[5] *((xpS2_minus_1)**6  - (10*xpS*one_minus_xpS)*(xpS2_minus_1)**(4)) /F,  #Vep5
+        Ap[6] *((xpS2_minus_1)**7  - (12*xpS*one_minus_xpS)*(xpS2_minus_1)**(5)) /F,  #Vep6
+        Ap[7] *((xpS2_minus_1)**8  - (14*xpS*one_minus_xpS)*(xpS2_minus_1)**(6)) /F,  #Vep7
+        Ap[8] *((xpS2_minus_1)**9  - (16*xpS*one_minus_xpS)*(xpS2_minus_1)**(7)) /F,  #Vep8
+        Ap[9] *((xpS2_minus_1)**10 - (18*xpS*one_minus_xpS)*(xpS2_minus_1)**(8)) /F,  #Vep9
+        Ap[10]*((xpS2_minus_1)**11 - (20*xpS*one_minus_xpS)*(xpS2_minus_1)**(9)) /F,  #Vep10
+        Ap[11]*((xpS2_minus_1)**12 - (22*xpS*one_minus_xpS)*(xpS2_minus_1)**(10))/F,  #Vep11
+        Ap[12]*((xpS2_minus_1)**13 - (24*xpS*one_minus_xpS)*(xpS2_minus_1)**(11))/F   #Vep12
+    ]
+    Vep = params['U0p'] + R*params['x0']['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
+
+    return {
+        'v0': Vep - Ven - params['x0']['Vo'] - params['x0']['Vsn'] - params['x0']['Vsp']
+    }
+
 def update_qSBmax(params : dict) -> dict:
     # max charge at surface, bulk (pos and neg)
     return {
@@ -103,10 +160,9 @@ def update_qSBmax(params : dict) -> dict:
 
 class BatteryElectroChemEOD(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in the following paper:
-    `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`. This model predicts the end of discharge event. 
+    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in [0]_. This model predicts the end of discharge event. 
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [1]_.
 
     :term:`Events<event>`: (1)
         EOD: End of Discharge
@@ -127,6 +183,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
     :term:`Outputs<output>`: (2)
         | t: Temperature of battery (°C) 
         | v: Voltage supplied by battery
+
+    :term:`Performance Metrics<performance metric>`: (1)
+        | max_i : The maximum current (amps) that can be sustained before steady-state voltage falls below VEOD. Decreases with discharge 
 
     Keyword Args
     ------------
@@ -175,9 +234,13 @@ class BatteryElectroChemEOD(PrognosticsModel):
             for surface overpotential (neg)
         tsp : float
             for surface overpotential (pos)
-        U0p, Ap : float
+        U0p : float
             Redlich-Kister parameter (+ electrode)
-        U0n, An : float
+        Ap : float
+            Redlich-Kister parameter (+ electrode)
+        U0n : float
+            Redlich-Kister parameter (- electrode)
+        An : float
             Redlich-Kister parameter (- electrode)
         VEOD : float
             End of Discharge Voltage Threshold
@@ -187,11 +250,17 @@ class BatteryElectroChemEOD(PrognosticsModel):
     See Also
     --------
     BatteryElectroChemEOL, BatteryElectroChem, BatteryElectroChemEODEOL
+
+    References 
+    -------------
+     .. [0] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
+     .. [1] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'Vo', 'Vsn', 'Vsp', 'qnB', 'qnS', 'qpB', 'qpS']
     outputs = ['t', 'v']
+    performance_metric_keys = ['max_i']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
@@ -258,9 +327,6 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def dx(self, x : dict, u : dict):
         params = self.parameters
         # Negative Surface
@@ -305,15 +371,76 @@ class BatteryElectroChemEOD(PrognosticsModel):
         Tbdot = voltage_eta*u['i']/mC + (params['x0']['tb'] - x['tb'])/tau # Newman
 
         return self.StateContainer(np.array([
-            [Tbdot],
-            [Vodot],
-            [Vsndot],
-            [Vspdot],
-            [qnBdot],
-            [qnSdot],
-            [qpBdot],
-            [qpSdot]
+            np.atleast_1d(Tbdot),
+            np.atleast_1d(Vodot),
+            np.atleast_1d(Vsndot),
+            np.atleast_1d(Vspdot),
+            np.atleast_1d(qnBdot),
+            np.atleast_1d(qnSdot),
+            np.atleast_1d(qpBdot),
+            np.atleast_1d(qpSdot)
         ]))
+
+    def performance_metrics(self, x):
+        params = self.parameters
+        An = params['An']
+        # Negative Surface
+        xnS = x['qnS']/params['qSMax']
+        xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+        one_minus_xnS = 1 - xnS
+        xnS2_minus_1 = xnS2 - 1
+        VenParts = [
+            An[0] *xnS2_minus_1/F,  # Ven0
+            An[1] *(xnS2_minus_1**2  - (xnS2*one_minus_xnS))/F,  # Ven1
+            An[2] *(xnS2_minus_1**3  - (4 *xnS*one_minus_xnS)*xnS2_minus_1)/F,  #Ven2
+            An[3] *(xnS2_minus_1**4  - (6 *xnS*one_minus_xnS)*xnS2_minus_1**2) /F,  #Ven3
+            An[4] *(xnS2_minus_1**5  - (8 *xnS*one_minus_xnS)*xnS2_minus_1**3) /F,  #Ven4
+            An[5] *(xnS2_minus_1**6  - (10*xnS*one_minus_xnS)*xnS2_minus_1**4) /F,  #Ven5
+            An[6] *(xnS2_minus_1**7  - (12*xnS*one_minus_xnS)*xnS2_minus_1**5) /F,  #Ven6
+            An[7] *(xnS2_minus_1**8  - (14*xnS*one_minus_xnS)*xnS2_minus_1**6) /F,  #Ven7
+            An[8] *(xnS2_minus_1**9  - (16*xnS*one_minus_xnS)*xnS2_minus_1**7) /F,  #Ven8
+            An[9] *(xnS2_minus_1**10 - (18*xnS*one_minus_xnS)*xnS2_minus_1**8) /F,  #Ven9
+            An[10]*(xnS2_minus_1**11 - (20*xnS*one_minus_xnS)*xnS2_minus_1**9) /F,  #Ven10
+            An[11]*(xnS2_minus_1**12 - (22*xnS*one_minus_xnS)*xnS2_minus_1**10)/F,  #Ven11
+            An[12]*(xnS2_minus_1**13 - (24*xnS*one_minus_xnS)*xnS2_minus_1**11)/F   #Ven12
+        ]
+        Ven = params['U0n'] + R*x['tb']/F*np.log(one_minus_xnS/xnS) + sum(VenParts)
+
+        # Positive Surface
+        Ap = params['Ap']
+        xpS = x['qpS']/params['qSMax']
+        one_minus_xpS = 1 - xpS
+        xpS2 = xpS + xpS
+        xpS2_minus_1 = xpS2 - 1
+        VepParts = [
+            Ap[0] *(xpS2_minus_1)/F,  #Vep0
+            Ap[1] *((xpS2_minus_1)**2  - xpS2*one_minus_xpS)/F,  #Vep1 
+            Ap[2] *((xpS2_minus_1)**3  - 4 *xpS*one_minus_xpS*xpS2_minus_1)/F,  #Vep2
+            Ap[3] *((xpS2_minus_1)**4  - 6 *xpS*one_minus_xpS*xpS2_minus_1**2) /F,  #Vep3
+            Ap[4] *((xpS2_minus_1)**5  - 8 *xpS*one_minus_xpS*xpS2_minus_1**3) /F,  #Vep4
+            Ap[5] *((xpS2_minus_1)**6  - 10*xpS*one_minus_xpS*xpS2_minus_1**4) /F,  #Vep5
+            Ap[6] *((xpS2_minus_1)**7  - 12*xpS*one_minus_xpS*xpS2_minus_1**5) /F,  #Vep6
+            Ap[7] *((xpS2_minus_1)**8  - 14*xpS*one_minus_xpS*xpS2_minus_1**6) /F,  #Vep7
+            Ap[8] *((xpS2_minus_1)**9  - 16*xpS*one_minus_xpS*xpS2_minus_1**7) /F,  #Vep8
+            Ap[9] *((xpS2_minus_1)**10 - 18*xpS*one_minus_xpS*xpS2_minus_1**8) /F,  #Vep9
+            Ap[10]*((xpS2_minus_1)**11 - 20*xpS*one_minus_xpS*xpS2_minus_1**9) /F,  #Vep10
+            Ap[11]*((xpS2_minus_1)**12 - 22*xpS*one_minus_xpS*xpS2_minus_1**10)/F,  #Vep11
+            Ap[12]*((xpS2_minus_1)**13 - 24*xpS*one_minus_xpS*xpS2_minus_1**11)/F   #Vep12
+        ]
+        Vep = params['U0p'] + R*x['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
+
+        v_part = R_F*x['tb']/params['alpha']
+        Jp0 = params['kp']*(one_minus_xpS*xpS)**params['alpha']
+        Jn0 = params['kn']*(one_minus_xnS*xnS)**params['alpha']
+
+        C1 = params['Sn']*(2*Jn0)
+        C2 = params['Sp']*(2*Jp0)
+        
+        # Solve for the current that would cause the steady state voltage to hit VEOD
+        def f(i):
+            return Vep - Ven - i*params['Ro'] - v_part*(np.arcsinh(i/C1) + np.arcsinh(i/C2)) - params['VEOD']
+        
+        return {'max_i': fsolve(f, [3])}
         
     def event_state(self, x : dict) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
@@ -348,23 +475,25 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # Positive Surface
         Ap = params['Ap']
         xpS = x['qpS']/params['qSMax']
+        one_minus_xpS = 1 - xpS
         xpS2 = xpS + xpS
+        xpS2_minus_1 = xpS2 - 1
         VepParts = [
-            Ap[0] *(xpS2-1)/F,  #Vep0
-            Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
-            Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
-            Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
-            Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
-            Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
-            Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
-            Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
-            Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
-            Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
-            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
-            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
-            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+            Ap[0] *(xpS2_minus_1)/F,  #Vep0
+            Ap[1] *((xpS2_minus_1)**2  - (xpS2*one_minus_xpS))/F,  #Vep1 
+            Ap[2] *((xpS2_minus_1)**3  - (4 *xpS*one_minus_xpS)*(xpS2_minus_1)) /F,  #Vep2
+            Ap[3] *((xpS2_minus_1)**4  - (6 *xpS*one_minus_xpS)*(xpS2_minus_1)**(2)) /F,  #Vep3
+            Ap[4] *((xpS2_minus_1)**5  - (8 *xpS*one_minus_xpS)*(xpS2_minus_1)**(3)) /F,  #Vep4
+            Ap[5] *((xpS2_minus_1)**6  - (10*xpS*one_minus_xpS)*(xpS2_minus_1)**(4)) /F,  #Vep5
+            Ap[6] *((xpS2_minus_1)**7  - (12*xpS*one_minus_xpS)*(xpS2_minus_1)**(5)) /F,  #Vep6
+            Ap[7] *((xpS2_minus_1)**8  - (14*xpS*one_minus_xpS)*(xpS2_minus_1)**(6)) /F,  #Vep7
+            Ap[8] *((xpS2_minus_1)**9  - (16*xpS*one_minus_xpS)*(xpS2_minus_1)**(7)) /F,  #Vep8
+            Ap[9] *((xpS2_minus_1)**10 - (18*xpS*one_minus_xpS)*(xpS2_minus_1)**(8)) /F,  #Vep9
+            Ap[10]*((xpS2_minus_1)**11 - (20*xpS*one_minus_xpS)*(xpS2_minus_1)**(9)) /F,  #Vep10
+            Ap[11]*((xpS2_minus_1)**12 - (22*xpS*one_minus_xpS)*(xpS2_minus_1)**(10))/F,  #Vep11
+            Ap[12]*((xpS2_minus_1)**13 - (24*xpS*one_minus_xpS)*(xpS2_minus_1)**(11))/F   #Vep12
         ]
-        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
         v = Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']
 
         charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
@@ -401,27 +530,29 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # Positive Surface
         Ap = params['Ap']
         xpS = x['qpS']/params['qSMax']
+        one_minus_xpS = 1 - xpS
         xpS2 = xpS + xpS
+        xpS2_minus_1 = xpS2 - 1
         VepParts = [
-            Ap[0] *(xpS2-1)/F,  #Vep0
-            Ap[1] *((xpS2-1)**2  - (xpS2*(1-xpS)))/F,  #Vep1 
-            Ap[2] *((xpS2-1)**3  - (4 *xpS*(1-xpS))/(xpS2-1)**(-1)) /F,  #Vep2
-            Ap[3] *((xpS2-1)**4  - (6 *xpS*(1-xpS))/(xpS2-1)**(-2)) /F,  #Vep3
-            Ap[4] *((xpS2-1)**5  - (8 *xpS*(1-xpS))/(xpS2-1)**(-3)) /F,  #Vep4
-            Ap[5] *((xpS2-1)**6  - (10*xpS*(1-xpS))/(xpS2-1)**(-4)) /F,  #Vep5
-            Ap[6] *((xpS2-1)**7  - (12*xpS*(1-xpS))/(xpS2-1)**(-5)) /F,  #Vep6
-            Ap[7] *((xpS2-1)**8  - (14*xpS*(1-xpS))/(xpS2-1)**(-6)) /F,  #Vep7
-            Ap[8] *((xpS2-1)**9  - (16*xpS*(1-xpS))/(xpS2-1)**(-7)) /F,  #Vep8
-            Ap[9] *((xpS2-1)**10 - (18*xpS*(1-xpS))/(xpS2-1)**(-8)) /F,  #Vep9
-            Ap[10]*((xpS2-1)**11 - (20*xpS*(1-xpS))/(xpS2-1)**(-9)) /F,  #Vep10
-            Ap[11]*((xpS2-1)**12 - (22*xpS*(1-xpS))/(xpS2-1)**(-10))/F,  #Vep11
-            Ap[12]*((xpS2-1)**13 - (24*xpS*(1-xpS))/(xpS2-1)**(-11))/F   #Vep12
+            Ap[0] *(xpS2_minus_1)/F,  #Vep0
+            Ap[1] *((xpS2_minus_1)**2  - (xpS2*one_minus_xpS))/F,  #Vep1 
+            Ap[2] *((xpS2_minus_1)**3  - (4 *xpS*one_minus_xpS)*(xpS2_minus_1)) /F,  #Vep2
+            Ap[3] *((xpS2_minus_1)**4  - (6 *xpS*one_minus_xpS)*(xpS2_minus_1)**(2)) /F,  #Vep3
+            Ap[4] *((xpS2_minus_1)**5  - (8 *xpS*one_minus_xpS)*(xpS2_minus_1)**(3)) /F,  #Vep4
+            Ap[5] *((xpS2_minus_1)**6  - (10*xpS*one_minus_xpS)*(xpS2_minus_1)**(4)) /F,  #Vep5
+            Ap[6] *((xpS2_minus_1)**7  - (12*xpS*one_minus_xpS)*(xpS2_minus_1)**(5)) /F,  #Vep6
+            Ap[7] *((xpS2_minus_1)**8  - (14*xpS*one_minus_xpS)*(xpS2_minus_1)**(6)) /F,  #Vep7
+            Ap[8] *((xpS2_minus_1)**9  - (16*xpS*one_minus_xpS)*(xpS2_minus_1)**(7)) /F,  #Vep8
+            Ap[9] *((xpS2_minus_1)**10 - (18*xpS*one_minus_xpS)*(xpS2_minus_1)**(8)) /F,  #Vep9
+            Ap[10]*((xpS2_minus_1)**11 - (20*xpS*one_minus_xpS)*(xpS2_minus_1)**(9)) /F,  #Vep10
+            Ap[11]*((xpS2_minus_1)**12 - (22*xpS*one_minus_xpS)*(xpS2_minus_1)**(10))/F,  #Vep11
+            Ap[12]*((xpS2_minus_1)**13 - (24*xpS*one_minus_xpS)*(xpS2_minus_1)**(11))/F   #Vep12
         ]
-        Vep = params['U0p'] + R*x['tb']/F*np.log((1-xpS)/xpS) + sum(VepParts)
+        Vep = params['U0p'] + R*x['tb']/F*np.log(one_minus_xpS/xpS) + sum(VepParts)
 
         return self.OutputContainer(np.array([
-            [x['tb'] - 273.15],
-            [Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp']]
+            np.atleast_1d(x['tb'] - 273.15),
+            np.atleast_1d(Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp'])
         ]))
 
     def threshold_met(self, x : dict) -> dict:
@@ -435,10 +566,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
 class BatteryElectroChemEOL(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in the following paper:
-    `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
+    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in [0]_
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository[1]_.
 
     :term:`Events<event>`: (1)
         InsufficientCapacity: Insufficient battery capacity
@@ -468,8 +598,12 @@ class BatteryElectroChemEOL(PrognosticsModel):
         measurement_noise_dist : Optional, String
           distribution for measurement noise (e.g., normal, uniform, triangular)
         qMaxThreshold : float
-            Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occured. Note: Battery manufacturers specify a threshold of 70-80% of qMax
-        wq, wr, wd : float
+            Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occurred. Note: Battery manufacturers specify a threshold of 70-80% of qMax
+        wq : float
+            Wear rate for qMax, Ro, and D respectively
+        wr : float
+            Wear rate for qMax, Ro, and D respectively
+        wd : float
             Wear rate for qMax, Ro, and D respectively
         x0 : dict[str, float]
             Initial :term:`state`
@@ -477,6 +611,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
     See Also
     --------
     BatteryElectroChemEOD, BatteryElectroChem, BatteryElectroChemEODEOL
+
+    References
+    -----------
+    .. [0] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
+    .. [1] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     states = ['qMax', 'Ro', 'D']
     events = ['InsufficientCapacity']
@@ -499,16 +638,13 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'qMax': (0, np.inf)
     }
 
-    def initialize(self, u=None, z=None):
-        return self.StateContainer(self.parameters['x0'])
-
     def dx(self, _, u : dict):
         params = self.parameters
 
         return self.StateContainer(np.array([
-            [params['wq'] * abs(u['i'])],
-            [params['wr'] * abs(u['i'])],
-            [params['wd'] * abs(u['i'])]
+            np.atleast_1d(params['wq'] * abs(u['i'])),
+            np.atleast_1d(params['wr'] * abs(u['i'])),
+            np.atleast_1d(params['wd'] * abs(u['i']))
         ]))
 
     def event_state(self, x : dict) -> dict:
@@ -539,13 +675,9 @@ def OverwrittenWarning(params):
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """
-    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in the following papers:
+    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in [0]_ and [1]_
 
-    1. `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
-
-    2. `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`
-
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [2]_.
 
     :term:`Events<event>`: (2)
         | EOD: End of Discharge
@@ -567,7 +699,13 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
 
     Note
     ----
-        For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
+    For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
+
+    References
+    -----------
+    .. [0] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
+    .. [1] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
+    .. [2] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     inputs = BatteryElectroChemEOD.inputs
     outputs = BatteryElectroChemEOD.outputs
@@ -588,9 +726,6 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['tDiffusion'] = [OverwrittenWarning]
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
-
-    def initialize(self, u : dict = {}, z : dict = {}):
-        return self.StateContainer(self.parameters['x0'])
 
     def dx(self, x : dict, u : dict):
         # Set EOD Parameters (corresponding to health)

@@ -18,7 +18,7 @@ def run_example():
     print('done')
 
     # We recommend saving the dataset to disk for future use
-    # This way you dont have to download it each time
+    # This way you don't have to download it each time
     import pickle
     pickle.dump((desc, data), open(f'dataset_{DATASET_ID}.pkl', 'wb'))
 

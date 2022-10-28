@@ -2,12 +2,16 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of generating a Dynamic Mode Decomposition surrogate model using the battery model 
+Example of generating a Dynamic Mode Decomposition surrogate model from a battery model.
+
+.. dropdown:: More details
+
+    In this example, an instance of a battery model is created. The DMD DataModel is used to generate a surrogate of this battery model for specific loading schemes. This surrogate can be used in place of the original model, approximating it's behavior. Frequently, surrogate models run faster than the original, at the cost of some accuracy. The performance of the two models are then compared. 
+
 """
 
-from prog_models.models import BatteryElectroChemEOD as Battery
-
 import matplotlib.pyplot as plt
+from prog_models.models import BatteryElectroChemEOD as Battery
 
 def run_example(): 
     ### Example 1: Standard DMD Application 
@@ -130,8 +134,8 @@ def run_example():
         'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
         'dt': 0.1, # For DMD, this value is the time step of the training data
         'trim_data': 1, # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
-        'states': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
-        'outputs': ['v'] # Define outputs to be included in surrogate model 
+        'state_keys': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
+        'output_keys': ['v'] # Define outputs to be included in surrogate model 
     }
 
     # Set noise in Prognostics Model, default for surrogate model is also this value

@@ -10,8 +10,9 @@
 
 # Note: To preserve vectorization use numpy math function (e.g., maximum, minimum, sign, sqrt, etc.) instead of non-vectorized functions (max, min, etc.)
 
-from prog_models import PrognosticsModel
 from numpy import inf
+
+from prog_models import PrognosticsModel
 
 # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
 # See examples.derived_params
@@ -58,10 +59,18 @@ class ProgModelTemplate(PrognosticsModel):
     ]
 
     # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
-    default_parameters = { # Set default parameters
+    # Note- everything required to configure the model 
+    # should be in parameters- this is to enable the serialization features 
+    default_parameters = {  # Set default parameters
         'Example Parameter 1': 0,
         'Example Parameter 2': 3,
-        'process_noise': 0.1, # Process noise
+        'process_noise': 0.1,  # Process noise
+        'x0': {  # Initial state  
+            'Examples State 1': 1.5,
+            'Examples State 2': -935,
+            'Examples State 3': 42.1,
+            'Examples State 4': 0
+        }
     }
 
     # REPLACE THE FOLLOWING WITH STATE BOUNDS IF NEEDED
@@ -83,62 +92,69 @@ class ProgModelTemplate(PrognosticsModel):
         "Example Parameter 2": [example_callback]
     }
 
+    # UNCOMMENT THIS FUNCTION IF YOU NEED CONSTRUCTION LOGIC (E.G., INPUT VALIDATION)
+    # def __init__(self, **kwargs):
+    #     """
+    #     Constructor for model
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for model
-        """
-        # ADD OPTIONS CHECKS HERE
+    #     Note 
+    #     ----
+    #     To use the JSON serialization capabilities in to_json and from_json, model.parameters must include everything necessary for initialize, including any keyword arguments.
+    #     """
+    #     # ADD OPTIONS CHECKS HERE
 
-        # e.g., Checking for required parameters
-        # if not 'required_param' in kwargs: 
-        #   throw Exception;
+    #     # e.g., Checking for required parameters
+    #     # if not 'required_param' in kwargs: 
+    #     #   throw Exception;
 
-        # e.g. 2, Modify parameters
-        # kwargs['some_param'] = some_function(kwargs['some_param'])
+    #     super().__init__(**kwargs) # Run Parent constructor
 
-        super().__init__(**kwargs) # Run Parent constructor
-
+    # Model state initialization - there are two ways to provide the logic to initialize model state. 
+    # 1. Provide the initial state in parameters['x0'], or
+    # 2. Provide an Initialization function
+    #
+    # If following method 2, uncomment the initialize function, below.
     # Sometimes initial input (u) and initial output (z) are needed to initialize the model
     # In that case remove the '= None' for the appropriate argument
     # Note: If they are needed, that requirement propogated through to the simulate_to* functions
-    def initialize(self, u=None, z=None):
-        """
-        Calculate initial state given inputs and outputs
-
-        Parameters
-        ----------
-        u : dict
-            Inputs, with keys defined by model.inputs.
-            e.g., u = {'i':3.2} given inputs = ['i']
-        z : dict
-            Outputs, with keys defined by model.outputs.
-            e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
-
-        Returns
-        -------
-        x : dict
-            First state, with keys defined by model.states
-            e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-        """
-
-        # REPLACE BELOW WITH LOGIC TO CALCULATE INITIAL STATE
-        # NOTE: KEYS FOR x0 MATCH 'states' LIST ABOVE
-
-        # YOU CAN ACCESS ANY PARAMETERS USING self.parameters[key]
-        x0 = {
-            'Examples State 1': 99.2,
-            'Examples State 2': False,
-            'Examples State 3': 44,
-            'Examples State 4': [1, 2, 3]
-        }
-        return self.StateContainer(x0)
+    # UNCOMMENT THIS FUNCTION FOR COMPLEX INITIALIZATION
+    # def initialize(self, u=None, z=None):
+    #     """
+    #     Calculate initial state given inputs and outputs
+    #
+    #     Parameters
+    #     ----------
+    #     u : dict
+    #         Inputs, with keys defined by model.inputs.
+    #         e.g., u = {'i':3.2} given inputs = ['i']
+    #     z : dict
+    #         Outputs, with keys defined by model.outputs.
+    #         e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
+    #
+    #     Returns
+    #     -------
+    #     x : dict
+    #         First state, with keys defined by model.states
+    #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
+    #     """
+    #
+    #     # REPLACE BELOW WITH LOGIC TO CALCULATE INITIAL STATE
+    #     # NOTE: KEYS FOR x0 MATCH 'states' LIST ABOVE
+    #
+    #     # YOU CAN ACCESS ANY PARAMETERS USING self.parameters[key]
+    #     x0 = {
+    #         'Examples State 1': 99.2,
+    #         'Examples State 2': False,
+    #         'Examples State 3': 44,
+    #         'Examples State 4': 7.5
+    #     }
+    #     return self.StateContainer(x0)
 
     # UNCOMMENT THIS FUNCTION FOR CONTINUOUS MODELS
     # def dx(self, t, x, u):
     #     """
     #     Returns the first derivative of state `x` at a specific time `t`, given state and input
-
+    #
     #     Parameters
     #     ----------
     #     t : number
@@ -150,13 +166,13 @@ class ProgModelTemplate(PrognosticsModel):
     #     u : dict
     #         Inputs, with keys defined by model.inputs.
     #         e.g., u = {'i':3.2} given inputs = ['i']
-
+    #
     #     Returns
     #     -------
     #     dx : dict
     #         First derivitive of state, with keys defined by model.states
     #         e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
-        
+    # 
     #     Example
     #     -------
     #     | m = DerivProgModel() # Replace with specific model being simulated
@@ -165,7 +181,7 @@ class ProgModelTemplate(PrognosticsModel):
     #     | x = m.initialize(u, z) # Initialize first state
     #     | dx = m.dx(3.0, x, u) # Returns first derivative of state at 3 seconds given input u
     #     """
-
+    #
     #     # REPLACE THE FOLLOWING WITH SOMETHING SPECIFC TO YOUR MODEL
     #     dxdt = {
     #         'Examples State 1': 0.1,
@@ -179,7 +195,7 @@ class ProgModelTemplate(PrognosticsModel):
     # def next_state(self, t, x, u, dt):
     #     """
     #     State transition equation: Calculate next state
-
+    #
     #     Parameters
     #     ----------
     #     t : number
@@ -194,29 +210,25 @@ class ProgModelTemplate(PrognosticsModel):
     #     dt : number
     #         Timestep size in seconds (≥ 0)
     #         e.g., dt = 0.1
-        
-
+    #
     #     Returns
     #     -------
     #     x : dict
     #         Next state, with keys defined by model.states
     #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
     #     """
-
+    #
     #     next_x = x
     #     # ADD LOGIC TO CALCULATE next_x from x
-
+    #
     #     return self.StateContainer(next_x)
 
-    def output(self, t, x):
+    def output(self, x):
         """
         Calculate next statem, forward one timestep
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0.0)
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -237,15 +249,12 @@ class ProgModelTemplate(PrognosticsModel):
 
         return z
 
-    def event_state(self, t, x):
+    def event_state(self, x):
         """
-        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))
+        Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occurred))
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0.0)
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
@@ -266,15 +275,12 @@ class ProgModelTemplate(PrognosticsModel):
         return event_x
         
     # Note: Thresholds met equation below is not strictly necessary. By default threshold_met will check if event_state is ≤ 0 for each event
-    def threshold_met(self, t, x):
+    def threshold_met(self, x):
         """
         For each event threshold, calculate if it has been met
 
         Parameters
         ----------
-        t : number
-            Current timestamp in seconds (≥ 0.0)
-            e.g., t = 3.4
         x : dict
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']

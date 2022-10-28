@@ -1,10 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
 from copy import deepcopy
 import numpy as np
 import warnings
+
+from .. import prognostics_model
 
 def calc_x(x : float, forces : float, Ls : float, new_x : float) -> float:
     lower_wall = (x==0 and forces<0) or (new_x<0)
@@ -107,7 +108,10 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             Temperature of supply gas (K)
         gas_gamma, gas_z, gas_R : float
             Supply gas parameters
-        At, Ct, Ab, Cb : float
+        At : float
+        Ct : float
+        Ab : float
+        Cb : float
         AbMax : float
             Max limit for state Aeb
         AtMax : float
@@ -298,16 +302,16 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             dp = [u['pL'] - u['pR']] * len(x['x'])
 
         return self.StateContainer(np.array([
-            [x['Aeb'] + params['wb'] * dt],     # Aeb
-            [x['Aet'] + params['wt'] * dt],     # Aet
-            [x['Ai'] + Aidot * dt],             # Ai
-            [x['k'] + kdot * dt],               # k
-            [x['mBot'] + mBotdot * dt],         # mBot
-            [x['mTop'] + mTopdot * dt],         # mTop
-            [x['r'] + rdot * dt],               # r
-            [vel],                              # v
-            [pos],                              # x
-            [dp]                                # pL - pR
+            np.atleast_1d(x['Aeb'] + params['wb'] * dt),     # Aeb
+            np.atleast_1d(x['Aet'] + params['wt'] * dt),     # Aet
+            np.atleast_1d(x['Ai'] + Aidot * dt),             # Ai
+            np.atleast_1d(x['k'] + kdot * dt),               # k
+            np.atleast_1d(x['mBot'] + mBotdot * dt),         # mBot
+            np.atleast_1d(x['mTop'] + mTopdot * dt),         # mTop
+            np.atleast_1d(x['r'] + rdot * dt),               # r
+            np.atleast_1d(vel),                              # v
+            np.atleast_1d(pos),                              # x
+            np.atleast_1d(dp)                                # pL - pR
         ]))
     
     def output(self, x : dict):
@@ -322,12 +326,12 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 
         return self.OutputContainer(np.array([
-            [trueFlow],             # Q
-            [indicatorBotm],        # indicatorBotm
-            [indicatorTopm],        # indicatorTopm
-            [1e-6 *pressureBot],    # pBot
-            [1e-6 *pressureTop],    # pTop
-            [x['x']]                # x
+            np.atleast_1d(trueFlow),             # Q
+            np.atleast_1d(indicatorBotm),        # indicatorBotm
+            np.atleast_1d(indicatorTopm),        # indicatorTopm
+            np.atleast_1d(1e-6 *pressureBot),    # pBot
+            np.atleast_1d(1e-6 *pressureTop),    # pTop
+            np.atleast_1d(x['x'])                # x
         ]))
 
     def event_state(self, x : dict) -> dict:
@@ -415,11 +419,11 @@ class PneumaticValveWithWear(PneumaticValveBase):
 
         # Append this way because the keys in the structure but the values are missing - this is due to the behavior of subclassed models calling their parent functions.
         next_x.matrix = np.vstack((next_x.matrix, np.array([
-            [x['wb']],
-            [x['wi']],
-            [x['wk']],
-            [x['wr']],
-            [x['wt']]
+            np.atleast_1d(x['wb']),
+            np.atleast_1d(x['wi']),
+            np.atleast_1d(x['wk']),
+            np.atleast_1d(x['wr']),
+            np.atleast_1d(x['wt'])
         ])))
         return next_x
 

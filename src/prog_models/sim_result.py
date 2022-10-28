@@ -1,11 +1,13 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
+
 from collections import UserList, defaultdict
+from copy import deepcopy
+from matplotlib.pyplot import figure
+import numpy as np
 from typing import Callable, Dict, List
 
-from matplotlib.pyplot import figure
-from numpy import sign
+from .utils.containers import DictLikeMatrixWrapper
 from .visualize import plot_timeseries
-from copy import deepcopy
 
 
 class SimResult(UserList):
@@ -19,9 +21,16 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times : list = [], data : list = []):
-        self.times = times.copy()
-        self.data = deepcopy(data)
+    def __init__(self, times : list = None, data : list = None, _copy = True):
+        if times is None or data is None:
+            self.times = [] 
+            self.data = []
+        else:
+            self.times = times.copy()
+            if _copy:
+                self.data = deepcopy(data)
+            else:
+                self.data = data
 
     def __eq__(self, other : "SimResult") -> bool:
         """Compare 2 SimResults
@@ -38,9 +47,9 @@ class SimResult(UserList):
         """
         Get the index of the first sample where other occurs
 
-        Args: 
+        Args:
             other (dict)
-    
+
         Returns:
             int: Index of first sample where other occurs
         """
@@ -54,7 +63,7 @@ class SimResult(UserList):
             other (SimResult/LazySimResult)
 
         """
-        if other.__class__ in [SimResult, LazySimResult]:
+        if isinstance(other, SimResult):
             self.times.extend(other.times)
             self.data.extend(other.data)
         else:
@@ -71,7 +80,7 @@ class SimResult(UserList):
         """
         self.times.pop(index)
         return self.data.pop(index)
-    
+
     def remove(self, d : float = None, t : float = None) -> None:
         """Remove an element
 
@@ -81,14 +90,14 @@ class SimResult(UserList):
         """
         if sum([i is None for i in (d, t)]) != 1:
             raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
-       
+
         if (t is not None):
             self.data.pop(self.times.index(t))
             self.times.remove(t)
         else:
             self.times.pop(self.data.index(d))
             self.data.remove(d)
-        
+
     def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
@@ -105,12 +114,42 @@ class SimResult(UserList):
         """
         return self.times[index]
 
+    def to_numpy(self, keys = None) -> np.ndarray:
+        """
+        Convert from simresult to numpy array
+
+        Args:
+            keys: Subset of keys to return as part of numpy array (by default, all)
+
+        Returns:
+            np.ndarray: numpy array representing simresult
+        """
+        if len(self.data) == 0:
+            return np.array([[]], dtype=np.float64)
+        if len(self.data[0]) == 0:
+            return np.array([[] for _ in self.data], dtype=np.float64)
+        if isinstance(self.data[0], DictLikeMatrixWrapper) and keys is None:
+            return np.array([u_i.matrix[:, 0] for u_i in self.data], dtype=np.float64)
+        if keys is None:
+            keys = self.data[0].keys()
+        return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
+
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
 
-        Args: 
-            kwargs: Configuration parameters for plot_timeseries
+        Keyword Args:
+            keys (list[str]): list of keys to plot. If not provided, all keys in the series are plotted.
+            figsize (tuple[float, float]): width and height of the figure
+            compact (bool): If true, all timeseries are displayed in one plot (multiple colored lines)
+            xlabel (str) : label for the x-axis. Default is 'time'
+            ylabel (str) : label for the y-axis. Default is 'state'
+            title (str) : plot title. Default is no title
+            title_fontsize (str or float): plot title fontsize. Default is 'x-large'
+            suptitle (str) : plot suptitle. Default is no suptitle
+            ticklabel_fontsize (str or float): tick label font sizes. Default is 'small'
+            tight_layout (bool): whether to use tight layout (minimize figure blank space around the graph)
+            display_labels (str): whether to display x and y-labels in the figure (['no', 'minimal', 'all'])
 
         Returns:
             Figure
@@ -119,12 +158,12 @@ class SimResult(UserList):
 
     def monotonicity(self) -> Dict[str, float]:
         """
-        Calculate monotonicty for a single prediction. 
+        Calculate monotonicty for a single prediction.
         Given a single simulation result, for each event: go through all predicted states and compare those to the next one.
         Calculates monotonicity for each event key using its associated mean value in UncertainData.
 
         Where N is number of measurements and sign indicates sign of calculation.
-        
+
         Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
         http://www.papers.phmsociety.org/index.php/phmconf/article/view/1404
         Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Aritifical Intelligence, Volume 306.
@@ -139,15 +178,15 @@ class SimResult(UserList):
         # Collect and organize mean values for each event
         by_event = defaultdict(list)
         for uncertaindata in self.data:
-            for key,value in uncertaindata.items():
+            for key, value in uncertaindata.items():
                 by_event[key].append(value)
 
         # For each event, calculate monotonicity using formula
         result = {}
-        for key,l in by_event.items():
+        for key, l in by_event.items():
             mono_sum = 0
             for i in range(len(l)-1): 
-                mono_sum += sign(l[i+1] - l[i])
+                mono_sum += np.sign(l[i+1] - l[i])
             result[key] = abs(mono_sum / (len(l)-1))
         return result
 
@@ -155,11 +194,12 @@ class SimResult(UserList):
         raise NotImplementedError("Not Implemented")
 
     # Functions of list not implemented
-    # Specified here to stop users from accidentally trying to use them (due to this classes similarity to list)
-    append = __not_implemented 
-    count = __not_implemented 
+    # Specified here to stop users from accidentally trying to use them 
+    # (due to this classes similarity to list)
+    append = __not_implemented
+    count = __not_implemented
     insert = __not_implemented
-    reverse = __not_implemented 
+    reverse = __not_implemented
     # lgtm [py/missing-equals]
 
 
@@ -167,7 +207,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn : Callable, times : list = [], states : list = []) -> None:
+    def __init__(self, fcn : Callable, times : list = None, states : list = None, _copy = True) -> None:
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -175,9 +215,16 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
         self.fcn = fcn
-        self.times = times.copy()
-        self.states = deepcopy(states)
         self.__data = None
+        if times is None or states is None:
+            self.times = []
+            self.states = []
+        else:
+            self.times = times.copy()
+            if _copy:
+                self.states = deepcopy(states)
+            else:
+                self.states = states
 
     def __reduce__(self):
         return (self.__class__.__base__, (self.times, self.data))
@@ -197,7 +244,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
         self.states = []
 
-    def extend(self, other : "LazySimResult") -> None:
+    def extend(self, other : "LazySimResult", _copy=True) -> None:
         """
         Extend the LazySimResult with another LazySimResult object
         Raise ValueError if SimResult is passed
@@ -208,8 +255,11 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
         """
         if (isinstance(other, self.__class__)):
-            self.times.extend(other.times)  # lgtm [py/modification-of-default-value]
-            self.states.extend(deepcopy(other.states))  # lgtm [py/modification-of-default-value]
+            self.times.extend(other.times)
+            if _copy:
+                self.states.extend(deepcopy(other.states))
+            else:
+                self.states.extend(other.states)
             if self.__data is None or not other.is_cached():
                 self.__data = None
             else:
@@ -236,15 +286,15 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
     def remove(self, d : float = None, t : float = None, s = None) -> None:
         """Remove an element
-         
+
         Args:
-            d: Data value to be removed.
-            t: Time value to be removed.
-            s: State value to be removed.
-        """ 
+            d: Data value to be removed
+            t: Time value to be removed
+            s: State value to be removed
+        """
         if sum([i is None for i in (d, t, s)]) != 2:
             raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
-       
+
         if (t is not None):
             target_index = self.times.index(t)
             self.times.pop(target_index)
@@ -277,4 +327,3 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if self.__data is None:
             self.__data = [self.fcn(x) for x in self.states]
         return self.__data
-    

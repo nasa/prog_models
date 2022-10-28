@@ -11,29 +11,34 @@ from .test_tutorials import main as tutorials_main
 from .test_datasets import main as datasets_main
 from .test_powertrain import main as powertrain_main
 from .test_surrogates import main as surrogates_main
+from .test_data_model import main as lstm_main
 
 from io import StringIO
+import matplotlib.pyplot as plt
 import sys
-import unittest
+from timeit import timeit
+from unittest.mock import patch
+
 from examples import sim as sim_example
 
 def _test_ex():
-    # set stdout (so it wont print)
-    _stdout = sys.stdout
-    sys.stdout = StringIO()
-
     # Run example
     sim_example.run_example()
-
-    # Reset stdout 
-    sys.stdout = _stdout
 
 if __name__ == '__main__':
     was_successful = True
 
     try:
-        from timeit import timeit
-        print("\nExample Runtime: ", timeit(_test_ex, number=10))
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+        
+        with patch('matplotlib.pyplot.show'):
+            runtime = timeit(_test_ex, number=10)
+            plt.close('all')
+
+        # Reset stdout 
+        sys.stdout = sys.__stdout__
+        print(f"\nExample Runtime: {runtime}")
     except Exception as e:
         print("\Benchmarking Failed: ", e)
         was_successful = False
@@ -93,6 +98,11 @@ if __name__ == '__main__':
 
     try:
         surrogates_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        lstm_main()
     except Exception:
         was_successful = False
 

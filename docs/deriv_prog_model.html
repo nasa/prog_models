@@ -107,7 +107,7 @@ e.g., dx = {‘abc’: 3.1, ‘def’: -2.003} given states = [‘abc’, ‘def
 <dl class="py method">
 <dt id="prog_models.deriv_prog_model.DerivProgModel.event_state">
 <code class="sig-name descname">event_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#prog_models.deriv_prog_model.DerivProgModel.event_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occured))</p>
+<dd><p>Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occurred))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -296,7 +296,7 @@ Note: configuration of the model is set through model.parameters</p></li>
 <li><p><strong>inputs</strong> (<em>[dict]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
 <li><p><strong>states</strong> (<em>[dict]</em>) – Estimated states for each time in times</p></li>
 <li><p><strong>outputs</strong> (<em>[dict]</em>) – Estimated outputs for each time in times</p></li>
-<li><p><strong>event_states</strong> (<em>[dict]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>[dict]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurrence, for each time in times</p></li>
 </ul>
 </p>
 </dd>
@@ -347,7 +347,7 @@ If blank, simulation will occur if any event will be met ()</p></li>
 <li><p><strong>inputs</strong> (<em>[dict]</em>) – Future input (from future_loading_eqn) for each time in times</p></li>
 <li><p><strong>states</strong> (<em>[dict]</em>) – Estimated states for each time in times</p></li>
 <li><p><strong>outputs</strong> (<em>[dict]</em>) – Estimated outputs for each time in times</p></li>
-<li><p><strong>event_states</strong> (<em>[dict]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurance, for each time in times</p></li>
+<li><p><strong>event_states</strong> (<em>[dict]</em>) – Estimated event state (e.g., SOH), between 1-0 where 0 is event occurrence, for each time in times</p></li>
 </ul>
 </p>
 </dd>

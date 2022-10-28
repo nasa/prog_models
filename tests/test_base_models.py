@@ -1,12 +1,18 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from copy import deepcopy
 import io
+import numpy as np
+from os.path import dirname, join
+import pickle
 import sys
 import unittest
-import numpy as np
+
+# This ensures that the directory containing ProgModelTemplate is in the python search directory
+sys.path.append(join(dirname(__file__), ".."))
+
 from prog_models import *
 from prog_models.models import *
-from copy import deepcopy
 
 
 class MockModel():
@@ -19,16 +25,18 @@ class MockModel():
     }
 
     def initialize(self, u = {}, z = {}):
-        return deepcopy(self.parameters['x0'])
+        return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
-        x['a']+= u['i1']*dt
-        x['c']-= u['i2']
-        x['t']+= dt
-        return x
+        return self.StateContainer({
+                    'a': x['a'] + u['i1']*dt,
+                    'b': x['b'],
+                    'c': x['c'] - u['i2'],
+                    't': x['t'] + dt
+                })
 
     def output(self, x):
-        return {'o1': x['a'] + x['b'] + x['c']}
+        return self.OutputContainer({'o1': x['a'] + x['b'] + x['c']})
 
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
@@ -59,6 +67,41 @@ def derived_callback3(config):
         'p4': -2 * config['p2'], 
     }
 
+class LinearThrownObject(LinearModel):
+    inputs = [] 
+    states = ['x', 'v']
+    outputs = ['x']
+    events = ['impact']
+
+    A = np.array([[0, 1], [0, 0]])
+    E = np.array([[0], [-9.81]])
+    C = np.array([[1, 0]])
+    F = None # Will override method
+
+    default_parameters = {
+        'thrower_height': 1.83,  # m
+        'throwing_speed': 40,  # m/s
+        'g': -9.81  # Acceleration due to gravity in m/s^2
+    }
+
+    def initialize(self, u=None, z=None):
+        return self.StateContainer({
+            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
+            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
+            })
+    
+    def threshold_met(self, x):
+        return {
+            'falling': x['v'] < 0,
+            'impact': x['x'] <= 0
+        }
+
+    def event_state(self, x): 
+        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+        return {
+            'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
+            'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+        }
 
 class MockModelWithDerived(MockProgModel):
     param_callbacks = {
@@ -68,6 +111,49 @@ class MockModelWithDerived(MockProgModel):
 
 
 class TestModels(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = io.StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+
+    def test_non_container(self):
+        class MockProgModelStateDict(MockProgModel):
+            def next_state(self, x, u, dt):
+                return {
+                    'a': x['a'] + u['i1']*dt,
+                    'b': x['b'],
+                    'c': x['c'] - u['i2'],
+                    't': x['t'] + dt
+                }
+        
+        m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+        self.assertAlmostEqual(outputs[-1]['o1'], -13.2)
+        self.assertIsInstance(outputs[-1], m.OutputContainer)
+
+        class MockProgModelStateNdarray(MockProgModel):
+            def next_state(self, x, u, dt):
+                return np.array([
+                    [x['a'] + u['i1']*dt],
+                    [x['b']],
+                    [x['c'] - u['i2']],
+                    [x['t'] + dt]]
+                )
+
+        m = MockProgModelStateNdarray(process_noise_dist='none', measurement_noise_dist='none')
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+
+
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
@@ -176,11 +262,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = missing_inputs()
-            self.fail("Should not have worked, missing 'inputs'")
-        except ProgModelTypeError:
-            pass
+        m = missing_inputs()
+        self.assertEqual(len(m.inputs), 0)
 
         try: 
             m = missing_outputs()
@@ -188,11 +271,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = missing_initiialize()
-            self.fail("Should not have worked, missing 'initialize' method")
-        except TypeError:
-            pass
+        m = missing_initiialize()
+        # Should work- initialize is now optional
 
         try: 
             m = missing_output()
@@ -221,15 +301,6 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(**{noise_key: add_one})
         x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
         self.assertEqual(x[keys[0]], 2)
-
-        try:
-            noise = {}
-            for i in range(len(keys)-1):
-                noise[keys[i]] = i
-            m = MockProgModel(**{noise_key: noise})
-            self.fail("Should have raised exception at missing process_noise key")
-        except ProgModelTypeError:
-            pass
 
         try:
             noise = []
@@ -274,7 +345,9 @@ class TestModels(unittest.TestCase):
         m = MockProgModel() # Should work- sets default
         m = MockProgModel(process_noise = 0.0)
         x0 = m.initialize()
-        self.assertDictEqual(x0, m.parameters['x0'])
+        self.assertSetEqual(set(x0.keys()), set(m.parameters['x0'].keys()))
+        for key, value in m.parameters['x0'].items():
+            self.assertEqual(value, x0[key])
         x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
         self.assertAlmostEqual(x['a'], 1.1, 6)
         self.assertAlmostEqual(x['c'], -5.3, 6)
@@ -291,6 +364,39 @@ class TestModels(unittest.TestCase):
         self.assertTrue(t['e1'])
         t = m.threshold_met({'t': 10})
         self.assertTrue(t['e1'])
+
+    def test_default_es_and_tm(self):
+        # Test 1: TM only
+        class NoES(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1', 'e2']
+
+            def threshold_met(self, _):
+                return {'e1': False, 'e2': True}
+
+        m = NoES()
+
+        self.assertDictEqual(m.threshold_met({}), {'e1': False, 'e2': True})
+        self.assertDictEqual(m.event_state({}), {'e1': 1.0, 'e2': 0.0})
+
+        # Test 2: ES only
+        class NoTM(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1', 'e2']
+
+            def event_state(self, _):
+                return {'e1': 0.0, 'e2': 1.0}
+        
+        m = NoTM()
+
+        self.assertDictEqual(m.threshold_met({}), {'e1': True, 'e2': False})
+        self.assertDictEqual(m.event_state({}), {'e1': 0.0, 'e2': 1.0})
+
+        # Test 3: Neither ES or TM 
+        class NoESTM(MockModel, prognostics_model.PrognosticsModel):
+            events = []
+
+        m = NoESTM()
+        self.assertDictEqual(m.threshold_met({}), {})
+        self.assertDictEqual(m.event_state({}), {})
 
     def test_model_gen(self):
         keys = {
@@ -524,7 +630,6 @@ class TestModels(unittest.TestCase):
 
     def test_pickle(self):
         m = MockProgModel(p1 = 1.3)
-        import pickle
         pickle.dump(m, open('model_test.pkl', 'wb'))
         m2 = pickle.load(open('model_test.pkl', 'rb'))
         isinstance(m2, MockProgModel)
@@ -661,7 +766,9 @@ class TestModels(unittest.TestCase):
         # Check inputs
         self.assertEqual(len(inputs), 5)
         for i in inputs:
-            self.assertDictEqual(i, {'i1': 1, 'i2': 2.1}, "Future loading error")
+            i0 = {'i1': 1, 'i2': 2.1}
+            for key in i.keys():
+                self.assertEqual(i[key], i0[key], "Future loading error")
 
         # Check states
         self.assertEqual(len(states), 5)
@@ -718,11 +825,10 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
-        from numpy import array
-        a = array([1, 2, 3, 4, 4.5])
-        b = array([5]*5)
-        c = array([-3.2, -7.4, -11.6, -15.8, -17.9])
-        t = array([0, 0.5, 1, 1.5, 2])
+        a = np.array([1, 2, 3, 4, 4.5])
+        b = np.array([5]*5)
+        c = np.array([-3.2, -7.4, -11.6, -15.8, -17.9])
+        t = np.array([0, 0.5, 1, 1.5, 2])
         dt = 0.5
         x0 = {'a': deepcopy(a), 'b': deepcopy(b), 'c': deepcopy(c), 't': deepcopy(t)}
         x = m.next_state(x0, load(0), dt)
@@ -792,6 +898,49 @@ class TestModels(unittest.TestCase):
         except ProgModelInputException:
             pass
 
+    def test_sim_modes(self):
+        m = ThrownObject(process_noise = 0, measurement_noise = 0)
+        def load(t, x=None):
+            return m.InputContainer({})
+
+        # Default mode should be auto
+        result = m.simulate_to_threshold(load, save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
+
+        # Auto step size
+        result = m.simulate_to_threshold(load, dt = 'auto', save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
+
+        # Auto step size with a max of 2
+        result = m.simulate_to_threshold(load, dt = ('auto', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
+
+        # Constant step size of 2
+        result = m.simulate_to_threshold(load, dt = ('constant', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 2, 4])  
+
+        # Constant step size of 2
+        result = m.simulate_to_threshold(load, dt = 2, save_freq = 0.75, save_pts = [1.5, 2.5])
+        self.assertListEqual(result.times, [0, 2, 4])  
+
+        result = m.simulate_to_threshold(load, dt = 2, save_pts = [2.5])
+        self.assertListEqual(result.times, [0, 4])  
+
+    def test_sim_rk4(self):
+        # With non-linear model
+        m = ThrownObject()
+        def load(t, x=None):
+            return m.InputContainer({})
+        
+        with self.assertRaises(ProgModelException):
+            m.simulate_to_threshold(load, integration_method='rk4')
+
+        # With linear model
+        m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
+
+        result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
+        self.assertAlmostEqual(result.times[-1], 8.3)
+
     # when range specified when state doesnt exist or entered incorrectly
     def test_state_limits(self):
         m = MockProgModel()
@@ -801,7 +950,7 @@ class TestModels(unittest.TestCase):
         x0 = m.initialize()
 
         def load(t, x=None):
-            return {'i1': 1, 'i2': 2.1}
+            return m.InputContainer({'i1': 1, 'i2': 2.1})
 
         # inside bounds
         x0['t'] = 0
@@ -894,43 +1043,7 @@ class TestModels(unittest.TestCase):
             pass
 
     def test_linear_model(self):
-        class ThrownObject(LinearModel):
-            inputs = [] 
-            states = ['x', 'v']
-            outputs = ['x']
-            events = ['impact']
-
-            A = np.array([[0, 1], [0, 0]])
-            E = np.array([[0], [-9.81]])
-            C = np.array([[1, 0]])
-            F = None # Will override method
-
-            default_parameters = {
-                'thrower_height': 1.83,  # m
-                'throwing_speed': 40,  # m/s
-                'g': -9.81  # Acceleration due to gravity in m/s^2
-            }
-
-            def initialize(self, u=None, z=None):
-                return self.StateContainer({
-                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    })
-            
-            def threshold_met(self, x):
-                return {
-                    'falling': x['v'] < 0,
-                    'impact': x['x'] <= 0
-                }
-
-            def event_state(self, x): 
-                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-                return {
-                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-                }
-
-        m = ThrownObject()
+        m = LinearThrownObject()
         m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         # len() = events states inputs outputs
         #         1      2      0      1
@@ -1163,15 +1276,7 @@ class TestModels(unittest.TestCase):
             m.matrixCheck()
 
     def test_F_property_not_none(self):
-        class ThrownObject(LinearModel):
-            inputs = [] 
-            states = ['x', 'v']
-            outputs = ['x']
-            events = ['impact']
-
-            A = np.array([[0, 1], [0, 0]])
-            E = np.array([[0], [-9.81]])
-            C = np.array([[1, 0]])
+        class ThrownObject(LinearThrownObject):
             F = np.array([[1, 0]]) # Will override method
 
             default_parameters = {
@@ -1180,25 +1285,6 @@ class TestModels(unittest.TestCase):
                 'g': -9.81  # Acceleration due to gravity in m/s^2
             }
 
-            def initialize(self, u=None, z=None):
-                return self.StateContainer({
-                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    })
-            
-            def threshold_met(self, x):
-                return {
-                    'falling': x['v'] < 0,
-                    'impact': x['x'] <= 0
-                }
-
-            def event_state(self, x): 
-                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-                return {
-                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-                }
-
         m = ThrownObject()
         m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         m.matrixCheck()
@@ -1206,41 +1292,10 @@ class TestModels(unittest.TestCase):
         self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
 
     def test_init_matrix_as_list(self):
-        class ThrownObject(LinearModel):
-            inputs = [] 
-            states = ['x', 'v']
-            outputs = ['x']
-            events = ['impact']
-
+        class ThrownObject(LinearThrownObject):
             A = [[0, 1], [0, 0]]
             E = [[0], [-9.81]]
             C = [[1, 0]]
-            F = None # Will override method
-
-            default_parameters = {
-                'thrower_height': 1.83,  # m
-                'throwing_speed': 40,  # m/s
-                'g': -9.81  # Acceleration due to gravity in m/s^2
-            }
-
-            def initialize(self, u=None, z=None):
-                return self.StateContainer({
-                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    })
-            
-            def threshold_met(self, x):
-                return {
-                    'falling': x['v'] < 0,
-                    'impact': x['x'] <= 0
-                }
-
-            def event_state(self, x): 
-                x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-                return {
-                    'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-                    'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-                }
 
         m = ThrownObject()
         m.matrixCheck()
@@ -1252,28 +1307,8 @@ class TestModels(unittest.TestCase):
         self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
 
     def test_event_state_function(self):
-        class ThrownObject(LinearModel):
-            inputs = [] 
-            states = ['x', 'v']
-            outputs = ['x']
-            events = ['impact']
-
-            A = [[0, 1], [0, 0]]
-            E = [[0], [-9.81]]
-            C = [[1, 0]]
+        class ThrownObject(LinearThrownObject):
             F = None # Will override method
-
-            default_parameters = {
-                'thrower_height': 1.83,  # m
-                'throwing_speed': 40,  # m/s
-                'g': -9.81  # Acceleration due to gravity in m/s^2
-            }
-
-            def initialize(self, u=None, z=None):
-                return self.StateContainer({
-                    'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-                    'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-                    })
             
             def threshold_met(self, x):
                 return {
@@ -1293,7 +1328,6 @@ class TestModels(unittest.TestCase):
 
         # Test progress bar matching
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
-        sys.stdout = sys.__stdout__
         capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l][:11]
         percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
         for i in range(len(capture_split)):
@@ -1353,10 +1387,6 @@ def run_tests():
     unittest.main()
     
 def main():
-    # This ensures that the directory containing ProgModelTemplate is in the python search directory
-    from os.path import dirname, join
-    sys.path.append(join(dirname(__file__), ".."))
-
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Base Models")

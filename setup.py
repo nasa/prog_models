@@ -11,11 +11,11 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name = 'prog_models',
-    version = '1.3.1', #pkg_resources.require("prog_models")[0].version,
+    version = '1.4.0', #pkg_resources.require("prog_models")[0].version,
     description = 'The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url = 'https://github.com/nasa/prog_models',
+    url = 'https://nasa.github.io/progpy/prog_models_guide.html',
     author = 'Christopher Teubert',
     author_email = 'christopher.a.teubert@nasa.gov',
     classifiers = [
@@ -34,20 +34,21 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3 :: Only'
     ],
-    keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management', 'surrogate modeling', 'model tuning', 'simulation'],
+    keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management', 'surrogate modeling', 'model tuning', 'simulation', 'ivhm'],
     package_dir = {"":"src"},
     packages = find_packages(where = 'src'),
     python_requires='>=3.7, <3.11',
     install_requires = [
         'scipy',
         'pandas',
-        'matplotlib'
+        'matplotlib',
+        'tensorflow'
     ],
     license = 'NOSA',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/nasa/prog_models/issues',
-        'Docs': 'https://nasa.github.io/prog_models',
-        'Organization': 'https://prognostics.nasa.gov/',
+        'Docs': 'https://nasa.github.io/progpy/prog_models_guide.html',
+        'Organization': 'https://www.nasa.gov/content/diagnostics-prognostics',
         'Source': 'https://github.com/nasa/prog_models',
     },
 )
