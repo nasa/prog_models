@@ -1014,117 +1014,6 @@ class PrognosticsModel(ABC):
             saved_outputs, 
             saved_event_states
         )
-    
-    @staticmethod
-    def generate_model(keys : dict, initialize_eqn : Callable, output_eqn : Callable, next_state_eqn : Callable = None, dx_eqn : Callable = None, event_state_eqn : Callable = None, threshold_eqn : Callable = None, config : dict = {'process_noise': 0.1}) -> "PrognosticsModel":
-        """
-        [DEPRECIATED] Generate a new prognostics model from individual model functions
-
-        Parameters
-        ----------
-        keys : dict
-            Dictionary containing keys required by model. Must include `inputs`, `outputs`, and `states`. Can also include `events`
-        initialize_eqn : callable
-            Equation to initialize first state of the model. See `initialize`
-        output_eqn : callable
-            Equation to calculate the outputs (measurements) for the model. See `output`
-        next_state_eqn : callable
-            Equation to calculate next_state from current state. See `next_state`.\n
-            Use this for discrete functions
-        dx_eqn : callable
-            Equation to calculate dx from current state. See `dx`. \n
-            Use this for continuous functions
-        event_state_eqn : callable, optional
-            Equation to calculate the state for each event of the model. See `event_state`
-        threshold_eqn : callable, optional
-            Equation to calculate if the threshold has been met for each event in model. See `threshold_met`
-        config : dict, optional
-            Any configuration parameters for the model
-
-        Returns
-        -------
-        model : PrognosticsModel
-            A callable PrognosticsModel
-
-        Raises
-        ------
-        ProgModelInputException
-
-        Example
-        -------
-        | keys = {
-        |     'inputs': ['u1', 'u2'],
-        |     'states': ['x1', 'x2', 'x3'],
-        |     'outputs': ['z1'],
-        |     'events': ['e1', 'e2']
-        | }
-        |
-        | m = PrognosticsModel.generate_model(keys, initialize_eqn, next_state_eqn, output_eqn, event_state_eqn, threshold_eqn)
-        """
-        warn("PrognosticsModel.generate_model is deprecated and will be removed in v1.5. Subclass PrognosticsModel instead", DeprecationWarning)
-
-        # Input validation
-        if not callable(initialize_eqn):
-            raise ProgModelTypeError("Initialize Function must be callable")
-
-        if not callable(output_eqn):
-            raise ProgModelTypeError("Output Function must be callable")
-
-        if next_state_eqn and not callable(next_state_eqn):
-            raise ProgModelTypeError("Next_State Function must be callable")
-
-        if dx_eqn and not callable(dx_eqn):
-            raise ProgModelTypeError("dx Function must be callable")
-
-        if not next_state_eqn and not dx_eqn:
-            raise ProgModelTypeError("Either next_state or dx must be defined (but not both)")
-
-        if next_state_eqn and dx_eqn:
-            raise ProgModelTypeError("Either next_state or dx must be defined (but not both)")
-
-        if event_state_eqn and not callable(event_state_eqn):
-            raise ProgModelTypeError("Event State Function must be callable")
-
-        if threshold_eqn and not callable(threshold_eqn):
-            raise ProgModelTypeError("Threshold Function must be callable")
-
-        if 'inputs' not in keys:
-            raise ProgModelTypeError("Keys must include 'inputs'")
-        
-        if 'states' not in keys:
-            raise ProgModelTypeError("Keys must include 'states'")
-        
-        if 'outputs' not in keys:
-            raise ProgModelTypeError("Keys must include 'outputs'")
-
-        # Construct model
-        class NewProgModel(PrognosticsModel):
-            inputs = keys['inputs']
-            states = keys['states']
-            outputs = keys['outputs']
-            
-            def initialize():
-                pass
-
-            def output():
-                pass
-
-        m = NewProgModel(**config)
-        m.initialize = initialize_eqn
-        m.output = output_eqn
-
-        if next_state_eqn:
-            m.next_state = next_state_eqn
-        if dx_eqn:
-            m.dx = dx_eqn
-        if 'events' in keys:
-            m.events = keys['events']
-        if event_state_eqn:
-            m.event_state = event_state_eqn
-        if threshold_eqn:
-            m.threshold_met = threshold_eqn
-
-        return m
 
     def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
@@ -1282,7 +1171,6 @@ class PrognosticsModel(ABC):
         -------
         See examples/generate_surrogate
         """
-
         from .data_models import SURROAGATE_METHOD_LOOKUP
 
         if method not in SURROAGATE_METHOD_LOOKUP.keys():
@@ -1386,7 +1274,6 @@ class PrognosticsModel(ABC):
         ----
         This serialization only works for models that include all parameters necessary to generate the model in model.parameters. 
         """
-
         extract_parameters = json.loads(data, object_hook = custom_decoder)
  
         return cls(**extract_parameters)
