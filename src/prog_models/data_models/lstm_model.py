@@ -19,9 +19,9 @@ class LSTMStateTransitionModel(DataModel):
     .. versionadded:: 1.4.0
 
     A State Transition Model with no :term:`event` using an Keras LSTM Model.
-    State transition models map from the :term:`input` at time t and :term:`output` at time t-1 plus historical data from a set window to the :term`output` at time t.
+    State transition models map from the :term:`input` at time t and :term:`output` at time t-1 plus historical data from a set window to the :term:`output` at time t.
 
-    Most users will use the `LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func`LSTMStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
+    Most users will use the :py:func:`LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func:`LSTMStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
 
     Args:
         output_model (keras.Model): If a state model is present, maps from the state_model outputs to model :term:`output`. Otherwise, maps from model inputs to model :term:`output`
@@ -405,7 +405,7 @@ class LSTMStateTransitionModel(DataModel):
             event_states (list[np.array], optional): 
                 list of :term:`event state` data for use in data. Each element is the event state for a single run of size (n_times, n_events)
             t_met (list[np.array], optional): 
-                list of :term:`threshold met` data for use in data. Each element is if the threshold has been met for a single run of size (n_times, n_events) 
+                list of :term:`threshold` met data for use in data. Each element is if the threshold has been met for a single run of size (n_times, n_events) 
 
         Keyword Args:
             window (int): 
@@ -415,7 +415,7 @@ class LSTMStateTransitionModel(DataModel):
             output_keys (list[str]): 
                 List of keys to use to identify :term:`output`. If not supplied z[#] will be used to idenfiy outputs
             event_keys (list[str]):
-                List of keys to use to identify events for :term:`event state` and :term:`threshold met`. If not supplied event[#] will be used to idenfiy events
+                List of keys to use to identify events for :term:`event state` and :term:`threshold` met. If not supplied event[#] will be used to identify events
             validation_percentage (float): 
                 Percentage of data to use for validation, between 0-1
             epochs (int): 
@@ -512,11 +512,11 @@ class LSTMStateTransitionModel(DataModel):
             n_inputs = len(inputs[0][0])
             u_mean = np.mean(u_all[:,0,:n_inputs], axis=0)
             u_std = np.std(u_all[:,0,:n_inputs], axis=0)
-            # If there's no variation- dont normalize 
+            # If there's no variation- don't normalize 
             u_std[u_std == 0] = 1
             z_mean = np.mean(z_all, axis=0)
             z_std = np.std(z_all, axis=0)
-            # If there's no variation- dont normalize 
+            # If there's no variation- don't normalize 
             z_std[z_std == 0] = 1
 
             # Add output (since z_t-1 is last input)

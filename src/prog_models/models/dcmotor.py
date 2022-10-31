@@ -1,8 +1,9 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from prog_models import PrognosticsModel
 import numpy as np
+
+from prog_models import PrognosticsModel
 
 RAD_TO_DEG = 180/np.pi
 PI2 = 2 * np.pi
@@ -78,14 +79,9 @@ class DCMotor(PrognosticsModel):
     """
     .. versionadded:: 1.3.0
 
-    :term:`Model<model>` of DC Motor.
+    :term:`Model<model>` of triple-phase brushlessDC Motor.
 
-    References:
-    Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
-    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
-
-    George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
-    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
+    References: [0]_, [1]_.
 
     This model was developed by NASA's System Wide Safety (SWS) Project. https://www.nasa.gov/aeroresearch/programs/aosp/sws/
 
@@ -107,17 +103,17 @@ class DCMotor(PrognosticsModel):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         L : float
             Inductance (H)
@@ -135,6 +131,13 @@ class DCMotor(PrognosticsModel):
             Load moment of inertia (neglecting motor shaft inertia) (Kg*m^2)
         x0 : dict[str, float]
             Initial :term:`state`
+
+    References
+    ----------
+    .. [0] Matteo Corbetta, Chetan S. Kulkarni. An approach for uncertainty quantification and management of unmanned aerial vehicle health. 
+    Annual Conference of the PHM Society, Scottsdale, AZ, 2019. http://papers.phmsociety.org/index.php/phmconf/article/view/847
+    .. [1] George E. Gorospe Jr, Chetan S. Kulkarni, Edward Hogge, Andrew Hsu, and Natalie Ownby. A Study of the Degradation of Electronic Speed Controllers forBrushless DC Motors.
+    Asia Pacific Conference of the Prognostics and Health Management Society, 2017. https://ntrs.nasa.gov/citations/20200000579
     """
     states = ['i_a', 'i_b', 'i_c', 'v_rot', 'theta']
     inputs = ['v_a', 'v_b', 'v_c', 't_l']

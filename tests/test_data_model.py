@@ -14,7 +14,14 @@ from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDMode
 from prog_models.models import ThrownObject
 
 
-class TestDataModel(unittest.TestCase):        
+class TestDataModel(unittest.TestCase):      
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+      
     def _test_simple_case(self, 
         DataModelType, 
         m = ThrownObject(), 
@@ -309,13 +316,10 @@ def main():
     runner = unittest.TextTestRunner()
     print("\n\nTesting Data Models")
 
-    _stdout = sys.stdout
-    sys.stdout = StringIO()
     with patch('matplotlib.pyplot.show'):
         result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
     plt.close('all')
-    sys.stdout = _stdout
-
+    
     if not result:
         raise Exception("Failed test")
 

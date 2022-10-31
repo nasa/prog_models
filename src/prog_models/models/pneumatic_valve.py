@@ -1,10 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
 from copy import deepcopy
 import numpy as np
 import warnings
+
+from .. import prognostics_model
 
 def calc_x(x : float, forces : float, Ls : float, new_x : float) -> float:
     lower_wall = (x==0 and forces<0) or (new_x<0)
@@ -63,17 +64,17 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         g : float
             Acceleration due to gravity (m/s^2)

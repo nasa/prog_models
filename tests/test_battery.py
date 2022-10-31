@@ -1,5 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from io import StringIO
+import sys
 import unittest
 
 from prog_models.models import BatteryCircuit, BatteryElectroChem, BatteryElectroChemEOL, BatteryElectroChemEOD, BatteryElectroChemEODEOL
@@ -18,7 +20,15 @@ def future_loading(t, x=None):
         i = 3
     return {'i': i}
 
+
 class TestBattery(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+    
     def test_battery_circuit(self):
         batt = BatteryCircuit()
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})

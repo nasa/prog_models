@@ -1,7 +1,4 @@
 Simulation Result Data Structure
 ================================
 
-.. autoclass:: prog_models.sim_result.SimResult
-   :members:
-   :inherited-members:
-   :exclude-members: append, reverse, count, insert
+Documentation moved to https://nasa.github.io/progpy

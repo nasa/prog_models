@@ -1,6 +1,4 @@
 Linear Model
 =======================
 
-.. autoclass:: prog_models.LinearModel
-   :members:
-   :inherited-members:
+Documentation moved to https://nasa.github.io/progpy

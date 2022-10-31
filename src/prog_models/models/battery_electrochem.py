@@ -1,13 +1,12 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import PrognosticsModel
-
 from copy import deepcopy
 import numpy as np
 from scipy.optimize import fsolve
 import warnings
 
+from .. import PrognosticsModel
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -161,10 +160,9 @@ def update_qSBmax(params : dict) -> dict:
 
 class BatteryElectroChemEOD(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in the following paper:
-    `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`. This model predicts the end of discharge event. 
+    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in [0]_. This model predicts the end of discharge event. 
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [1]_.
 
     :term:`Events<event>`: (1)
         EOD: End of Discharge
@@ -191,17 +189,17 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         qMobile : float
         xnMax : float
@@ -252,6 +250,11 @@ class BatteryElectroChemEOD(PrognosticsModel):
     See Also
     --------
     BatteryElectroChemEOL, BatteryElectroChem, BatteryElectroChemEODEOL
+
+    References 
+    -------------
+     .. [0] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
+     .. [1] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     events = ['EOD']
     inputs = ['i']
@@ -563,10 +566,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
 class BatteryElectroChemEOL(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in the following paper:
-    `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
+    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in [2]_
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository[3]_.
 
     :term:`Events<event>`: (1)
         InsufficientCapacity: Insufficient battery capacity
@@ -583,20 +585,20 @@ class BatteryElectroChemEOL(PrognosticsModel):
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[Srt, float]
+        process_noise : Optional, float or dict[Srt, float]
           Process noise (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for process noise (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[Srt, float]
+        measurement_noise : Optional, float or dict[Srt, float]
           Measurement noise (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for measurement noise (e.g., normal, uniform, triangular)
         qMaxThreshold : float
-            Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occured. Note: Battery manufacturers specify a threshold of 70-80% of qMax
+            Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occurred. Note: Battery manufacturers specify a threshold of 70-80% of qMax
         wq : float
             Wear rate for qMax, Ro, and D respectively
         wr : float
@@ -609,6 +611,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
     See Also
     --------
     BatteryElectroChemEOD, BatteryElectroChem, BatteryElectroChemEODEOL
+
+    References
+    -----------
+    .. [2] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
+    .. [3] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     states = ['qMax', 'Ro', 'D']
     events = ['InsufficientCapacity']
@@ -668,13 +675,9 @@ def OverwrittenWarning(params):
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """
-    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in the following papers:
+    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in [4]_ and [5]_
 
-    1. `M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132`
-
-    2. `M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252`
-
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the `Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/`.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [6]_.
 
     :term:`Events<event>`: (2)
         | EOD: End of Discharge
@@ -696,7 +699,13 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
 
     Note
     ----
-        For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
+    For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
+
+    References
+    -----------
+    .. [4] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
+    .. [5] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
+    .. [6] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     inputs = BatteryElectroChemEOD.inputs
     outputs = BatteryElectroChemEOD.outputs

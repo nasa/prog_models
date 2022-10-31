@@ -1,5 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from io import StringIO
+import sys
 import unittest
 import warnings
 
@@ -8,6 +10,13 @@ from prog_models.exceptions import ProgModelInputException
 
 
 class TestSurrogate(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+
     def test_surrogate_improper_input(self):
         m = ThrownObject()
         def load_eqn(t = None, x = None):

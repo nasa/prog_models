@@ -1,17 +1,16 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import prognostics_model
-
 from copy import deepcopy
 import numpy as np
 import warnings
 
+from .. import prognostics_model
+
 
 class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     """
-    Prognostics :term:`model` for a Centrifugal Pump as described in the following paper:
-    `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
+    Prognostics :term:`model` for a Centrifugal Pump as described in [0]_.
 
     :term:`Events<event>`: (4)
         | ImpellerWearFailure: Failure of the impeller due to wear
@@ -46,17 +45,17 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
 
     keyword args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         pAtm : float
             Atmospheric pressure
@@ -108,6 +107,10 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
     See Also
     --------
     CentrifugalPumpWithWear
+
+    References
+    ----------
+    .. [0] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
     """
     events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
@@ -280,8 +283,7 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     """
     Prognostics :term:`model` for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states
 
-    This class implements a Centrifugal Pump model as described in the following paper:
-    `M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes`
+    This class implements a Centrifugal Pump model as described in [1]_.
 
     :term:`Events<event>`: (4) 
         See CentrifugalPumpBase
@@ -304,6 +306,10 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     See Also
     --------
     CentrifugalPumpBase
+
+    References
+    ----------
+    .. [1] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
     """
     inputs = CentrifugalPumpBase.inputs
     outputs = CentrifugalPumpBase.outputs

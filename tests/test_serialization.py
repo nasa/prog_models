@@ -1,12 +1,20 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from io import StringIO
+import sys
 import unittest
-import numpy as np
 
 from prog_models.models import BatteryElectroChemEOD as Battery 
 from prog_models.data_models import DMDModel
 
+
 class TestSerialization(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
 
     def test_serialization_basic(self):
         batt = Battery()
