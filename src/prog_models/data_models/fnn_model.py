@@ -7,14 +7,14 @@ from tensorflow.keras import layers
 from . import NNStateTransitionModel
 
 
-class LSTMStateTransitionModel(NNStateTransitionModel):
+class FNNStateTransitionModel(NNStateTransitionModel):
     """
     .. versionadded:: 1.4.0
 
-    A State Transition Model with no :term:`event` using an Keras LSTM Model.
+    A State Transition Model with no :term:`event` using an Keras CNN Lyer.
     State transition models map from the :term:`input` at time t and :term:`output` at time t-1 plus historical data from a set window to the :term:`output` at time t.
 
-    Most users will use the :py:func:`LSTMStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The LSTM model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func:`LSTMStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
+    Most users will use the :py:func:`CNNStateTransitionModel.from_data` method to create a model, but the model can be created by passing in a model directly into the constructor. The CNN model in this method maps from [u_t-n+1, z_t-n, ..., u_t, z_t-1] to z_t. Past :term:`input` are stored in the :term:`model` internal :term:`state`. Actual calculation of :term:`output` is performed when :py:func:`CNNStateTransitionModel.output` is called. When using in simulation that may not be until the simulation results are accessed.
 
     Args:
         output_model (keras.Model): If a state model is present, maps from the state_model outputs to model :term:`output`. Otherwise, maps from model inputs to model :term:`output`
@@ -31,7 +31,7 @@ class LSTMStateTransitionModel(NNStateTransitionModel):
         model (keras.Model): Keras model to use for state transition
 
     See Also:
-        LSTMStateTransitionModel.from_data
+        CNNStateTransitionModel.from_data
         examples.lstm_model
     """
 
@@ -43,7 +43,7 @@ class LSTMStateTransitionModel(NNStateTransitionModel):
     @classmethod
     def from_data(cls, inputs, outputs, event_states = None, t_met = None, **kwargs):
         """
-        Generate a LSTMStateTransitionModel from data
+        Generate a CNNStateTransitionModel from data
 
         Args:
             inputs (list[np.array]): 
@@ -69,9 +69,9 @@ class LSTMStateTransitionModel(NNStateTransitionModel):
             epochs (int): 
                 Number of epochs (i.e., iterations) to train the model. More epochs means better results (to a point), but more time to train. Note: large numbers of epochs may result in overfitting.
             layers (int): 
-                Number of LSTM layers to use. More layers can represent more complex systems, but are less efficient. Note: 2 layers is typically enough for most complex systems. Default: 1
+                Number of CNN layers to use. More layers can represent more complex systems, but are less efficient. Default: 3
             units (int or list[int]): 
-                number of units (i.e., dimensionality of output state) used in each lstm layer. Using a scalar value will use the same number of units for each layer.
+                number of units (i.e., dimensionality of output state) used in each cnn layer. Using a scalar value will use the same number of units for each layer.
             activation (str or list[str]): 
                 Activation function to use for each layer
             dropout (float): 
@@ -86,17 +86,17 @@ class LSTMStateTransitionModel(NNStateTransitionModel):
                 Number of workers to use when training. One worker indicates no multiprocessing
 
         Returns:
-            LSTMStateTransitionModel: Generated Model
+            CNNStateTransitionModel: Generated Model
 
         See Also:
-            https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
+            https://www.tensorflow.org/api_docs/python/tf/keras/layers/CNN
         """
         params = { # default_params
-            'layers': 1,
-            'units': 16,
+            'layers': 3,
+            'units': 128,
             'activation': 'tanh',
         }.copy()  # Copy is needed to avoid updating default
-        params.update(LSTMStateTransitionModel.default_params)
+        params.update(FNNStateTransitionModel.default_params)
         params.update(kwargs)
 
         if not np.isscalar(params['layers']):
@@ -115,7 +115,6 @@ class LSTMStateTransitionModel(NNStateTransitionModel):
         if not isinstance(params['activation'], (list, np.ndarray)):
             params['activation'] = [params['activation'] for _ in range(params['layers'])]
 
-        internal_layers = [layers.LSTM(params['units'][i], activation=params['activation'][i], return_sequences=True) for i in range(params['layers']-1)]
-        internal_layers.append(layers.LSTM(params['units'][-1], activation=params['activation'][-1]))
-
+        internal_layers = [layers.Flatten()]
+        internal_layers.extend([layers.Dense(params['units'][i], activation=params['activation'][i]) for _ in range(params['layers'])])
         return NNStateTransitionModel.from_data(internal_layers, inputs, outputs, event_states, t_met, **params)
