@@ -2,7 +2,7 @@
 # This ensures that the directory containing examples is in the python search directories 
 
 """
-Example building a LSTMStateTransitionModel from data. This is a simple example of how to use the LSTMStateTransitionModel class.
+Example building a Data Models from data. This is a simple example of how to use the LSTMStateTransitionModel and FNNStateTransitionModel classes.
 
 .. dropdown:: More details
 
@@ -13,7 +13,7 @@ Example building a LSTMStateTransitionModel from data. This is a simple example 
 
 import matplotlib.pyplot as plt
 import numpy as np
-from prog_models.data_models import LSTMStateTransitionModel
+from prog_models.data_models import FNNStateTransitionModel, LSTMStateTransitionModel
 from prog_models.models import ThrownObject, BatteryElectroChemEOD
 
 def run_example():
@@ -40,17 +40,21 @@ def run_example():
     # Step 2: Generate model
     # We'll use the LSTMStateTransitionModel class to generate a model from the data.
     print('Building model...')
-    m2 = LSTMStateTransitionModel.from_data(
-        inputs = [data.inputs],
-        outputs = [data.outputs],  
-        window=4, 
-        epochs=30,  # Maximum number of epochs, may stop earlier if early stopping enabled
-        output_keys = ['x'])
+    cfg = {  # Configuration for training
+        'inputs': [data.inputs],
+        'outputs': [data.outputs],
+        'window': 4,
+        'epochs': 50,  # Maximum number of epochs, may stop earlier if early stopping enabled
+        'output_keys': ['x']
+    }
+    lstm_model = LSTMStateTransitionModel.from_data(**cfg)
+    fnn_model = FNNStateTransitionModel.from_data(**cfg, layers=4, units=[4086, 10000, 1024, 512], activation='sigmoid')
 
     # We can see the training history
     # Should show the model progressively getting better (i.e., the loss going down).
     # If val_loss starts going up again, then we may be overtraining
-    m2.plot_history()
+    lstm_model.plot_history()
+    fnn_model.plot_history()
     plt.show()
     
     # Step 3: Use model to simulate_to time of threshold
@@ -64,17 +68,19 @@ def run_example():
         # and the output from the last timestep
         nonlocal t_counter, x_counter
         z = m.output(x_counter)
-        z = m2.InputContainer(z.matrix)
+        z = lstm_model.InputContainer(z.matrix)
         x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
         t_counter = t
         return z
     
-    results2 = m2.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
+    lstm_results = lstm_model.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
+    fnn_results = fnn_model.simulate_to(data.times[-1], future_loading2, dt=TIMESTEP, save_freq=TIMESTEP)
 
     # Step 4: Compare model to original model
     print('Comparing results...')
     data.outputs.plot(title='original model')
-    results2.outputs.plot(title='generated model')
+    lstm_results.outputs.plot(title='LSTM generated model')
+    fnn_results.outputs.plot(title='FNN generated model')
     plt.show()
 
     # -----------------------------------------------------
@@ -105,23 +111,31 @@ def run_example():
 
     # Step 3: Generate Model
     print('Building model...')
-    m3 = LSTMStateTransitionModel.from_data(
+    cfg = {
+        'window': 4,
+        'epochs': 50,
+        'input_keys': ['dt'],
+        'output_keys': ['x']
+    }
+    lstm_model = LSTMStateTransitionModel.from_data(
         inputs = input_data,  
         outputs = output_data,
-        window=4, 
-        epochs=30, 
-        input_keys = ['dt'],
-        output_keys = ['x']) 
+        **cfg) 
     # Note, since we're generating from a model, we could also have done this:
-    # m3 = LSTMStateTransitionModel.from_model(
+    # lstm_model = LSTMStateTransitionModel.from_model(
     #     m,
     #     [future_loading for _ in range(5)],
     #     dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
-    #     window=4, 
-    #     epochs=30)  
+    #     **cfg)  
+
+    fnn_model = FNNStateTransitionModel.from_data(
+        inputs = input_data,  
+        outputs = output_data,
+        units = 128,
+        **cfg) 
 
     # Take a look at the training history
-    m3.plot_history()
+    lstm_model.plot_history()
     plt.show() 
 
     # Step 4: Simulate with model
@@ -129,7 +143,7 @@ def run_example():
     x_counter = m.initialize()
     def future_loading3(t, x = None):
         nonlocal t_counter, x_counter
-        z = m3.InputContainer({'x_t-1': x_counter['x'], 'dt': t - t_counter})
+        z = lstm_model.InputContainer({'x_t-1': x_counter['x'], 'dt': t - t_counter})
         x_counter = m.next_state(x_counter, future_loading(t), t - t_counter)
         t_counter = t
         return z
@@ -138,12 +152,14 @@ def run_example():
     # Using a dt not used in training will demonstrate the model's 
     # ability to handle different timesteps not part of training set
     data = m.simulate_to(data.times[-1], future_loading, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
-    results3 = m3.simulate_to(data.times[-1], future_loading3, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
+    lstm_results = lstm_model.simulate_to(data.times[-1], future_loading3, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
+    fnn_results = fnn_model.simulate_to(data.times[-1], future_loading3, dt=TIMESTEP*3, save_freq=TIMESTEP*3)
 
     # Step 5: Compare Results
     print('Comparing results...')
     data.outputs.plot(title='original model')
-    results3.outputs.plot(title='generated model')
+    lstm_results.outputs.plot(title='lstm model')
+    fnn_results.outputs.plot(title='fnn model')
     plt.show()
 
     # -----------------------------------------------------
@@ -174,21 +190,28 @@ def run_example():
             t_met_data.append(t_met)
   
     # Step 2: Generate Model
-    print('Building model...') 
-    m_batt = LSTMStateTransitionModel.from_data(
-        inputs = input_data,
-        outputs = output_data,
-        event_states = es_data,
-        t_met = t_met_data,
-        window=12, 
-        epochs=10, 
+    print('Building model...')
+    cfg = {
+        'inputs': input_data,
+        'outputs': output_data,
+        'event_states': es_data,
+        't_met': t_met_data,
+        'window': 12,
+        'epochs': 50,
+        'input_keys': ['i', 'dt'],
+        'output_keys': ['t', 'v'],
+        'event_keys':['EOD']
+    }
+    m_batt_lstm = LSTMStateTransitionModel.from_data(
         units=64,  # Additional units given the increased complexity of the system
-        input_keys = ['i', 'dt'],
-        output_keys = ['t', 'v'],
-        event_keys=['EOD']) 
+        **cfg)
+        
+    m_batt_fnn = FNNStateTransitionModel.from_data(
+        units=128,
+        **cfg) 
 
     # Take a look at the training history.
-    m_batt.plot_history()
+    m_batt_lstm.plot_history()
     plt.show()
 
     # Step 3: Simulate with model
@@ -201,7 +224,7 @@ def run_example():
     def future_loading2(t, x = None):
         nonlocal t_counter, x_counter
         z = batt.output(x_counter)
-        z = m_batt.InputContainer({'i': 3, 't_t-1': z['t'], 'v_t-1': z['v'], 'dt': t - t_counter})
+        z = m_batt_lstm.InputContainer({'i': 3, 't_t-1': z['t'], 'v_t-1': z['v'], 'dt': t - t_counter})
         x_counter = batt.next_state(x_counter, future_loading(t), t - t_counter)
         t_counter = t
         return z
@@ -210,14 +233,17 @@ def run_example():
     # Using a dt not used in training will demonstrate the model's 
     # ability to handle different timesteps not part of training set
     data = batt.simulate_to_threshold(future_loading, dt=1, save_freq=1)
-    results = m_batt.simulate_to_threshold(future_loading2, dt=1, save_freq=1)
+    results = m_batt_lstm.simulate_to_threshold(future_loading2, dt=1, save_freq=1)
+    fnn_results = m_batt_fnn.simulate_to_threshold(future_loading2, dt=1, save_freq=1)
 
     # Step 5: Compare Results
     print('Comparing results...')
     data.outputs.plot(title='original model', compact=False)
-    results.outputs.plot(title='generated model', compact=False)
+    results.outputs.plot(title='lstm model', compact=False)
+    fnn_results.outputs.plot(title='fnn model', compact=False)
     data.event_states.plot(title='original model', compact=False)
-    results.event_states.plot(title='generated model', compact=False)
+    results.event_states.plot(title='lstm model', compact=False)
+    fnn_results.event_states.plot(title='fnn model', compact=False)
     plt.show()
 
     # This last example isn't a perfect fit, but it matches the behavior pretty well
