@@ -23,7 +23,15 @@ jobs:
 
             - [ ] Confirm that all issues associated with the release have been closed (i.e., requirements have been met) or assigned to another release
 
-            - [ ] Run unit tests `python -m tests`
+            - [ ] Run unit tests `python -m tests`, on 
+          
+              - [ ] Windows
+
+              - [ ] Linux
+
+              - [ ] Apple Silicon Mac
+
+              - [ ] Intel Mac
 
             - [ ] If present, run manual tests `python -m tests.test_manual`
 
