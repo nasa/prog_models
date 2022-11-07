@@ -19,13 +19,13 @@ class BatteryCircuit(PrognosticsModel):
         i: Current draw on the battery
 
     :term:`States<state>`: (4)
-        | tb : Battery Temperature (°C)
+        | tb : Battery Temperature (K)
         | qb : Charge stored in Capacitor Cb of the equivalent circuit model
         | qcp : Charge stored in Capacitor Ccp of the equivalent circuit model
         | qcs : Charge stored in Capacitor Ccs of the equivalent circuit model
 
     :term:`Outputs<output>`: (2)
-        | t: Temperature of battery (°C)
+        | t: Temperature of battery (K)
         | v: Voltage supplied by battery
 
     Keyword Args
@@ -75,7 +75,7 @@ class BatteryCircuit(PrognosticsModel):
         Ccp : float
           R-C Pair Parameter
         Ta : float
-          Ambient Temperature
+          Ambient Temperature (K)
         Jt : float
           Temperature parameter
         ha : float
@@ -119,13 +119,13 @@ class BatteryCircuit(PrognosticsModel):
         'Rcp2': 37.223,
         'Ccp': 14.8223,
         # Temperature Parameters
-        'Ta': 18.95,
+        'Ta': 292.1,
         'Jt': 800,
         'ha': 0.5,
         'hcp': 19,
         'hcs': 1,
         'x0': {
-            'tb': 18.95,
+            'tb': 292.1,
             'qb': 7856.3254,
             'qcp': 0,
             'qcs': 0
@@ -133,7 +133,7 @@ class BatteryCircuit(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
+        'tb': (0, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
         'qb': (0, inf)
     }
 
