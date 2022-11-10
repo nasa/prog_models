@@ -11,7 +11,7 @@ import unittest
 sys.path.append(join(dirname(__file__), ".."))  # needed to access examples
 from examples import *
 
-EXAMPLES_SKIPPED = ['dataset', 'sim_battery_eol']
+EXAMPLES_SKIPPED = ['dataset', 'sim_battery_eol', 'ensemble']
 
 def make_test_function(example):
     def test(self):
