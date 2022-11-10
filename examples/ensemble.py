@@ -22,6 +22,7 @@ from prog_models.datasets import nasa_battery
 from prog_models.models import BatteryElectroChemEOD, BatteryCircuit
 
 def run_example():
+    # Example 1: Different model configurations
     # Download data
     print('downloading data (this may take a while)...')
     data = nasa_battery.load_data(8)[1]
@@ -30,50 +31,36 @@ def run_example():
     RUN_ID = 0
     test_input = [{'i': i} for i in data[RUN_ID]['current']]
     test_time = data[RUN_ID]['relativeTime']
-    test_output = [{'v': v, 't': t} for v, t in zip(data[RUN_ID]['voltage'], data[RUN_ID]['temperature'])]
 
     # Setup models
     # In this case, we have some uncertainty on the parameters of the model, 
     # so we're setting up a few versions of the circuit model with different parameters.
     print('Setting up models...')
     m_circuit = BatteryCircuit(process_noise = 0, measurement_noise = 0)
-    m_circuit_2 = BatteryCircuit(process_noise = 0, measurement_noise = 0, qMax = 8000)
-    m_circuit_3 = BatteryCircuit(process_noise = 0, measurement_noise = 0, qMax = 7500)
-    m_circuit_4 = BatteryCircuit(process_noise = 0, measurement_noise = 0, qMax = 6000, Rs = 0.055)
-    m_ensemble = EnsembleModel((m_circuit, m_circuit_2, m_circuit_3, m_circuit_4), process_noise = 0, measurement_noise = 0)
+    m_circuit_2 = BatteryCircuit(process_noise = 0, measurement_noise = 0, qMax = 7860)
+    m_circuit_3 = BatteryCircuit(process_noise = 0, measurement_noise = 0, qMax = 6700, Rs = 0.055)
+    m_ensemble = EnsembleModel((m_circuit, m_circuit_2, m_circuit_3), process_noise = 0, measurement_noise = 0)
 
     # Evaluate models
     print('Evaluating models...')
-    DT = 5
     def future_loading(t, x=None):
         for i, mission_time in enumerate(test_time):
             if mission_time > t:
                 return m_circuit.InputContainer(test_input[i])
-    print('\tEnsemble')
-    results_ensemble = m_ensemble.simulate_to(test_time.iloc[-1], future_loading, dt = DT)
-    print('\tCircuit 1')
-    results_circuit1 = m_circuit.simulate_to(test_time.iloc[-1], future_loading, dt = DT)
-    print('\tCircuit 2')
-    results_circuit2 = m_circuit_2.simulate_to(test_time.iloc[-1], future_loading, dt = DT)
-    print('\tCircuit 3')
-    results_circuit3 = m_circuit_3.simulate_to(test_time.iloc[-1], future_loading, dt = DT)
-    print('\tCircuit 4')
-    results_circuit4 = m_circuit_4.simulate_to(test_time.iloc[-1], future_loading, dt = DT)
+    results_ensemble = m_ensemble.simulate_to(test_time.iloc[-1], future_loading)
 
     # Plot results
     print('Producing figures...')
     plt.plot(test_time, data[RUN_ID]['voltage'], color='green', label='ground truth')
-    plt.plot(results_circuit1.times, [z['v'] for z in results_circuit1.outputs], color='blue', label='circuit 1')
-    plt.plot(results_circuit2.times, [z['v'] for z in results_circuit2.outputs], color='red', label='circuit 2')
-    plt.plot(results_circuit3.times, [z['v'] for z in results_circuit3.outputs], color='grey', label='circuit 3')
-    plt.plot(results_circuit4.times, [z['v'] for z in results_circuit4.outputs], color='purple', label='circuit 4')
-    plt.plot(results_ensemble.times, [z['v'] for z in results_ensemble.outputs], color='yellow', label='ensemble')
+    plt.plot(results_ensemble.times, [z['v'] for z in results_ensemble.outputs], color='red', label='ensemble')
     plt.legend()
 
-    # Note: there was an outlier model (results_circuit4), which effected the quality of the model prediction
+    # Note: This is a very poor perfoming model
+    # there was an outlier model (m_circuit_3), which effected the quality of the model prediction
     # This can be resolved by using a different aggregation_method. For example, median
+    # In a real scenario, you would likely remove this model, this is just to illustrate outlier elimination
     print('Updating with Median ')
-    m_ensemble.parameters['ensemble_method'] = np.median
+    m_ensemble.parameters['aggregation_method'] = np.median
     results_ensemble = m_ensemble.simulate_to(test_time.iloc[-1], future_loading)
     plt.plot(results_ensemble.times, [z['v'] for z in results_ensemble.outputs], color='orange', label='ensemble - median')
     plt.legend()
@@ -92,6 +79,8 @@ def run_example():
     print('Evaluating models...')
     print('\tEnsemble')
     results_ensemble = m_ensemble.simulate_to(test_time.iloc[-1], future_loading)
+    print('\tCircuit 1')
+    results_circuit1 = m_circuit.simulate_to(test_time.iloc[-1], future_loading)
     print('\tElectroChem')
     results_electro = m_electro.simulate_to(test_time.iloc[-1], future_loading)
 
@@ -103,8 +92,10 @@ def run_example():
     plt.plot(results_electro.times, [z['v'] for z in results_electro.outputs], color='red', label='electro chemistry')
     plt.plot(results_ensemble.times, [z['v'] for z in results_ensemble.outputs], color='yellow', label='ensemble')
     plt.legend()
+    
+    # Note that the result may not be exactly between the other two models. 
+    # This is because of aggrigation is done in 2 steps: at state transition and then at output calculation
 
 # This allows the module to be executed directly 
 if __name__=='__main__':
     run_example()
-
