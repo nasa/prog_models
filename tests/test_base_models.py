@@ -1,12 +1,18 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from copy import deepcopy
 import io
+import numpy as np
+from os.path import dirname, join
+import pickle
 import sys
 import unittest
-import numpy as np
+
+# This ensures that the directory containing ProgModelTemplate is in the python search directory
+sys.path.append(join(dirname(__file__), ".."))
+
 from prog_models import *
 from prog_models.models import *
-from copy import deepcopy
 
 
 class MockModel():
@@ -22,13 +28,15 @@ class MockModel():
         return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
-        x['a']+= u['i1']*dt
-        x['c']-= u['i2']
-        x['t']+= dt
-        return x
+        return self.StateContainer({
+                    'a': x['a'] + u['i1']*dt,
+                    'b': x['b'],
+                    'c': x['c'] - u['i2'],
+                    't': x['t'] + dt
+                })
 
     def output(self, x):
-        return {'o1': x['a'] + x['b'] + x['c']}
+        return self.OutputContainer({'o1': x['a'] + x['b'] + x['c']})
 
 
 class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
@@ -103,6 +111,49 @@ class MockModelWithDerived(MockProgModel):
 
 
 class TestModels(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = io.StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+
+    def test_non_container(self):
+        class MockProgModelStateDict(MockProgModel):
+            def next_state(self, x, u, dt):
+                return {
+                    'a': x['a'] + u['i1']*dt,
+                    'b': x['b'],
+                    'c': x['c'] - u['i2'],
+                    't': x['t'] + dt
+                }
+        
+        m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+        self.assertAlmostEqual(outputs[-1]['o1'], -13.2)
+        self.assertIsInstance(outputs[-1], m.OutputContainer)
+
+        class MockProgModelStateNdarray(MockProgModel):
+            def next_state(self, x, u, dt):
+                return np.array([
+                    [x['a'] + u['i1']*dt],
+                    [x['b']],
+                    [x['c'] - u['i2']],
+                    [x['t'] + dt]]
+                )
+
+        m = MockProgModelStateNdarray(process_noise_dist='none', measurement_noise_dist='none')
+
+        # Any event, default
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        self.assertAlmostEqual(times[-1], 5.0, 5)
+
+
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
@@ -314,239 +365,41 @@ class TestModels(unittest.TestCase):
         t = m.threshold_met({'t': 10})
         self.assertTrue(t['e1'])
 
-    def test_model_gen(self):
-        keys = {
-            'states': ['a', 'b', 'c', 't'],
-            'inputs': ['i1', 'i2'],
-            'outputs': ['o1'],
-            'events': ['e1']
-        }
+    def test_default_es_and_tm(self):
+        # Test 1: TM only
+        class NoES(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1', 'e2']
 
-        def initialize(u, z):
-            return {'a': 1, 'b': 3, 'c': -3.2, 't': 0}
+            def threshold_met(self, _):
+                return {'e1': False, 'e2': True}
 
-        def next_state(x, u, dt):
-            x['a']+= u['i1']*dt
-            x['c']-= u['i2']
-            x['t']+= dt
-            return x
+        m = NoES()
 
-        def dx(x, u):
-            return {'a': u['i1'], 'b': 0, 'c': u['i2'], 't':1}
+        self.assertDictEqual(m.threshold_met({}), {'e1': False, 'e2': True})
+        self.assertDictEqual(m.event_state({}), {'e1': 1.0, 'e2': 0.0})
 
-        def output(x):
-            return {'o1': x['a'] + x['b'] + x['c']}
+        # Test 2: ES only
+        class NoTM(MockModel, prognostics_model.PrognosticsModel):
+            events = ['e1', 'e2']
 
-        def event_state(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0)}
+            def event_state(self, _):
+                return {'e1': 0.0, 'e2': 1.0}
+        
+        m = NoTM()
 
-        def threshold_met(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0) < 1e-6}
+        self.assertDictEqual(m.threshold_met({}), {'e1': True, 'e2': False})
+        self.assertDictEqual(m.event_state({}), {'e1': 0.0, 'e2': 1.0})
 
-        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn = next_state, event_state_eqn = event_state, threshold_eqn = threshold_met)
-        x0 = m.initialize({}, {})
-        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        self.assertAlmostEqual(x['a'], 1.1, 6)
-        self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], 3)
-        z = m.output(x)
-        self.assertAlmostEqual(z['o1'], -1.2, 5)
-        e = m.event_state({'t': 0})
-        t = m.threshold_met({'t': 0})
-        self.assertAlmostEqual(e['e1'], 1.0, 5)
-        self.assertFalse(t['e1'])
-        e = m.event_state({'t': 5})
-        self.assertAlmostEqual(e['e1'], 0.0, 5)
-        t = m.threshold_met({'t': 5.1})
-        self.assertTrue(t['e1'])
-        t = m.threshold_met({'t': 10})
-        self.assertTrue(t['e1'])
+        # Test 3: Neither ES or TM 
+        class NoESTM(MockModel, prognostics_model.PrognosticsModel):
+            events = []
 
-        # Without event_state or threshold
-        keys = {
-            'states': ['a', 'b', 'c'],
-            'inputs': ['i1', 'i2'],
-            'outputs': ['o1']
-        }
-        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn=next_state)
-        x0 = m.initialize({}, {})
-        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        self.assertAlmostEqual(x['a'], 1.1, 6)
-        self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], 3)
-        z = m.output(x)
-        self.assertAlmostEqual(z['o1'], -1.2, 5)
-        e = m.event_state({'t': 5})
-        self.assertDictEqual(e, {})
-        t = m.threshold_met({'t': 5.1})
-        self.assertDictEqual(t, {})
-
-        # Deriv Model
-        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
-        x0 = m.initialize({}, {})
-        dx = m.dx(x0, {'i1': 1, 'i2': 2.1})
-        self.assertAlmostEqual(dx['a'], 1, 6)
-        self.assertAlmostEqual(dx['b'], 0, 6)
-        self.assertAlmostEqual(dx['c'], 2.1, 6)
-        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        self.assertAlmostEqual(x['a'], 1.1, 6)
-        self.assertAlmostEqual(x['c'], -2.99, 6)
-        self.assertEqual(x['b'], 3)
-
-    def test_broken_model_gen(self):
-        keys = {
-            'states': ['a', 'b', 'c', 't'],
-            'inputs': ['i1', 'i2'],
-            'outputs': ['o1'],
-            'events': ['e1']
-        }
-
-        def initialize(u, z):
-            return {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
-
-        def next_state(x, u, dt):
-            x['a']+= u['i1']*dt
-            x['c']-= u['i2']
-            x['t']+= dt
-            return x
-
-        def output(x):
-            return {'o1': x['a'] + x['b'] + x['c']}
-
-        def event_state(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0)}
-
-        def threshold_met(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0) < 1e-6}
-
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, 7, output, next_state_eqn=next_state)
-            self.fail("Should have failed- non-callable initialize eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn=[])
-            self.fail("Should have failed- non-callable next_state eqn")
-        except ProgModelTypeError:
-            pass
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output)
-            self.fail("Should have failed- missing next_state and dx eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- non-callable output eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- missing inputs keys")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- missing states keys")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- missing outputs keys")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            extra_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1'],
-                'abc': 'def'
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(extra_keys, initialize, output, next_state_eqn = next_state)
-        except ProgModelTypeError:
-            self.fail("Should not have failed- extra keys")
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, output, event_state_eqn=-3, next_state_eqn = next_state)
-            self.fail("Should have failed- not callable event_state eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, output, event_state_eqn=event_state, threshold_eqn=-3, next_state_eqn = next_state)
-            self.fail("Should have failed- not callable threshold eqn")
-        except ProgModelTypeError:
-            pass
-
-        # Non-iterable state
-        try:
-            keys = {
-                'states': 10, # should be a list
-                'inputs': ['i1', 'i2'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            def dx(t, x, u):
-                return {'a': u['i1'], 'b': 0, 'c': u['i2']}
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
-            self.fail("Should have failed- non iterable states")
-        except TypeError:
-            pass
-
-        try:
-            keys = {
-                'states': ['a', 'b', 'c'], 
-                'inputs': ['i1', 'i2'],
-                'outputs': -2,# should be a list
-                'events': ['e1']
-            }
-            def dx(t, x, u):
-                return {'a': u['i1'], 'b': 0, 'c': u['i2']}
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
-            self.fail("Should have failed- non iterable outputs")
-        except ProgModelTypeError:
-            pass
+        m = NoESTM()
+        self.assertDictEqual(m.threshold_met({}), {})
+        self.assertDictEqual(m.event_state({}), {})
 
     def test_pickle(self):
         m = MockProgModel(p1 = 1.3)
-        import pickle
         pickle.dump(m, open('model_test.pkl', 'wb'))
         m2 = pickle.load(open('model_test.pkl', 'rb'))
         isinstance(m2, MockProgModel)
@@ -683,7 +536,9 @@ class TestModels(unittest.TestCase):
         # Check inputs
         self.assertEqual(len(inputs), 5)
         for i in inputs:
-            self.assertDictEqual(i, {'i1': 1, 'i2': 2.1}, "Future loading error")
+            i0 = {'i1': 1, 'i2': 2.1}
+            for key in i.keys():
+                self.assertEqual(i[key], i0[key], "Future loading error")
 
         # Check states
         self.assertEqual(len(states), 5)
@@ -740,11 +595,10 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
-        from numpy import array
-        a = array([1, 2, 3, 4, 4.5])
-        b = array([5]*5)
-        c = array([-3.2, -7.4, -11.6, -15.8, -17.9])
-        t = array([0, 0.5, 1, 1.5, 2])
+        a = np.array([1, 2, 3, 4, 4.5])
+        b = np.array([5]*5)
+        c = np.array([-3.2, -7.4, -11.6, -15.8, -17.9])
+        t = np.array([0, 0.5, 1, 1.5, 2])
         dt = 0.5
         x0 = {'a': deepcopy(a), 'b': deepcopy(b), 'c': deepcopy(c), 't': deepcopy(t)}
         x = m.next_state(x0, load(0), dt)
@@ -1244,7 +1098,6 @@ class TestModels(unittest.TestCase):
 
         # Test progress bar matching
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
-        sys.stdout = sys.__stdout__
         capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l][:11]
         percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
         for i in range(len(capture_split)):
@@ -1304,10 +1157,6 @@ def run_tests():
     unittest.main()
     
 def main():
-    # This ensures that the directory containing ProgModelTemplate is in the python search directory
-    from os.path import dirname, join
-    sys.path.append(join(dirname(__file__), ".."))
-
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Base Models")

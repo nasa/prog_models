@@ -1,13 +1,24 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from io import StringIO
 import numpy as np
+import pickle
+import sys
 import unittest
 
+from prog_models.models import BatteryElectroChemEOD
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class TestSimResult(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+    
     def test_sim_result(self):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
@@ -36,13 +47,12 @@ class TestSimResult(unittest.TestCase):
         time = list(range(NUM_ELEMENTS))
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
-        import pickle
         pickle.dump(result, open('model_test.pkl', 'wb'))
         result2 = pickle.load(open('model_test.pkl', 'rb'))
         self.assertEqual(result, result2)
 
     def test_extend(self):
-        NUM_ELEMENTS = 5 # Creating two result objects
+        NUM_ELEMENTS = 5  # Creating two result objects
         time = list(range(NUM_ELEMENTS))
         state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(NUM_ELEMENTS)]
         result = SimResult(time, state)
@@ -55,11 +65,11 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result.data, [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5}, {'a': 10.0, 'b': 10.0}]) # Assert data is correct before extending
         self.assertEqual(result2.data, [{'a': 0, 'b': 0}, {'a': 5, 'b': 5}, {'a': 10, 'b': 10}, {'a': 15, 'b': 15}, {'a': 20, 'b': 20}, {'a': 25, 'b': 25}, {'a': 30, 'b': 30}, {'a': 35, 'b': 35}, {'a': 40, 'b': 40}, {'a': 45, 'b': 45}])
         
-        result.extend(result2) # Extend result with result2
+        result.extend(result2)  # Extend result with result2
         self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(result.data, [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5}, {'a': 10.0, 'b': 10.0}, {'a': 0, 'b': 0}, {'a': 5, 'b': 5}, {'a': 10, 'b': 10}, {'a': 15, 'b': 15}, {'a': 20, 'b': 20}, {'a': 25, 'b': 25}, {'a': 30, 'b': 30}, {'a': 35, 'b': 35}, {'a': 40, 'b': 40}, {'a': 45, 'b': 45}])
 
-        self.assertRaises(ValueError, result.extend, 0) # Passing non-LazySimResult types to extend method
+        self.assertRaises(ValueError, result.extend, 0)  # Passing non-LazySimResult types to extend method
         self.assertRaises(ValueError, result.extend, [0,1])
         self.assertRaises(ValueError, result.extend, {})
         self.assertRaises(ValueError, result.extend, set())
@@ -91,13 +101,12 @@ class TestSimResult(unittest.TestCase):
         NUM_ELEMENTS = 5
         time = list(range(NUM_ELEMENTS))
         state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(NUM_ELEMENTS)]
-        lazy_result = LazySimResult(f, time, state) # Ordinary LazySimResult with f, time, state
-        sim_result = SimResult(time, state) # Ordinary SimResult with time,state
+        lazy_result = LazySimResult(f, time, state)  # Ordinary LazySimResult with f, time, state
+        sim_result = SimResult(time, state)  # Ordinary SimResult with time,state
 
         converted_lazy_result = SimResult(lazy_result.times, lazy_result.data)
-        self.assertNotEqual(sim_result, converted_lazy_result) # converted is not the same as the original SimResult
+        self.assertNotEqual(sim_result, converted_lazy_result)  # converted is not the same as the original SimResult
 
-        import pickle # try pickle'ing
         pickle.dump(lazy_result, open('model_test.pkl', 'wb'))
         pickle_converted_result = pickle.load(open('model_test.pkl', 'rb'))
         self.assertEqual(converted_lazy_result, pickle_converted_result)
@@ -238,7 +247,6 @@ class TestSimResult(unittest.TestCase):
     def test_plot(self):
         # Testing model taken from events.py
         YELLOW_THRESH, RED_THRESH, THRESHOLD = 0.15, 0.1, 0.05
-        from prog_models.models import BatteryElectroChemEOD
         class MyBatt(BatteryElectroChemEOD):
             events = BatteryElectroChemEOD.events + ['EOD_warn_yellow', 'EOD_warn_red', 'EOD_requirement_threshold']
             def event_state(self, state):
@@ -268,7 +276,7 @@ class TestSimResult(unittest.TestCase):
     def test_namedtuple_access(self):
         # Testing model taken from events.py
         YELLOW_THRESH, RED_THRESH, THRESHOLD = 0.15, 0.1, 0.05
-        from prog_models.models import BatteryElectroChemEOD
+        
         class MyBatt(BatteryElectroChemEOD):
             events = BatteryElectroChemEOD.events + ['EOD_warn_yellow', 'EOD_warn_red', 'EOD_requirement_threshold']
             def event_state(self, state):
@@ -475,8 +483,8 @@ class TestSimResult(unittest.TestCase):
         except IndexError:
             pass
 
-        # Catch bug that occured where lazysimresults weren't actually different
-        # This occured because the underlying arrays of time and state were not copied (see PR #158)
+        # Catch bug that occurred where lazysimresults weren't actually different
+        # This occurred because the underlying arrays of time and state were not copied (see PR #158)
         result = LazySimResult(f, time, state)
         result2 = LazySimResult(f, time, state)
         self.assertTrue(result == result2)
@@ -579,11 +587,6 @@ def run_tests():
     unittest.main()
     
 def main():
-    # This ensures that the directory containing ProgModelTemplate is in the python search directory
-    import sys
-    from os.path import dirname, join
-    sys.path.append(join(dirname(__file__), ".."))
-
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Sim Result")

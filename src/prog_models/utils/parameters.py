@@ -3,16 +3,19 @@
 
 from collections import UserDict
 from copy import deepcopy
+import json
 from numbers import Number
 import types
 from typing import Callable
 
 from .noise_functions import measurement_noise_functions, process_noise_functions
+from .serialization import *
 from ..exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
     from prog_models.prognostics_model import PrognosticsModel
+
 
 class PrognosticsModelParameters(UserDict):
     """
@@ -24,14 +27,13 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}):
+    def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}, _copy: bool = True):
         super().__init__()
         self._m = model
         self.callbacks = {}
         # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
         for (key, value) in dict_in.items():
-            # Deepcopy is needed here to force copying when value is an object (e.g., dict)
-            self[key] = deepcopy(value)
+            self.__setitem__(key, value, _copy=_copy)
 
         # Add and run callbacks
         # Has to be done here so the base parameters are all set 
@@ -42,16 +44,20 @@ class PrognosticsModelParameters(UserDict):
                     changes = callback(self)
                     self.update(changes)
 
-    def __setitem__(self, key : str, value : float) -> None:
+    def __setitem__(self, key : str, value : float, _copy : bool = True) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
-            key (string): configuration key to set
+            key (str): configuration key to set
             value: value to set that configuration value to
 
         Raises:
             ProgModelTypeError: Improper configuration for a model
         """
+        # Deepcopy is needed here to force copying when value is an object (e.g., dict)
+        if _copy:
+            value = deepcopy(value)
+        
         super().__setitem__(key, value)
 
         if key in self.callbacks:
@@ -123,7 +129,7 @@ class PrognosticsModelParameters(UserDict):
         """Register a new callback for derived parameters
 
         Args:
-            key (string): key for which the callback is triggered
+            key (str): key for which the callback is triggered
             callback (function): callback function f(parameters) -> updates (dict)
         """
         if key in self.callbacks:
@@ -135,3 +141,27 @@ class PrognosticsModelParameters(UserDict):
         if key in self:
             updates = callback(self[key])
             self.update(updates)
+
+    def to_json(self):
+        """
+        Serialize parameters as JSON objects 
+        """
+        return json.dumps(self.data, cls=CustomEncoder)
+    
+    @classmethod
+    def from_json(cls, data):
+        """
+        Create a new parameters object from parameters that were serialized as a JSON object
+
+        Args:
+            data: 
+                JSON serialized parameters necessary to build parameters 
+                See to_json method 
+
+        Returns:
+            Parameters: Parameters generated from serialized parameters 
+        """
+
+        extract_parameters = json.loads(data, object_hook = custom_decoder)
+ 
+        return cls(**extract_parameters)

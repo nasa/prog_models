@@ -47,9 +47,9 @@ class SimResult(UserList):
         """
         Get the index of the first sample where other occurs
 
-        Args: 
+        Args:
             other (dict)
-    
+
         Returns:
             int: Index of first sample where other occurs
         """
@@ -80,7 +80,7 @@ class SimResult(UserList):
         """
         self.times.pop(index)
         return self.data.pop(index)
-    
+
     def remove(self, d : float = None, t : float = None) -> None:
         """Remove an element
 
@@ -90,14 +90,14 @@ class SimResult(UserList):
         """
         if sum([i is None for i in (d, t)]) != 1:
             raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
-       
+
         if (t is not None):
             self.data.pop(self.times.index(t))
             self.times.remove(t)
         else:
             self.times.pop(self.data.index(d))
             self.data.remove(d)
-        
+
     def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
@@ -129,7 +129,7 @@ class SimResult(UserList):
         if len(self.data[0]) == 0:
             return np.array([[] for _ in self.data], dtype=np.float64)
         if isinstance(self.data[0], DictLikeMatrixWrapper) and keys is None:
-            return np.array([u_i.matrix[:,0] for u_i in self.data], dtype=np.float64)
+            return np.array([u_i.matrix[:, 0] for u_i in self.data], dtype=np.float64)
         if keys is None:
             keys = self.data[0].keys()
         return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
@@ -138,8 +138,18 @@ class SimResult(UserList):
         """
         Plot the simresult as a line plot
 
-        Args: 
-            kwargs: Configuration parameters for plot_timeseries
+        Keyword Args:
+            keys (list[str]): list of keys to plot. If not provided, all keys in the series are plotted.
+            figsize (tuple[float, float]): width and height of the figure
+            compact (bool): If true, all timeseries are displayed in one plot (multiple colored lines)
+            xlabel (str) : label for the x-axis. Default is 'time'
+            ylabel (str) : label for the y-axis. Default is 'state'
+            title (str) : plot title. Default is no title
+            title_fontsize (str or float): plot title fontsize. Default is 'x-large'
+            suptitle (str) : plot suptitle. Default is no suptitle
+            ticklabel_fontsize (str or float): tick label font sizes. Default is 'small'
+            tight_layout (bool): whether to use tight layout (minimize figure blank space around the graph)
+            display_labels (str): whether to display x and y-labels in the figure (['no', 'minimal', 'all'])
 
         Returns:
             Figure
@@ -148,12 +158,12 @@ class SimResult(UserList):
 
     def monotonicity(self) -> Dict[str, float]:
         """
-        Calculate monotonicty for a single prediction. 
+        Calculate monotonicty for a single prediction.
         Given a single simulation result, for each event: go through all predicted states and compare those to the next one.
         Calculates monotonicity for each event key using its associated mean value in UncertainData.
 
         Where N is number of measurements and sign indicates sign of calculation.
-        
+
         Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
         http://www.papers.phmsociety.org/index.php/phmconf/article/view/1404
         Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Aritifical Intelligence, Volume 306.
@@ -168,12 +178,12 @@ class SimResult(UserList):
         # Collect and organize mean values for each event
         by_event = defaultdict(list)
         for uncertaindata in self.data:
-            for key,value in uncertaindata.items():
+            for key, value in uncertaindata.items():
                 by_event[key].append(value)
 
         # For each event, calculate monotonicity using formula
         result = {}
-        for key,l in by_event.items():
+        for key, l in by_event.items():
             mono_sum = 0
             for i in range(len(l)-1): 
                 mono_sum += np.sign(l[i+1] - l[i])
@@ -184,11 +194,12 @@ class SimResult(UserList):
         raise NotImplementedError("Not Implemented")
 
     # Functions of list not implemented
-    # Specified here to stop users from accidentally trying to use them (due to this classes similarity to list)
-    append = __not_implemented 
-    count = __not_implemented 
+    # Specified here to stop users from accidentally trying to use them 
+    # (due to this classes similarity to list)
+    append = __not_implemented
+    count = __not_implemented
     insert = __not_implemented
-    reverse = __not_implemented 
+    reverse = __not_implemented
     # lgtm [py/missing-equals]
 
 
@@ -206,7 +217,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.fcn = fcn
         self.__data = None
         if times is None or states is None:
-            self.times = [] 
+            self.times = []
             self.states = []
         else:
             self.times = times.copy()
@@ -244,9 +255,9 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
         """
         if (isinstance(other, self.__class__)):
-            self.times.extend(other.times)  
+            self.times.extend(other.times)
             if _copy:
-                self.states.extend(deepcopy(other.states))  
+                self.states.extend(deepcopy(other.states))
             else:
                 self.states.extend(other.states)
             if self.__data is None or not other.is_cached():
@@ -275,15 +286,15 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
     def remove(self, d : float = None, t : float = None, s = None) -> None:
         """Remove an element
-         
+
         Args:
-            d: Data value to be removed.
-            t: Time value to be removed.
-            s: State value to be removed.
-        """ 
+            d: Data value to be removed
+            t: Time value to be removed
+            s: State value to be removed
+        """
         if sum([i is None for i in (d, t, s)]) != 2:
             raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
-       
+
         if (t is not None):
             target_index = self.times.index(t)
             self.times.pop(target_index)
@@ -316,4 +327,3 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if self.__data is None:
             self.__data = [self.fcn(x) for x in self.states]
         return self.__data
-    

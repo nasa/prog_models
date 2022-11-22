@@ -1,5 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+from io import StringIO
+import sys
 import unittest
 import warnings
 
@@ -8,6 +10,13 @@ from prog_models.exceptions import ProgModelInputException
 
 
 class TestSurrogate(unittest.TestCase):
+    def setUp(self):
+        # set stdout (so it wont print)
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stdout = sys.__stdout__
+
     def test_surrogate_improper_input(self):
         m = ThrownObject()
         def load_eqn(t = None, x = None):
@@ -50,7 +59,7 @@ class TestSurrogate(unittest.TestCase):
             m.generate_surrogate([load_eqn], training_noise = ['invalid'])
     
     def test_surrogate_basic_thrown_object(self):
-        m = ThrownObject()
+        m = ThrownObject(process_noise = 0, measurement_noise = 0)
         def load_eqn(t = None, x = None):
             return m.InputContainer({})
         
@@ -68,6 +77,8 @@ class TestSurrogate(unittest.TestCase):
             'dt': 0.25
         }
         result = m.simulate_to_threshold(load_eqn, **options)
+        surrogate.parameters['measurement_noise'] = 0
+        surrogate.parameters['process_noise'] = 0
         surrogate_results = surrogate.simulate_to_threshold(load_eqn, **options)
 
         MSE = m.calc_error(surrogate_results.times, surrogate_results.inputs, surrogate_results.outputs)
@@ -153,12 +164,14 @@ class TestSurrogate(unittest.TestCase):
         self.assertLess(MSE, 0.02) # Pretty good approx
     
     def test_surrogate_subsets(self):
-        m = ThrownObject()
+        m = ThrownObject(process_noise=0, measurement_noise = 0)
         def load_eqn(t = None, x = None):
             return m.InputContainer({})
 
         # Perfect subset
         surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys=['x', 'v'], training_noise = 0)
+        surrogate.parameters['process_noise'] = 0
+        surrogate.parameters['measurement_noise'] = 0
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.inputs and stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + m.events)

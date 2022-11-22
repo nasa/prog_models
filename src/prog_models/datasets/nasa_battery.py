@@ -9,34 +9,34 @@ import zipfile
 
 # Map of battery to url for data
 urls = {
-    'RW1': "https://ti.arc.nasa.gov/c/27/",
-    'RW2': "https://ti.arc.nasa.gov/c/27/",
-    'RW3': "https://ti.arc.nasa.gov/c/26/",
-    'RW4': "https://ti.arc.nasa.gov/c/26/",
-    'RW5': "https://ti.arc.nasa.gov/c/26/",
-    'RW6': "https://ti.arc.nasa.gov/c/26/",
-    'RW7': "https://ti.arc.nasa.gov/c/27/",
-    'RW8': "https://ti.arc.nasa.gov/c/27/",
-    'RW9': "https://ti.arc.nasa.gov/c/25/",
-    'RW10': "https://ti.arc.nasa.gov/c/25/",
-    'RW11': "https://ti.arc.nasa.gov/c/25/",
-    'RW12': "https://ti.arc.nasa.gov/c/25/",
-    'RW13': "https://ti.arc.nasa.gov/c/31/",
-    'RW14': "https://ti.arc.nasa.gov/c/31/",
-    'RW15': "https://ti.arc.nasa.gov/c/31/",
-    'RW16': "https://ti.arc.nasa.gov/c/31/",
-    'RW17': "https://ti.arc.nasa.gov/c/29/",
-    'RW18': "https://ti.arc.nasa.gov/c/29/",
-    'RW19': "https://ti.arc.nasa.gov/c/29/",
-    'RW20': "https://ti.arc.nasa.gov/c/29/",
-    'RW21': "https://ti.arc.nasa.gov/c/30/",
-    'RW22': "https://ti.arc.nasa.gov/c/30/",
-    'RW23': "https://ti.arc.nasa.gov/c/30/",
-    'RW24': "https://ti.arc.nasa.gov/c/30/",
-    'RW25': "https://ti.arc.nasa.gov/c/28/",
-    'RW26': "https://ti.arc.nasa.gov/c/28/",
-    'RW27': "https://ti.arc.nasa.gov/c/28/",
-    'RW28': "https://ti.arc.nasa.gov/c/28/",
+    'RW1': "https://data.nasa.gov/download/ed33-vxp2/application%2Fzip",
+    'RW2': "https://data.nasa.gov/download/ed33-vxp2/application%2Fzip",
+    'RW3': "https://data.nasa.gov/download/qghr-qkfw/application%2Fzip",
+    'RW4': "https://data.nasa.gov/download/qghr-qkfw/application%2Fzip",
+    'RW5': "https://data.nasa.gov/download/qghr-qkfw/application%2Fzip",
+    'RW6': "https://data.nasa.gov/download/qghr-qkfw/application%2Fzip",
+    'RW7': "https://data.nasa.gov/download/ed33-vxp2/application%2Fzip",
+    'RW8': "https://data.nasa.gov/download/ed33-vxp2/application%2Fzip",
+    'RW9': "https://data.nasa.gov/download/ugxu-9kjx/application%2Fzip",
+    'RW10': "https://data.nasa.gov/download/ugxu-9kjx/application%2Fzip",
+    'RW11': "https://data.nasa.gov/download/ugxu-9kjx/application%2Fzip",
+    'RW12': "https://data.nasa.gov/download/ugxu-9kjx/application%2Fzip",
+    'RW13': "https://data.nasa.gov/download/sb48-rsbc/application%2Fzip",
+    'RW14': "https://data.nasa.gov/download/sb48-rsbc/application%2Fzip",
+    'RW15': "https://data.nasa.gov/download/sb48-rsbc/application%2Fzip",
+    'RW16': "https://data.nasa.gov/download/sb48-rsbc/application%2Fzip",
+    'RW17': "https://data.nasa.gov/download/tcjd-g74p/application%2Fzip",
+    'RW18': "https://data.nasa.gov/download/tcjd-g74p/application%2Fzip",
+    'RW19': "https://data.nasa.gov/download/tcjd-g74p/application%2Fzip",
+    'RW20': "https://data.nasa.gov/download/tcjd-g74p/application%2Fzip",
+    'RW21': "https://data.nasa.gov/download/5uxu-h2h6/application%2Fzip",
+    'RW22': "https://data.nasa.gov/download/5uxu-h2h6/application%2Fzip",
+    'RW23': "https://data.nasa.gov/download/5uxu-h2h6/application%2Fzip",
+    'RW24': "https://data.nasa.gov/download/5uxu-h2h6/application%2Fzip",
+    'RW25': "https://data.nasa.gov/download/gah6-q2es/application%2Fzip",
+    'RW26': "https://data.nasa.gov/download/gah6-q2es/application%2Fzip",
+    'RW27': "https://data.nasa.gov/download/gah6-q2es/application%2Fzip",
+    'RW28': "https://data.nasa.gov/download/gah6-q2es/application%2Fzip",
 }
 
 cache = {}  # Cache for downloaded data
@@ -61,11 +61,6 @@ def load_data(batt_id : str) -> tuple:
     Raises:
         ValueError: Battery id must be a string or int
         ConnectionError: Failed to download data. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models.
-
-    Note:
-        Due to the NASA web modernization effort the dataset may be moved to a different URL. If that happens, this feature will break and the user will get a connection error. When/if that happens, we will quickly release an updated version with the new dataset URL. Update to the latest version.
-    
-        In all other instances of connection error or failed downloading, please submit an issue on the repository page (https://github.com/nasa/prog_models/issues) for our team to look into.
     """
     if isinstance(batt_id, int):
         # Convert to string

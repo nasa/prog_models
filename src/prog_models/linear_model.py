@@ -1,9 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from . import PrognosticsModel
 from abc import ABC, abstractmethod
 import numpy as np
+
+from . import PrognosticsModel
 
 
 class LinearModel(PrognosticsModel, ABC):
@@ -11,20 +12,22 @@ class LinearModel(PrognosticsModel, ABC):
     A linear prognostics :term:`model`. Used when behavior can be described using a simple linear time-series model defined by the following equations:
 
     .. math::
-        \frac{dx}{dt} = Ax + Bu + E
+        \dfrac{dx}{dt} = Ax + Bu + E
+
         z = Cx + D
+
         es = Fx + G
 
     where x is :term:`state`, u is :term:`input`, z is :term:`output` and es is :term:`event state`
 
     Linear Models must inherit from this class and define the following properties:
-        * A: 2-d numpy.array[float], dimensions: n_states x n_states
-        * B: 2-d numpy.array[float], optional (zeros by default), dimensions: n_states x n_inputs
-        * C: 2-d numpy.array[float], optional (zeros by default), dimensions: n_outputs x n_states
-        * D: 1-d numpy.array[float], dimensions: n_outputs x 1
-        * E: 1-d numpy.array[float], optional (zeros by default), dimensions: n_states x 1
-        * F: 2-d numpy.array[float], dimensions: n_es x n_states
-        * G: 1-d numpy.array[float], optional (zeros by default), dimensions: n_es x 1
+        * A: 2-d np.array[float], dimensions: n_states x n_states
+        * B: 2-d np.array[float], optional (zeros by default), dimensions: n_states x n_inputs
+        * C: 2-d np.array[float], optional (zeros by default), dimensions: n_outputs x n_states
+        * D: 1-d np.array[float], dimensions: n_outputs x 1
+        * E: 1-d np.array[float], optional (zeros by default), dimensions: n_states x 1
+        * F: 2-d np.array[float], dimensions: n_es x n_states
+        * G: 1-d np.array[float], optional (zeros by default), dimensions: n_es x 1
         * inputs:  list[str] - :term:`input` keys
         * states:  list[str] - :term:`state` keys
         * outputs: list[str] - :term:`output` keys

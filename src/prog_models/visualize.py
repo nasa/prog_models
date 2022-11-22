@@ -81,15 +81,15 @@ def set_plot_options(opt : dict) -> dict:
     ----------
     opt : dictionary of plot options. Acceptable entries are:\n
           * 'figsize' : tuple of 2 floats, width and height of the figure
-          * 'compact' : Boolean, whether to plot a "compact" figure. If compact, all time series are displayed in one plot (multiple colored lines)
-          * 'xlabel'  : string, label for the x-axis. Default is 'time'
-          * 'ylabel'  : string, label for the y-axis. Default is 'state'
-          * 'title'   : string or empty list or None, plot title. Default is empty list (no title)
-          * 'title_fontsize' : string or float, plot title fontsixe. Default is 'x-large'
-          * 'suptitle'       : string or empty list or None, plot suptitle. Default is empty list (no suptitle)
-          * 'ticklabel_fontsize' : string or float, tick label font sizes. Defaullt is 'small'
+          * 'compact' : bool, whether to plot a "compact" figure. If compact, all time series are displayed in one plot (multiple colored lines)
+          * 'xlabel'  : str, label for the x-axis. Default is 'time'
+          * 'ylabel'  : str, label for the y-axis. Default is 'state'
+          * 'title'   : str or empty list or None, plot title. Default is empty list (no title)
+          * 'title_fontsize' : str or float, plot title fontsize. Default is 'x-large'
+          * 'suptitle'       : str or empty list or None, plot suptitle. Default is empty list (no suptitle)
+          * 'ticklabel_fontsize' : str or float, tick label font sizes. Default is 'small'
           * 'tight_layout' : Boolean, whether to use tight layout (minimize figure blank space around the graph)
-          * 'display_labels' : string, whether to display x and y-labels in the figure.
+          * 'display_labels' : str, whether to display x and y-labels in the figure.
           * 'keys' : list of keys to plot. If not provided, all keys in the series are plotted.
 
     Returns
@@ -239,9 +239,9 @@ def set_savefig_options(sfo : dict) -> dict:
     ----------
     sfo : dictionary of options to save the current figure
           if not provided, a figure will not be saved by default. Otherwise, sfo should provide the following dictionary entries:\n
-           * 'save' (Boolean, whether to save the figure or not, True or False)
+           * 'save' (bool, whether to save the figure or not, True or False)
            * 'dpi' (int, resolution of the figure in dots per inch)
-           * 'filename' (string, figure filename, including file type, e.g., .pdf or .png. Default is 'timeseries_plot.pdf')
+           * 'filename' (str, figure filename, including file type, e.g., .pdf or .png. Default is 'timeseries_plot.pdf')
     
     Returns
     -------

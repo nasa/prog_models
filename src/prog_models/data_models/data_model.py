@@ -3,9 +3,10 @@
 
 from abc import ABC, abstractclassmethod
 import numpy as np
+import sys
 
 from .. import PrognosticsModel
-import sys
+
 
 class DataModel(PrognosticsModel, ABC):
     """
@@ -52,7 +53,7 @@ class DataModel(PrognosticsModel, ABC):
 
     def __setstate__(self, state):
         # Set the state (after un-pickling)
-        # If you use the __getstate__ method format below, you dont have to override setstate
+        # If you use the __getstate__ method format below, you don't have to override setstate
         (args, config) = state
         self.__init__(*args, **config)
 
@@ -83,7 +84,7 @@ class DataModel(PrognosticsModel, ABC):
     @classmethod
     def from_model(cls, m: PrognosticsModel, load_functions: list, **kwargs) -> "DataModel":
         """
-        Create a Data Model from an existing PrognosticsModel (i.e., a surrogate model). Generates data through simulation with supplied load functions. Then calls :py:func:`from_data` to generate the model.
+        Create a Data Model from an existing PrognosticsModel (i.e., a :term:`surrogate` model). Generates data through simulation with supplied load functions. Then calls :py:func:`from_data` to generate the model.
 
         Args:
             m (PrognosticsModel): 
@@ -154,5 +155,6 @@ class DataModel(PrognosticsModel, ABC):
         outputs = [d.outputs for d in data]
         states = [d.states for d in data]
         event_states = [d.event_states for d in data]
+        t_met = [[list(m.threshold_met(x).values()) for x in state] for state in states]
 
-        return cls.from_data(times = times, inputs = inputs, states = states, outputs = outputs, event_states = event_states, **config)
+        return cls.from_data(times = times, inputs = inputs, states = states, outputs = outputs, event_states = event_states, t_met= t_met, **config)

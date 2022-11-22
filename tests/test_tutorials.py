@@ -1,12 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+import importlib.util
 import unittest
 import warnings
-import importlib.util
 
 
 class TestTutorials(unittest.TestCase):
-
     def test_tutorial_ipynb(self):
         if importlib.util.find_spec('testbook') is None:
             warnings.warn('testbook not installed')
@@ -22,8 +21,7 @@ def main():
     result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
 
     if not result:
-        raise Exception("Failed test")
-          
+        raise Exception("Failed test") 
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .. import PrognosticsModel
-
 from math import inf
 import numpy as np
+
+from .. import PrognosticsModel
 
 
 class BatteryCircuit(PrognosticsModel):
@@ -19,28 +19,28 @@ class BatteryCircuit(PrognosticsModel):
         i: Current draw on the battery
 
     :term:`States<state>`: (4)
-        | tb : Battery Temperature (°C)
+        | tb : Battery Temperature (K)
         | qb : Charge stored in Capacitor Cb of the equivalent circuit model
         | qcp : Charge stored in Capacitor Ccp of the equivalent circuit model
         | qcs : Charge stored in Capacitor Ccs of the equivalent circuit model
 
     :term:`Outputs<output>`: (2)
-        | t: Temperature of battery (°C)
+        | t: Temperature of battery (K)
         | v: Voltage supplied by battery
 
     Keyword Args
     ------------
-        process_noise : Optional, float or Dict[str, float]
+        process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
           Can be number (e.g., .2) applied to every state, a dictionary of values for each 
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
-        process_noise_dist : Optional, String
+        process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
-        measurement_noise : Optional, float or Dict[str, float]
+        measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
           Can be number (e.g., .2) applied to every output, a dictionary of values for each
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
-        measurement_noise_dist : Optional, String
+        measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         V0 : float
           Nominal Battery Voltage
@@ -52,12 +52,30 @@ class BatteryCircuit(PrognosticsModel):
           Maximum Capacity
         VEOD : float
           End of Discharge Voltage Threshold
-        Cb0, Cbp0, Cbp1, Cbp2, Cbp3 : float 
-          Battery Capacity Parameters
-        Rs, Cs, Rcp0, Rcp1, Rcp2, Ccp : float
+        Cb0 : float 
+          Battery Capacity Parameter
+        Cbp0 : float 
+          Battery Capacity Parameter
+        Cbp1 : float 
+          Battery Capacity Parameter
+        Cbp2 : float 
+          Battery Capacity Parameter
+        Cbp3 : float 
+          Battery Capacity Parameter
+        Rs : float
+          R-C Pair Parameter
+        Cs : float
+          R-C Pair Parameter
+        Rcp0 : float
+          R-C Pair Parameter
+        Rcp1 : float
+          R-C Pair Parameter
+        Rcp2 : float
+          R-C Pair Parameter
+        Ccp : float
           R-C Pair Parameter
         Ta : float
-          Ambient Temperature
+          Ambient Temperature (K)
         Jt : float
           Temperature parameter
         ha : float
@@ -101,13 +119,13 @@ class BatteryCircuit(PrognosticsModel):
         'Rcp2': 37.223,
         'Ccp': 14.8223,
         # Temperature Parameters
-        'Ta': 18.95,
+        'Ta': 292.1,
         'Jt': 800,
         'ha': 0.5,
         'hcp': 19,
         'hcs': 1,
         'x0': {
-            'tb': 18.95,
+            'tb': 292.1,
             'qb': 7856.3254,
             'qcp': 0,
             'qcs': 0
@@ -115,7 +133,7 @@ class BatteryCircuit(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
+        'tb': (0, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
         'qb': (0, inf)
     }
 

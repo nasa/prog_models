@@ -2,7 +2,9 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example defining and testing a new model. 
+Example defining and using a new prognostics model.  
+
+In this example a simple model of an object thrown upward into the air is defined. That model is then used in simulation under different conditions and the results are displayed in different formats.
 """
 
 from prog_models import PrognosticsModel
@@ -106,8 +108,8 @@ def run_example():
     threshs_met = m.threshold_met(simulated_results.states[-1])
     for (key, met) in threshs_met.items():
         if met:
-            event_occured = key
-    print('\nThis event that occured first: ', event_occured)
+            event_occurred = key
+    print('\nThis event that occurred first: ', event_occurred)
     # It falls before it hits the gorund, obviously
 
     # Metrics can be analyzed from the simulation results. For example: monotonicity

@@ -12,7 +12,6 @@ from ..sim_result import SimResult, LazySimResult
 from .. import LinearModel, PrognosticsModel
 from . import DataModel
 
-
 class DMDModel(LinearModel, DataModel):
     """
     .. versionadded:: 1.3.0
@@ -101,8 +100,15 @@ class DMDModel(LinearModel, DataModel):
         self.outputs = params['output_keys']
         n_outputs = len(params['output_keys'])
         
-        self.events = params['event_keys']
-        n_events = len(params['event_keys'])
+        has_overwritten_threshold_eqn = hasattr(self, 'events')
+        if has_overwritten_threshold_eqn: 
+             # To support overridding to add custom threshold equation
+            n_events = 0
+        else:
+            self.events = params['event_keys']
+            n_events = len(self.events)
+
+
         n_total = n_states + n_outputs + n_events
 
         self.A = dmd_matrix[:,0:n_total]
@@ -110,7 +116,8 @@ class DMDModel(LinearModel, DataModel):
         self.C = np.zeros((n_outputs,n_total))
         for iter1 in range(n_outputs):
             self.C[iter1,n_states+iter1] = 1 
-        self.F = np.zeros((n_events,n_total))
+        if not has_overwritten_threshold_eqn:
+            self.F = np.zeros((n_events,n_total))
         for iter2 in range(n_events):
             self.F[iter2,n_states+n_outputs+iter2] = 1 
 
@@ -120,7 +127,7 @@ class DMDModel(LinearModel, DataModel):
         self.dmd_matrix = dmd_matrix
         self.parameters['dmd_matrix'] = dmd_matrix  # This simplifies pickling (all data in parameters)
         
-        if not isinstance(self.parameters['x0'], bool) and not isinstance(self.parameters['x0'], self.StateContainer):
+        if 'x0' in self.parameters and not isinstance(self.parameters['x0'], self.StateContainer):
             self.parameters['x0'] = self.StateContainer(params['x0'])
 
     @classmethod
@@ -141,21 +148,21 @@ class DMDModel(LinearModel, DataModel):
                 list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
 
         Keyword Args:
-            trim_data_to (int, optional): 
+            trim_data_to (float, optional): 
                 Fraction (0-1) of data resulting from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold` used to train DMD surrogate model
                 e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to 100, the surrogate model is trained on the data from t=0 to 70 \n   
                 Note: To trim data to a set time, use the 'horizon' parameter  
-            stability_tol (int, optional):
+            stability_tol (float, optional):
                 Value that determines the tolerance for DMD matrix stability
-            training_noise (int, optional):
-                Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise
-            input_keys (list[str]): 
+            training_noise (float, optional):
+                Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise. Adding noise to the training data results in a slight perturbation that removes any linear dependencies among the data
+            input_keys (list[str], optional): 
                 List of :term:`input` keys
-            state_keys (list[str]): 
+            state_keys (list[str], optional): 
                 List of :term:`state` keys
-            output_keys (list[str]):
+            output_keys (list[str], optional):
                 List of :term:`output` keys
-            event_keys (list[str]):
+            event_keys (list[str], optional):
                 List of :term:`event` keys
         
         Additionally, other keyword arguments from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold`
@@ -388,7 +395,6 @@ class DMDModel(LinearModel, DataModel):
         process_noise_temp = {key: 0 for key in m.events}
         config = {
             'add_dt': False,
-            'x0': True,  # Set it to anything not None since we define our own function
             'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
             'measurement_noise': m.parameters['measurement_noise'],
             'process_noise_dist': m.parameters.get('process_noise_dist', 'normal'),
