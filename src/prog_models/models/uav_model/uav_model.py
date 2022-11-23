@@ -3,16 +3,16 @@
 
 # from .. import PrognosticsModel
 from prog_models.prognostics_model import PrognosticsModel
-import prog_models.models.trajectory_generation.trajectory.route as route 
-import prog_models.models.trajectory_generation.trajectory.trajectory as trajectory
-from prog_models.models.trajectory_generation.vehicles import AircraftModels
-from prog_models.models.trajectory_generation.vehicles.control import allocation_functions
+import prog_models.models.uav_model.trajectory.route as route 
+import prog_models.models.uav_model.trajectory.trajectory as trajectory
+from prog_models.models.uav_model.vehicles import AircraftModels
+from prog_models.models.uav_model.vehicles.control import allocation_functions
 
 import numpy as np
-import prog_models.models.trajectory_generation.utilities.geometry as geom
+import prog_models.models.uav_model.utilities.geometry as geom
 from warnings import warn
 
-class TrajGen(PrognosticsModel):
+class UAVGen(PrognosticsModel):
     """
 
     :term:`Events<event>`: (1)
@@ -28,14 +28,14 @@ class TrajGen(PrognosticsModel):
 
     """
     events = [] # fill in ['EOD']
-    inputs = ['u_x', 'u_y', 'u_z', 'u_phi', 'u_theta', 'u_psi', 'u_vx', 'u_vy', 'u_vz', 'u_p', 'u_q', 'u_r']
+    inputs = ['T','mx','my','mz']
     states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
         # Flight information
-        'flight_file': 'src/prog_models/models/trajectory_generation/data/20181207_011200_Flight.txt', 
+        'flight_file': 'src/prog_models/models/uav_model/data/20181207_011200_Flight.txt', 
         'flight_name': 'LaRC_20181207', 
         'aircraft_name': 'aircraft-1', 
 
@@ -80,7 +80,6 @@ class TrajGen(PrognosticsModel):
                         nurbs_basis_length=self.parameters['nurbs_basis_length'])
 
         self.ref_traj = ref_traj
-        # self.parameters['ref_traj'] = ref_traj
 
         # Initialize vehicle 
         init_pos = np.concatenate((ref_traj.cartesian_pos[0,:], ref_traj.attitude[0,:], 
@@ -118,13 +117,16 @@ class TrajGen(PrognosticsModel):
         # Extract values from vectors
         # --------------------------------
         m = self.vehicle_model.mass['total']  # vehicle mass
-        T, tp, tq, tr = u       # extract control input
+        T = u['T'] 
+        tp = u['mx']
+        tq = u['my']
+        tr = u['mz']
         Ixx, Iyy, Izz = self.vehicle_model.mass['Ixx'], self.vehicle_model.mass['Iyy'], self.vehicle_model.mass['Izz']    # vehicle inertia
 
         # Extract state variables from current state vector
         # -------------------------------------------------
-        phi = x['phi'] #x.matrix[3][0]
-        theta = x['theta'] #x.matrix[4][0]
+        phi = x['phi'] 
+        theta = x['theta'] 
         psi = x['psi']
         vx_a = x['vx']
         vy_a = x['vy']
@@ -132,9 +134,6 @@ class TrajGen(PrognosticsModel):
         p = x['p']
         q = x['q']
         r = x['r']
-        # phi, theta, psi  = x.matrix[3:6][0]
-        # p, q, r          = x.matrix[-3:]
-        # vx_a, vy_a, vz_a = x.matrix[6:9]
 
         # Pre-compute Trigonometric values
         # --------------------------------
@@ -225,7 +224,6 @@ class TrajGen(PrognosticsModel):
         kwargs['dt'] = self.parameters['dt']
         kwargs['save_freq'] = self.parameters['dt']
 
-        ref_times = self.ref_traj.time.tolist()
         def future_loading_new(t, x=None): 
             if t == 0:
                 ref_now = np.concatenate((self.ref_traj.cartesian_pos[0,:], self.ref_traj.attitude[0,:], 
@@ -234,26 +232,21 @@ class TrajGen(PrognosticsModel):
                 u = self.vehicle_model.control_scheduled(self.vehicle_model.state - ref_now)
                 u[0]      += self.vehicle_model.steadystate_input
                 u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])
-                return u # self.InputContainer({'u': u})
+     
+                return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
             else:
                 t_temp = np.round(t - self.parameters['dt']/2,1) # THIS NEEDS HELP
-                for time_ind in range(len(ref_times)):
-                    if t_temp >= ref_times[-1]:
-                        ref_now = np.concatenate((self.ref_traj.cartesian_pos[-1,:], self.ref_traj.attitude[-1,:], 
-                                        self.ref_traj.velocity[-1,:], self.ref_traj.angular_velocity[-1,:]), axis=0)
-                        break
-                    if t_temp <= ref_times[time_ind]:
-                        ref_now = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
+                time_ind = np.argmin(np.abs(t_temp - self.ref_traj.time.tolist()))
+                ref_now = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
                                         self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
-                        break
 
                 # Define controller
                 x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix))])
-                u = self.vehicle_model.control_scheduled(x_temp - ref_now) # self.vehicle_model.state - ref_now)
+                u = self.vehicle_model.control_scheduled(x_temp - ref_now) 
                 u[0]      += self.vehicle_model.steadystate_input
                 u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])
-                return u # self.InputContainer({'u': u})
+                return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
 
-        # Simulate to threshold at DMD time step
+        # Simulate to threshold 
         results = super().simulate_to_threshold(future_loading_new,first_output, threshold_keys, **kwargs)
         return results 

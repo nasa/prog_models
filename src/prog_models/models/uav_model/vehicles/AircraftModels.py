@@ -13,18 +13,18 @@ from sklearn.linear_model import GammaRegressor
 import numpy as np
 import sympy as sym
 
-from prog_models.models.trajectory_generation.vehicles.control import controllers
-from prog_models.models.trajectory_generation.vehicles.control import allocation_functions as caf
-from prog_models.models.trajectory_generation.vehicles.aero import aerodynamics as aero
+from prog_models.models.uav_model.vehicles.control import controllers
+from prog_models.models.uav_model.vehicles.control import allocation_functions as caf
+from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 # from control import controllers
 # import control.allocation_functions as caf
 # from aero import aerodynamics as aero
 
-import prog_models.models.trajectory_generation.utilities.utils as utils
-import prog_models.models.trajectory_generation.vehicles.vehicles as vehicles
+import prog_models.models.uav_model.utilities.utils as utils
+import prog_models.models.uav_model.vehicles.vehicles as vehicles
 # import vehicles
 
-import prog_models.models.trajectory_generation.utilities.geometry as geom
+import prog_models.models.uav_model.utilities.geometry as geom
 
 
 # Functions

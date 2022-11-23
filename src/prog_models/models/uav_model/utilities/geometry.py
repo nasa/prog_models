@@ -7,7 +7,7 @@ Matteo Corbetta
 # import scipy.spatial as spatial
 # import scipy.interpolate as interp
 # import numpy as np
-from prog_models.models.trajectory_generation.utilities.imports_ import np, spatial, interp
+from prog_models.models.uav_model.utilities.imports_ import np, spatial, interp
 
 """
 

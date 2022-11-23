@@ -5,8 +5,8 @@ import os
 import sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '../utilities/'))
 
-import prog_models.models.trajectory_generation.trajectory.load_trajectories as load
-from prog_models.models.trajectory_generation.trajectory.route import Route, read_routes
+import prog_models.models.uav_model.trajectory.load_trajectories as load
+from prog_models.models.uav_model.trajectory.route import Route, read_routes
 
 
 import matplotlib.pyplot as plt

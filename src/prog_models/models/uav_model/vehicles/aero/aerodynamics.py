@@ -12,7 +12,7 @@ import h5py
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-import prog_models.models.trajectory_generation.utilities.geometry as geom
+import prog_models.models.uav_model.utilities.geometry as geom
 
 ftps2mps = 0.3048   # feet per second to meters per second
 lb2kg = 0.453592        # pound to kg

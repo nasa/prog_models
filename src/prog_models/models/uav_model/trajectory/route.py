@@ -4,7 +4,7 @@ import datetime as dt
 import os, sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/utilities'))
 
-from prog_models.models.trajectory_generation.utilities import geometry as geom
+from prog_models.models.uav_model.utilities import geometry as geom
 
 # FUNCTIONS
 # ==========

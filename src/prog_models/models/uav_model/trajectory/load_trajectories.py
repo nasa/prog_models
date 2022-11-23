@@ -4,7 +4,7 @@ import io
 import numpy as np
 import datetime as dt
 import scipy.io as inpout
-from prog_models.models.trajectory_generation.trajectory.route import Route, read_routes
+from prog_models.models.uav_model.trajectory.route import Route, read_routes
 
 DEG2RAD = np.pi/180.0
 FEET2MET = 0.3048
