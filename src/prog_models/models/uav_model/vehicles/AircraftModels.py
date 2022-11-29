@@ -14,7 +14,7 @@ import numpy as np
 import sympy as sym
 
 from prog_models.models.uav_model.vehicles.control import controllers
-from prog_models.models.uav_model.vehicles.control import allocation_functions as caf
+# from prog_models.models.uav_model.vehicles.control import dn_allocation_functions as caf
 from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 # from control import controllers
 # import control.allocation_functions as caf
@@ -53,7 +53,7 @@ def build_rotorcraft_inertia(m, g):
 
     
 
-def rotorcraft_earthframe_ang_moments(phidot, thetadot, psidot, p, q, r, Ixx, Iyy, Izz, b):
+# def rotorcraft_earthframe_ang_moments(phidot, thetadot, psidot, p, q, r, Ixx, Iyy, Izz, b):
     """
     Return moments along x, y, z on inertial reference frame (Earth's reference frame) given
     rate of change of Euler's angles, body angular velocities, and inertia terms
@@ -70,18 +70,17 @@ def rotorcraft_earthframe_ang_moments(phidot, thetadot, psidot, p, q, r, Ixx, Iy
     :param b:           Body arm's length (from center of mass to rotor's center)
     :return:            Three moments wrt inertial reference frame Mx, My, Mz
     """
-    Mx = phidot   - ((Iyy - Izz) * q * r) * 1.0/b
-    My = thetadot - ((Izz - Ixx) * p * r) * 1.0/b
-    Mz = psidot   - ((Ixx - Iyy) * p * q)
-    return Mx, My, Mz
+#     Mx = phidot   - ((Iyy - Izz) * q * r) * 1.0/b
+#     My = thetadot - ((Izz - Ixx) * p * r) * 1.0/b
+#     Mz = psidot   - ((Ixx - Iyy) * p * q)
+#     return Mx, My, Mz
 
 
 # Symbolic functions
 # =================
+    """
 def rotorcraft_symbolic_f(phi, theta, psi, vx, vy, vz, p, q, r, T, tp, tq, tr, m, l, Ixx, Iyy, Izz, g):
-    """
-    """
-    
+
     # Calculate inertia parameters
     a1 = (Iyy - Izz) / Ixx
     a2 = (Izz - Ixx) / Iyy
@@ -103,8 +102,8 @@ def rotorcraft_symbolic_f(phi, theta, psi, vx, vy, vz, p, q, r, T, tp, tq, tr, m
                        a1 * q * r + b1 * tp,
                        a2 * p * r + b2 * tq,
                        a3 * p * q + b3 * tr,])
-    
-
+"""    
+"""
 def rotorcraft_symbolicStateMatrices():
 
     x, y, z, vx, vy, vz, \
@@ -120,7 +119,7 @@ def rotorcraft_symbolicStateMatrices():
     jacobInputMatrix = stateEquation.jacobian(inputVector)
 
     return  (jacobStateMatrix, jacobInputMatrix)
-
+"""
 
 # Initialize rotorcraft
 # =====================
@@ -213,7 +212,8 @@ class Rotorcraft():
         
         # Build rotorcraft inertia properties
         self.mass, self.geom = build_rotorcraft_inertia(self.mass, self.geom)
-        
+
+    """    
     def reset_state(self, state0=None):
         if state0 is None:  self.state = np.zeros((self.dynamics['num_states'],))
         else:               self.state = state0.copy()
@@ -247,6 +247,7 @@ class Rotorcraft():
             self.controller.err_hist = []    
         print("Aircraft controller reset complete")
         return
+    """
     
     def build(self, initial_state=None, steadystate_input=None, integrator_fn='Euler', dt=0.01):
 
@@ -273,6 +274,7 @@ class Rotorcraft():
         elif integrator_fn.lower() == 'rk4':        self.int_fn = utils.rk4
         else:   raise Exception("Integrator function not recognized. Available options (so far) are: Euler (default) or RK4")
 
+    """
     # Introducing control allocation matrices for rotor speed-based control
     def set_control_allocation_matrix(self, constrained_cam=False):
         Gamma, Gamma_inv, _ = caf.rotorcraft_cam(n=self.geom['num_rotors'],
@@ -285,6 +287,7 @@ class Rotorcraft():
     def set_propulsion_system(self, prop_system):
         self.propulsion = prop_system
         return
+    """
 
     def set_controller(self, type_='LQR', strategy='realtime', scheduled_states=None, scheduled_var='psi', Q=None, R=None, qi=None, int_lag=np.inf):
 
@@ -370,7 +373,7 @@ class Rotorcraft():
         K     = self.control_gains[:, :, k_idx]
         return self.controller.compute_input(K, error)
 
-
+    """
     def compute_state(self, ref, params=None):
         u          = self.control_fn(self.state - ref)
         
@@ -381,8 +384,8 @@ class Rotorcraft():
         self.state = self.state + dstatedt * self.dt     
         self.input = u
         return self.state
-
-
+    """
+    """
     def f(self, x, u, params=None):
         
         # Extract params
@@ -441,8 +444,8 @@ class Rotorcraft():
         dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.geom['arm_length'] / Iyy
         dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
         return dxdt
-
-
+    """
+    """
     def linear_f(self, x, u):
         # Extract state variables from state-vector
         phi, theta, psi = x[3:6]
@@ -452,7 +455,7 @@ class Rotorcraft():
         # Compute linearized model
         A, B = self.linear_model(phi, theta, psi, p, q, r, thrust)
         return np.dot(A, x) + np.dot(B, u)
-
+    """
 
     def linear_model(self, phi, theta, psi, p, q, r, T):
         m         = self.mass['total']
@@ -496,6 +499,7 @@ class Rotorcraft():
 
         return A, B
 
+    """
     # POWERTRAIN STUFF
     def get_omega(self, prop_num, thr, ti, dt_highfreq, input_voltage):
         x = self.propulsion[prop_num].get_next_state(ti, thr, input_voltage, dt_highfreq)
@@ -524,3 +528,4 @@ class Rotorcraft():
     @staticmethod
     def get_throttle_from_omega_des(omega_des):
         return caf.omega2throttle(omega_des)
+    """

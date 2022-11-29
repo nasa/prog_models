@@ -20,7 +20,7 @@ lbpftsq2kgpmsq = 4.88243    # pound per square feet to kg per square meter
 slugpftcub2kgpmcub = 515.379    # slug per cubic foot to kg per cubic meter
 inchplb2nm = 0.112984825        # inch per pound to newtown meters
 
-
+"""
 def read_csv_aerotest_file(filename=None):
     if filename is None:
         filename = 'data/Aerodynamics/3DRSOLO_FullVehicle_Table_1.csv'
@@ -69,7 +69,7 @@ def read_csv_aerotest_file(filename=None):
                    'Fx (lb)', 'Fy (lb)', 'Fz (lb)', 'U-Fx (lb)', 'U-Fy (lb)', 'U-Fz (lb)', 'Mx (in-lb)', 'My (in-lb)', 'Mz (in-lb)', 'U-Mx (in-lb)', 'U-My (in-lb)', 'U-Mz (in-lb)', 'D (lb)']
     
     return pd.DataFrame(data=data, index=[ii for ii in range(drag.shape[0])], columns=variables)
-
+"""
 
 # Aerodynamic forces
 # ====================
@@ -83,7 +83,7 @@ class DragModel():
     def __call__(self, air_v):
         vsq = air_v * np.abs(air_v)
         return 0.5 * self.rho * self.area * self.cd * vsq
-    
+  
     
 
 
@@ -99,7 +99,7 @@ class DragModel():
 #     return np.dot( geom.rot_body2earth(phi, theta, psi), d_body)
     
 
-
+"""
 if __name__ == '__main__':
     
     print('Aerodynamic models')
@@ -119,3 +119,4 @@ if __name__ == '__main__':
 
 
     plt.show()
+"""

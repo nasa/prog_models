@@ -6,7 +6,7 @@ import sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '../utilities/'))
 
 import prog_models.models.uav_model.trajectory.load_trajectories as load
-from prog_models.models.uav_model.trajectory.route import Route, read_routes
+from prog_models.models.uav_model.trajectory.route import Route # , read_routes
 
 
 import matplotlib.pyplot as plt
@@ -74,7 +74,7 @@ def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81):
                   'time':           t}
     return trajectory
     
-
+"""
 def horizontal_cruise_speed_from_cartesian_speed(vx_m, vy_m, vz_m, vx_std, vy_std, vz_std, nsamps=1000, return_climb_speed=False):
     norm_rv = utils.LHS(dist='normal')
     usamps  = norm_rv(ndims=1, nsamps=nsamps, loc=vx_m, scale=vx_std)
@@ -90,8 +90,8 @@ def horizontal_cruise_speed_from_cartesian_speed(vx_m, vy_m, vz_m, vx_std, vy_st
     cruise_std = np.std(cruise_speed_samps, axis=0)
     if return_climb_speed:      return cruise_avg, cruise_std, np.mean(wsamps, axis=0), np.std(wsamps, axis=0)
     else:                       return cruise_avg, cruise_std
-
-
+"""
+"""
 def average_speed_between_wps(wp_etas, traj_timestamps, traj_cruise_speed_avg, traj_cruise_speed_std):
     ts            = np.asarray([wp_etas[item].timestamp() for item in range(len(wp_etas))])
     ts_traj       = np.asarray([traj_timestamps[item].timestamp() for item in range(len(traj_timestamps))])
@@ -104,8 +104,8 @@ def average_speed_between_wps(wp_etas, traj_timestamps, traj_cruise_speed_avg, t
         wp_speed_avg[ii] = np.mean(traj_cruise_speed_avg[idx_waypoints[ii] : idx_waypoints[ii+1]])
         wp_speed_std[ii] = np.mean(traj_cruise_speed_std[idx_waypoints[ii] : idx_waypoints[ii+1]])
     return wp_speed_avg, wp_speed_std
-
-
+"""
+"""
 def degrees_to_decimal_from_str(str_):
     degrees_ = float(str_[:str_.find('°')])
     minutes_ = float(str_[str_.find('°')+1:str_.find("'")]) / 60.0
@@ -113,25 +113,25 @@ def degrees_to_decimal_from_str(str_):
     sign     = 1.0
     if str_[str_.rfind('"')+1:str_.rfind(',')] == 'W' or str_[str_.rfind('"')+1:str_.rfind(',')] == 'S':  sign = -1.0
     return sign * (degrees_ + minutes_ + seconds_)
-    
+""" 
 
-def feet2meters_from_str(str_):
-    return 0.3048 * float(str_)
-
-
-def make_list(x, n=1):
-    if type(x) != list: return [x,] * n
-    else:               return x
+# def feet2meters_from_str(str_):
+#     return 0.3048 * float(str_)
 
 
+# def make_list(x, n=1):
+#     if type(x) != list: return [x,] * n
+#     else:               return x
+
+"""
 def gen_timestamps_from_etas(etas, departure_timestamp):
     # departure_timestamp = dt.datetime.strptime(departure_datetime, "%Y-%m-%d %H:%M:%S")
     eta_timestamp       = [departure_timestamp, ]
     for item in etas[1:]:   
         eta_timestamp.append(eta_timestamp[0] + dt.timedelta(seconds=item))
     return eta_timestamp
-
-
+"""
+"""
 def sample_generator_4d(etas, t0, x, y, z, n_samples, timestep, lat0, lon0, alt0, name):
     wb = utils.ProgressBar(n_samples, prefix='Sampling ' + str(name) + ' with speed uncertainty (linear interpolator) ', 
                      suffix=' complete.', print_length=70)
@@ -152,8 +152,8 @@ def sample_generator_4d(etas, t0, x, y, z, n_samples, timestep, lat0, lon0, alt0
         wb(samp)
     wb(n_samples)
     return traj_samples
-
-
+"""
+"""
 def sample_generator_4d_fixed_t(etas, t0, x, y, z, n_samples, t_i, lat0, lon0, alt0, name):
     wb = utils.ProgressBar(n_samples, prefix='Sampling ' + str(name) + ' with speed uncertainty (linear, fixed time vector) ', suffix=' complete.', print_length=50)
     traj_samples = []
@@ -169,7 +169,7 @@ def sample_generator_4d_fixed_t(etas, t0, x, y, z, n_samples, t_i, lat0, lon0, a
         wb(samp)
     wb(n_samples)
     return traj_samples
-
+"""
 
 class Trajectory():
     def __init__(self, name, route, gravity=9.81, airspeed_std=0., dt=0.1):
@@ -191,8 +191,8 @@ class Trajectory():
         self.weight_vector    = []
         self.airspeed_std     = airspeed_std # m/s
 
-    def set_airspeed_std(self, s):
-        self.airspeed_std = s
+    # def set_airspeed_std(self, s):
+    #     self.airspeed_std = s
 
     def gen_cartesian_coordinates(self):
         coord = geom.Coord(self.route.lat[0], self.route.lon[0], self.route.alt[0])
@@ -247,7 +247,7 @@ class Trajectory():
         self.time             = traj['time']
         pass 
 
-
+    """
     def __gen_groundspeed(self, airspeed_x_std=None, airspeed_y_std=None, nsamps=1000):
         
         # For now, works only in 2d (x, y)
@@ -289,7 +289,8 @@ class Trajectory():
         gs_y_s   = np.std(gs_y_samps, axis=0)
         gs_hor_s = np.std(np.sqrt(gs_x_samps**2.0 + gs_y_samps**2.0), axis=0)
         return {'x': {'m': gs_x_m, 's': gs_x_s}, 'y': {'m': gs_y_m, 's': gs_y_s}, 'cruise': {'m': gs_hor_m, 's': gs_hor_s}}
-
+    """
+    """
     def __average_speed_between_wps(self, nsamps=1000):
 
         ground_speed = self.__gen_groundspeed(nsamps=nsamps, airspeed_x_std=self.airspeed_std/np.sqrt(2),
@@ -323,7 +324,8 @@ class Trajectory():
                 wp_speed_avg[ii] = np.mean(vmag_m[idx_waypoints[ii] : idx_waypoints[ii+1]])
                 wp_speed_std[ii] = np.mean(vmag_s[idx_waypoints[ii] : idx_waypoints[ii+1]])
         return wp_speed_avg, wp_speed_std
-        
+    """
+    """    
     def __gen_etas_with_groundspeed(self, distance_method='greatcircle', speed_sampling_size=1000, return_average=True):
         new_cruise_speed_avg, new_cruise_speed_std = self.__average_speed_between_wps(nsamps=speed_sampling_size)
         if not hasattr(new_cruise_speed_std, '__len__') and np.isclose(new_cruise_speed_std, 0.):
@@ -341,7 +343,8 @@ class Trajectory():
                 etas[:, samp] = self.route.compute_etas_from_speed(self.route.hovering, self.route.takeoff_time, self.route.landing_time, 
                                                                    distance_method=distance_method, cruise_speed=speed_sample, assign_eta=False)    
         return etas
-
+    """
+    """
     def gen_samples(self, **kwargs):
         
         params = dict(n_samples=100, distance_method='greatcircle', generator_type='linear', 
@@ -392,8 +395,8 @@ class Trajectory():
             wb(n_samples)
 
         return trajectory_samples
-
-
+    """
+    """
     def display(self, what='position', coord='geodetic', **kwargs):
         
         params = dict(figsize=(9,8), label_fontsize=12, xlabel='time stamps', ylabel=['x (East), m', 'y (North), m', 'z (Up), m'],
@@ -467,142 +470,140 @@ class Trajectory():
         figs.append(fig_unrolled)
         
         return figs
-
-
-
-def compute_eta_bounds(eta, eta_timestamp, avg_speed, var_vel, minVnorm=1.0, dv_ratio=0.1, alpha_bound=1.0):
-    """
-    Compute the interval associated to each estimated time of arrival (ETA) based
-    on the average speed in between way-points and the expected variance of the velocity.
-    Assuming Gaussian variables for ETA and velocities, the error interval defined by
-    \delta can be interpreted as standard deviation.
-
-    The error on the ETA is calculated as:
-                                E[t_i] \delta V_j
-            \delta t_{i, j} = --------------------------
-                                    ||V||_2
-
-    Where:
-    E[t_i]              ETA at way-point i in direction j (j=x, y, or z)
-    \delta V_j          error (or standard deviation) of velocity along direction j
-    ||V||_2             norm-2 of the mean velocity vector between way-points i and i+1
-
-    \delta t has the same measurement unit of E[t].
-
-    Two conditions are needed effective error-interval propagation:
-    1) the standard deviation (or variance) of the speed, \delta V_j, in each direction j should be "sufficiently small"
-    when compared to the velocity absolute value (in this case, use ||V||_2).
-    2) the norm of the velocity vector should be "sufficiently" larger than 0 to introduce non-negligible uncertainty.
-
-    The two properties are tied to each other, since a very small ||V||_2 needs to be accompained by a (much) smaller
-    \delta V.
-
-    The input parameters minVnorm (=1.0 m/s by default) and dv_ratio (=0.05 by default) help forcing the two properties.
-
-    if ||V||_2 < minVnorm, then uncertainty is not propagated
-    if \sigma_{v_j} / ||V||_2 > maxVvar, then maxVvar is propagated
-
-    :param eta_wp:              (n,) array, ETA at each waypoint
-    :param velocity_var:        (3,) array, variance of the velocity vector in x, y and z directions
-    :param velocity_avg:        (n,) array, average velocity in-between way-points
-    :param minVnorm:            scalar, m/s, minimum value of Vnorm to consider uncertainty (default is 0.5 m/s).
-    :param dv_ratio:            scalar, maximum value of \sigma_v / v to consider the error propagation a valid equation
-    :param alpha_bound:         multiplier to define inferior and superior bounds of ETA (default = 1.0, corresponding to 1 standard deviation)
-    :return ETA_inf:            (n,) array, ETA inferior bound
-    :return ETA_sup:            (n,) array, ETA superior bound
     """
 
-    # Initialize differential time of arrival Et, and variance of time of arrival Vt
-    Et = np.diff(eta)  # Et is calculated as ETA @ way-point i minus ETA @ way-point i-1. It's the same for each dimension x, y and z.
-    Vt = np.zeros((len(eta),))  # variance of ETA at each waypoint in x-y-z (because we have different speed in each direciton x-y-z)
-    for ii in range(len(eta) - 1):
-        # Et[ii + 1] = eta_wp[ii + 1] - eta_wp[ii]  # Compute Et
-        Vnorm2 = np.linalg.norm(avg_speed[ii, :])**2.0
-        # if ||V||_2 > minVnorm m/s, then compute uncertainty. Otherwise neglect contribution
-        # if ||V||_2 is too small, this waypoint does not contribute to uncertainty
-        if np.sqrt(Vnorm2) > minVnorm:      Vt[ii + 1] = time_variance_norm(Et[ii], Vnorm2, np.linalg.norm(var_vel), dv_ratio)
-        else:                               Vt[ii + 1] = 0.0
+
+# def compute_eta_bounds(eta, eta_timestamp, avg_speed, var_vel, minVnorm=1.0, dv_ratio=0.1, alpha_bound=1.0):
+#     """
+#     Compute the interval associated to each estimated time of arrival (ETA) based
+#     on the average speed in between way-points and the expected variance of the velocity.
+#     Assuming Gaussian variables for ETA and velocities, the error interval defined by
+#     \delta can be interpreted as standard deviation.
+
+#     The error on the ETA is calculated as:
+#                                 E[t_i] \delta V_j
+#             \delta t_{i, j} = --------------------------
+#                                     ||V||_2
+
+#     Where:
+#     E[t_i]              ETA at way-point i in direction j (j=x, y, or z)
+#     \delta V_j          error (or standard deviation) of velocity along direction j
+#     ||V||_2             norm-2 of the mean velocity vector between way-points i and i+1
+
+#     \delta t has the same measurement unit of E[t].
+
+#     Two conditions are needed effective error-interval propagation:
+#     1) the standard deviation (or variance) of the speed, \delta V_j, in each direction j should be "sufficiently small"
+#     when compared to the velocity absolute value (in this case, use ||V||_2).
+#     2) the norm of the velocity vector should be "sufficiently" larger than 0 to introduce non-negligible uncertainty.
+
+#     The two properties are tied to each other, since a very small ||V||_2 needs to be accompained by a (much) smaller
+#     \delta V.
+
+#     The input parameters minVnorm (=1.0 m/s by default) and dv_ratio (=0.05 by default) help forcing the two properties.
+
+#     if ||V||_2 < minVnorm, then uncertainty is not propagated
+#     if \sigma_{v_j} / ||V||_2 > maxVvar, then maxVvar is propagated
+
+#     :param eta_wp:              (n,) array, ETA at each waypoint
+#     :param velocity_var:        (3,) array, variance of the velocity vector in x, y and z directions
+#     :param velocity_avg:        (n,) array, average velocity in-between way-points
+#     :param minVnorm:            scalar, m/s, minimum value of Vnorm to consider uncertainty (default is 0.5 m/s).
+#     :param dv_ratio:            scalar, maximum value of \sigma_v / v to consider the error propagation a valid equation
+#     :param alpha_bound:         multiplier to define inferior and superior bounds of ETA (default = 1.0, corresponding to 1 standard deviation)
+#     :return ETA_inf:            (n,) array, ETA inferior bound
+#     :return ETA_sup:            (n,) array, ETA superior bound
+#     """
+
+#     # Initialize differential time of arrival Et, and variance of time of arrival Vt
+#     Et = np.diff(eta)  # Et is calculated as ETA @ way-point i minus ETA @ way-point i-1. It's the same for each dimension x, y and z.
+#     Vt = np.zeros((len(eta),))  # variance of ETA at each waypoint in x-y-z (because we have different speed in each direciton x-y-z)
+#     for ii in range(len(eta) - 1):
+#         # Et[ii + 1] = eta_wp[ii + 1] - eta_wp[ii]  # Compute Et
+#         Vnorm2 = np.linalg.norm(avg_speed[ii, :])**2.0
+#         # if ||V||_2 > minVnorm m/s, then compute uncertainty. Otherwise neglect contribution
+#         # if ||V||_2 is too small, this waypoint does not contribute to uncertainty
+#         if np.sqrt(Vnorm2) > minVnorm:      Vt[ii + 1] = time_variance_norm(Et[ii], Vnorm2, np.linalg.norm(var_vel), dv_ratio)
+#         else:                               Vt[ii + 1] = 0.0
     
-    # Compute ETA inferior and superior bounds
-    # ------------------------------------------
-    # First check if Vt is a matrix (that means that second dimension is 1)
-    if len(Vt.shape) == 2:      Vt = np.max(Vt, axis=1)
+#     # Compute ETA inferior and superior bounds
+#     # ------------------------------------------
+#     # First check if Vt is a matrix (that means that second dimension is 1)
+#     if len(Vt.shape) == 2:      Vt = np.max(Vt, axis=1)
 
-    cum_time_error = np.cumsum(alpha_bound * np.sqrt(Vt))
-    eta_inf   = eta - cum_time_error   # ETA inferior bound
-    eta_sup   = eta + cum_time_error   # ETA superior  bound
-    eta_inf_timestamp = []
-    eta_sup_timestamp = []
-    for idx, deltatime in enumerate(cum_time_error):
-        eta_inf_timestamp.append(eta_timestamp[idx] - dt.timedelta(seconds=deltatime))
-        eta_sup_timestamp.append(eta_timestamp[idx] + dt.timedelta(seconds=deltatime))
-    return eta_inf, eta_sup, eta_inf_timestamp, eta_sup_timestamp
-
-
-def compute_average_speed(t, eta, vx, vy, vz):
-    """
-    Compute average speed in-between way-points given the ETAs and the planned velocity as a function of time.
-
-    :param t:           (n,) array, trajectory time vector
-    :param eta:         (m,) array, ETA at each way-point along the trajectory
-    :param vx:          (n,) array, x-axis velocity along the trajectory
-    :param vy:          (n,) array, y-axis velocity along the trajectory
-    :param vz:          (n,) array, z-axis velocity along the trajectory
-    :return:            (m, 3) array, average velocity in-between way-points over x, y and z axes.
-    """
-    v0 = np.zeros((len(eta), 3))
-    for index in range(len(eta) - 1):
-        idx0 = np.argmin(abs(t - eta[index]))
-        idx1 = np.argmin(abs(t - eta[index + 1]))
-
-        v0[index, 0] = np.mean(vx[idx0:idx1])
-        v0[index, 1] = np.mean(vy[idx0:idx1])
-        v0[index, 2] = np.mean(vz[idx0:idx1])
-    return v0
+#     cum_time_error = np.cumsum(alpha_bound * np.sqrt(Vt))
+#     eta_inf   = eta - cum_time_error   # ETA inferior bound
+#     eta_sup   = eta + cum_time_error   # ETA superior  bound
+#     eta_inf_timestamp = []
+#     eta_sup_timestamp = []
+#     for idx, deltatime in enumerate(cum_time_error):
+#         eta_inf_timestamp.append(eta_timestamp[idx] - dt.timedelta(seconds=deltatime))
+#         eta_sup_timestamp.append(eta_timestamp[idx] + dt.timedelta(seconds=deltatime))
+#     return eta_inf, eta_sup, eta_inf_timestamp, eta_sup_timestamp
 
 
+# def compute_average_speed(t, eta, vx, vy, vz):
+#     """
+#     Compute average speed in-between way-points given the ETAs and the planned velocity as a function of time.
+
+#     :param t:           (n,) array, trajectory time vector
+#     :param eta:         (m,) array, ETA at each way-point along the trajectory
+#     :param vx:          (n,) array, x-axis velocity along the trajectory
+#     :param vy:          (n,) array, y-axis velocity along the trajectory
+#     :param vz:          (n,) array, z-axis velocity along the trajectory
+#     :return:            (m, 3) array, average velocity in-between way-points over x, y and z axes.
+#     """
+#     v0 = np.zeros((len(eta), 3))
+#     for index in range(len(eta) - 1):
+#         idx0 = np.argmin(abs(t - eta[index]))
+#         idx1 = np.argmin(abs(t - eta[index + 1]))
+
+#         v0[index, 0] = np.mean(vx[idx0:idx1])
+#         v0[index, 1] = np.mean(vy[idx0:idx1])
+#         v0[index, 2] = np.mean(vz[idx0:idx1])
+#     return v0
 
 
+# def time_variance_norm(t, norm_v_squared, var_v, max_dv_ratio):
+#     """
+#     Compute the variance of the time of arrival using the norm of the variances.
+#     The function returns:
 
-def time_variance_norm(t, norm_v_squared, var_v, max_dv_ratio):
-    """
-    Compute the variance of the time of arrival using the norm of the variances.
-    The function returns:
+#             \sigma_t^2 = t^2 ||\sigma_v^2|| / ||v||^2
 
-            \sigma_t^2 = t^2 ||\sigma_v^2|| / ||v||^2
+#     where:
+#         t           is the average travel time from previous to current way-point
+#         \sigma_v^2  is the variance of the velocity vector, which is itself a 3x1 vector for variance in (x, y, z)
+#         v           is the velocity vector along (x, y, z)
 
-    where:
-        t           is the average travel time from previous to current way-point
-        \sigma_v^2  is the variance of the velocity vector, which is itself a 3x1 vector for variance in (x, y, z)
-        v           is the velocity vector along (x, y, z)
+#     :param t:                   scalar, average travel time, s
+#     :param norm_v_squared:      scalar, squared norm of the velocity vector, (m/s)^2
+#     :param var_v:               vector of velocity variances or norm of such vector (m/s)^2
+#     :param max_dv_ratio:        maximum value of \sigma_v / v ratio.
+#     :return:                    variance of travel time, [s^2].
+#     """
+#     var_v = np.linalg.norm(var_v)
+#     # if ratio of \sigma_v/v is not too large, use error interval propagation to compute time variance
+#     # if ratio of \sigma_v/v is too large, then propagate max_dv_ratio only.
+#     if np.sqrt(var_v / norm_v_squared) < max_dv_ratio:      return compute_time_variance(t, var_v, norm_v_squared)
+#     else:                                                   return compute_time_variance(t, max_dv_ratio, norm_v_squared)
 
-    :param t:                   scalar, average travel time, s
-    :param norm_v_squared:      scalar, squared norm of the velocity vector, (m/s)^2
-    :param var_v:               vector of velocity variances or norm of such vector (m/s)^2
-    :param max_dv_ratio:        maximum value of \sigma_v / v ratio.
-    :return:                    variance of travel time, [s^2].
-    """
-    var_v = np.linalg.norm(var_v)
-    # if ratio of \sigma_v/v is not too large, use error interval propagation to compute time variance
-    # if ratio of \sigma_v/v is too large, then propagate max_dv_ratio only.
-    if np.sqrt(var_v / norm_v_squared) < max_dv_ratio:      return compute_time_variance(t, var_v, norm_v_squared)
-    else:                                                   return compute_time_variance(t, max_dv_ratio, norm_v_squared)
-
-def compute_time_variance(t, dv2, v2):
-    """
-    Compute the travel time variance \sigma_t^2 given the travel time t, the variance of the velocity dv2, and the
-    square of the velocity v2.
-    :param t:               scalar, [s], travel time
-    :param dv2:             scalar, [(m/s)^2], variance of velocity
-    :param v2:              scalar, [(m/s)^2], squared of velocity
-    :return:                scalar, variance of travel time, s^2
-    """
-    return t**2.0 * dv2/v2
+# def compute_time_variance(t, dv2, v2):
+#     """
+#     Compute the travel time variance \sigma_t^2 given the travel time t, the variance of the velocity dv2, and the
+#     square of the velocity v2.
+#     :param t:               scalar, [s], travel time
+#     :param dv2:             scalar, [(m/s)^2], variance of velocity
+#     :param v2:              scalar, [(m/s)^2], squared of velocity
+#     :return:                scalar, variance of travel time, s^2
+#     """
+#     return t**2.0 * dv2/v2
 
 
 
 # GROUND SPEED FUNCTIONS
 # ======================
+"""
 def compute_ground_speed_xy(traj_vel_xy, windspeed_uv, windspeed_std_uv, alpha=3):
     vx, vy = traj_vel_xy[:, 0], traj_vel_xy[:, 1]
     wx_avg, wy_avg = windspeed_uv[:, 0], windspeed_uv[:, 1]
@@ -620,14 +621,14 @@ def compute_ground_speed_xy(traj_vel_xy, windspeed_uv, windspeed_std_uv, alpha=3
     g_vx_up = vx + wx_up
     g_vy_up = vy + wy_up
     return g_vx_avg, g_vy_avg, g_vx_low, g_vy_low, g_vx_up, g_vy_up
+"""
 
-
-def compute_new_cruise_speed(cruisespeed, groundspeed):
-    """ Compute new cruise speed based on input ground speed """
-    mean_cs, max_cs = np.mean(cruisespeed), np.max(cruisespeed)
-    ratio           = (np.mean(groundspeed) - mean_cs)/ mean_cs
-    return max_cs + ratio * max_cs
-
+# def compute_new_cruise_speed(cruisespeed, groundspeed):
+#     """ Compute new cruise speed based on input ground speed """
+#     mean_cs, max_cs = np.mean(cruisespeed), np.max(cruisespeed)
+#     ratio           = (np.mean(groundspeed) - mean_cs)/ mean_cs
+#     return max_cs + ratio * max_cs
+"""
 def from_air_wind_to_groundspeed(u, v, w, wx, wy, wz=0.0):
     n   = len(u['m'])
     g_m = np.zeros((n, 3))
@@ -641,8 +642,8 @@ def from_air_wind_to_groundspeed(u, v, w, wx, wy, wz=0.0):
     g_s[:, 1] = np.sqrt(v['std']**2.0 + wy['std']**2.0)
     g_s[:, 2] = np.sqrt(w['std']**2.0 + wz['std']**2.0)
     return {'m': g_m, 'std': g_s}
-
-
+"""
+"""
 def get_ground_speed_for_routes(routes, wind_uv, windstd_uv):
     routes             = make_list(routes)
     new_ref_speed_mean = []
@@ -661,8 +662,8 @@ def get_ground_speed_for_routes(routes, wind_uv, windstd_uv):
         new_ref_speed_std.append(groundspeed['std'])
 
     return new_ref_speed_mean, new_ref_speed_std
-
-
+"""
+"""
 def compute_groundspeed_profile(vx, vy, wind_uv, windstd_uv, alpha_bound=1):
     gs_x, gs_y, \
         gs_x_low, gs_y_low, \
@@ -678,8 +679,8 @@ def compute_groundspeed_profile(vx, vy, wind_uv, windstd_uv, alpha_bound=1):
     ground_vel_min = np.min(ground_vel_, axis=1)
     ground_vel_mean = np.mean(ground_vel_, axis=1)
     return ground_vel_mean, ground_vel_max, ground_vel_min
-
-
+"""
+"""
 def compute_new_cruise_speed_with_wind(routes, wind_uv, windstd_uv, alpha_bound=1):
     routes            = make_list(routes)
     new_ref_speed_max = np.zeros((len(routes),))
@@ -693,9 +694,9 @@ def compute_new_cruise_speed_with_wind(routes, wind_uv, windstd_uv, alpha_bound=
         new_ref_speed_max[idx] = compute_new_cruise_speed(ref_speed, gspeed_max)
         new_ref_speed_min[idx] = compute_new_cruise_speed(ref_speed, gspeed_min)
     return new_ref_speed_avg, new_ref_speed_max, new_ref_speed_min
+"""
 
-
-
+"""
 def from_speed_to_time(lat, lon, alt, horizontal_speed, ascent_speed, descent_speed, landing_speed=None, land_alt=10, geodetic_dist_method='greatcircle'):
     # land_alt is in meters
 
@@ -726,32 +727,32 @@ def from_speed_to_time(lat, lon, alt, horizontal_speed, ascent_speed, descent_sp
 
     eta = np.max(np.column_stack((np.nan_to_num(surface_dist / horizontal_speed), np.nan_to_num(vert_dist/vert_speed))), axis=1) # eta as max between horizontal and vertical ETAs
     return eta
+"""
 
+# def introduce_landing_waypoints(lat, lon, alt, land_alt=10):
+#     """ 
+#         lat, lon, alt = introduce_landing_waypoints(lat, lon, alt, land_alt=10)
 
-def introduce_landing_waypoints(lat, lon, alt, land_alt=10):
-    """ 
-        lat, lon, alt = introduce_landing_waypoints(lat, lon, alt, land_alt=10)
+#     introduce fictitious waypoints to reduce speed in proximity of the ground 
 
-    introduce fictitious waypoints to reduce speed in proximity of the ground 
-
-    """
-    # land altitude is in meters
+#     """
+#     # land altitude is in meters
     
-    # Convert to arrays in case they're list
-    lat = np.asarray(lat)
-    lon = np.asarray(lon)
-    alt = np.asarray(alt)
-    # alt[10] = 0.0   # artificial, to test the function
+#     # Convert to arrays in case they're list
+#     lat = np.asarray(lat)
+#     lon = np.asarray(lon)
+#     alt = np.asarray(alt)
+#     # alt[10] = 0.0   # artificial, to test the function
     
-    idx_land = np.asarray(alt < land_alt) * np.insert(np.sign(np.diff(alt)) < 0, 0, False)
-    idx_pos  = np.where(idx_land)[0]
-    lat      = np.insert(lat, idx_pos, lat[idx_pos])
-    lon      = np.insert(lon, idx_pos, lon[idx_pos])
-    alt      = np.insert(alt, idx_pos, [land_alt*1.0, ]*len(idx_pos))
-    return lat, lon, alt
+#     idx_land = np.asarray(alt < land_alt) * np.insert(np.sign(np.diff(alt)) < 0, 0, False)
+#     idx_pos  = np.where(idx_land)[0]
+#     lat      = np.insert(lat, idx_pos, lat[idx_pos])
+#     lon      = np.insert(lon, idx_pos, lon[idx_pos])
+#     alt      = np.insert(alt, idx_pos, [land_alt*1.0, ]*len(idx_pos))
+#     return lat, lon, alt
 
 
-
+"""
 def traj_from_flightplan(delta_t=0.01, gravity=9.81, nurbs_order=3, weight_vector=None, cruise_speed=6, ascent_speed=0.5, descent_speed=0.5, landing_speed=0.5, hovering=0., takeofftime=40, landingtime=40, alpha_bound=3):
     
     lat, lon, alt, _, tstamps = load.get_flightplan()
@@ -787,8 +788,8 @@ def traj_from_flightplan(delta_t=0.01, gravity=9.81, nurbs_order=3, weight_vecto
     route.eta           = {'upper': eta_up,        'lower': eta_low,        'avg': eta_avg}
     route.eta_timestamp = {'upper': timestamps_up, 'lower': timestamps_low, 'avg': timestamps_avg}
     return route
-
-
+"""
+"""
 def get_route(dt=1.0, gravity=9.81, desired_cruisespeed=100, takeofftime=60, landingtime=60, nurbs_order=5, weight_vector=None, alpha_bound=3):
     route_filename = 'data/SF_SJ_OAK_routes.txt'
     routes = read_routes(route_filename, ft2m=True)
@@ -811,12 +812,10 @@ def get_route(dt=1.0, gravity=9.81, desired_cruisespeed=100, takeofftime=60, lan
     route.eta           = {'upper': eta_up,        'lower': eta_low,        'avg': eta_avg}
     route.eta_timestamp = {'upper': timestamps_up, 'lower': timestamps_low, 'avg': timestamps_avg}
     return route
+"""
+# if __name__ == '__main__':
 
-
-if __name__ == '__main__':
-    
-
-    print("trajectory generation code")
+#     print("trajectory generation code")
     
     # =======
     # END

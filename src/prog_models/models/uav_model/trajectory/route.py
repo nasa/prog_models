@@ -56,7 +56,7 @@ def reshape_route_attribute(x, dim=None, msk=None):
         x = np.insert(x, msk, x[msk])
     return x
 
-
+"""
 def read_routes(fname, str_=None, decimal=True, ft2m=False):
     
     # Set default name for new route:
@@ -85,9 +85,11 @@ def read_routes(fname, str_=None, decimal=True, ft2m=False):
         route.x, route.y, route.z = coord.geodetic2enu(route.lat, route.lon, route.alt)
         routes[idx] = route
     return routes
+"""
 
+""" 
 def parse_coordinate_line(l, decimal=True, ft2m=False):
-    """According to how the text file with trajectory is organized."""
+    # According to how the text file with trajectory is organized.
     lat = degrees_to_decimal_from_str(l[:l.find(',')])
     lon = degrees_to_decimal_from_str(l[l.find(',')+2:-1])
     if decimal:
@@ -98,7 +100,7 @@ def parse_coordinate_line(l, decimal=True, ft2m=False):
     if ft2m:    alt = feet2meters_from_str(l[l.rfind(',')+2:l.rfind('\n')-2])
     else:       alt = float(l[l.rfind(',')+2:l.rfind('\n')-2])
     return lat, lon, alt
-
+"""
 
 # ROUTE CLASS
 # ============    
@@ -129,18 +131,22 @@ class Route():
     def __call__(self):
         return self.lat, self.lon, self.alt, self.eta
     
+    """
     def adjust_eta(self, hours_=0., seconds_=0.0):
         self.departure_time = dt.datetime.now() + dt.timedelta(hours=hours_, seconds=seconds_) 
         timedelta            = self.departure_time - self.eta[0]
         self.eta            = [item + timedelta  for item in self.eta]
         return
+    """
 
+    """
     def add_point(self, lat, lon, alt, eta=None):
         self.lat.append(lat)
         self.lon.append(lon)
         self.alt.append(alt)
         if eta:
             self.eta.append(eta)
+    """
         
     def set_waypoints(self, lat, lon, alt, eta=None):
         self.lat = lat
@@ -150,12 +156,14 @@ class Route():
             self.eta = eta
         return
         
+    """
     def set_waypoints_as_array(self):
         self.lat = np.asarray(self.lat)
         self.lon = np.asarray(self.lon)
         self.alt = np.asarray(self.alt)
         return
-
+    """
+        
     def set_landing_waypoints(self, set_landing_eta=False):
         if type(self.alt) == list:
             self.set_waypoints_as_array()

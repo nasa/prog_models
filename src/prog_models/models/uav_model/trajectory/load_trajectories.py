@@ -4,7 +4,7 @@ import io
 import numpy as np
 import datetime as dt
 import scipy.io as inpout
-from prog_models.models.uav_model.trajectory.route import Route, read_routes
+from prog_models.models.uav_model.trajectory.route import Route # , read_routes
 
 DEG2RAD = np.pi/180.0
 FEET2MET = 0.3048
@@ -40,6 +40,16 @@ def load_txt_file(fname, skiprows=1, comments='#', max_rows=None):
     timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
     return lat, lon, alt, time_unix, timestamps
 
+def convert_dict_inputs(input_dict):
+    lat = input_dict['lat_deg'] * DEG2RAD
+    lon = input_dict['lon_deg'] * DEG2RAD
+    alt = input_dict['alt_ft'] * FEET2MET
+    time_unix = input_dict['time_unix']
+    timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
+
+    return {'lat_rad': lat, 'lon_rad': lon, 'alt_m': alt, 'timestamps': timestamps}
+
+"""
 def load_mat_file(fname):
     d   = inpout.loadmat(fname)
     lat = d['waypoints'][0][0][0] * DEG2RAD
@@ -57,10 +67,11 @@ def load_mat_file(fname):
 
     timestamps = [datetime_0 + dt.timedelta(seconds=eta[ii]-eta[0]) for ii in range(len(eta))]
     return lat.reshape((-1,)), lon.reshape((-1,)), alt.reshape((-1,)), eta, timestamps
-
+"""
 
 # LARC flight loading function
 # ============================
+"""
 def larc_flight(file='data/LARC_data.mat'):
     d = io.loadmat(file)
     lat = d['waypoints'][0][0][0][0] * np.pi/180.0
@@ -123,3 +134,4 @@ def get_small_drone_flight_route():
     route.set_eta(tstamps[0],  cruise_speed=6, ascent_speed=3, descent_speed=3,
                   hover=hover, add_takeoff_time=40, add_landing_time=40)
     return route
+"""

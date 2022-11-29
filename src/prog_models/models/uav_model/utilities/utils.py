@@ -3,7 +3,7 @@ from imports_ import np, stats, interp, dt, plt, animation, make_axes_locatable
 
 # Functions
 # ==========
-
+"""
 def check_dist2bounds(val, bounds):
     n = len(val)
     assert len(bounds)==n, "check_dist2bounds: Number of values should match the number of bounds."
@@ -135,47 +135,47 @@ def interpolate_2dgrid(X, n_interp, m_interp):
     for col in range(m):                tmp[:, col]     = np.linspace(X[:, col][0], X[:, col][-1], n_interp)
     for row in range(n_interp):         Xinterp[row, :] = np.linspace(tmp[row, :][0], tmp[row, :][-1], m_interp)
     return Xinterp
-
+"""
 
 def euler(f, h, x, u, params):
     return f(x, u, params)
 
 
-def rk4(f, h, x, u, params):
-    """
-    Fourth-order Runge-Kutta method
+# def rk4(f, h, x, u, params):
+#     """
+#     Fourth-order Runge-Kutta method
+# 
+#     dxdt = rk4(f, h, x, u, params)
 
-    dxdt = rk4(f, h, x, u, params)
+#     Provide the value increment of variable x, dx/dt,
+#     evolving according to the dynamics:
 
-    Provide the value increment of variable x, dx/dt,
-    evolving according to the dynamics:
+#         dx/dt = f(x)
 
-        dx/dt = f(x)
+#     where f is dynamic function, x is the current value, and dt is the time-step size.
 
-    where f is dynamic function, x is the current value, and dt is the time-step size.
+#     Input:
+#     f               matlab function (anonymous function, script function, etc.) defining the system's dynamics
+#                     f must be able to receive n-dimensional vector x
+#     h               scalar, time step size
+#     x               n x 1 vector, independent variable
+#     u               m x 1 vector, input to the system
+#     params
 
-    Input:
-    f               matlab function (anonymous function, script function, etc.) defining the system's dynamics
-                    f must be able to receive n-dimensional vector x
-    h               scalar, time step size
-    x               n x 1 vector, independent variable
-    u               m x 1 vector, input to the system
-    params
-
-    Output:
-    dxdt            n x 1 vector, value increment of x in time dt.
-    """
-    # Compute intermediate points of integration
-    k1 = f(x, u, params)               # Compute k1 -> k1 = f(x, u, params)
-    k2 = f(x + h/2.0 * k1, u, params)  # Compute k2 -> k2 = f(x + h/2.0*k1, u, params);
-    k3 = f(x + h/2.0 * k2, u, params)  # Compute k3 -> k3 = f(x + h/2.0*k2, u, params);
-    k4 = f(x + h * k3, u, params)      # Compute k4 -> k4 = f(x + h*k3, u, params);
-    return 1.0/6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)    # Compute dxdt: sum up individual contributions
+#     Output:
+#     dxdt            n x 1 vector, value increment of x in time dt.
+#     """
+#     # Compute intermediate points of integration
+#     k1 = f(x, u, params)               # Compute k1 -> k1 = f(x, u, params)
+#     k2 = f(x + h/2.0 * k1, u, params)  # Compute k2 -> k2 = f(x + h/2.0*k1, u, params);
+#     k3 = f(x + h/2.0 * k2, u, params)  # Compute k3 -> k3 = f(x + h/2.0*k2, u, params);
+#     k4 = f(x + h * k3, u, params)      # Compute k4 -> k4 = f(x + h*k3, u, params);
+#     return 1.0/6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)    # Compute dxdt: sum up individual contributions
 
 
 # GPR utilities
 # ==============
-
+"""
 def interp_function(x, t, tq):
     return interp.interp1d(t, x, axis=-1)(tq)
     
@@ -210,7 +210,7 @@ def init_hyperparams(X, y, gamma=0.5, delta=0.5):
     amp   = max([np.mean(dy), 0.])
     noise = gamma * amp + delta * min(dy)
     return {'signal_amplitude': amp, 'lengthscale': ls, 'noise_var': noise}
-
+"""
 
 # CLASSES
 # ========
@@ -236,68 +236,69 @@ class ProgressBar():
             print('')
 
             
-class LHS():
-    """
-    Latin Hypercube Sampling Function
+# class LHS():
+#     """
+#     Latin Hypercube Sampling Function
 
-    Limitations:
-    - independent dimensions
-    - uniform and normal distributions only
+#     Limitations:
+#     - independent dimensions
+#     - uniform and normal distributions only
     
-    Example calls:
-    - Generate 100 random variate samples in one dimension from a standard normal distribution
+#     Example calls:
+#     - Generate 100 random variate samples in one dimension from a standard normal distribution
     
-    norm_rv = LHS(dist='normal')
-    r       = norm_rv(ndims=1, nsamps=100, loc=0, scale=1)
+#     norm_rv = LHS(dist='normal')
+#     r       = norm_rv(ndims=1, nsamps=100, loc=0, scale=1)
     
-    - Generate 200 random variate samples in three dimensions from a uniform distribution with limits
+#    - Generate 200 random variate samples in three dimensions from a uniform distribution with limits
     
-    unif_rv = LHS(dist='uniform')
-    u       = unif_rv(ndims=3, nsamps=200)
-    """
-    def __init__(self, dist='uniform') -> None:
-        dist = dist.lower().replace(" ","").replace("_", "").replace("-","")
-        if dist != 'uniform' and dist != 'normal':      raise Exception("Distribution type " + self.dist + " not recognized.")
-        self.dist = dist
-        pass
+#     unif_rv = LHS(dist='uniform')
+#     u       = unif_rv(ndims=3, nsamps=200)
+#     """
+#     def __init__(self, dist='uniform') -> None:
+#         dist = dist.lower().replace(" ","").replace("_", "").replace("-","")
+#         if dist != 'uniform' and dist != 'normal':      raise Exception("Distribution type " + self.dist + " not recognized.")
+#         self.dist = dist
+#         pass
 
-    def __call__(self, ndims=1, nsamps=1, **kwargs):
-        norm_params = dict(loc=0, scale=1)
-        norm_params.update(kwargs)
-        if   self.dist == 'uniform':    return self.__uniform(ndims, nsamps)
-        elif self.dist == 'normal':     return self.__normal(ndims, nsamps, norm_params['loc'], norm_params['scale'])
-        else:                           return []
+#     def __call__(self, ndims=1, nsamps=1, **kwargs):
+#         norm_params = dict(loc=0, scale=1)
+#         norm_params.update(kwargs)
+#         if   self.dist == 'uniform':    return self.__uniform(ndims, nsamps)
+#         elif self.dist == 'normal':     return self.__normal(ndims, nsamps, norm_params['loc'], norm_params['scale'])
+#         else:                           return []
     
-    def __normal(self, ndims=1, nsamps=1, loc=0.0, scale=1.0):
-        if not hasattr(loc, '__len__'):     loc   = [loc, ] * ndims
-        if not hasattr(scale, '__len__'):   scale = [scale, ] * ndims
-        samples = self.__draw_samples(ndims=ndims, nsamps=nsamps, loc=loc, scale=scale)
-        return self.shuffle_samples(samples)
+#     def __normal(self, ndims=1, nsamps=1, loc=0.0, scale=1.0):
+#         if not hasattr(loc, '__len__'):     loc   = [loc, ] * ndims
+#         if not hasattr(scale, '__len__'):   scale = [scale, ] * ndims
+#         samples = self.__draw_samples(ndims=ndims, nsamps=nsamps, loc=loc, scale=scale)
+#         return self.shuffle_samples(samples)
 
-    def __uniform(self, ndims=1, nsamps=1):
-        samples = self.__draw_samples(ndims=ndims, nsamps=nsamps)
-        return self.shuffle_samples(samples)
+#     def __uniform(self, ndims=1, nsamps=1):
+#         samples = self.__draw_samples(ndims=ndims, nsamps=nsamps)
+#         return self.shuffle_samples(samples)
 
-    def __draw_samples(self, ndims, nsamps, loc=0., scale=1.):
-        u_low, u_high = self.__gen_unif_limits(nsamps)
-        if self.dist=='uniform' or self.dist=='normal':
-            samples = np.random.uniform(low=u_low, high=u_high, size=(ndims, nsamps)).T
-            if self.dist == 'normal':       
-                samples = stats.norm.ppf(samples, loc=loc, scale=scale)
-        else:
-            raise Exception("Distribution type " + self.dist + " not recognized (or not implemented yet).")
-        return samples
+#     def __draw_samples(self, ndims, nsamps, loc=0., scale=1.):
+#         u_low, u_high = self.__gen_unif_limits(nsamps)
+#         if self.dist=='uniform' or self.dist=='normal':
+#             samples = np.random.uniform(low=u_low, high=u_high, size=(ndims, nsamps)).T
+#             if self.dist == 'normal':       
+#                 samples = stats.norm.ppf(samples, loc=loc, scale=scale)
+#         else:
+#             raise Exception("Distribution type " + self.dist + " not recognized (or not implemented yet).")
+#         return samples
 
-    @staticmethod
-    def __gen_unif_limits(nsamps):
-        u = np.linspace(0.0, 1.0, nsamps+1)
-        return u[:-1], u[1:]
+#     @staticmethod
+#     def __gen_unif_limits(nsamps):
+#         u = np.linspace(0.0, 1.0, nsamps+1)
+#         return u[:-1], u[1:]
 
-    @staticmethod
-    def shuffle_samples(samples):
-        [np.random.shuffle(samples[:, ii]) for ii in range(samples.shape[1])]
-        return samples
+#     @staticmethod
+#     def shuffle_samples(samples):
+#         [np.random.shuffle(samples[:, ii]) for ii in range(samples.shape[1])]
+#         return samples
 
+"""
 def resize_wind_grid(x, order='F'):
     grid_size = int(np.sqrt(x.shape[0]))
     if len(x.shape) == 1:
@@ -317,72 +318,71 @@ def trajectory_sample_generator(trajs, **kwargs):
 def is_segment_full(t):
     if t['lat']['start'].size + t['lat']['end'].size:   return True
     else:                                               return False
-
+"""
 
 # VISUALIZE FUNCTIONS
 # ==========================
-def get_subplot_dim(num_subplots, rowfirst=True):
-    """
-    Compute the number of rows and columns (nrows, ncols) for a figure with multiple subplots.
-    The function returns number of rows and columns given num_subplots. 
-    Those numbers are computed sequentially until nrows * ncols >= num_subplots.
-    By default, the function adds a new row first if the number of subplots has not been reached, then adds a new column.
-    By passing rowfirst=False, the function will add a new column first if the number of subplot has not been reached, then a new row.
+# def get_subplot_dim(num_subplots, rowfirst=True):
+#     """
+#     Compute the number of rows and columns (nrows, ncols) for a figure with multiple subplots.
+#     The function returns number of rows and columns given num_subplots. 
+#     Those numbers are computed sequentially until nrows * ncols >= num_subplots.
+#     By default, the function adds a new row first if the number of subplots has not been reached, then adds a new column.
+#     By passing rowfirst=False, the function will add a new column first if the number of subplot has not been reached, then a new row.
 
-    nrows and ncols are initialized to 1. If num_subplots==1, then subplots are not needed, and the function returns nrows=ncols=1.
-    The command fig.add_subplot(nrows,ncols,1) generates a normal plot (no subplots).
+#     nrows and ncols are initialized to 1. If num_subplots==1, then subplots are not needed, and the function returns nrows=ncols=1.
+#     The command fig.add_subplot(nrows,ncols,1) generates a normal plot (no subplots).
 
-    Parameters
-    ----------
-    num_subplots : int
-                   number of subplots the figure should contain
-    rowfirst     : Boolean
-                   whether to add a new row first or a new column first to increase the number of rows and columns if necessary.
-                   Default is rowfirst=True.
+#     Parameters
+#     ----------
+#     num_subplots : int
+#                    number of subplots the figure should contain
+#     rowfirst     : Boolean
+#                    whether to add a new row first or a new column first to increase the number of rows and columns if necessary.
+#                    Default is rowfirst=True.
     
-    Returns
-    -------
-    nrows : int
-            number of subplots along the rows (vertical axis) of the figure
-    ncols : int
-            number of subplots along the columns (horizontal axis) of the figure
+#     Returns
+#     -------
+#     nrows : int
+#             number of subplots along the rows (vertical axis) of the figure
+#     ncols : int
+#             number of subplots along the columns (horizontal axis) of the figure
 
-    Example
-    -------
-    | states = np.random.randn(1000,5) # let us consider a state vector with 5 dimensions, and 1000 values of the states (one for each time step)
-    | n_states = states.shape[-1]     # get the number of states (5)
-    | print(get_subplot_dim(n_states)) # 3, 2
-    | print(get_subplot_dim(n_states, rowfirst=False)) # 2, 3
-    | 
-    | fig = plt.figure()
-    | ax = fig.add_subplot(nrows, ncols, 0)
-    | # ...
-    """
-    nrows, ncols = 1, 1 # initialize number of rows and cols to 1.
-    if rowfirst:
-        while nrows * ncols < num_subplots:         
-            nrows += 1
-            if nrows * ncols < num_subplots:        
-                ncols += 1
-    else:
-        while nrows * ncols < num_subplots:         
-            ncols += 1
-            if nrows * ncols < num_subplots:        
-                nrows += 1
-    return nrows, ncols
+#     Example
+#     -------
+#     | states = np.random.randn(1000,5) # let us consider a state vector with 5 dimensions, and 1000 values of the states (one for each time step)
+#     | n_states = states.shape[-1]     # get the number of states (5)
+#     | print(get_subplot_dim(n_states)) # 3, 2
+#     | print(get_subplot_dim(n_states, rowfirst=False)) # 2, 3
+#     | 
+#     | fig = plt.figure()
+#     | ax = fig.add_subplot(nrows, ncols, 0)
+#     | # ...
+#     """
+#     nrows, ncols = 1, 1 # initialize number of rows and cols to 1.
+#     if rowfirst:
+#         while nrows * ncols < num_subplots:         
+#             nrows += 1
+#             if nrows * ncols < num_subplots:        
+#                 ncols += 1
+#     else:
+#         while nrows * ncols < num_subplots:         
+#             ncols += 1
+#             if nrows * ncols < num_subplots:        
+#                 nrows += 1
+#     return nrows, ncols
 
 
+# if __name__ == '__main__':
 
-if __name__ == '__main__':
+#     import time
 
-    import time
+#     x = np.linspace(0., 1.0, 100)
+#     wb = ProgressBar(n=len(x), prefix=' Nonsense computation .. ', suffix=' complete.')
 
-    x = np.linspace(0., 1.0, 100)
-    wb = ProgressBar(n=len(x), prefix=' Nonsense computation .. ', suffix=' complete.')
-
-    for ii in range(len(x)):
-        wb(ii)
-        # your model computation here
-        time.sleep(0.2)
-    wb(len(x))
+#     for ii in range(len(x)):
+#         wb(ii)
+#         # your model computation here
+#         time.sleep(0.2)
+#     wb(len(x))
 

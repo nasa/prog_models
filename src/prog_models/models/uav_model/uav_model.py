@@ -6,22 +6,23 @@ from prog_models.prognostics_model import PrognosticsModel
 import prog_models.models.uav_model.trajectory.route as route 
 import prog_models.models.uav_model.trajectory.trajectory as trajectory
 from prog_models.models.uav_model.vehicles import AircraftModels
-from prog_models.models.uav_model.vehicles.control import allocation_functions
+# from prog_models.models.uav_model.vehicles.control import dn_allocation_functions
 
 import numpy as np
 import prog_models.models.uav_model.utilities.geometry as geom
 from warnings import warn
+from prog_models.exceptions import ProgModelInputException
 
 class UAVGen(PrognosticsModel):
     """
 
-    :term:`Events<event>`: (1)
+    :term:`Events<event>`: (#)
     
-    :term:`Inputs/Loading<input>`: (1)
+    :term:`Inputs/Loading<input>`: ()
 
-    :term:`States<state>`: (4)
+    :term:`States<state>`: (12)
 
-    :term:`Outputs<output>`: (2)
+    :term:`Outputs<output>`: (12)
 
     Keyword Args
     ------------
@@ -35,9 +36,10 @@ class UAVGen(PrognosticsModel):
 
     default_parameters = {  # Set to defaults
         # Flight information
-        'flight_file': 'src/prog_models/models/uav_model/data/20181207_011200_Flight.txt', 
-        'flight_name': 'LaRC_20181207', 
+        'flight_file': None, 
+        'flight_name': 'flight-1', 
         'aircraft_name': 'aircraft-1', 
+        'flight_plan': None,
 
         # Simulation parameters:
         'dt': 0.2, 
@@ -55,14 +57,25 @@ class UAVGen(PrognosticsModel):
         # Vehicle params:
         'vehicle_model': 'djis1000',
         'vehicle_payload': 0.0,
-        'vehicle_integrator_fn': 'RK4'
+        'vehicle_integrator_fn': 'euler' #  this parameter currently has no effect, need to delete and define elsewhere
     }
 
-    def initialize(self, u=None, z=None): # initialize(self, u : dict, z = None):
+    def initialize(self, u=None, z=None): 
         
-        flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
-        lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
-
+        if self.parameters['flight_plan'] and self.parameters['flight_file'] == None:
+            flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
+            lat = flightplan['lat_rad']
+            lon = flightplan['lon_rad']
+            alt = flightplan['alt_m']
+            tstamps = flightplan['timestamps']
+        elif self.parameters['flight_file'] and self.parameters['flight_plan'] == None:
+            flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
+            lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
+        elif self.parameters['flight_file'] and self.parameters['flight_plan']:
+            raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
+        else:
+            raise ProgModelInputException("No flight plan information supplied.")
+            
         # Generate route
         route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                             cruise_speed=self.parameters['cruise_speed'], 

@@ -5,6 +5,9 @@ import numpy as np
 
 def run_example(): 
 
+    # Example uses waypoints from flight LaRC_20181207
+    flight_name = 'LaRC_20181207'
+
     # Define coarse waypoints: 
     waypoints = {}
     waypoints['lat_deg'] = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
@@ -12,8 +15,16 @@ def run_example():
     waypoints['alt_ft'] = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
     waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
 
-    traj_gen = UAVGen()
+    # Generate UAV instance with waypoints defined in dictionary 
+    # traj_gen = UAVGen(flight_plan=waypoints)
+
+    # Alternatively, waypoints can be specified in a table format and saved to a text file 
+    flight_file = 'examples/uav_waypoints.txt'
+    traj_gen = UAVGen(flight_file=flight_file)
+    
+    # No noise for testing 
     traj_gen.parameters['process_noise'] = 0
+    traj_gen.parameters['measurement_noise'] = 0 
 
     x0_test = traj_gen.initialize()
 
@@ -25,17 +36,9 @@ def run_example():
         # 'save_freq': 0.2
     }
 
-    # simulated_results = traj_gen.simulate_to_threshold(future_loading, **options)
     simulated_results = traj_gen.simulate_to(425,future_loading, **options)
 
-
-
     debug = 1
-
-
-
-
-
 
 
 # This allows the module to be executed directly 
