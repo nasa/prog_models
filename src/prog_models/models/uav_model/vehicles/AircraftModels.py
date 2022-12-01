@@ -126,19 +126,25 @@ def rotorcraft_symbolicStateMatrices():
 def build_model(init_state_vector, dt, **kwargs):
 
     params = dict(name='rotorcraft-1', model='djis1000', 
-                  integrator_fn='RK4', payload=6.0, Q=None, R=None, qi=None, i_lag=None,
+                  integrator_fn='RK4', payload=2.0, Q=None, R=None, qi=None, i_lag=None,
                   aero_effects=True, steadystate_input=None)
     params.update(kwargs)
-
+    params['i_lag'] = 100
+    params['qi'] = np.array([100, 100, 300])
+    params['R'] = np.diag([10, 2000, 2000, 2000])
+    params['Q'] = np.diag([1000, 1000, 5000,  # x, y, z
+                           100.0, 100.0, 100.0,  # phi, theta, psi,
+                           1000, 1000, 5000,  # vx, vy, vz,
+                           1000, 1000, 1000])  # p, q, r
     # Default control parameters (if not provided)
     if params['Q'] is None:
-        params['Q'] = np.diag([1000,  1000,  1000000, # x, y, z
-                               500, 500, 1000,      # phi, theta, psi, 
-                               1.,  1.,  1.,     # vx, vy, vz,
-                               100, 100,   100,])   # p, q, r
-    if params['R'] is None:         params['R']     = np.diag([1e2, 1e3, 1e3, 5e3])   # T, Mu, Mv, Mw
-    if params['qi'] is None:        params['qi']    = np.array([100.0, 100., 500.])  # Integral error weights in position x, y, z
-    if params['i_lag'] is None:     params['i_lag'] = 1000                        # integral lag: how far back to use (in data points, so 1 point = 1 dt) for integral error
+        params['Q'] = np.diag([1000,  1000,  5000, # x, y, z
+                               100, 100, 100,      # phi, theta, psi, 
+                               10000, 10000, 10000,     # vx, vy, vz,
+                               10000, 10000, 10000])   # p, q, r
+    if params['R'] is None:         params['R']     = np.diag([50, 7e3, 7e3, 7e3])   # T, Mu, Mv, Mw
+    if params['qi'] is None:        params['qi']    = np.array([5000, 5000, 1000])  # Integral error weights in position x, y, z
+    if params['i_lag'] is None:     params['i_lag'] = 500                        # integral lag: how far back to use (in data points, so 1 point = 1 dt) for integral error
 
 
     # Generate UAV model
@@ -201,6 +207,7 @@ class Rotorcraft():
         
         # select model
         if self.model.lower() == 'djis1000':    self.mass, self.geom, self.dynamics = vehicles.DJIS1000(payload, gravity)
+        elif self.model.lower() == 'tarot18':   self.mass, self.geom, self.dynamics = vehicles.TAROT18(payload, gravity)
         else:                                   self.mass, self.geom, self.dynamics = dict(), dict(), dict()
         
         # update model based on input parameters

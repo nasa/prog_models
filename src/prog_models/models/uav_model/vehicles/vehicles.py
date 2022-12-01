@@ -22,8 +22,8 @@ def DJIS1000(payload=0.0, gravity=9.81):
     :return:                dictionaries containing mass, geometry and dynamic properties of the vehicle
     """
 
-    mass = dict(body_empty=1.3,         # kg, total empty mass
-                max_payload=None,        # kg, admissible payload    
+    mass = dict(body_empty=1.8,         # kg, total empty mass
+                max_payload=6.6,        # kg, admissible payload    
                 arm=0.325,              # kg, arm mass (comprehensive of motors)
                 total=None,             # kg, total mass (to be calculated using payload, num rotors and weight of all arms)
                 body=None,              # kg, mass of central body

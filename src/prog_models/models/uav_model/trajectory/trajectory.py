@@ -16,11 +16,13 @@ import datetime as dt
 
 import geometry as geom
 import utils
-from .nurbs import generate_3dnurbs
+from .nurbs import generate_3dnurbs, generate_intermediate_points, evaluate, knot_vector
 
 
 def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
-    
+    """
+    Compute angular velocities from attitudes
+    """
     phidot   = np.insert(np.diff(phi) / delta_t, 0, 0.0)
     thetadot = np.insert(np.diff(theta) / delta_t, 0, 0.0)
     psidot   = np.insert(np.diff(psi) / delta_t, 0, 0.0)
@@ -28,40 +30,54 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
     q        = phidot.copy()
     r        = phidot.copy()
     for ii in range(len(phi)):
-        # des_angular_vel = geom.body_ang_vel_from_eulers(phidot[ii], thetadot[ii], psidot[ii])
         des_angular_vel = geom.body_ang_vel_from_eulers(phi[ii], theta[ii], psi[ii], phidot[ii], thetadot[ii], psidot[ii])
         p[ii], q[ii], r[ii] = des_angular_vel[0], des_angular_vel[1], des_angular_vel[2]
     return p, q, r
 
 
 
-def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81):
+# def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81):
+def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
     
     delta_t = t[1]-t[0]
     # --------- Differentiate trajectory to obtain speed and acceleration ------ #
     # Try to get velocity starting at 0
-    px[1] = 0.
-    py[1] = 0.
-    pz[1] = 0.
+    # px[1] = 0.
+    # py[1] = 0.
+    # pz[1] = 0.
     
     # velocity
     vx = np.gradient(px, delta_t)
     vy = np.gradient(py, delta_t)
     vz = np.gradient(pz, delta_t)
+    # modify to start at 0
+    vx[0] = 0.
+    vy[0] = 0.
+    vz[0] = 0.
 
+    # Acceleration 
     ax = np.gradient(vx, delta_t)
     ay = np.gradient(vy, delta_t)
     az = np.gradient(vz, delta_t)
+    # modify to start at 0
+    ax[0] = 0.
+    ay[0] = 0.
+    az[0] = 0.
 
     # --------- Calculate angular kinematics based on acceleration and yaw ---------- #
     # Yaw interpolation has to be done with zero-degree polynomial to ensure we have constant yaw over a segment
-    yawFun = interp.interp1d(wp_etas, wp_yaw, kind='zero', fill_value='extrapolate')
-    psi    = yawFun(t)
+    # yawFun = interp.interp1d(wp_etas, wp_yaw, kind='zero', fill_value='extrapolate')
+    # psi    = yawFun(t)
+    psi = generate_smooth_yaw(wp_etas, wp_yaw, t)
 
     # linearized angular kinematics
     phi   = 1.0 / (gravity + az) * (ax * np.sin(psi) - ay * np.cos(psi))    # 
     theta = 1.0 / (gravity + az) * (ax * np.cos(psi) + ay * np.sin(psi))    # 
     
+    # Introduce limits on attitude angles
+    phi   = np.fmax(np.fmin(phi, max_phi), -max_phi)
+    theta = np.fmax(np.fmin(theta, max_theta), -max_theta)
+
     # Get body angular velocity from attitude
     p, q, r = angular_vel_from_attitude(phi, theta, psi, delta_t)
 
@@ -73,6 +89,21 @@ def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81):
                   'angVel':         np.array([p, q, r]).T,
                   'time':           t}
     return trajectory
+
+def generate_smooth_yaw(etas, yaw_points, time):
+    yaw_fun = interp.interp1d(etas, yaw_points, kind='zero', fill_value='extrapolate')
+    psi = yaw_fun(time)
+
+    # Smooth things out
+    t = knot_vector(len(time)-1, 6)
+    p_vector       = np.zeros((2, len(time)))
+    p_vector[0, :] = time
+    p_vector[1, :] = psi
+    weight_vector = np.ones_like(time)
+    psi_smooth = evaluate(6, t, weight_vector, p_vector, basis_length=2000)
+    psi_smooth = interp.interp1d(psi_smooth[0,:], psi_smooth[1,:], kind='linear', fill_value='extrapolate')(time)
+    return psi_smooth
+
     
 """
 def horizontal_cruise_speed_from_cartesian_speed(vx_m, vy_m, vz_m, vx_std, vy_std, vz_std, nsamps=1000, return_climb_speed=False):
@@ -191,8 +222,8 @@ class Trajectory():
         self.weight_vector    = []
         self.airspeed_std     = airspeed_std # m/s
 
-    # def set_airspeed_std(self, s):
-    #     self.airspeed_std = s
+    def set_airspeed_std(self, s):
+        self.airspeed_std = s
 
     def gen_cartesian_coordinates(self):
         coord = geom.Coord(self.route.lat[0], self.route.lon[0], self.route.alt[0])
@@ -200,8 +231,9 @@ class Trajectory():
         eta_unix = np.asarray([self.route.eta[item].timestamp() for item in range(len(self.route.eta))])
         return x, y, z, eta_unix
 
-    def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000):
-        
+    # def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000):
+    def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
+
         print('\n\n**** Generating Trajectory using NURBS ***\n===================================')
         
         # Update parameters for future use
@@ -221,14 +253,18 @@ class Trajectory():
 
         # Generating nurbs
         # -----------------
-        nurbs_curve = generate_3dnurbs(x, y, z, compass, eta_unix - eta_unix[0], 
-                                       dt, self.nurbs_order, weightVector=self.weight_vector, basis_length=nurbs_basis_length)
+        # nurbs_curve = generate_3dnurbs(x, y, z, compass, eta_unix - eta_unix[0], 
+        #                                dt, self.nurbs_order, weightVector=self.weight_vector, basis_length=nurbs_basis_length)
+        wpx, wpy, wpz, wyaw, eta, weight_vector = generate_intermediate_points(x, y, z, compass, eta_unix-eta_unix[0], self.weight_vector)
+        nurbs_curve = generate_3dnurbs(wpx, wpy, wpz, eta, dt, self.nurbs_order, weight_vector=weight_vector, basis_length=nurbs_basis_length)
         
         # Generating higher-order derivatives for velocity, acceleration profile, attitude, etc.
         # ------------------------------------------------------------------------------------
         print("Generating kinematics from position profile ", end=" ")
+        # traj = gen_from_pos_profile(nurbs_curve['px'], nurbs_curve['py'], nurbs_curve['pz'], nurbs_curve['time'],
+        #                                  nurbs_curve['weta'], nurbs_curve['wyaw'], gravity=self.gravity)
         traj = gen_from_pos_profile(nurbs_curve['px'], nurbs_curve['py'], nurbs_curve['pz'], nurbs_curve['time'],
-                                         nurbs_curve['weta'], nurbs_curve['wyaw'], gravity=self.gravity)
+                                    eta, wyaw, gravity=self.gravity, max_phi=max_phi, max_theta=max_theta)
         print('complete.')
         # Convert trajectory into geodetic coordinates
         # --------------------------------------------
