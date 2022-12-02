@@ -32,7 +32,7 @@ class DictLikeMatrixWrapper():
                     [data[key]] if key in data else [None] for key in keys
                 ], dtype=np.float64)
         else:
-            raise ProgModelTypeError(f"Input must be a dictionary or numpy array, not {type(data)}")     
+            raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")     
 
     def __reduce__(self):
         return (DictLikeMatrixWrapper, (self._keys, self.matrix))
