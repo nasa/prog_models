@@ -384,9 +384,10 @@ def gen_compass_angles(wps_enu):
     return yaw_angle
 """
 
-def gen_heading_angle(lat, lon):
+def gen_heading_angle(lat, lon, alt):
     
     print('Generating heading angle ', end=" ")
+    """
     # Compute heading using lat-lon coordinates
     # -----------------------------------------
     n    = len(lat)
@@ -421,6 +422,63 @@ def gen_heading_angle(lat, lon):
             else:                                               head[idx+1] = next_p_2
     print('complete.')
     return head
+    """
+    # Compute heading using lat-lon coordinates
+    # -----------------------------------------
+    # This heading is calculated from North,
+    # while reference frame is ENU (East-North-Up), therefore, the first direction is EAST, not NORTH.
+    # Need to adjust heading for ENU reference frame after calculating it.
+    head = heading_compute_geodetic(lat, lon)
+    # Adjust first heading based on altitude (avoid issues with fictitious way-points later on)
+    head = heading_adjust_first_nonzero(head, alt)
+    # Adjust heading based on minimum rotation between current and next heading.
+    # ---------------------------------------------------------------------------
+    # Select the sign of the angle based on the shortest rotation the UAV is supposed to move
+    head = heading_adjust_rotation(head)
+
+    print('complete.')
+    return head
+
+def heading_adjust_first_nonzero(heading, altitude):
+    n = len(heading)
+    for jj in range(n):
+        if altitude[jj] > 1.0 and heading[jj] == 0 and heading[jj + 1] != 0:
+            heading[jj] = heading[jj + 1]
+            break
+    return heading
+
+def heading_adjust_rotation(heading):
+    n = len(heading)
+    for idx in range(n-1):
+        curr_p = heading[idx]
+        next_p = heading[idx+1]
+        # If angles are identical move on
+        if curr_p == next_p:
+            continue
+        else:
+            next_p_2 = next_p - 2.0*np.pi   # angle in opposite direction
+            # Select angle based on mininum rotation necessary
+            if abs(curr_p - next_p) < abs(curr_p - next_p_2):   heading[idx+1] = next_p
+            else:                                               heading[idx+1] = next_p_2
+    return heading
+
+def heading_compute_geodetic(lat, lon):
+    n = len(lat)
+    heading = np.zeros((n,))
+    for jj in range(1, n):
+        dlon_ = lon[jj] - lon[jj - 1]
+        dlat_ = lat[jj] - lat[jj - 1]
+        X = np.cos(lat[jj]) * np.sin(dlon_)
+        Y = np.cos(lat[jj - 1]) * np.sin(lat[jj]) - np.sin(lat[jj - 1]) * np.cos(lat[jj]) * np.cos(dlon_)
+        head_temp = np.arctan2(X, Y)
+        if Y != 0:
+            head_temp -= np.pi / 2.0
+            head_temp *= -1.0
+        if jj < n - 1 and ((dlat_ != 0 or dlon_ != 0) and head_temp == 0):
+            head_temp = heading[jj - 2]
+        heading[jj - 1] = head_temp
+    heading[-1] = heading[-2]
+    return heading
 
 
 # def coord_distance(lat, lon, alt):

@@ -123,11 +123,16 @@ def rotorcraft_symbolicStateMatrices():
 
 # Initialize rotorcraft
 # =====================
-def build_model(init_state_vector, dt, **kwargs):
+# def build_model(init_state_vector, dt, **kwargs):
+def build_model(**kwargs):
 
-    params = dict(name='rotorcraft-1', model='djis1000', 
+    # params = dict(name='rotorcraft-1', model='djis1000', 
+    #               integrator_fn='RK4', payload=2.0, Q=None, R=None, qi=None, i_lag=None,
+    #               aero_effects=True, steadystate_input=None)
+    params = dict(name='rotorcraft-1', model='djis1000',
+                  init_state_vector=None, dt=None,
                   integrator_fn='RK4', payload=2.0, Q=None, R=None, qi=None, i_lag=None,
-                  aero_effects=True, steadystate_input=None)
+                  steadystate_input=None)
     params.update(kwargs)
     params['i_lag'] = 100
     params['qi'] = np.array([100, 100, 300])
@@ -149,14 +154,20 @@ def build_model(init_state_vector, dt, **kwargs):
 
     # Generate UAV model
     # ------------------
-    uav = Rotorcraft(name=params['name'], model=params['model'], payload=params['payload'], aero_effects=params['aero_effects'])
+    # uav = Rotorcraft(name=params['name'], model=params['model'], payload=params['payload'], aero_effects=params['aero_effects'])
+    uav = Rotorcraft(name=params['name'], model=params['model'], payload=params['payload'])
     
     # Build vehicle properties
     # ------------------------
-    uav.build(initial_state     = init_state_vector,
+    # uav.build(initial_state     = init_state_vector,
+    #           steadystate_input = params['steadystate_input'],     # None assigns deault value (hover condition)
+    #           integrator_fn     = params['integrator_fn'],    # Available types: Euler or RK4
+    #           dt                = dt) # should be small enough to converge (RK4 allows larger dt)
+    uav.build(initial_state     = params['init_state_vector'],
               steadystate_input = params['steadystate_input'],     # None assigns deault value (hover condition)
               integrator_fn     = params['integrator_fn'],    # Available types: Euler or RK4
-              dt                = dt) # should be small enough to converge (RK4 allows larger dt)
+              dt                = params['dt']) # should be small enough to converge (RK4 allows larger dt)
+
 
     # Define controller and control strategy
     # ---------------------------------------
@@ -188,7 +199,7 @@ class Rotorcraft():
                  payload = 0.0,
                  gravity = 9.81,
                  air_density=1.225,
-                 aero_effects=False,
+                 # aero_effects=False,
                  **kwargs):
         self.name = name
         self.model = model
@@ -201,7 +212,7 @@ class Rotorcraft():
         self.integrator = None
         self.dt = None
         self.propulsion = None
-        self.aero_effects=aero_effects
+        # self.aero_effects=aero_effects
         self.aero = None
         self.air_density = air_density
         
@@ -218,7 +229,17 @@ class Rotorcraft():
         self.dynamics.update(kwargs)
         
         # Build rotorcraft inertia properties
-        self.mass, self.geom = build_rotorcraft_inertia(self.mass, self.geom)
+        # self.mass, self.geom = build_rotorcraft_inertia(self.mass, self.geom)
+        pass
+
+    def set_state(self, state):
+        self.state = state.copy()
+        pass
+
+    def set_dt(self, dt):
+        self.dt = dt
+        self.controller.dt = dt
+        pass
 
     """    
     def reset_state(self, state0=None):
@@ -269,18 +290,22 @@ class Rotorcraft():
         self.input[0]          = steadystate_input
         
         # Introduction of Aerodynamic effects:
-        if self.aero_effects:
-            self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
-                                                 Cd=self.dynamics['aero']['cd'],
-                                                 air_density=self.air_density),
-                             lift=None)
+        # if self.aero_effects:
+        #     self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
+        #                                          Cd=self.dynamics['aero']['cd'],
+        #                                          air_density=self.air_density),
+        #                      lift=None)
+        self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
+                                             Cd=self.dynamics['aero']['cd'],
+                                             air_density=self.air_density),
+                         lift=None)
 
         # Integration properties
         self.dt = dt
         if   integrator_fn.lower() == 'euler':      self.int_fn = utils.euler
         elif integrator_fn.lower() == 'rk4':        self.int_fn = utils.rk4
         else:   raise Exception("Integrator function not recognized. Available options (so far) are: Euler (default) or RK4")
-
+        pass
     """
     # Introducing control allocation matrices for rotor speed-based control
     def set_control_allocation_matrix(self, constrained_cam=False):

@@ -246,7 +246,7 @@ class Trajectory():
         x, y, z, eta_unix = self.gen_cartesian_coordinates()
         self.route.x, self.route.y, self.route.z = x, y, z  # assign cartesian coordinates to route
         print('complete.')
-        compass = geom.gen_heading_angle(self.route.lat, self.route.lon)
+        compass = geom.gen_heading_angle(self.route.lat, self.route.lon, self.route.alt)
         
         if weight_vector is None:   weight_vector = np.asarray([10,]*len(self.route.x))
         self.weight_vector = weight_vector

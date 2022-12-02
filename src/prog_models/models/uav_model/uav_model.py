@@ -42,17 +42,18 @@ class UAVGen(PrognosticsModel):
         'flight_plan': None,
 
         # Simulation parameters:
-        'dt': 0.2, 
+        'dt': 0.1, 
         'gravity': 9.81,
         'cruise_speed': 6.0,
         'ascent_speed': 3.0,
         'descent_speed': 3.0, 
         'landing_speed': 1.5,
-        'hovering_time': 10.0,
-        'takeoff_time': 60.0, 
-        'landing_time': 60.0, 
+        'hovering_time': 0.0,
+        'takeoff_time': 0.0, 
+        'landing_time': 0.0, 
+        'waypoint_weights': 20.0, # should default be 0?
         'nurbs_basis_length': 2000, 
-        'nurbs_order': 5, 
+        'nurbs_order': 4, 
 
         # Vehicle params:
         'vehicle_model': 'djis1000',
@@ -85,25 +86,43 @@ class UAVGen(PrognosticsModel):
                             hovering_time=self.parameters['hovering_time'], 
                             add_takeoff_time=self.parameters['takeoff_time'], 
                             add_landing_time=self.parameters['landing_time'])
+
+        aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
+                                               model=self.parameters['vehicle_model'],
+                                               integrator_fn=self.parameters['vehicle_integrator_fn'],
+                                               payload=self.parameters['vehicle_payload'])
+        self.vehicle_model = aircraft1 
+        
         # Generate trajectory
         ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
         ref_traj.generate(dt=self.parameters['dt'], 
                         nurbs_order=self.parameters['nurbs_order'], 
                         gravity=self.parameters['gravity'], 
-                        nurbs_basis_length=self.parameters['nurbs_basis_length'])
+                        weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat)),   # weight of waypoints
+                        nurbs_basis_length=self.parameters['nurbs_basis_length'],
+                        max_phi=aircraft1.dynamics['max_roll'],                    # rad, allowable roll for the aircraft
+                        max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
 
         self.ref_traj = ref_traj
 
         # Initialize vehicle 
         init_pos = np.concatenate((ref_traj.cartesian_pos[0,:], ref_traj.attitude[0,:], 
                                     ref_traj.velocity[0,:], ref_traj.angular_velocity[0,:]), axis=0)
-        aircraft1 = AircraftModels.build_model(init_pos, 
-                                               ref_traj.dt, 
-                                               name=self.parameters['aircraft_name'], 
-                                               model=self.parameters['vehicle_model'], 
-                                               integrator_fn=self.parameters['vehicle_integrator_fn'],
-                                               payload=self.parameters['vehicle_payload'])
-        self.vehicle_model = aircraft1 
+        # aircraft1 = AircraftModels.build_model(init_pos, 
+        #                                        ref_traj.dt, 
+        #                                        name=self.parameters['aircraft_name'], 
+        #                                        model=self.parameters['vehicle_model'], 
+        #                                        integrator_fn=self.parameters['vehicle_integrator_fn'],
+        #                                        payload=self.parameters['vehicle_payload'])
+        # aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
+        #                                        model=self.parameters['vehicle_model'],
+        #                                        integrator_fn=self.parameters['vehicle_integrator_fn'],
+        #                                        payload=self.parameters['vehicle_payload'])
+        # self.vehicle_model = aircraft1 
+
+        ### QUESTION: I'm not sure where to put this - it's needed for defining dt in the right way
+        aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
+        aircraft1.set_dt(dt=self.parameters['dt'])
 
         return self.StateContainer({
             'x': ref_traj.cartesian_pos[0,0],
