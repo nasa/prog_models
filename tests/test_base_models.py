@@ -792,7 +792,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(outputs), 5)
         o = [2.8, -0.4, -3.6, -6.8, -8.4]
         for (oi, z) in zip(o, outputs): 
-            # Noise will make output not equal the expected
+            # Lack of noise will make output as expected
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
     
     def test_sim_prog(self):
