@@ -33,7 +33,7 @@ Use the following to cite this repository:
 @misc{2022_nasa_prog_models,
     author    = {Christopher Teubert and Matteo Corbetta and Chetan Kulkarni and Katelyn Jarvis and Matthew Daigle},
     title     = {Prognostics Models Python Package},
-    month     = October,
+    month     = December,
     year      = 2022,
     version   = {1.4},
     url       = {https://github.com/nasa/prog\_models}
@@ -42,7 +42,7 @@ Use the following to cite this repository:
 
 The corresponding reference should look like this:
 
-C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.4, October 2022. URL https://github.com/nasa/prog_models.
+C. Teubert, C. Kulkarni, M. Corbetta, K. Jarvis, M. Daigle, Prognostics Model Python Package, v1.4, December 2022. URL https://github.com/nasa/prog_models.
 
 Alternatively, if using both prog_models and prog_algs, you can cite the combined package as
 

@@ -16,12 +16,12 @@ INSTALL_REQS = [
         'matplotlib',
         'requests',
         "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'",
-        "tensorflow-macos; platform_system=='Darwin' or platform_machine=='arm64'",
+        "tensorflow-macos; platform_system=='Darwin' and platform_machine=='arm64'",
     ]
 
 setup(
     name = 'prog_models',
-    version = '1.4.2', #pkg_resources.require("prog_models")[0].version,
+    version = '1.4.4', #pkg_resources.require("prog_models")[0].version,
     description = 'The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',
