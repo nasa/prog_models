@@ -7,4 +7,4 @@ from .ensemble_model import EnsembleModel
 from .linear_model import LinearModel
 from .exceptions import ProgModelException, ProgModelInputException, ProgModelTypeError
 
-__version__ = '1.4.4'
+__version__ = '1.5.0-pre'
