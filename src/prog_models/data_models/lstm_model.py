@@ -136,7 +136,7 @@ class LSTMStateTransitionModel(DataModel):
             # Enough data has been received to calculate output
             # Format input into np array with shape (1, window, num_inputs)
             m_input = states.reshape(1, self.parameters['window'], len(self.inputs))
-            m_input = np.array(m_input, dtype=np.float)
+            m_input = np.array(m_input, dtype=np.float64)
             internal_states = self.parameters['state_model'](m_input).numpy().T
         return self.StateContainer(np.vstack((states, internal_states)))
 
@@ -149,7 +149,7 @@ class LSTMStateTransitionModel(DataModel):
         # Pass internal states into model to calculate output
         if self.parameters['state_model'] is None:
             m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
-            internal_states = np.array(m_input, dtype=np.float)
+            internal_states = np.array(m_input, dtype=np.float64)
         else:
             internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
         m_output = self.parameters['output_model'](internal_states)
@@ -173,7 +173,7 @@ class LSTMStateTransitionModel(DataModel):
         # Pass internal states into model to calculate output
         if self.parameters['state_model'] is None:
             m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
-            internal_states = np.array(m_input, dtype=np.float)
+            internal_states = np.array(m_input, dtype=np.float64)
         else:
             internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
         m_event_state = self.parameters['event_state_model'](internal_states)
@@ -193,7 +193,7 @@ class LSTMStateTransitionModel(DataModel):
         # Pass internal states into model to calculate output
         if self.parameters['state_model'] is None:
             m_input = x.matrix.reshape(1, self.parameters['window'], len(self.inputs))
-            internal_states = np.array(m_input, dtype=np.float)
+            internal_states = np.array(m_input, dtype=np.float64)
         else:
             internal_states = x.matrix[-self.parameters['state_model'].output_shape[1]:].T
         m_t_met = self.parameters['t_met_model'](internal_states)
@@ -386,10 +386,10 @@ class LSTMStateTransitionModel(DataModel):
             es_all.extend(es_i)
             t_all.extend(t_i)
         
-        u_all = np.array(u_all, dtype=np.float)
-        z_all = np.array(z_all, dtype=np.float)
-        es_all = np.array(es_all, dtype=np.float)
-        t_all = np.array(t_all, dtype=np.float)
+        u_all = np.array(u_all, dtype=np.float64)
+        z_all = np.array(z_all, dtype=np.float64)
+        es_all = np.array(es_all, dtype=np.float64)
+        t_all = np.array(t_all, dtype=np.float64)
         return (u_all, z_all, es_all, t_all)
 
     @classmethod
@@ -648,7 +648,7 @@ class LSTMStateTransitionModel(DataModel):
 
         # Now do actual simulate_to_threshold
         kwargs['t0'] = t
-        x.matrix = np.array(x.matrix, dtype=np.float)
+        x.matrix = np.array(x.matrix, dtype=np.float64)
         kwargs['x'] = x
         if 'horizon' in kwargs:
             if kwargs['horizon'] < t:
