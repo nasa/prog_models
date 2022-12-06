@@ -436,6 +436,65 @@ class TestSurrogate(unittest.TestCase):
                 self.assertNotEqual(surrogate_noise_results.states[i]['v'] - surrogate_results.outputs[i]['v'], 0)
                 self.assertNotEqual(surrogate_noise_results.states[i]['EOD'] - surrogate_results.event_states[i]['EOD'], 0)
     
+    def test_surrogate_output_interp(self):
+        m = BatteryElectroChemEOD(process_noise = 0)
+        def future_loading_1(t, x=None):
+            # Variable (piece-wise) future loading scheme 
+            if (t < 500):
+                i = 3
+            elif (t < 1000):
+                i = 2
+            elif (t < 1500):
+                i = 0.5
+            else:
+                i = 4.5
+            return m.InputContainer({'i': i})
+        
+        def future_loading_2(t, x=None):
+            # Variable (piece-wise) future loading scheme 
+            if (t < 300):
+                i = 2
+            elif (t < 800):
+                i = 3.5
+            elif (t < 1300):
+                i = 4
+            elif (t < 1600):
+                i = 1.5
+            else:
+                i = 5
+            return m.InputContainer({'i': i})
+        load_functions = [future_loading_1, future_loading_2]
+
+        options_surrogate = {
+            'save_freq': 5, # For DMD, this value is the time step for which the surrogate model is generated
+            'dt': 0.1, # For DMD, this value is the time step of the training data
+            'trim_data_to': 0.7, # Trim data to this fraction of the time series
+            'training_noise': 0
+        }
+
+        surrogate = m.generate_surrogate(load_functions, **options_surrogate)
+
+        options_sim = {
+            'save_freq': 3, # Frequency at which results are saved, or equivalently time step in results
+            'save_pts': [7] # Add save points to check functionality 
+        }
+
+        # Define loading profile 
+        def future_loading(t, x=None):
+            if (t < 600):
+                i = 3
+            elif (t < 1000):
+                i = 2
+            elif (t < 1500):
+                i = 1.5
+            else:
+                i = 4
+            return m.InputContainer({'i': i})
+
+        surrogate_results = surrogate.simulate_to_threshold(future_loading, **options_sim)
+        self.assertEqual((surrogate_results.times[1]-surrogate_results.times[0]),options_sim['save_freq'])
+        self.assertEqual(options_sim['save_pts'][0] in surrogate_results.times, True)
+
     def test_surrogate_options(self):
         m = ThrownObject()
         def load_eqn(t = None, x = None):
