@@ -1282,9 +1282,6 @@ class TestModels(unittest.TestCase):
             m.B = np.array([[0]]) # less column values per row
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
-            m.B = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
             m.B = np.array([[0, 1], [1, 1], [2, 2]]) # extra row
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
@@ -1323,9 +1320,6 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError):
             m.E = np.array([[], []]) # less column values per row
             m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.E = np.array([[0, 1, 2], [0]]) # one row has more columns than another
-            m.matrixCheck() 
         with self.assertRaises(AttributeError): 
             m.E = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
             m.matrixCheck()
