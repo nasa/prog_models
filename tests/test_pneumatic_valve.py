@@ -16,6 +16,7 @@ class TestPneumaticValve(unittest.TestCase):
     def tearDown(self):
         sys.stdout = sys.__stdout__
 
+    @unittest.skip
     def test_pneumatic_valve_vectorized(self):
         m = PneumaticValveWithWear(process_noise= 0)    
 
