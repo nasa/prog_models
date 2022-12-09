@@ -600,11 +600,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
         qMaxThreshold : float
             Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occurred. Note: Battery manufacturers specify a threshold of 70-80% of qMax
         wq : float
-            Wear rate for qMax, Ro, and D respectively
+            Wear rate for qMax
         wr : float
-            Wear rate for qMax, Ro, and D respectively
+            Wear rate for Ro
         wd : float
-            Wear rate for qMax, Ro, and D respectively
+            Wear rate for D
         x0 : dict[str, float]
             Initial :term:`state`
     

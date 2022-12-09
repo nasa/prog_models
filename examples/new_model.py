@@ -12,7 +12,7 @@ from prog_models import PrognosticsModel
 
 class ThrownObject(PrognosticsModel):
     """
-    Model that similates an object thrown into the air without air resistance
+    Model that simulates an object thrown into the air without air resistance
     """
 
     inputs = [] # no inputs, no way to control
@@ -28,13 +28,13 @@ class ThrownObject(PrognosticsModel):
         'impact' # Event- object has impacted ground
     ]
 
-    # The Default parameters. Overwritten by passing parameters dictionary into constructor
+    # The Default parameters. Overwritten by passing parameters into constructor
     default_parameters = {
         'x0': {  # Initial State
             'x': 1.83,  # Height of thrower (m)
-            'v': 40  # Velocity at which the ball is thrown (m/s)
+            'v': 40  # Velocity at which the object is thrown (m/s)
         },
-        'g': -9.81,  # Acceleration due to gravity in m/s^2
+        'g': -9.81,  # Acceleration due to gravity (m/s^2)
         'process_noise': 0.0  # amount of noise in each step
     }
 
