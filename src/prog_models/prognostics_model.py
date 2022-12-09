@@ -846,7 +846,6 @@ class PrognosticsModel(ABC):
         next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
-        save_pts.append(1e99)  # Add last endpoint
 
         # confgure optional intermediate printing
         if config['print']:
@@ -891,7 +890,8 @@ class PrognosticsModel(ABC):
                 return dt
         elif dt_mode == 'auto':
             def next_time(t, x):
-                return min(dt, next_save-t, save_pts[save_pt_index]-t)
+                next_save_pt = save_pts[save_pt_index] if save_pt_index < len(save_pts) else float('inf')
+                return min(dt, next_save-t, next_save_pt-t)
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
@@ -974,10 +974,12 @@ class PrognosticsModel(ABC):
             if (t >= next_save):
                 next_save = next(iterator)
                 update_all()
-                if (t >= save_pts[save_pt_index]):
+                if (save_pt_index < len(save_pts)) and (t >= save_pts[save_pt_index]):
                     # Prevent double saving when save_pt and save_freq align
                     save_pt_index += 1
-            elif (t >= save_pts[save_pt_index]):
+            elif (save_pt_index < len(save_pts)) and (t >= save_pts[save_pt_index]):
+                # (save_pt_index < len(save_pts)) covers when t is past the last savepoint
+                # Otherwise save_pt_index would be out of range
                 save_pt_index += 1
                 update_all()
 
@@ -1001,7 +1003,7 @@ class PrognosticsModel(ABC):
         
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(self.output, saved_times, saved_states) 
+            saved_outputs = LazySimResult(self.__output, saved_times, saved_states) 
             saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)

@@ -490,6 +490,80 @@ class TestModels(unittest.TestCase):
         # With next_time
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'save_freq': 1e-99, 'dt': next_time})
         self.assertEqual(len(times), 11)
+
+    def test_sim_measurement_noise(self):
+        m = MockProgModel(process_noise = 0.0, measurement_noise = 1)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        ## Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+
+        # Check times
+        for t in range(0, 4):
+            self.assertAlmostEqual(times[t], t, 5)
+        self.assertEqual(len(times), 5)
+        self.assertAlmostEqual(times[-1], 3.5, 5) # Save last step (even though it's not on a savepoint)
+        
+        # Check inputs
+        self.assertEqual(len(inputs), 5)
+        for i in inputs:
+            i0 = {'i1': 1, 'i2': 2.1}
+            for key in i.keys():
+                self.assertEqual(i[key], i0[key], "Future loading error")
+
+        # Check states
+        self.assertEqual(len(states), 5)
+        a = [1, 2, 3, 4, 4.5]
+        c = [-3.2, -7.4, -11.6, -15.8, -17.9]
+        for (ai, ci, x) in zip(a, c, states):
+            self.assertAlmostEqual(x['a'], ai, 5)
+            self.assertEqual(x['b'], 5)
+            self.assertAlmostEqual(x['c'], ci, 5)
+
+        # Check outputs
+        self.assertEqual(len(outputs), 5)
+        o = [2.8, -0.4, -3.6, -6.8, -8.4]
+        for (oi, z) in zip(o, outputs): 
+            # Noise will make output not equal the expected
+            self.assertNotEqual(round(z['o1'], 6), round(oi, 6))
+
+        ## Now with no measurmeent Noise
+        m = MockProgModel(process_noise = 0.0, measurement_noise = 0.0)
+        def load(t, x=None):
+            return {'i1': 1, 'i2': 2.1}
+
+        ## Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+
+        # Check times
+        for t in range(0, 4):
+            self.assertAlmostEqual(times[t], t, 5)
+        self.assertEqual(len(times), 5)
+        self.assertAlmostEqual(times[-1], 3.5, 5) # Save last step (even though it's not on a savepoint)
+        
+        # Check inputs
+        self.assertEqual(len(inputs), 5)
+        for i in inputs:
+            i0 = {'i1': 1, 'i2': 2.1}
+            for key in i.keys():
+                self.assertEqual(i[key], i0[key], "Future loading error")
+
+        # Check states
+        self.assertEqual(len(states), 5)
+        a = [1, 2, 3, 4, 4.5]
+        c = [-3.2, -7.4, -11.6, -15.8, -17.9]
+        for (ai, ci, x) in zip(a, c, states):
+            self.assertAlmostEqual(x['a'], ai, 5)
+            self.assertEqual(x['b'], 5)
+            self.assertAlmostEqual(x['c'], ci, 5)
+
+        # Check outputs
+        self.assertEqual(len(outputs), 5)
+        o = [2.8, -0.4, -3.6, -6.8, -8.4]
+        for (oi, z) in zip(o, outputs): 
+            # Lack of noise will make output as expected
+            self.assertEqual(round(z['o1'], 6), round(oi, 6))
     
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
@@ -965,9 +1039,6 @@ class TestModels(unittest.TestCase):
             m.A = np.array([[0], [0]]) # less column values per row
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
-            m.A = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
             m.A = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
@@ -979,9 +1050,6 @@ class TestModels(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.B = np.array([[0]]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.B = np.array([[0, 1, 2], [0, 0]]) # one row has more columns than another
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
             m.B = np.array([[0, 1], [1, 1], [2, 2]]) # extra row
@@ -1022,9 +1090,6 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(AttributeError):
             m.E = np.array([[], []]) # less column values per row
             m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.E = np.array([[0, 1, 2], [0]]) # one row has more columns than another
-            m.matrixCheck() 
         with self.assertRaises(AttributeError): 
             m.E = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
             m.matrixCheck()
