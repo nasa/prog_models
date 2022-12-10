@@ -40,7 +40,7 @@ def run_example():
     m = DirectThrownObject()
     x = m.initialize()  # Using Initial state
     # Now instead of simulating to threshold, we can estimate it directly from the state, like so
-    print(m.__class__.__name__, "(Direct Model)" if m.is_direct_model else "(Timeseries Model)")
+    print('\n', m.__class__.__name__, "(Direct Model)" if m.is_direct_model else "(Timeseries Model)")
     tic = time.perf_counter()
     print('Time of event: ', m.time_of_event(x))
     toc = time.perf_counter()
