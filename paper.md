@@ -64,15 +64,15 @@ class Battery(PrognosticsModel):
         ]
     outputs = [
         ‘t’, # Battery temperature
-                   ‘v’  # Voltage supplied by battery
+        ‘v’  # Voltage supplied by battery
     ]
     events = [
-       'EOD’, # battery end-of-discharge 
+       'EOD' # battery end-of-discharge 
     ]
 
     # Default parameters. Overwritten by passing parameters into constructor
     default_parameters = {
-       ’x0':{  # Initial State
+       'x0':{  # Initial State
         },
        'param1':p_1, 
         …. # Include parameters to define battery model (see ref)
@@ -84,12 +84,12 @@ class Battery(PrognosticsModel):
 
     def output(self, x):
 # From the state, calculate temperature and voltage 
-        return self.OutputContainer('t': x[‘t'], ‘v’: x[‘v’]})
+        return self.OutputContainer({'t': x['t'], 'v': x['v']})
 
     def event_state(self, x): 
         # From current state, calculate progress towards EOD
         return {
-         ‘EOD': v_now – v_threshold # EOD occurs when voltage drops below						    threshold 
+         'EOD': v_now – v_threshold # EOD occurs when voltage drops below						    threshold 
         }
 ```
 
