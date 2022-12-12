@@ -265,20 +265,14 @@ class TestModels(unittest.TestCase):
         m = missing_inputs()
         self.assertEqual(len(m.inputs), 0)
 
-        try: 
-            m = missing_outputs()
-            self.fail("Should not have worked, missing 'outputs'")
-        except ProgModelTypeError:
-            pass
+        m = missing_outputs()
+        self.assertEqual(len(m.outputs), 0)
 
         m = missing_initiialize()
         # Should work- initialize is now optional
 
-        try: 
-            m = missing_output()
-            self.fail("Should not have worked, missing 'output' method")
-        except TypeError:
-            pass
+        m = missing_output()
+        # Should work- output is now optional
 
     def __noise_test(self, noise_key, dist_key, keys):
         m = MockProgModel(**{noise_key: 0.0})
