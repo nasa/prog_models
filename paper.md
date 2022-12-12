@@ -99,7 +99,7 @@ m = Battery()
 def future_load(t, x=None):  # system loading
     return m.InputContainer({‘i’:1})  # Constant 1 amp applied
 
-simulated_results = m.simulate_to_threshold(future_load, threshold_keys=['EOD’], dt=0.005, save_freq=1, print=True)
+simulated_results = m.simulate_to_threshold(future_load, threshold_keys=['EOD'], dt=0.005, save_freq=1, print=True)
 
 print(f'EOD was reached in {round(simulated_results.times[-1],2)}seconds') 
 ```
