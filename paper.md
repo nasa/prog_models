@@ -28,14 +28,14 @@ affiliations:
    index: 1
  - name: KBR, Inc. 
    index: 2
-date: 7 December 2022
+date: 12 December 2022
 bibliography: paper.bib
 ---
 
 # Summary
 Prognostics of engineering systems or systems of systems is the prediction of future performance and/or the time at which one or more events of interest occur. Prognostics can be applied in a variety of applications, from spacecraft and aircraft to wind turbines, oil and gas infrastructure, and assembly lines. Prognostic results are used to inform action to extend life or prevent failures through changes in use or predictive maintenance.
 
-The [NASA Prognostics Python Packages (ProgPy)](https://nasa.github.io/progpy/)[@2022_nasa_progpy] are a set of open-sourced python packages supporting research and development of prognostics and health management for engineering systems, as described in [@goebel2017prognostics]. ProgPy builds upon the architecture of the Matlab Prognostics Libraries [@2016_nasa_prog_model_library, @2016_nasa_prog_algs_library, @2016_nasa_prog_metrics_library], Generic Software Architecture for Prognostics [@teubert2017generic], and Prognostics As-A-Service [@watkins2019prognostics]. ProgPy implements architectures and common functionalities of prognostics, supporting both researchers and practitioners.
+The [NASA Prognostics Python Packages (ProgPy)](https://nasa.github.io/progpy/)[@2022_nasa_progpy] are a set of open-sourced python packages supporting research and development of prognostics and health management for engineering systems, as described in [@goebel2017prognostics]. ProgPy builds upon the architecture of the Matlab Prognostics Libraries [@2016_nasa_prog_model_library; @2016_nasa_prog_algs_library; @2016_nasa_prog_metrics_library], Generic Software Architecture for Prognostics [@teubert2017generic], and Prognostics As-A-Service [@watkins2019prognostics]. ProgPy implements architectures and common functionalities of prognostics, supporting both researchers and practitioners.
 
 # Statement of need
 Prognostics and Health Management (PHM) is a fast-growing field. Successful PHM application can reduce operational costs and prevent failure, making systems safer. There have been limited application of prognostics in-practice. This is partially because prognostics is a multi-faceted and complex problem, including data availability, sensor design and placement, and, of interest to us, software. Often, software is written for ad-hoc single prognostic application and cannot be transferred to others. There is a need for a foundational set of efficient tools to enable new PHM technologies. 
@@ -140,8 +140,8 @@ while RUNNING:
 ```
 # NASA use cases
 ProgPy has been used in various NASA projects. Two are described below.
-## Data and Reasoning Fabric [@jarvis2022enabling]
-ProgPy functionality predicting battery degradation was implemented to assess the Li-ion batteries state of charge during unmanned aerial vehicle (UAV) flight. Based on planned trajectories, ProgPy provided UAV operators with statistics on expected battery health during flight and helped to ensure safety in the national airspace. 
+## Data and Reasoning Fabric 
+ProgPy functionality predicting battery degradation was implemented to assess the Li-ion batteries state of charge during unmanned aerial vehicle (UAV) flight. Based on planned trajectories, ProgPy provided UAV operators with statistics on expected battery health during flight and helped to ensure safety in the national airspace. [@jarvis2022enabling]
 
 ## Autonomous Spacecraft Operations
 ProgPy was used to create models predicting the ISS life support system degradation informing maintenance. Researchers evaluated the performance of multiple potential models with data from the system and ProgPy metrics and visualization. Researchers updated models based on performance results. The selected model will be integrated with ProgPy state estimation and prediction into a prognostic application for crew or ground support.
