@@ -152,7 +152,7 @@ class PrognosticsModel(ABC):
         self.n_events = len(self.events)
 
         if not hasattr(self, 'outputs'):
-            raise ProgModelTypeError('Must have `outputs` attribute')
+            self.outputs = []
         try:
             iter(self.outputs)
         except TypeError:
