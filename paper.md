@@ -57,7 +57,9 @@ class Battery(PrognosticsModel):
     inputs = [
  	‘i’ # current applied to battery 
     ] 
-    states = [ # internal battery model states, e.g., temperature, surface 			  potentials, etc. (see https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
+    states = [ 
+        # internal battery model states, e.g., temperature, surface potentials, etc.
+        # [see here](https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
         ‘x_1’, # State 1
         ‘x_2’,  # State 2 
     	      …  
@@ -75,15 +77,18 @@ class Battery(PrognosticsModel):
        'x0':{  # Initial State
         },
        'param1':p_1, 
-        …. # Include parameters to define battery model (https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
+        …. 
+        # Include parameters to define battery model
+        # [See here](https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
     }
     
     def dx(self, x, u):
- # calculate derivative of the battery state (https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
+        # calculate derivative of the battery state
+        # [see here](https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
         return self.StateContainer({})  # Return state container with derivative 
 
     def output(self, x):
-# From the state, calculate temperature and voltage 
+        # From the state, calculate temperature and voltage 
         return self.OutputContainer({'t': x['t'], 'v': x['v']})
 
     def event_state(self, x): 
