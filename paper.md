@@ -140,6 +140,7 @@ while RUNNING:
 ```
 # NASA use cases
 ProgPy has been used in various NASA projects. Two are described below.
+
 ## Data and Reasoning Fabric 
 ProgPy functionality predicting battery degradation was implemented to assess the Li-ion batteries state of charge during unmanned aerial vehicle (UAV) flight. Based on planned trajectories, ProgPy provided UAV operators with statistics on expected battery health during flight and helped to ensure safety in the national airspace. [@jarvis2022enabling]
 
