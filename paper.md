@@ -58,7 +58,7 @@ class Battery(PrognosticsModel):
  	‘i’ # current applied to battery 
     ] 
     states = [ 
-        # internal battery model states, e.g., temperature, surface potentials, etc.
+        # internal battery model states, e.g., temperature, surface potentials
         # nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html
         ‘x_1’, # State 1
         ‘x_2’,  # State 2 
@@ -103,7 +103,7 @@ m = Battery()
 def future_load(t, x=None):  # system loading
     return m.InputContainer({‘i’:1})  # Constant 1 amp applied
 
-simulated_results = m.simulate_to_threshold(future_load, threshold_keys=['EOD'], dt=0.005, save_freq=1, print=True)
+simulated_results = m.simulate_to_threshold(future_load, dt=0.005)
 
 print(f'EOD was reached in {round(simulated_results.times[-1],2)}seconds') 
 ```
