@@ -38,7 +38,7 @@ Prognostics of engineering systems or systems of systems is the prediction of fu
 The [NASA Prognostics Python Packages (ProgPy)](https://nasa.github.io/progpy/)[@2022_nasa_progpy] are a set of open-sourced python packages supporting research and development of prognostics and health management for engineering systems, as described in [@goebel2017prognostics]. ProgPy builds upon the architecture of the Matlab Prognostics Libraries [@2016_nasa_prog_model_library; @2016_nasa_prog_algs_library; @2016_nasa_prog_metrics_library], Generic Software Architecture for Prognostics [@teubert2017generic], and Prognostics As-A-Service [@watkins2019prognostics]. ProgPy implements architectures and common functionalities of prognostics, supporting both researchers and practitioners.
 
 # Statement of need
-Prognostics and Health Management (PHM) is a fast-growing field. Successful PHM application can reduce operational costs and prevent failure, making systems safer. There have been limited application of prognostics in-practice. This is partially because prognostics is a multi-faceted and complex problem, including data availability, sensor design and placement, and, of interest to us, software. Often, software is written for ad-hoc single prognostic application and cannot be transferred to others. There is a need for a foundational set of efficient tools to enable new PHM technologies. 
+Prognostics and Health Management (PHM) is a fast-growing field. Successful PHM application can reduce operational costs and prevent failure, making systems safer. There has been limited application of prognostics in-practice. This is partially because prognostics is a multi-faceted and complex problem, including data availability, sensor design and placement, and, of interest to us, software. Often, software is written for an ad-hoc single prognostic application and cannot be transferred to others. Thus, there is a need for a foundational set of efficient tools to enable new PHM technologies. 
 
 ProgPy provides a set of support packages for individuals researching and developing prognostic technologies. ProgPy consists of three packages: prog_models, prog_algs, and prog_server. prog_models provides tools aiding the development, evaluation, simulation, and tuning of prognostic models, whether physics-based or data-driven. prog_algs supports uncertainty representation, state estimation, prognostics, the evaluation and visualization of prognostic results, and the creation of new prognostic algorithms. prog_server is a Service-Oriented Architecture for prognostics and state estimation. prog_server is also distributed with a python client, prog_client. 
 
@@ -75,7 +75,7 @@ class Battery(PrognosticsModel):
        'x0':{  # Initial State
         },
        'param1':p_1, 
-        …. # Include parameters to define battery model (see ref)
+        …. # Include parameters to define battery model (https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model)
     }
     
     def dx(self, x, u):
