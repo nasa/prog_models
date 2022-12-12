@@ -140,7 +140,7 @@ while RUNNING:
         metrics = mc_results.time_of_event.metrics()
         eod_mean = metrics['EOD']['mean']
         eod_std = metrics['EOD']['std']))
-        print(f'  - Predicted end of discharge: {eod_mean} (sigma: {eod_std})'
+        print(f'  - Predicted end of discharge: {eod_mean} (sigma: {eod_std})')
 ```
 # NASA use cases
 ProgPy has been used in various NASA projects. Two are described below.
