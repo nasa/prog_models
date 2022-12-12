@@ -32,7 +32,7 @@ def run_example():
         return traj_gen.InputContainer({})  # Loading defined internally 
 
     options = {
-        'dt': 0.2,
+        'dt': 0.1,
         # 'save_freq': 0.2
     }
 

@@ -22,8 +22,9 @@ def check_and_adjust_eta_feasibility(lat, lon, alt, eta, cruise_speed_val, vert_
             d_eta[point] += 1.0
     return np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
 
-def build(name, lat, lon, alt, departure_time, etas=None, cruise_speed=None, ascent_speed=None, descent_speed=None, landing_speed=None,
-             hovering_time=0., add_takeoff_time=0., add_landing_time=0., adjust_eta=None):
+# def build(name, lat, lon, alt, departure_time, etas=None, cruise_speed=None, ascent_speed=None, descent_speed=None, landing_speed=None,
+#              hovering_time=0., add_takeoff_time=0., add_landing_time=0., adjust_eta=None, additional_hover_time=0.5):
+def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=None):
     """
     Generate route given waypoints (lat, lon, alt), departure time, 
     etas or speed in-between way-points, additional time for hovering, takeoff, landing, and eventually adjust eta in case 
@@ -37,28 +38,46 @@ def build(name, lat, lon, alt, departure_time, etas=None, cruise_speed=None, asc
     :param lon:         1D array or list, longitude positions
     :param alt:         1D array or list, altitude positions
     :param departure_time:          timestamp, flight departure time
+    The following are kewywords for the dictionary 'route_parameters':
+        :param cruise_speed:            scalar, cruise speed in-between waypoints, default is None.
+        :param ascent_speed:            scalar, ascent speed, default is None.
+        :param descent_speed:           scalar, descent_speed, default is None.
+        :param landing_speed:           scalar, landing_speed when vehicle is <10m from the ground, default is None.
+        :param hovering_time:           scalar, additional hovering time, default is 0.
+        :param add_takeoff_time:        scalar, additional takeoff time, default is 0.
+        :param add_landing_time:        scalar, additional landing time, default is 0.
+        :param adjust_eta:              dictionary with keys ['hours', 'seconds'], to adjust route time 
     :param etas:                    1D array or list, etas at each waypoints, in seconds, default is None.
-    :param cruise_speed:            scalar, cruise speed in-between waypoints, default is None.
-    :param ascent_speed:            scalar, ascent speed, default is None.
-    :param descent_speed:           scalar, descent_speed, default is None.
-    :param landing_speed:           scalar, landing_speed when vehicle is <10m from the ground, default is None.
-    :param hovering_time:           scalar, additional hovering time, default is 0.
-    :param add_takeoff_time:        scalar, additional takeoff time, default is 0.
-    :param add_landing_time:        scalar, additional landing time, default is 0.
-    :param adjust_eta:              dictionary with keys ['hours', 'seconds'], to adjust route time 
     :return:                        route, from Route class.
     """
+    params = dict(
+        cruise_speed=6.0,       # m/s, default cruise speed
+        ascent_speed=3.0,       # m/s, default ascent speed (climb)
+        descent_speed=3.0,      # m/s, default descent speed
+        landing_speed=1.5,      # m/s, default landing speed (when < 10ft from ground)
+        hovering_time=0.0,      # s, scalar, additional hovering time, default is 0.
+        takeoff_time=None,  # scalar, additional takeoff time, default is 0.
+        landing_time=None,  # scalar, additional landing time, default is 0.
+        adjust_eta=None,        # dictionary with keys ['hours', 'seconds'], to adjust route time
+        additional_hover_time=0.5,  # s, additional hovering time if waypoints are identical (to avoid extreme acceleration values).
+    )
+    params.update(parameters)
+
     route = Route(name=name, 
                   departure_time=departure_time, 
-                  cruise_speed=cruise_speed, 
-                  ascent_speed=ascent_speed, 
-                  descent_speed=descent_speed, 
-                  landing_speed=landing_speed)
+                  cruise_speed=params['cruise_speed'], 
+                  ascent_speed=params['ascent_speed'], 
+                  descent_speed=params['descent_speed'], 
+                  landing_speed=params['landing_speed'])
     route.set_waypoints(lat, lon, alt) 
-    route.set_eta(eta=etas, hovering=hovering_time, add_takeoff_time=add_takeoff_time, add_landing_time=add_landing_time)
-    if adjust_eta is not None:
-        assert adjust_eta==dict, 'adjust_eta must be a dictionary with keys: "hours" and "seconds."'
-        route.adjust_eta(hours_=adjust_eta['hours'], seconds_=adjust_eta['seconds'])
+    route.set_eta(eta=etas,
+                  hovering=params['hovering_time'],
+                  add_takeoff_time=params['takeoff_time'],
+                  add_landing_time=params['landing_time'],
+                  same_wp_hovering_time=params['additional_hover_time'])
+    if params['adjust_eta'] is not None:
+        assert params['adjust_eta']==dict, 'adjust_eta must be a dictionary with keys: "hours" and "seconds."'
+        route.adjust_eta(hours_=params['adjust_eta']['hours'], seconds_=params['adjust_eta']['seconds'])
     return route
 
 

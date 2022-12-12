@@ -7,6 +7,7 @@ import prog_models.models.uav_model.trajectory.route as route
 import prog_models.models.uav_model.trajectory.trajectory as trajectory
 from prog_models.models.uav_model.vehicles import AircraftModels
 # from prog_models.models.uav_model.vehicles.control import dn_allocation_functions
+from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 
 import numpy as np
 import prog_models.models.uav_model.utilities.geometry as geom
@@ -79,13 +80,14 @@ class UAVGen(PrognosticsModel):
             
         # Generate route
         route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                            cruise_speed=self.parameters['cruise_speed'], 
-                            ascent_speed=self.parameters['ascent_speed'], 
-                            descent_speed=self.parameters['descent_speed'], 
-                            landing_speed=self.parameters['landing_speed'],
-                            hovering_time=self.parameters['hovering_time'], 
-                            add_takeoff_time=self.parameters['takeoff_time'], 
-                            add_landing_time=self.parameters['landing_time'])
+                             parameters = self.parameters)
+        #                     cruise_speed=self.parameters['cruise_speed'], 
+        #                     ascent_speed=self.parameters['ascent_speed'], 
+        #                     descent_speed=self.parameters['descent_speed'], 
+        #                     landing_speed=self.parameters['landing_speed'],
+        #                     hovering_time=self.parameters['hovering_time'], 
+        #                     add_takeoff_time=self.parameters['takeoff_time'], 
+        #                     add_landing_time=self.parameters['landing_time'])
 
         aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
                                                model=self.parameters['vehicle_model'],
@@ -138,13 +140,16 @@ class UAVGen(PrognosticsModel):
             'q': ref_traj.angular_velocity[0,1],
             'r': ref_traj.angular_velocity[0,2]
             })
-
+    """
     def dx(self, x : dict, u : dict):
         # Extract params
         # -------------
         # wind = self.parameters['wind']
         wx = 0 #wind['u']
         wy = 0 #wind['v']
+
+        # Jp = self.parameters['Jp']
+        # Omega_r = self.parameters['Omega_r']
 
         # Extract values from vectors
         # --------------------------------
@@ -179,12 +184,17 @@ class UAVGen(PrognosticsModel):
         
         # Compute drag forces
         # -------------------
-        v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
-                        np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
-        v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
-        fb_drag = self.vehicle_model.aero['drag'](v_body)
-        fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
-        
+        # v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
+        #                 np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
+        # v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
+        # fb_drag = self.vehicle_model.aero['drag'](v_body)
+        # fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
+        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
+        v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
+        fb_drag = self.vehicle_model.aero['drag'](v_body) # self.aero['drag'](v_body)
+        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
+        fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
+
         # Update state vector
         # -------------------
         dxdt     = np.zeros((len(x),))
@@ -219,6 +229,100 @@ class UAVGen(PrognosticsModel):
             np.atleast_1d(dxdt[10]),
             np.atleast_1d(dxdt[11]),
         ]))
+    """
+
+    def next_state(self, x : dict, u : dict, dt):
+        # Extract params
+        # -------------
+        # wind = self.parameters['wind']
+        wx = 0 #wind['u']
+        wy = 0 #wind['v']
+
+        # Jp = self.parameters['Jp']
+        # Omega_r = self.parameters['Omega_r']
+
+        # Extract values from vectors
+        # --------------------------------
+        m = self.vehicle_model.mass['total']  # vehicle mass
+        T = u['T'] 
+        tp = u['mx']
+        tq = u['my']
+        tr = u['mz']
+        Ixx, Iyy, Izz = self.vehicle_model.mass['Ixx'], self.vehicle_model.mass['Iyy'], self.vehicle_model.mass['Izz']    # vehicle inertia
+
+        # Extract state variables from current state vector
+        # -------------------------------------------------
+        phi = x['phi'] 
+        theta = x['theta'] 
+        psi = x['psi']
+        vx_a = x['vx']
+        vy_a = x['vy']
+        vz_a = x['vz']
+        p = x['p']
+        q = x['q']
+        r = x['r']
+
+        # Pre-compute Trigonometric values
+        # --------------------------------
+        sin_phi   = np.sin(phi)
+        cos_phi   = np.cos(phi)
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        tan_theta = np.tan(theta)
+        sin_psi   = np.sin(psi)
+        cos_psi   = np.cos(psi)
+        
+        # Compute drag forces
+        # -------------------
+        # v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
+        #                 np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
+        # v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
+        # fb_drag = self.vehicle_model.aero['drag'](v_body)
+        # fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
+        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
+        v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
+        fb_drag = self.vehicle_model.aero['drag'](v_body) # self.aero['drag'](v_body)
+        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
+        fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
+
+        # Update state vector
+        # -------------------
+        dxdt     = np.zeros((len(x),))
+        
+        dxdt[0] = vx_a + wx   # add wind u-component to generate ground speed
+        dxdt[1] = vy_a + wy   # add wind v-component to generate ground speed
+        dxdt[2] = vz_a
+        
+        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
+        dxdt[4]  = q * cos_phi - r * sin_phi
+        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta
+        
+        dxdt[6]  = (sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T / m - 1.0/m * fe_drag[0]
+        dxdt[7]  = (sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T / m - 1.0/m * fe_drag[1]
+        dxdt[8]  = - self.parameters['gravity'] + cos_phi * cos_theta  * T / m - 1.0/m * fe_drag[2]
+
+        dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.vehicle_model.geom['arm_length'] / Ixx
+        dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.vehicle_model.geom['arm_length'] / Iyy
+        dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
+
+        x['x'] += dxdt[0] * self.parameters['dt']
+        x['y'] += dxdt[1] * self.parameters['dt']
+        x['z'] += dxdt[2] * self.parameters['dt']
+        x['phi'] += dxdt[3] * self.parameters['dt']
+        x['theta'] += dxdt[4] * self.parameters['dt']
+        x['psi'] += dxdt[5] * self.parameters['dt']
+        x['vx'] += dxdt[6] * self.parameters['dt']
+        x['vy'] += dxdt[7] * self.parameters['dt']
+        x['vz'] += dxdt[8] * self.parameters['dt']
+        x['p'] += dxdt[9] * self.parameters['dt']
+        x['q'] += dxdt[10] * self.parameters['dt']
+        x['r'] += dxdt[11] * self.parameters['dt']
+
+        # Update aircraft state
+        self.vehicle_model.set_state(state=np.array([x[iter] for iter in x.keys()]))
+        
+        return x
+
     
     def event_state(self, x : dict) -> dict:
         pass
@@ -248,6 +352,14 @@ class UAVGen(PrognosticsModel):
         # return {
         #      'EOD': V < parameters['VEOD']
         # }
+
+    # def future_loading()
+        # User defined: m.simulate_to(10, m.future_loading)
+        # m.simulate_to(10,uav_model.controllers.xxx)
+
+        # ctrl = uav_model.controllers.ABc(m,....)
+        # m.simulate_to(10,ctrl)
+
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         

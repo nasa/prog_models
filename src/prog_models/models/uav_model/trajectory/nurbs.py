@@ -155,7 +155,7 @@ def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
     # The fictitious yaw is NOT the average of the true yaw, but it is equal
     # to the yaw at the previous (true) waypoint.
     yaw_new = np.zeros((ps_new.shape[0],))            # Initialize new yaw vector
-    tmpcount1 = 1
+    counter_1 = 1
     for jj in range(len(yaw)):
         yaw_new[counter_1:counter_1 + 2] = yaw[jj]    # Assign new yaw value
         counter_1 += 2                                # this counter is

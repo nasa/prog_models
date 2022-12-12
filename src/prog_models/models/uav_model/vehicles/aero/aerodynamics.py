@@ -14,13 +14,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import prog_models.models.uav_model.utilities.geometry as geom
 
+# AUXILIARY CONVERSIONS
+# =======================
 ftps2mps = 0.3048   # feet per second to meters per second
 lb2kg = 0.453592        # pound to kg
 lbpftsq2kgpmsq = 4.88243    # pound per square feet to kg per square meter
 slugpftcub2kgpmcub = 515.379    # slug per cubic foot to kg per cubic meter
 inchplb2nm = 0.112984825        # inch per pound to newtown meters
 
-"""
+
+# FUNCTIONS
+# =======================
 def read_csv_aerotest_file(filename=None):
     if filename is None:
         filename = 'data/Aerodynamics/3DRSOLO_FullVehicle_Table_1.csv'
@@ -69,7 +73,7 @@ def read_csv_aerotest_file(filename=None):
                    'Fx (lb)', 'Fy (lb)', 'Fz (lb)', 'U-Fx (lb)', 'U-Fy (lb)', 'U-Fz (lb)', 'Mx (in-lb)', 'My (in-lb)', 'Mz (in-lb)', 'U-Mx (in-lb)', 'U-My (in-lb)', 'U-Mz (in-lb)', 'D (lb)']
     
     return pd.DataFrame(data=data, index=[ii for ii in range(drag.shape[0])], columns=variables)
-"""
+
 
 # Aerodynamic forces
 # ====================
@@ -83,8 +87,7 @@ class DragModel():
     def __call__(self, air_v):
         vsq = air_v * np.abs(air_v)
         return 0.5 * self.rho * self.area * self.cd * vsq
-  
-    
+ 
 
 
 

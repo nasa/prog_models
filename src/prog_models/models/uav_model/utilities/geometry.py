@@ -271,6 +271,12 @@ def rot_earth2body(phi, theta, psi):
                         np.cos(psi) * np.cos(theta)])
     return R
 
+def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
+    return np.array([[                        ctheta*cpsi,                       ctheta * spsi,          - stheta],
+                     [-cphi * spsi + sphi * stheta * cpsi,  cphi * cpsi + sphi * stheta * spsi,     sphi * ctheta],
+                     [ sphi * spsi + cphi * stheta * cpsi, -sphi * cpsi + cphi * stheta * spsi,     cphi * ctheta]])
+
+
 def rot_body2earth(phi, theta, psi):
     R = np.zeros((3, 3))
     R[0, :] = np.array([np.cos(psi) * np.cos(theta),
@@ -283,6 +289,12 @@ def rot_body2earth(phi, theta, psi):
                          np.cos(theta) * np.sin(phi),
                          np.cos(theta) * np.cos(phi)])
     return R
+
+def rot_body2earth_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
+    return np.array([[      cpsi * ctheta,          cpsi * stheta * sphi - spsi * cphi,         cpsi * stheta * cphi + spsi * sphi],
+                     [      spsi * ctheta,          spsi * stheta * sphi + cpsi * cphi,         spsi * stheta * cphi - cpsi * sphi],
+                     [           - stheta,                               ctheta * sphi,                              ctheta * cphi]])
+
 
 """
 def R_phiX(phi):
