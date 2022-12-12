@@ -611,7 +611,7 @@ class PrognosticsModel(ABC):
         """
         return type(self).time_of_event != PrognosticsModel.time_of_event
 
-    def time_of_event(self, x, **kwargs) -> dict:
+    def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
         Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met) from :term:`state`. time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
@@ -620,6 +620,8 @@ class PrognosticsModel(ABC):
         x : StateContainer
             state, with keys defined by model.states \n
             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+        future_loading_eqn : callable, optional
+            Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
 
         Returns
         ------------
@@ -627,12 +629,16 @@ class PrognosticsModel(ABC):
             time of each event, with keys defined by model.events \n
             e.g., time_of_event = {'impact': 8.2, 'falling': 4.077} given events = ['impact', 'falling']
 
+        Note
+        -----------
+        Also supports arguments from :py:meth:`simulate_to_threshold`
+
         See Also
         --------
         threshold_met
         """
         params = {
-            'future_loading_eqn': lambda t,x=None: {}
+            'future_loading_eqn': future_loading_eqn,
         }
         params.update(kwargs)
 

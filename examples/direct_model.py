@@ -13,7 +13,6 @@ from prog_models.models import ThrownObject
 
 def run_example():
     # Here is how estimating time of event works for a timeseries model
-    # TODO(CT): Time
     m = ThrownObject()
     x = m.initialize()
     print(m.__class__.__name__, "(Direct Model)" if m.is_direct_model else "(Timeseries Model)")
@@ -27,7 +26,7 @@ def run_example():
     # In the case of thrown objects, we can solve the differential equation 
     # to estimate the time at which the events occur.
     class DirectThrownObject(ThrownObject):
-        def time_of_event(self, x, **kwargs):
+        def time_of_event(self, x, *args, **kwargs):
             # calculate time when object hits ground given x['x'] and x['v']
             # 0 = x0 + v0*t - 0.5*g*t^2
             g = self.parameters['g']
@@ -35,6 +34,10 @@ def run_example():
             # 0 = v0 - g*t
             t_falling = -x['v']/g
             return {'impact': t_impact, 'falling': t_falling}
+
+    # Note that adding *args and **kwargs is optional.
+    # Having these arguments makes the function interchangeable with other models
+    # which might have arguments or keyword arguments
 
     # Step 2: Now estimate time of event for a ThrownObject
     m = DirectThrownObject()
