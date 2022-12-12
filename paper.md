@@ -59,7 +59,7 @@ class Battery(PrognosticsModel):
     ] 
     states = [ 
         # internal battery model states, e.g., temperature, surface potentials, etc.
-        # https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model
+        # nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html
         ‘x_1’, # State 1
         ‘x_2’,  # State 2 
     	      …  
@@ -79,12 +79,11 @@ class Battery(PrognosticsModel):
        'param1':p_1, 
         …. 
         # Include parameters to define battery model
-        # https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model
+        # nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html
     }
     
     def dx(self, x, u):
         # calculate derivative of the battery state
-        # https://nasa.github.io/progpy/api_ref/prog_models/IncludedModels.html#battery-model
         return self.StateContainer({})  # Return state container with derivative 
 
     def output(self, x):
