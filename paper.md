@@ -93,7 +93,8 @@ class Battery(PrognosticsModel):
     def event_state(self, x): 
         # From current state, calculate progress towards EOD
         return {
-         'EOD': v_now – v_threshold # EOD occurs when voltage drops below						    threshold 
+         'EOD': v_now – v_threshold 
+         # EOD occurs when voltage drops below threshold 
         }
 ```
 
@@ -150,6 +151,7 @@ ProgPy functionality predicting battery degradation was implemented to assess th
 
 ## Autonomous Spacecraft Operations
 ProgPy was used to create models predicting the ISS life support system degradation informing maintenance. Researchers evaluated the performance of multiple potential models with data from the system and ProgPy metrics and visualization. Researchers updated models based on performance results. The selected model will be integrated with ProgPy state estimation and prediction into a prognostic application for crew or ground support.
+
 # Acknowledgements
 ProgPy is supported by NASA's Autonomous Spacecraft Operations, Data and Reasoning Fabric, System-Wide Safety, and Transformative Tools and Technologies projects. Additionally, development is supported by Northrop Grumman Corporation, Vanderbilt University, the German Aerospace Center (DLR), Research Institutes of Sweden and others. 
 
