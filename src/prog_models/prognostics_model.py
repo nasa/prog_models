@@ -139,12 +139,10 @@ class PrognosticsModel(ABC):
 
         if not hasattr(self, 'states'):
             raise ProgModelTypeError('Must have `states` attribute')
-        if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
         try:
             iter(self.states)
         except TypeError:
-            raise ProgModelTypeError('model.states must be iterable')
+            raise ProgModelTypeError('model.states must be a list')
         self.n_states = len(self.states)
 
         if not hasattr(self, 'events'):
@@ -156,7 +154,7 @@ class PrognosticsModel(ABC):
         try:
             iter(self.outputs)
         except TypeError:
-            raise ProgModelTypeError('model.outputs must be iterable')
+            raise ProgModelTypeError('model.outputs must be a list')
         self.n_outputs = len(self.outputs)
 
         if not hasattr(self, 'performance_metric_keys'):
