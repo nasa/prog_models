@@ -90,8 +90,8 @@ class PolynomialChaosExpansion(DataModel):
             params['J'] = cp.J(*params['input_dists'])
 
         # Train
-        expansion = cp.generate_expansion(order=2, dist=params['J']) # Order=2 is the only hyperparameter
-        surrogate = cp.fit_regression(expansion, inputs.T, time_of_event.T[0])
+        expansion = cp.generate_expansion(order=params['order'], dist=params['J']) # Order=2 is the only hyperparameter
+        surrogate = cp.fit_regression(expansion, inputs, time_of_event.T[0])
 
         return cls(surrogate, times = times, input_keys = input_keys, **params)
 
@@ -133,8 +133,9 @@ class PolynomialChaosExpansion(DataModel):
 
         if params['N'] < 1:
             raise ValueError(f'N must be greater than 0, was {params["N"]}. At least one sample required')
-        if params['discretization'] < 1:
-            raise ValueError(f'discretization must be greater than 0, was {params["discretization"]}')
+        if params['discretization'] < 2:
+            raise ValueError(f'discretization must be greater than 1, was {params["discretization"]}')
+            # TODO(CT): HANDLE DISCRETIZATION OF 1 (i.e., const load)
         if params['order'] < 1:
             raise ValueError(f'order must be greater than 0, was {params["order"]}')
         if params['max_time'] is None and params['times'] is None:
@@ -143,29 +144,35 @@ class PolynomialChaosExpansion(DataModel):
         # Setup data
         if params['times'] is None:
             params['times'] = np.linspace(0, params['max_time'], params['discretization'])
-        input_dists = [input_dists[key] for key in m.inputs]
+        input_dists = [cp.UserDistribution(
+                            cdf = input_dists[key].cdf,
+                            pdf = input_dists[key].pdf,
+                            ppf = input_dists[key].ppf
+                        )
+                        for key in m.inputs 
+                        for _ in range(params['discretization'])
+                        ]
         J = cp.J(*input_dists)  # Joint distribution to sample from
         
         # Simulate to collect time_of_event data
-        time_of_event = []
-        inputs = []
+        time_of_event = np.empty((params['N'], len(m.events)), dtype=np.float64)
         def future_loading(t, x=None):
             nonlocal interpolator
             return m.InputContainer(interpolator(t)[np.newaxis].T)
         
+        all_samples = J.sample(size=params['N'], rule='latin_hypercube')
+        x0 = m.initialize()
         for i in range(params['N']):
             # Sample
-            samples = J.sample(size=params['discretization'], rule='latin_hypercube')
-            interpolator = sp.interpolate.interp1d(params['times'], samples)
+            interpolator = sp.interpolate.interp1d(params['times'], all_samples[:, i])
 
             # Simulate to get data
-            time_of_event_i = m.time_of_event(m.initialize(), future_loading, dt=params['dt'])
+            time_of_event_i = m.time_of_event(x0, future_loading, dt=params['dt'])
 
             # Add to list
-            time_of_event.append(np.array([time_of_event_i[key] for key in m.events]))
-            inputs.append(samples)
+            time_of_event[i] = [time_of_event_i[key] for key in m.events]
         
         params['input_keys'] = m.inputs
-        return cls.from_data(inputs = np.array(inputs), time_of_event = np.array(time_of_event), event_keys = m.events, J=J, **params)
+        return cls.from_data(inputs = all_samples, time_of_event = time_of_event, event_keys = m.events, J=J, **params)
 
 PCE = PolynomialChaosExpansion
