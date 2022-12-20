@@ -39,6 +39,7 @@ class LSTMStateTransitionModel(DataModel):
 
     See Also:
         LSTMStateTransitionModel.from_data
+        LSTMStateTransitionModel.from_model
         examples.lstm_model
     """
 

@@ -4,7 +4,7 @@
 """
 Example defining and using a new prognostics model.  
 
-In this example a simple model of an object thrown upward into the air is defined. That model is then used in simulation under different conditions and the results are displayed in different formats.
+In this example a simple state-transition model of an object thrown upward into the air is defined. That model is then used in simulation under different conditions and the results are displayed in different formats.
 """
 
 from prog_models import PrognosticsModel
