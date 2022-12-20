@@ -528,6 +528,12 @@ class TestSurrogate(unittest.TestCase):
         with self.assertWarns(Warning):
             surrogate.simulate_to_threshold(load_eqn, dt = 0.05)
 
+    def test_pce_no_input(self):
+        m = ThrownObject()
+        from prog_models.data_models import PCE
+        with self.assertRaises(ValueError):
+            pce = PCE.from_model(m, m.initialize(), [])
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()
