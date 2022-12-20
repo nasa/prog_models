@@ -48,8 +48,8 @@ class PolynomialChaosExpansion(DataModel):
         self.parameters['times'] = times
 
     def time_of_event(self, x, future_loading_eqn, **kwargs) -> dict:
-        loading = np.array([future_loading_eqn(t, x).matrix for t in self.parameters['times']]).T[0].T
-        return {key: model(*loading)[0] for key, model in zip(self.events, self.parameters['models'])}
+        loading = np.reshape(np.array([future_loading_eqn(t, x).matrix for t in self.parameters['times']]).T, (len(self.inputs*len(self.parameters['times']))))
+        return {key: model(*loading) for key, model in zip(self.events, self.parameters['models'])}
 
     @classmethod
     def from_data(cls, times, inputs, time_of_event, input_keys, **kwargs):
@@ -63,6 +63,7 @@ class PolynomialChaosExpansion(DataModel):
                 list of :term:`input` data for use in data. Each  eelement is the inputs for a single run of size (n_times, n_inputs)
             time_of_event (np.array):
                 Array of time of event data for use in data. Each element is the time of event for a single run of size (n_times, n_events)
+                TODO(CT): CHECK SHAPE ----------------
             input_keys (list[str]):
                 List of input keys for the inputs
                 # TODO(CT): MAKE OPTIONAL ----------------
@@ -184,7 +185,8 @@ class PolynomialChaosExpansion(DataModel):
         all_samples = J.sample(size=params['N'], rule='latin_hypercube')
         for i in range(params['N']):
             # Sample
-            interpolator = sp.interpolate.interp1d(params['times'], all_samples[:, i], bounds_error = False, fill_value = all_samples[:, i][-1])
+            inputs = np.reshape(all_samples[:, i], (len(m.inputs), params['discretization']))
+            interpolator = sp.interpolate.interp1d(params['times'], inputs, bounds_error = False, fill_value = inputs[:, -1])
             # TODO(CT): RAISE DESCRIPTIVE ERROR IF TIMES IS NOT ENOUGH
 
             # Simulate to get data

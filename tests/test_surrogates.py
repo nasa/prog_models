@@ -2,6 +2,7 @@
 
 import chaospy as cp
 from io import StringIO
+import logging
 import sys
 import unittest
 import warnings
@@ -17,6 +18,8 @@ class TestSurrogate(unittest.TestCase):
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
+        logging.getLogger('chaospy').propogate = False
+        logging.getLogger('numpy').propogate = False
 
     def tearDown(self):
         sys.stdout = sys.__stdout__
@@ -544,24 +547,28 @@ class TestSurrogate(unittest.TestCase):
 
     def _pce_tests(self, m):
         x0 = m.initialize()
-        input_dists = {'u1': cp.Uniform(0.25, 2)}
-        pce = PCE.from_model(m, x0, input_dists, max_time = 40, N = 250)
-        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1}))
-        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1}))
+        input_dists = {'u1': cp.Uniform(0.25, 2), 'u2': cp.Uniform(0.25, 2)}
+        # This is to handle cases where there are <2 inputs
+        input_dists = {key: input_dists[key] for key in m.inputs}
+        pce = PCE.from_model(m, x0, input_dists, max_time = 40, N = 300)
+        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1, 'u2': 0.75}))
+        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1, 'u2': 0.75}))
         for event in m.events:
-            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=0.5)
+            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=0.75)
 
-        input_dists = {'u1': cp.Normal(1, 0.5)}
+        input_dists = {'u1': cp.Normal(1, 0.5), 'u2': cp.Normal(1, 0.5)}
+        # This is to handle cases where there are <2 inputs
+        input_dists = {key: input_dists[key] for key in m.inputs}
         pce = PCE.from_model(m, x0, input_dists, max_time = 50, N = 250)
-        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1}))
-        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1}))
+        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1, 'u2': 0.75}))
+        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1, 'u2': 0.75}))
         for event in m.events:
-            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=0.5)
+            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=0.75)
 
-        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1.5}))
-        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1.5}))
+        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1.5, 'u2': 1}))
+        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1.5, 'u2': 1}))
         for event in m.events:
-            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=1)
+            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=1.25)
     
     def test_pce_oneinput_oneevent(self):
         m = OneInputNoOutputOneEventLM()
@@ -570,6 +577,14 @@ class TestSurrogate(unittest.TestCase):
     def test_pce_oneinput_twoevent(self):
         m = OneInputNoOutputTwoEventLM()
         self._pce_tests(m)
+
+    def test_pce_twoinput_oneevent(self):
+        m = TwoInputNoOutputOneEventLM()
+        self._pce_tests(m) 
+
+    def test_pce_twoinput_oneevent(self):
+        m = TwoInputNoOutputTwoEventLM()
+        self._pce_tests(m) 
             
 # This allows the module to be executed directly
 def run_tests():
