@@ -18,8 +18,6 @@ class TestSurrogate(unittest.TestCase):
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
-        logging.getLogger('chaospy').propogate = False
-        logging.getLogger('numpy').propogate = False
 
     def tearDown(self):
         sys.stdout = sys.__stdout__
