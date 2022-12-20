@@ -600,6 +600,16 @@ class PrognosticsModel(ABC):
             for (key, event_state) in self.event_state(x).items()} 
 
     @property
+    def is_state_transition_model(self) -> bool:
+        """
+        If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propogate state forward.
+
+        Returns:
+            bool: if the model is a state transition model
+        """
+        return type(self).next_state != PrognosticsModel.next_state or type(self).dx != PrognosticsModel.dx
+
+    @property
     def is_direct_model(self) -> bool:
         """
         If the model is a "direct model" - i.e., a model that directly estimates time of event from system state, rather than using state transition. This is useful for data-driven models that map from sensor data to time of event, and for physics-based models where state transition differential equations can be solved.
