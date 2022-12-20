@@ -85,9 +85,6 @@ class PolynomialChaosExpansion(DataModel):
         if params['J'] is None and params['input_dists'] is None:
             raise ValueError('Either J or input_dists must be provided')
         if params['J'] is None:
-            if isinstance(params['input_dists'][0], dict) or isinstance(params['input_dists'][0], DictLikeMatrixWrapper):
-                # Convert to list
-                input_dists = [input_dists[key] for key in m.inputs]
             params['J'] = cp.J(*params['input_dists'])
 
         # Train
