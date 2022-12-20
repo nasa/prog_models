@@ -153,7 +153,6 @@ class PolynomialChaosExpansion(DataModel):
             raise ValueError(f'N must be greater than 0, was {params["N"]}. At least one sample required')
         if params['discretization'] < 2:
             raise ValueError(f'discretization must be greater than 1, was {params["discretization"]}')
-            # TODO(CT): HANDLE DISCRETIZATION OF 1 (i.e., const load)
         if params['max_time'] is None and params['times'] is None:
             raise ValueError('Either max_time or times must be provided')
         if len(m.events) < 1:
@@ -185,7 +184,6 @@ class PolynomialChaosExpansion(DataModel):
             # Sample
             inputs = np.reshape(all_samples[:, i], (len(m.inputs), params['discretization']))
             interpolator = sp.interpolate.interp1d(params['times'], inputs, bounds_error = False, fill_value = inputs[:, -1])
-            # TODO(CT): RAISE DESCRIPTIVE ERROR IF TIMES IS NOT ENOUGH
 
             # Simulate to get data
             time_of_event_i = m.time_of_event(x, future_loading, dt=params['dt'])
