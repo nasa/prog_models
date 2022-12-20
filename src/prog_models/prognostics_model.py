@@ -728,7 +728,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn : Callable = lambda t,x=None: {}, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -809,7 +809,9 @@ class PrognosticsModel(ABC):
         if first_output and not all(key in first_output for key in self.outputs):
             raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
 
-        if not (callable(future_loading_eqn)):
+        if future_loading_eqn is None:
+            future_loading_eqn = lambda t,x=None: self.InputContainer({})
+        elif not (callable(future_loading_eqn)):
             raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
         
         if isinstance(threshold_keys, str):
