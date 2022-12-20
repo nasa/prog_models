@@ -140,6 +140,10 @@ class PolynomialChaosExpansion(DataModel):
             raise ValueError(f'order must be greater than 0, was {params["order"]}')
         if params['max_time'] is None and params['times'] is None:
             raise ValueError('Either max_time or times must be provided')
+        if len(m.events) < 1:
+            raise ValueError('Model must have at least one event')
+        if len(m.inputs) < 1:
+            raise ValueError('Model must have at least one input')
 
         # Setup data
         if params['times'] is None:
