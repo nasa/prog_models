@@ -6,7 +6,6 @@ import numpy as np
 import scipy as sp
 
 from prog_models.data_models import DataModel
-from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class PolynomialChaosExpansion(DataModel):
