@@ -163,6 +163,9 @@ class PolynomialChaosExpansion(DataModel):
         # Setup data
         if params['times'] is None:
             params['times'] = np.linspace(0, params['max_time'], params['discretization'])
+        # ChaosPy doesn't support copying distributions. 
+        # As a workaround we create a new UserDistribution for each timepoint for each input
+        # The UserDistribution is functionally the same as the original distribution
         input_dists = [cp.UserDistribution(
                             cdf = input_dists[key].cdf,
                             pdf = input_dists[key].pdf,
