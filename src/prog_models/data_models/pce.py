@@ -96,13 +96,15 @@ class PolynomialChaosExpansion(DataModel):
         return cls(surrogate, times = times, input_keys = input_keys, **params)
 
     @classmethod
-    def from_model(cls, m, input_dists, **kwargs):
+    def from_model(cls, m, x, input_dists, **kwargs):
         """
         Create a PolynomialChaosExpansion from a model.
 
         Args:
             m (Model):
                 Model to create PolynomialChaosExpansion from
+            x (StateContainer):
+                Initial state to use for simulation
             input_dists (dict[key, chaospy.Distribution]):"
                 List of chaospy distributions for each input            
 
@@ -119,6 +121,7 @@ class PolynomialChaosExpansion(DataModel):
                 Maximum time to simulate to. Either max_time or times must be provided
             times (list[float], optional):
                 List of times to simulate to. If provided, max_time is ignored
+            
         """
         default_params = {
             'discretization': 5,
@@ -161,18 +164,18 @@ class PolynomialChaosExpansion(DataModel):
             return m.InputContainer(interpolator(t)[np.newaxis].T)
         
         all_samples = J.sample(size=params['N'], rule='latin_hypercube')
-        x0 = m.initialize()
         for i in range(params['N']):
             # Sample
             interpolator = sp.interpolate.interp1d(params['times'], all_samples[:, i])
 
             # Simulate to get data
-            time_of_event_i = m.time_of_event(x0, future_loading, dt=params['dt'])
+            time_of_event_i = m.time_of_event(x, future_loading, dt=params['dt'])
 
             # Add to list
             time_of_event[i] = [time_of_event_i[key] for key in m.events]
         
         params['input_keys'] = m.inputs
+        params['x'] = x
         return cls.from_data(inputs = all_samples, time_of_event = time_of_event, event_keys = m.events, J=J, **params)
 
 PCE = PolynomialChaosExpansion
