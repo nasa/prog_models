@@ -75,6 +75,7 @@ class PolynomialChaosExpansion(DataModel):
         default_params = {
             'J': None,
             'input_dists': None,
+            'order': 2,
         }
         params = default_params.copy()
         params.update(kwargs)
@@ -127,7 +128,6 @@ class PolynomialChaosExpansion(DataModel):
             'discretization': 5,
             'N': 1000, 
             'dt': 0.1, 
-            'order': 2,
             'max_time': None,
             'times': None
         }
