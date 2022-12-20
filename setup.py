@@ -12,10 +12,11 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 INSTALL_REQS = [
         'scipy',
-        'pandas',
+        'pandas',  # For data downloading features
         'matplotlib',
-        'requests',
-        "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'",
+        'requests',  # For data downloading features
+        'chaospy',  # For PCE
+        "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'", 
         "tensorflow-macos; platform_system=='Darwin' and platform_machine=='arm64'",
     ]
 
