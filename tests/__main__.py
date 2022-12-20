@@ -12,6 +12,7 @@ from .test_datasets import main as datasets_main
 from .test_powertrain import main as powertrain_main
 from .test_surrogates import main as surrogates_main
 from .test_data_model import main as lstm_main
+from .test_direct import main as direct_main
 
 from io import StringIO
 import matplotlib.pyplot as plt
@@ -48,6 +49,11 @@ if __name__ == '__main__':
     # Run tests individually to test them and make sure they can be executed individually
     try:
         base_models_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        direct_main()
     except Exception:
         was_successful = False
 
