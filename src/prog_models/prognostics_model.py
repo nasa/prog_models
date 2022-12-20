@@ -609,7 +609,8 @@ class PrognosticsModel(ABC):
         Returns:
             bool: if the model is a state transition model
         """
-        return type(self).next_state != PrognosticsModel.next_state or type(self).dx != PrognosticsModel.dx
+        has_overridden_transition = type(self).next_state != PrognosticsModel.next_state or type(self).dx != PrognosticsModel.dx
+        return has_overridden_transition and len(self.states) > 0
 
     @property
     def is_direct_model(self) -> bool:
