@@ -71,6 +71,8 @@ class PolynomialChaosExpansion(DataModel):
                 Joint distribution to sample from. If not included, input_dists must be provided
             input_dists (list[chaospy.Distribution], optional):
                 List of chaospy distributions for each input
+            order (int, optional):
+                Order of the polynomial chaos expansion
         """
         default_params = {
             'J': None,
@@ -86,6 +88,8 @@ class PolynomialChaosExpansion(DataModel):
             raise ValueError('Either J or input_dists must be provided')
         if params['J'] is None:
             params['J'] = cp.J(*params['input_dists'])
+        if params['order'] < 1:
+            raise ValueError(f'order must be greater than 0, was {params["order"]}')
 
         # Train
         expansion = cp.generate_expansion(order=params['order'], dist=params['J']) # Order=2 is the only hyperparameter
@@ -119,7 +123,6 @@ class PolynomialChaosExpansion(DataModel):
                 Maximum time to simulate to. Either max_time or times must be provided
             times (list[float], optional):
                 List of times to simulate to. If provided, max_time is ignored
-            
         """
         default_params = {
             'discretization': 5,
@@ -136,8 +139,6 @@ class PolynomialChaosExpansion(DataModel):
         if params['discretization'] < 2:
             raise ValueError(f'discretization must be greater than 1, was {params["discretization"]}')
             # TODO(CT): HANDLE DISCRETIZATION OF 1 (i.e., const load)
-        if params['order'] < 1:
-            raise ValueError(f'order must be greater than 0, was {params["order"]}')
         if params['max_time'] is None and params['times'] is None:
             raise ValueError('Either max_time or times must be provided')
         if len(m.events) < 1:
