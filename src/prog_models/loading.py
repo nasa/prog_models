@@ -14,6 +14,16 @@ class MovingAverage():
         The InputContainer class for the model (model.InputContainer)
     window : int, optional
         The size of the window to use for the moving average, by default 10
+
+    Example
+    -------
+    >>> from prog_models.loading import MovingAverage
+    >>> m = SomeModel()
+    >>> future_load = MovingAverage(m.InputContainer)
+    >>> for _ in range(WINDOW_SIZE):
+    >>>     load = load_source.get_load()
+    >>>     future_load.add_load(load)
+    >>> m.simulate_to_threshold(future_load)
     """
     def __init__(self, InputContainer, window = 10):
         self.window = window
@@ -58,6 +68,13 @@ class GuassianNoiseLoadWrapper():
         The future loading function to wrap
     std : float
         The standard deviation of the gaussian noise to add
+
+    Example
+    -------
+    >>> from prog_models.loading import GuassianNoiseLoadWrapper
+    >>> m = SomeModel()
+    >>> future_load = GuassianNoiseLoadWrapper(future_load, STANDARD_DEV)
+    >>> m.simulate_to_threshold(future_load)
     """
     def __init__(self, fcn, std):
         self.fcn = fcn
