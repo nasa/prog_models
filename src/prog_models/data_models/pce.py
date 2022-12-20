@@ -59,20 +59,18 @@ class PolynomialChaosExpansion(DataModel):
         Args:
             times (list[float]):
                 list of times data for use in data. Each element is the time such that inputs[i] is the inputs at time[i]
-            inputs (list[np.array]): 
-                list of :term:`input` data for use in data. Each  eelement is the inputs for a single run of size (n_times, n_inputs)
+            inputs (np.array): 
+                list of :term:`input` data for use in data. Each  eelement is the inputs for a single run of size (n_samples, n_inputs*n_times)
             time_of_event (np.array):
-                Array of time of event data for use in data. Each element is the time of event for a single run of size (n_times, n_events)
-                TODO(CT): CHECK SHAPE ----------------
+                Array of time of event data for use in data. Each element is the time of event for a single run of size (n_samples, n_events)
             input_keys (list[str]):
                 List of input keys for the inputs
-                # TODO(CT): MAKE OPTIONAL ----------------
 
         Keyword Args:
             J (chaospy.Distribution, optional):
-                Joint distribution to sample from. If not included, input_dists must be provided
+                Joint distribution to sample from. Must include distribution for each timepoint for each input [u0_t0, u0_t1, ..., u1_t0, ...]. If not included, input_dists must be provided
             input_dists (list[chaospy.Distribution], optional):
-                List of chaospy distributions for each input
+                List of chaospy distributions for each input for each timepoint
             order (int, optional):
                 Order of the polynomial chaos expansion
         """
@@ -93,20 +91,20 @@ class PolynomialChaosExpansion(DataModel):
         if params['order'] < 1:
             raise ValueError(f'order must be greater than 0, was {params["order"]}')
         if len(time_of_event) == 0:
-            raise ValueError('Training data must include at least one event')
+            raise ValueError('Time of event must include at least one run')
         if len(times) == 0:
             raise ValueError('Times must include at least one time')
         if len(inputs) == 0:
-            raise ValueError('Inputs must include at least one input')
+            raise ValueError('Inputs must include at least one run')
+        if len(time_of_event) != len(inputs):
+            raise ValueError('There must be the same number of runs for inputs and time of event')
 
         n_events = len(time_of_event[0])
         if n_events == 0:
             raise ValueError('There must be at least one event to train an PCE model')
 
-        if len(time_of_event) != inputs.shape[1]:
-            raise ValueError('There must be the same number of samples for inputs and time of event')
-
         # Train
+        inputs = inputs.T
         expansion = cp.generate_expansion(order=params['order'], dist=params['J']) # Order=2 is the only hyperparameter
         surrogates = [
             cp.fit_regression(expansion, inputs, toe_i) for toe_i in time_of_event.T
@@ -197,6 +195,6 @@ class PolynomialChaosExpansion(DataModel):
         
         params['input_keys'] = m.inputs
         params['x'] = x
-        return cls.from_data(inputs = all_samples, time_of_event = time_of_event, event_keys = m.events, J=J, **params)
+        return cls.from_data(inputs = all_samples.T, time_of_event = time_of_event, event_keys = m.events, J=J, **params)
 
 PCE = PolynomialChaosExpansion
