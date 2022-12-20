@@ -18,8 +18,8 @@ class PolynomialChaosExpansion(DataModel):
     Generally this is used as a :term:`surrogate model` for a :term:`model` that is too expensive to simulate. This is done using the :meth:`PolynomialChaosExpansion.from_model` method. The model is used to generate data, which is then used to train the polynomial chaos expansion. The polynomial chaos expansion can then be used to predict the time of event for future inputs.
 
     Args:
-        model (chaospy.Poly):
-            Polynomial chaos expansion model
+        models (List[chaospy.Poly]):
+            Polynomial chaos expansion models (one for each event)
         times (list[float]):
             List of times to use for the polynomial chaos expansion
         input_keys (list[str]):
@@ -37,19 +37,19 @@ class PolynomialChaosExpansion(DataModel):
     Note:
         The generated model is only valid for the intial state at which the data was generated. If the initial state is different, the model will not be valid.
     """
-    def __init__(self, model, times, input_keys, **kwargs):
+    def __init__(self, models, times, input_keys, **kwargs):
         self.inputs = input_keys
         self.states = []
         self.outputs = []
-        self.events = kwargs.get('event_keys', [f'e{i}' for i in range(model.size)])
+        self.events = kwargs.get('event_keys', [f'e{i}' for i in range(len(models))])
 
         super().__init__(**kwargs)
-        self.parameters['model'] = model
+        self.parameters['models'] = models
         self.parameters['times'] = times
 
     def time_of_event(self, x, future_loading_eqn, **kwargs) -> dict:
-        loading = np.array([future_loading_eqn(t, x).matrix for t in self.parameters['times']])
-        return {key: value for key, value in zip(self.events, self.parameters['model'](*loading.T[0].T))}
+        loading = np.array([future_loading_eqn(t, x).matrix for t in self.parameters['times']]).T[0].T
+        return {key: model(*loading)[0] for key, model in zip(self.events, self.parameters['models'])}
 
     @classmethod
     def from_data(cls, times, inputs, time_of_event, input_keys, **kwargs):
@@ -60,11 +60,12 @@ class PolynomialChaosExpansion(DataModel):
             times (list[float]):
                 list of times data for use in data. Each element is the time such that inputs[i] is the inputs at time[i]
             inputs (list[np.array]): 
-                list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
+                list of :term:`input` data for use in data. Each  eelement is the inputs for a single run of size (n_times, n_inputs)
             time_of_event (np.array):
                 Array of time of event data for use in data. Each element is the time of event for a single run of size (n_times, n_events)
             input_keys (list[str]):
                 List of input keys for the inputs
+                # TODO(CT): MAKE OPTIONAL ----------------
 
         Keyword Args:
             J (chaospy.Distribution, optional):
@@ -90,12 +91,27 @@ class PolynomialChaosExpansion(DataModel):
             params['J'] = cp.J(*params['input_dists'])
         if params['order'] < 1:
             raise ValueError(f'order must be greater than 0, was {params["order"]}')
+        if len(time_of_event) == 0:
+            raise ValueError('Training data must include at least one event')
+        if len(times) == 0:
+            raise ValueError('Times must include at least one time')
+        if len(inputs) == 0:
+            raise ValueError('Inputs must include at least one input')
+
+        n_events = len(time_of_event[0])
+        if n_events == 0:
+            raise ValueError('There must be at least one event to train an PCE model')
+
+        if len(time_of_event) != inputs.shape[1]:
+            raise ValueError('There must be the same number of samples for inputs and time of event')
 
         # Train
         expansion = cp.generate_expansion(order=params['order'], dist=params['J']) # Order=2 is the only hyperparameter
-        surrogate = cp.fit_regression(expansion, inputs, time_of_event.T[0])
+        surrogates = [
+            cp.fit_regression(expansion, inputs, toe_i) for toe_i in time_of_event.T
+        ]
 
-        return cls(surrogate, times = times, input_keys = input_keys, **params)
+        return cls(surrogates, times = times, input_keys = input_keys, **params)
 
     @classmethod
     def from_model(cls, m, x, input_dists, **kwargs):
@@ -168,7 +184,8 @@ class PolynomialChaosExpansion(DataModel):
         all_samples = J.sample(size=params['N'], rule='latin_hypercube')
         for i in range(params['N']):
             # Sample
-            interpolator = sp.interpolate.interp1d(params['times'], all_samples[:, i])
+            interpolator = sp.interpolate.interp1d(params['times'], all_samples[:, i], bounds_error = False, fill_value = all_samples[:, i][-1])
+            # TODO(CT): RAISE DESCRIPTIVE ERROR IF TIMES IS NOT ENOUGH
 
             # Simulate to get data
             time_of_event_i = m.time_of_event(x, future_loading, dt=params['dt'])
