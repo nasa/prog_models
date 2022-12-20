@@ -2,15 +2,13 @@
 
 import chaospy as cp
 from io import StringIO
-import logging
 import sys
 import unittest
 import warnings
 
-from prog_models.models import *
 from prog_models.data_models import PCE
 from prog_models.exceptions import ProgModelInputException
-
+from prog_models.models import *
 from prog_models.models.test_models.linear_models import *
 
 
