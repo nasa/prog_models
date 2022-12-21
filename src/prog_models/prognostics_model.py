@@ -381,12 +381,12 @@ class PrognosticsModel(ABC):
             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
         """
         for (key, limit) in self.state_limits.items():
-            if x[key] < limit[0]:
+            if np.any(np.array(x[key]) < limit[0]):
                 warn("State {} limited to {} (was {})".format(key, limit[0], x[key]), ProgModelStateLimitWarning)
-                x[key] = limit[0]
-            elif x[key] > limit[1]:
+                x[key] = np.maximum(x[key], limit[0])
+            if np.any(np.array(x[key]) > limit[1]):
                 warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
-                x[key] = limit[1]
+                x[key] = np.minimum(x[key], limit[1])
         return x
 
     def __next_state(self, x, u, dt : float):
