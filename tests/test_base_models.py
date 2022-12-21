@@ -256,11 +256,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = empty_states()
-            self.fail("Should not have worked, empty 'states'")
-        except ProgModelTypeError:
-            pass
+        m = empty_states()
+        self.assertEqual(len(m.states), 0)
 
         m = missing_inputs()
         self.assertEqual(len(m.inputs), 0)
