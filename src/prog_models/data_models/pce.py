@@ -124,7 +124,7 @@ class PolynomialChaosExpansion(DataModel):
             input_dists (dict[key, chaospy.Distribution]):"
                 List of chaospy distributions for each input
             times (list[float]):
-                List of times to simulate to, also called collcation points.
+                List of coordinates along the time axis used to estimate the expansion coefficients (collocation points).
 
         Keyword Args:
             N (int, optional):
