@@ -45,7 +45,12 @@ def run_example():
     # To build the model we pass in the distributions of possible values for each input.
     # We also provide the max_time. This is the maximum time that the surrogate will be used for.
     # We dont expect any battery to last more than 4000 seconds given the high discharge curves we're passing in.
-    m_surrogate = PCE.from_model(m, x0, {'i': INPUT_CURRENT_DIST}, dt=DT, max_time = 4000, discretization = 5, N=N_SAMPLES)
+    m_surrogate = PCE.from_model(m, 
+        x0,                         # Model State
+        {'i': INPUT_CURRENT_DIST},  # Distribution of inputs
+        dt=DT, 
+        times = [i*1000 for i in range(5)],
+        N = N_SAMPLES)
     # The result (m_surrogate) is a model that can be used to VERY quickly estimate time_of_event for a new loading profile.
  
     # Note: this is only valid for the initial state (x0) of the battery.

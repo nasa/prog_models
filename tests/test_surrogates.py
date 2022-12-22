@@ -534,19 +534,19 @@ class TestSurrogate(unittest.TestCase):
     def test_pce_no_input(self):
         m = ThrownObject()
         with self.assertRaises(ValueError):
-            pce = PCE.from_model(m, m.initialize(), {})
+            pce = PCE.from_model(m, m.initialize(), {}, [])
 
     def test_pce_no_state(self):
         m = DCMotorSP()
         with self.assertRaises(ValueError):
-            pce = PCE.from_model(m, m.initialize(), {})
+            pce = PCE.from_model(m, m.initialize(), {}, [])
 
     def _pce_tests(self, m):
         x0 = m.initialize()
         input_dists = {'u1': cp.Uniform(0.5, 2), 'u2': cp.Uniform(0.5, 2)}
         # This is to handle cases where there are <2 inputs
         input_dists = {key: input_dists[key] for key in m.inputs}
-        pce = PCE.from_model(m, x0, input_dists, max_time = 40, N = 250)
+        pce = PCE.from_model(m, x0, input_dists, times = [i*10 for i in range(5)], N = 250)
         pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1, 'u2': 0.75}))
         gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1, 'u2': 0.75}))
         for event in m.events:
@@ -555,7 +555,7 @@ class TestSurrogate(unittest.TestCase):
         input_dists = {'u1': cp.Normal(1, 0.5), 'u2': cp.Normal(0.75, 0.5)}
         # This is to handle cases where there are <2 inputs
         input_dists = {key: input_dists[key] for key in m.inputs}
-        pce = PCE.from_model(m, x0, input_dists, max_time = 50, N = 250)
+        pce = PCE.from_model(m, x0, input_dists, times = [i*10 for i in range(6)], N = 250)
         pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1, 'u2': 0.75}))
         gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1, 'u2': 0.75}))
         for event in m.events:

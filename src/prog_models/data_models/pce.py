@@ -112,7 +112,7 @@ class PolynomialChaosExpansion(DataModel):
         return cls(surrogates, times = times, input_keys = input_keys, **params)
 
     @classmethod
-    def from_model(cls, m, x, input_dists, **kwargs):
+    def from_model(cls, m, x, input_dists, times, **kwargs):
         """
         Create a PolynomialChaosExpansion from a model.
 
@@ -122,46 +122,32 @@ class PolynomialChaosExpansion(DataModel):
             x (StateContainer):
                 Initial state to use for simulation
             input_dists (dict[key, chaospy.Distribution]):"
-                List of chaospy distributions for each input            
+                List of chaospy distributions for each input
+            times (list[float]):
+                List of times to simulate to, also called collcation points.
 
         Keyword Args:
-            discretization (int, optional):
-                Number of points to discretize each input
             N (int, optional):
                 Number of samples to use for training
             dt (float, optional):
                 Time step to use for simulation
             order (int, optional):
                 Order of the polynomial chaos expansion
-            max_time (float, optional):
-                Maximum time to simulate to. Either max_time or times must be provided
-            times (list[float], optional):
-                List of times to simulate to. If provided, max_time is ignored
         """
         default_params = {
-            'discretization': 5,
             'N': 1000, 
             'dt': 0.1, 
-            'max_time': None,
-            'times': None
         }
         params = default_params.copy()
         params.update(kwargs)
 
         if params['N'] < 1:
             raise ValueError(f'N must be greater than 0, was {params["N"]}. At least one sample required')
-        if params['discretization'] < 2:
-            raise ValueError(f'discretization must be greater than 1, was {params["discretization"]}')
-        if params['max_time'] is None and params['times'] is None:
-            raise ValueError('Either max_time or times must be provided')
         if len(m.events) < 1:
             raise ValueError('Model must have at least one event')
         if len(m.inputs) < 1:
             raise ValueError('Model must have at least one input')
 
-        # Setup data
-        if params['times'] is None:
-            params['times'] = np.linspace(0, params['max_time'], params['discretization'])
         # ChaosPy doesn't support copying distributions. 
         # As a workaround we create a new UserDistribution for each timepoint for each input
         # The UserDistribution is functionally the same as the original distribution
@@ -171,7 +157,7 @@ class PolynomialChaosExpansion(DataModel):
                             ppf = input_dists[key].ppf
                         )
                         for key in m.inputs 
-                        for _ in range(params['discretization'])
+                        for _ in range(len(times))
                         ]
         J = cp.J(*input_dists)  # Joint distribution to sample from
         
@@ -184,8 +170,8 @@ class PolynomialChaosExpansion(DataModel):
         all_samples = J.sample(size=params['N'], rule='latin_hypercube')
         for i in range(params['N']):
             # Sample
-            inputs = np.reshape(all_samples[:, i], (len(m.inputs), params['discretization']))
-            interpolator = sp.interpolate.interp1d(params['times'], inputs, bounds_error = False, fill_value = inputs[:, -1])
+            inputs = np.reshape(all_samples[:, i], (len(m.inputs), len(times)))
+            interpolator = sp.interpolate.interp1d(times, inputs, bounds_error = False, fill_value = inputs[:, -1])
 
             # Simulate to get data
             time_of_event_i = m.time_of_event(x, future_loading, dt=params['dt'])
@@ -195,6 +181,7 @@ class PolynomialChaosExpansion(DataModel):
         
         params['input_keys'] = m.inputs
         params['x'] = x
+        params['times'] = times
         return cls.from_data(inputs = all_samples.T, time_of_event = time_of_event, event_keys = m.events, J=J, **params)
 
 PCE = PolynomialChaosExpansion
