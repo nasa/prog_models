@@ -25,6 +25,7 @@ inchplb2nm = 0.112984825        # inch per pound to newtown meters
 
 # FUNCTIONS
 # =======================
+"""
 def read_csv_aerotest_file(filename=None):
     if filename is None:
         filename = 'data/Aerodynamics/3DRSOLO_FullVehicle_Table_1.csv'
@@ -73,7 +74,7 @@ def read_csv_aerotest_file(filename=None):
                    'Fx (lb)', 'Fy (lb)', 'Fz (lb)', 'U-Fx (lb)', 'U-Fy (lb)', 'U-Fz (lb)', 'Mx (in-lb)', 'My (in-lb)', 'Mz (in-lb)', 'U-Mx (in-lb)', 'U-My (in-lb)', 'U-Mz (in-lb)', 'D (lb)']
     
     return pd.DataFrame(data=data, index=[ii for ii in range(drag.shape[0])], columns=variables)
-
+"""
 
 # Aerodynamic forces
 # ====================
@@ -89,18 +90,6 @@ class DragModel():
         return 0.5 * self.rho * self.area * self.cd * vsq
  
 
-
-
-# def drag_force_body_frame(rho, a, cd, v):
-#     vsq = v * np.abs(v)
-#     d   = 0.5 * rho * a * cd * vsq
-#     # D = - 1.0 / mass * np.dot(rotMat_body2earth(phi, theta, psi), np.dot(vel_bodyFrame_square, dragCoeff))    # N, drag forces in x, y, z
-#     return d
-
-
-# def drag_force_earth_frame(d_body, phi, theta, psi):
-#     return np.dot( geom.rot_body2earth(phi, theta, psi), d_body)
-    
 
 """
 if __name__ == '__main__':

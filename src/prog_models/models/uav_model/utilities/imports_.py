@@ -17,23 +17,21 @@ import scipy.spatial as spatial
 import scipy.interpolate as interp
 import scipy.signal as signal
 import scipy.stats as stats
-# from scipy.special import ndtr
 import scipy.special as specialfn
 import scipy.io as inpout
 
 from sklearn.gaussian_process import GaussianProcessRegressor as GPR
-# from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
 from sklearn.gaussian_process import kernels
 
+import warnings
 
 import pandas as pd
 
 from scipy.io import netcdf
 import requests
 import itertools
-import time
+from copy import deepcopy
 import datetime as dt
-# import contextily as ctx
 
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
@@ -47,4 +45,3 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.units as munits
 
 import seaborn as sns
-# import geopandas as geo

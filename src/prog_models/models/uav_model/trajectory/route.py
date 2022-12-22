@@ -5,10 +5,12 @@ import os, sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/utilities'))
 
 from prog_models.models.uav_model.utilities import geometry as geom
+import datetime as dt
 
 # FUNCTIONS
 # ==========
-def check_and_adjust_eta_feasibility(lat, lon, alt, eta, cruise_speed_val, vert_speed_val, distance_method='greatcircle'):
+def check_and_adjust_eta_feasibility(lat, lon, alt, eta, vehicle_max_speed, vehicle_max_speed_vert, distance_method='greatcircle'):
+    # Check if the speeds required for ETAs are beyond the max vehicle speeds.
     n = len(lat)-1
     d_eta = np.diff(eta)
     for point in range(n):
@@ -17,14 +19,12 @@ def check_and_adjust_eta_feasibility(lat, lon, alt, eta, cruise_speed_val, vert_
                                         [alt[point], alt[point + 1]],
                                         method=distance_method, return_surf_vert=True)
         dv = dv[0]
-        # If speed is larger than desired (possible when both dh, dv>0), increment d_eta to reduce until desired (consider margin)
-        while dh / d_eta[point] > cruise_speed_val or dv / d_eta[point] > vert_speed_val:
+        # If speed is larger than maximum (possible when both dh, dv>0), increment d_eta to reduce until desired (consider margin)
+        while dh / d_eta[point] > vehicle_max_speed or dv / d_eta[point] > vehicle_max_speed_vert:
             d_eta[point] += 1.0
     return np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
 
-# def build(name, lat, lon, alt, departure_time, etas=None, cruise_speed=None, ascent_speed=None, descent_speed=None, landing_speed=None,
-#              hovering_time=0., add_takeoff_time=0., add_landing_time=0., adjust_eta=None, additional_hover_time=0.5):
-def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=None):
+def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, vehicle_max_speed=None):
     """
     Generate route given waypoints (lat, lon, alt), departure time, 
     etas or speed in-between way-points, additional time for hovering, takeoff, landing, and eventually adjust eta in case 
@@ -51,13 +51,13 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
     :return:                        route, from Route class.
     """
     params = dict(
-        cruise_speed=6.0,       # m/s, default cruise speed
-        ascent_speed=3.0,       # m/s, default ascent speed (climb)
-        descent_speed=3.0,      # m/s, default descent speed
-        landing_speed=1.5,      # m/s, default landing speed (when < 10ft from ground)
+        cruise_speed=None, #6.0,       # m/s, default cruise speed
+        ascent_speed=None, #3.0,       # m/s, default ascent speed (climb)
+        descent_speed=None, #3.0,      # m/s, default descent speed
+        landing_speed=None, #1.5,      # m/s, default landing speed (when < 10ft from ground)
         hovering_time=0.0,      # s, scalar, additional hovering time, default is 0.
-        takeoff_time=None,  # scalar, additional takeoff time, default is 0.
-        landing_time=None,  # scalar, additional landing time, default is 0.
+        takeoff_time=0.0,  # scalar, additional takeoff time, default is 0.
+        landing_time=0.0,  # scalar, additional landing time, default is 0.
         adjust_eta=None,        # dictionary with keys ['hours', 'seconds'], to adjust route time
         additional_hover_time=0.5,  # s, additional hovering time if waypoints are identical (to avoid extreme acceleration values).
     )
@@ -74,7 +74,8 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
                   hovering=params['hovering_time'],
                   add_takeoff_time=params['takeoff_time'],
                   add_landing_time=params['landing_time'],
-                  same_wp_hovering_time=params['additional_hover_time'])
+                  same_wp_hovering_time=params['additional_hover_time'],
+                  vehicle_max_speed=vehicle_max_speed)
     if params['adjust_eta'] is not None:
         assert params['adjust_eta']==dict, 'adjust_eta must be a dictionary with keys: "hours" and "seconds."'
         route.adjust_eta(hours_=params['adjust_eta']['hours'], seconds_=params['adjust_eta']['seconds'])
@@ -166,22 +167,18 @@ class Route():
     def __call__(self):
         return self.lat, self.lon, self.alt, self.eta
     
-    """
     def adjust_eta(self, hours_=0., seconds_=0.0):
         self.departure_time = dt.datetime.now() + dt.timedelta(hours=hours_, seconds=seconds_) 
         timedelta            = self.departure_time - self.eta[0]
         self.eta            = [item + timedelta  for item in self.eta]
         return
-    """
 
-    """
     def add_point(self, lat, lon, alt, eta=None):
         self.lat.append(lat)
         self.lon.append(lon)
         self.alt.append(alt)
         if eta:
             self.eta.append(eta)
-    """
         
     def set_waypoints(self, lat, lon, alt, eta=None):
         self.lat = lat
@@ -191,24 +188,15 @@ class Route():
             self.eta = eta
         return
         
-    """
     def set_waypoints_as_array(self):
         self.lat = np.asarray(self.lat)
         self.lon = np.asarray(self.lon)
         self.alt = np.asarray(self.alt)
         return
-    """
         
     def set_landing_waypoints(self, set_landing_eta=False):
         if type(self.alt) == list:
             self.set_waypoints_as_array()
-        """
-        idx_land     = np.asarray(self.alt < self.landing_altitude) * np.insert(np.sign(np.diff(self.alt)) < 0, 0, False)
-        idx_land_pos = np.where(idx_land)[0]
-        self.lat     = np.insert(self.lat, idx_land_pos, self.lat[idx_land_pos])
-        self.lon     = np.insert(self.lon, idx_land_pos, self.lon[idx_land_pos])
-        self.alt     = np.insert(self.alt, idx_land_pos, [self.landing_altitude*1.0, ]*len(idx_land_pos))
-        """
         idx_land     = np.asarray(self.alt < self.landing_altitude)
         idx_land_pos = np.where(idx_land)[0]
         if idx_land_pos.size != 0:
@@ -262,39 +250,8 @@ class Route():
             self.eta = np.insert(self.eta, idx_land_pos, eta_landing)
         return idx_land_pos
 
-    
-    # def set_eta(self, eta=None, hovering=0, add_takeoff_time=None, add_landing_time=None):
-    def set_eta(self, eta=None, hovering=0, add_takeoff_time=None, add_landing_time=None, same_wp_hovering_time=1.0):
-        """        
-        # Assign ETAS
-        # ============
-        if eta is not None: # if ETA is provided, assign to self.eta and that's it.
-            assert hasattr(eta, "__len__") and len(eta)==len(self.lat), "ETA must be vector array with same length as lat, lon and alt."
-            assert isinstance(eta[0], dt.datetime), "ETA vector must be composed of datetime objects."
-            self.eta = eta
-            # self.set_landing_waypoints(set_landing_eta=True)
-        else:   # if ETA is not provided, compute it from desired cruise speed and other speeds
-            assert self.cruise_speed is not None, "If ETA is not provided, desired speed (cruise, ascent, descent) must be provided."
-            
-            idx_land_pos = self.set_landing_waypoints(set_landing_eta=False)
-            
-            if add_takeoff_time is not None:    self.takeoff_time = add_takeoff_time
-            if add_landing_time is not None:    self.landing_time = add_landing_time
-
-            # Check speed dimensions
-            n = len(self.lat)
-            self.cruise_speed  = reshape_route_attribute(self.cruise_speed, dim=n-1, msk=idx_land_pos)
-            self.ascent_speed  = reshape_route_attribute(self.ascent_speed, dim=n-1, msk=idx_land_pos)
-            self.descent_speed = reshape_route_attribute(self.descent_speed, dim=n-1, msk=idx_land_pos)
-            self.hovering      = reshape_route_attribute(hovering, dim=n-1, msk=idx_land_pos)
-            if self.landing_speed is None:  self.landing_speed = self.descent_speed          
-            else:                           self.landing_speed = reshape_route_attribute(self.landing_speed, dim=n-1, msk=idx_land_pos)
-            
-            self.eta = self.compute_etas_from_speed(takeoff_time=self.takeoff_time, landing_time=self.landing_time, hovering=self.hovering)
-            # self.eta = [self.departure_time + dt.timedelta(0, self.eta[item]) for item in range(len(self.eta))]
-            
-        return self.eta
-        """
+    def set_eta(self, eta=None, hovering=0, add_takeoff_time=None, add_landing_time=None, same_wp_hovering_time=1.0,vehicle_max_speed=None):
+        
         # Assign ETAS
         # ============
         if eta is not None: # if ETA is provided, assign to self.eta and that's it.
@@ -303,13 +260,12 @@ class Route():
             departure_timestamp = self.departure_time.timestamp()
             eta_unix = np.zeros_like(eta, dtype=np.float64)
             for i, eta_i in enumerate(eta):
-                eta_unix[i] = departure_timestamp + float(eta_i)
-            if self.cruise_speed is None:       cruise_speed_val = 6.0
-            else:                               cruise_speed_val = self.cruise_speed
-            if self.ascent_speed is None:       vert_speed_val = 3.0
-            else:                               vert_speed_val = self.ascent_speed
+                eta_unix[i] = dt.datetime.timestamp(eta_i) 
+            # Check if speeds required for ETAs are above max speeds            
+            if vehicle_max_speed is None:       cruise_speed_val = 15.0 # Default for vehicle max horizontal speed 
+            vehicle_max_speed_vert = (2/3)*vehicle_max_speed # Define vehicle max vertial speed 
             # Get the new relative ETA given expected ETAs and distance between waypoints
-            relative_eta_new = check_and_adjust_eta_feasibility(self.lat, self.lon, self.alt, eta_unix-eta_unix[0], cruise_speed_val, vert_speed_val, distance_method='greatcircle')
+            relative_eta_new = check_and_adjust_eta_feasibility(self.lat, self.lon, self.alt, eta_unix-eta_unix[0], vehicle_max_speed, vehicle_max_speed_vert, distance_method='greatcircle')
             self.eta = np.asarray([dt.datetime.fromtimestamp(relative_eta_new[i] + eta_unix[0]) for i in range(len(eta))])
 
         else:   # if ETA is not provided, compute it from desired cruise speed and other speeds
@@ -334,8 +290,6 @@ class Route():
 
         return self.eta
 
-
-    # def compute_etas_from_speed(self, hovering, takeoff_time, landing_time, distance_method='greatcircle', cruise_speed=None, ascent_speed=None, descent_speed=None, assign_eta=True):
     def compute_etas_from_speed(self, hovering, takeoff_time, landing_time, distance_method='greatcircle', cruise_speed=None, ascent_speed=None, descent_speed=None, same_wp_hovering_time=1.0, assign_eta=True):
         """
         :param cruise_speed:        m/s, cruise speed in between waypoints
@@ -348,7 +302,7 @@ class Route():
         """
         assert len(self.lat)>2, "Need at least more than 2 way-points to compute ETAS with function compute_etas."
         
-                # define margin on cruise speed
+        # define margin on cruise speed
         # ----------------------------
         # If calculated ETA produces a speed that is larger than desired speed, we can accommodate it as long as is within this margin (%)
         cruise_speed_margin = 0.1   # %, 'extra' speed we can tolerate on cruise.
@@ -393,14 +347,6 @@ class Route():
                                             [self.alt[point], self.alt[point+1]], 
                                             method=distance_method, return_surf_vert=True)
             dv = dv[0]
-
-            # if dv> 0:                                                       vert_speed = ascent_speed[point]
-            # elif dv < 0 and alt_for_land[point] > self.landing_altitude:    vert_speed = descent_speed[point]
-            # elif dv < 0 and alt_for_land[point] <= self.landing_altitude:   vert_speed = self.landing_speed[point]
-            # else:                                                           vert_speed = 0. # not moving vertically.
-            # # d_eta[point] = max([dh / cruise_speed[point], abs(dv / vert_speed)])
-            # d_eta[point] = np.sqrt( (dh**2.0 + dv**2.0) / (cruise_speed[point]**2.0 + vert_speed**2.0))
-            # if hovering[point] != 0:    d_eta[point] += hovering[point]
 
             # Identify correct vertical speed
             if   dv > 0 and alt_for_land[point] > self.landing_altitude:    vert_speed = ascent_speed[point]

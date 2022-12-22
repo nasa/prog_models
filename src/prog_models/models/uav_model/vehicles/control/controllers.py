@@ -122,3 +122,21 @@ class LQR_I():
         err_hist     = np.asarray(self.err_hist).T
         err_integral = np.sum(err_hist[:, max([0, len(self.err_hist) - self.int_lag]):], axis=1) * self.dt
         return - np.dot(gain[:, :self.n_states], error) - np.dot(gain[:, self.n_states:], err_integral)
+
+# PD Controller (PID coming soon..) 
+# =================================
+class PDController():
+    def __init__(self, kp=1.0, kd=1.0) -> None:
+        self.kp = kp
+        self.kd = kd
+        pass
+
+    def __call__(self, x_des, x, xdot_des, xdot):
+        """
+        Compute PD Control action
+        :param x_des:       desired value
+        :param x:           current value
+        :param xdot_des:    desired first order derivative value
+        :param xdot:        curretn first order derivative value
+        """
+        return self.kp * (x_des - x) + self.kd * (xdot_des - xdot)

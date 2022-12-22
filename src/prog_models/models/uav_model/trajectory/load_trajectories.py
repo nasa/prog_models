@@ -5,6 +5,9 @@ import numpy as np
 import datetime as dt
 import scipy.io as inpout
 from prog_models.models.uav_model.trajectory.route import Route # , read_routes
+from prog_models.models.uav_model.utilities import loadsavewrite_utils as loadsave
+
+from prog_models.exceptions import ProgModelInputException
 
 DEG2RAD = np.pi/180.0
 FEET2MET = 0.3048
@@ -19,63 +22,55 @@ def get_flightplan(fname, **kwargs):
     :param  kwargs:       options for numpy loadtxt function: skiprows (default=1), comments (default #), max_rows (default None)
     :return:              flight plan dictionary with keys: lat, lon, alt, time_unix, time_stamp, name (i.e., filename).
     """
+    
     params = dict(skiprows=1, comments='#', max_rows=None)
     params.update(kwargs)
 
     if fname[fname.rfind('.')+1:] == 'txt':
-        lat, lon, alt, time_unix, timestamps = load_txt_file(fname, params['skiprows'], params['comments'], params['max_rows'])
+        lat, lon, alt, time_unix, timestamps = loadsave.load_traj_from_txt(fname, params['skiprows'], params['comments'], params['max_rows'])
     elif fname[fname.rfind('.')+1:] == 'mat':
-        lat, lon, alt, time_unix, timestamps = load_mat_file(fname)
-
+        lat, lon, alt, time_unix, timestamps = loadsave.load_traj_from_mat_file(fname)
+    
+    # If no time stamp was available from file, add current time stamp and corresponding unix time.
+    if timestamps is None or time_unix is None:
+        timestamps = [dt.datetime.now()]
+        time_unix  = [timestamps[0].timestamp()]
+    
     flightplan_ = {'lat': lat, 'lon': lon, 'alt': alt, 'time_unix': time_unix, 'timestamp': timestamps, 'name': fname}
     return flightplan_
 
-
-def load_txt_file(fname, skiprows=1, comments='#', max_rows=None):
-    d          = np.loadtxt(fname=fname, skiprows=skiprows, comments=comments, max_rows=max_rows)
-    lat        = d[:, 0] * DEG2RAD      # covert deg 2 rad
-    lon        = d[:, 1] * DEG2RAD      # covert deg 2 rad
-    alt        = d[:, 2] * FEET2MET     # covert feet 2 meters
-    time_unix  = d[:, -1]
-    timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
-    return lat, lon, alt, time_unix, timestamps
-
 def convert_dict_inputs(input_dict):
+    # Check units and return warnings if incorrect:
+    if 'lat_deg' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints latitude must be defined in degrees. Use lat_deg to specify.")
+    elif 'lon_deg' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints longitude must be defined in degrees. Use lon_deg to specify.")
+    elif 'alt_ft' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints altitude must be defined in feet. Use alt_ft to specify.")
+    if len(input_dict.keys()) > 3 and 'time_unix' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints input incorrectly. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
     lat = input_dict['lat_deg'] * DEG2RAD
     lon = input_dict['lon_deg'] * DEG2RAD
     alt = input_dict['alt_ft'] * FEET2MET
-    time_unix = input_dict['time_unix']
-    timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
+    if 'time_unix' in input_dict.keys():
+        time_unix = input_dict['time_unix']
+        timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
+    else: 
+        # If no time stamp was available from file, add current time stamp and corresponding unix time.
+        timestamps = [dt.datetime.now()]
+        time_unix  = [timestamps[0].timestamp()]
 
-    return {'lat_rad': lat, 'lon_rad': lon, 'alt_m': alt, 'timestamps': timestamps}
+    return {'lat_rad': lat, 'lon_rad': lon, 'alt_m': alt, 'timestamp': timestamps, 'time_unix': time_unix}
 
-"""
-def load_mat_file(fname):
-    d   = inpout.loadmat(fname)
-    lat = d['waypoints'][0][0][0] * DEG2RAD
-    lon = d['waypoints'][0][0][1] * DEG2RAD
-    alt = d['waypoints'][0][0][2] * FEET2MET
-    eta = d['waypoints'][0][0][3]
-    
-    eta = eta.astype(float).reshape((-1,))
-    if all(name in list(d.keys()) for name in ['cepic_date', 'etime']):
-        datetime_0 = dt.datetime.strptime(d['cepic_date'][0] + ' ' + d['etime'][0], '%Y_%m-%d %H:%M:%S')  # 
-    elif eta[0] != 0:
-        datetime_0 = dt.datetime.fromtimestamp(eta[0])
-    else:
-        raise Exception('Mat file does not contain date information.')
-
-    timestamps = [datetime_0 + dt.timedelta(seconds=eta[ii]-eta[0]) for ii in range(len(eta))]
-    return lat.reshape((-1,)), lon.reshape((-1,)), alt.reshape((-1,)), eta, timestamps
-"""
 
 # LARC flight loading function
 # ============================
 """
 def larc_flight(file='data/LARC_data.mat'):
-    d = io.loadmat(file)
-    lat = d['waypoints'][0][0][0][0] * np.pi/180.0
-    lon = d['waypoints'][0][0][1][0] * np.pi/180.0
+    # d = io.loadmat(file)
+    d = inpout.loadmat(file)
+    lat = d['waypoints'][0][0][0][0] * DEG2RAD
+    lon = d['waypoints'][0][0][1][0] * DEG2RAD
     alt = d['waypoints'][0][0][2][0]
     eta = d['waypoints'][0][0][3][0]
 

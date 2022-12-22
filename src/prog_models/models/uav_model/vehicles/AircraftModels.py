@@ -302,9 +302,9 @@ class Rotorcraft():
 
         # Integration properties
         self.dt = dt
-        if   integrator_fn.lower() == 'euler':      self.int_fn = utils.euler
-        elif integrator_fn.lower() == 'rk4':        self.int_fn = utils.rk4
-        else:   raise Exception("Integrator function not recognized. Available options (so far) are: Euler (default) or RK4")
+        # if   integrator_fn.lower() == 'euler':      self.int_fn = utils.euler
+        # elif integrator_fn.lower() == 'rk4':        self.int_fn = utils.rk4
+        # else:   raise Exception("Integrator function not recognized. Available options (so far) are: Euler (default) or RK4")
         pass
     """
     # Introducing control allocation matrices for rotor speed-based control

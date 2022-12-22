@@ -1,12 +1,10 @@
 # Copyright © 2022 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-# from .. import PrognosticsModel
 from prog_models.prognostics_model import PrognosticsModel
 import prog_models.models.uav_model.trajectory.route as route 
 import prog_models.models.uav_model.trajectory.trajectory as trajectory
 from prog_models.models.uav_model.vehicles import AircraftModels
-# from prog_models.models.uav_model.vehicles.control import dn_allocation_functions
 from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 
 import numpy as np
@@ -45,10 +43,10 @@ class UAVGen(PrognosticsModel):
         # Simulation parameters:
         'dt': 0.1, 
         'gravity': 9.81,
-        'cruise_speed': 6.0,
-        'ascent_speed': 3.0,
-        'descent_speed': 3.0, 
-        'landing_speed': 1.5,
+        'cruise_speed': None, # 6.0,
+        'ascent_speed': None, # 3.0,
+        'descent_speed': None, # 3.0, 
+        'landing_speed': None, # 1.5,
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
@@ -57,9 +55,9 @@ class UAVGen(PrognosticsModel):
         'nurbs_order': 4, 
 
         # Vehicle params:
-        'vehicle_model': 'djis1000',
+        'vehicle_model': 'tarot18', # 'djis1000',
         'vehicle_payload': 0.0,
-        'vehicle_integrator_fn': 'euler' #  this parameter currently has no effect, need to delete and define elsewhere
+        # 'vehicle_integrator_fn': 'euler' #  this parameter currently has no effect, need to delete and define elsewhere
     }
 
     def initialize(self, u=None, z=None): 
@@ -69,7 +67,7 @@ class UAVGen(PrognosticsModel):
             lat = flightplan['lat_rad']
             lon = flightplan['lon_rad']
             alt = flightplan['alt_m']
-            tstamps = flightplan['timestamps']
+            tstamps = flightplan['timestamp']
         elif self.parameters['flight_file'] and self.parameters['flight_plan'] == None:
             flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
             lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
@@ -77,24 +75,31 @@ class UAVGen(PrognosticsModel):
             raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
         else:
             raise ProgModelInputException("No flight plan information supplied.")
-            
-        # Generate route
-        route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                             parameters = self.parameters)
-        #                     cruise_speed=self.parameters['cruise_speed'], 
-        #                     ascent_speed=self.parameters['ascent_speed'], 
-        #                     descent_speed=self.parameters['descent_speed'], 
-        #                     landing_speed=self.parameters['landing_speed'],
-        #                     hovering_time=self.parameters['hovering_time'], 
-        #                     add_takeoff_time=self.parameters['takeoff_time'], 
-        #                     add_landing_time=self.parameters['landing_time'])
 
         aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
                                                model=self.parameters['vehicle_model'],
-                                               integrator_fn=self.parameters['vehicle_integrator_fn'],
+                                               # integrator_fn=self.parameters['vehicle_integrator_fn'],
                                                payload=self.parameters['vehicle_payload'])
         self.vehicle_model = aircraft1 
-        
+
+        # Generate route
+        if len(tstamps) > 1:
+            # ETAs specified: 
+            # Check if speeds have been defined and warn user if so:
+            if self.parameters['cruise_speed'] is not None or self.parameters['ascent_speed'] is not None or self.parameters['descent_speed'] is not None:
+                warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
+            route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
+                                 etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed etas if want to use desired speeds values.
+                                 vehicle_max_speed = self.vehicle_model.dynamics['max_speed'],
+                                 parameters = self.parameters)
+        else: 
+            # ETAs not specified:  
+            # Check that speeds have been provided:
+            if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None:
+                raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent) must be provided.")  
+            route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
+                                 parameters = self.parameters)
+
         # Generate trajectory
         ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
         ref_traj.generate(dt=self.parameters['dt'], 
@@ -106,23 +111,12 @@ class UAVGen(PrognosticsModel):
                         max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
 
         self.ref_traj = ref_traj
+        self.current_time = 0
 
         # Initialize vehicle 
         init_pos = np.concatenate((ref_traj.cartesian_pos[0,:], ref_traj.attitude[0,:], 
                                     ref_traj.velocity[0,:], ref_traj.angular_velocity[0,:]), axis=0)
-        # aircraft1 = AircraftModels.build_model(init_pos, 
-        #                                        ref_traj.dt, 
-        #                                        name=self.parameters['aircraft_name'], 
-        #                                        model=self.parameters['vehicle_model'], 
-        #                                        integrator_fn=self.parameters['vehicle_integrator_fn'],
-        #                                        payload=self.parameters['vehicle_payload'])
-        # aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
-        #                                        model=self.parameters['vehicle_model'],
-        #                                        integrator_fn=self.parameters['vehicle_integrator_fn'],
-        #                                        payload=self.parameters['vehicle_payload'])
-        # self.vehicle_model = aircraft1 
-
-        ### QUESTION: I'm not sure where to put this - it's needed for defining dt in the right way
+    
         aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
         aircraft1.set_dt(dt=self.parameters['dt'])
 
@@ -140,14 +134,10 @@ class UAVGen(PrognosticsModel):
             'q': ref_traj.angular_velocity[0,1],
             'r': ref_traj.angular_velocity[0,2]
             })
-    """
+    
     def dx(self, x : dict, u : dict):
         # Extract params
         # -------------
-        # wind = self.parameters['wind']
-        wx = 0 #wind['u']
-        wy = 0 #wind['v']
-
         # Jp = self.parameters['Jp']
         # Omega_r = self.parameters['Omega_r']
 
@@ -184,14 +174,9 @@ class UAVGen(PrognosticsModel):
         
         # Compute drag forces
         # -------------------
-        # v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
-        #                 np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
-        # v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
-        # fb_drag = self.vehicle_model.aero['drag'](v_body)
-        # fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
         v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
         v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
-        fb_drag = self.vehicle_model.aero['drag'](v_body) # self.aero['drag'](v_body)
+        fb_drag = self.vehicle_model.aero['drag'](v_body) 
         fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
         fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
 
@@ -199,8 +184,8 @@ class UAVGen(PrognosticsModel):
         # -------------------
         dxdt     = np.zeros((len(x),))
         
-        dxdt[0] = vx_a + wx   # add wind u-component to generate ground speed
-        dxdt[1] = vy_a + wy   # add wind v-component to generate ground speed
+        dxdt[0] = vx_a
+        dxdt[1] = vy_a
         dxdt[2] = vz_a
         
         dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
@@ -214,6 +199,10 @@ class UAVGen(PrognosticsModel):
         dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.vehicle_model.geom['arm_length'] / Ixx
         dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.vehicle_model.geom['arm_length'] / Iyy
         dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
+
+        # Set vehicle state:
+        state_temp = np.array([x[iter] for iter in x.keys()])
+        self.vehicle_model.set_state(state=state_temp + dxdt*self.parameters['dt'])
 
         return self.StateContainer(np.array([
             np.atleast_1d(dxdt[0]),
@@ -229,17 +218,15 @@ class UAVGen(PrognosticsModel):
             np.atleast_1d(dxdt[10]),
             np.atleast_1d(dxdt[11]),
         ]))
-    """
 
+    """
     def next_state(self, x : dict, u : dict, dt):
         # Extract params
         # -------------
-        # wind = self.parameters['wind']
-        wx = 0 #wind['u']
-        wy = 0 #wind['v']
-
         # Jp = self.parameters['Jp']
         # Omega_r = self.parameters['Omega_r']
+
+        self.vehicle_model.set_state(state=np.array([x[iter] for iter in x.keys()]))
 
         # Extract values from vectors
         # --------------------------------
@@ -274,14 +261,9 @@ class UAVGen(PrognosticsModel):
         
         # Compute drag forces
         # -------------------
-        # v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
-        #                 np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
-        # v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
-        # fb_drag = self.vehicle_model.aero['drag'](v_body)
-        # fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
         v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
         v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
-        fb_drag = self.vehicle_model.aero['drag'](v_body) # self.aero['drag'](v_body)
+        fb_drag = self.vehicle_model.aero['drag'](v_body) 
         fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
         fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
 
@@ -289,8 +271,8 @@ class UAVGen(PrognosticsModel):
         # -------------------
         dxdt     = np.zeros((len(x),))
         
-        dxdt[0] = vx_a + wx   # add wind u-component to generate ground speed
-        dxdt[1] = vy_a + wy   # add wind v-component to generate ground speed
+        dxdt[0] = vx_a
+        dxdt[1] = vy_a
         dxdt[2] = vz_a
         
         dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
@@ -319,10 +301,10 @@ class UAVGen(PrognosticsModel):
         x['r'] += dxdt[11] * self.parameters['dt']
 
         # Update aircraft state
-        self.vehicle_model.set_state(state=np.array([x[iter] for iter in x.keys()]))
+        # self.vehicle_model.set_state(state=np.array([x[iter] for iter in x.keys()]))
         
         return x
-
+        """
     
     def event_state(self, x : dict) -> dict:
         pass
@@ -347,7 +329,7 @@ class UAVGen(PrognosticsModel):
             'r': x['r']
             })
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x : dict, t=None) -> dict:
         pass
         # return {
         #      'EOD': V < parameters['VEOD']

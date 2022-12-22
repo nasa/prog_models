@@ -34,19 +34,11 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
         p[ii], q[ii], r[ii] = des_angular_vel[0], des_angular_vel[1], des_angular_vel[2]
     return p, q, r
 
-
-
-# def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81):
 def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
     
     delta_t = t[1]-t[0]
     # --------- Differentiate trajectory to obtain speed and acceleration ------ #
-    # Try to get velocity starting at 0
-    # px[1] = 0.
-    # py[1] = 0.
-    # pz[1] = 0.
-    
-    # velocity
+    # Velocity
     vx = np.gradient(px, delta_t)
     vy = np.gradient(py, delta_t)
     vz = np.gradient(pz, delta_t)
@@ -66,8 +58,6 @@ def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=4
 
     # --------- Calculate angular kinematics based on acceleration and yaw ---------- #
     # Yaw interpolation has to be done with zero-degree polynomial to ensure we have constant yaw over a segment
-    # yawFun = interp.interp1d(wp_etas, wp_yaw, kind='zero', fill_value='extrapolate')
-    # psi    = yawFun(t)
     psi = generate_smooth_yaw(wp_etas, wp_yaw, t)
 
     # linearized angular kinematics
@@ -146,9 +136,8 @@ def degrees_to_decimal_from_str(str_):
     return sign * (degrees_ + minutes_ + seconds_)
 """ 
 
-# def feet2meters_from_str(str_):
-#     return 0.3048 * float(str_)
-
+def feet2meters_from_str(str_):
+    return 0.3048 * float(str_)
 
 # def make_list(x, n=1):
 #     if type(x) != list: return [x,] * n
@@ -231,7 +220,6 @@ class Trajectory():
         eta_unix = np.asarray([self.route.eta[item].timestamp() for item in range(len(self.route.eta))])
         return x, y, z, eta_unix
 
-    # def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000):
     def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
 
         print('\n\n**** Generating Trajectory using NURBS ***\n===================================')
@@ -251,18 +239,15 @@ class Trajectory():
         if weight_vector is None:   weight_vector = np.asarray([10,]*len(self.route.x))
         self.weight_vector = weight_vector
 
-        # Generating nurbs
-        # -----------------
-        # nurbs_curve = generate_3dnurbs(x, y, z, compass, eta_unix - eta_unix[0], 
-        #                                dt, self.nurbs_order, weightVector=self.weight_vector, basis_length=nurbs_basis_length)
+        # GENERATE NURBS
+        # ===============
+        # Add fictitious waypoints to ensure the trajectory will pass through the true waypoints
         wpx, wpy, wpz, wyaw, eta, weight_vector = generate_intermediate_points(x, y, z, compass, eta_unix-eta_unix[0], self.weight_vector)
         nurbs_curve = generate_3dnurbs(wpx, wpy, wpz, eta, dt, self.nurbs_order, weight_vector=weight_vector, basis_length=nurbs_basis_length)
         
         # Generating higher-order derivatives for velocity, acceleration profile, attitude, etc.
         # ------------------------------------------------------------------------------------
         print("Generating kinematics from position profile ", end=" ")
-        # traj = gen_from_pos_profile(nurbs_curve['px'], nurbs_curve['py'], nurbs_curve['pz'], nurbs_curve['time'],
-        #                                  nurbs_curve['weta'], nurbs_curve['wyaw'], gravity=self.gravity)
         traj = gen_from_pos_profile(nurbs_curve['px'], nurbs_curve['py'], nurbs_curve['pz'], nurbs_curve['time'],
                                     eta, wyaw, gravity=self.gravity, max_phi=max_phi, max_theta=max_theta)
         print('complete.')
@@ -394,7 +379,7 @@ class Trajectory():
             x, y, z = self.route.x, self.route.y, self.route.z
 
         departure_timestamp = self.route.departure_time.timestamp()
-        compass = geom.gen_compass_angles(np.vstack((x, y, z)).T)
+        compass = geom.gen_heading_angle_enu(x, y, z)
         etas    = self.__gen_etas_with_groundspeed(distance_method=params['distance_method'], 
                                                    speed_sampling_size=params['n_samples'], return_average=params['return_average'])
         if params['return_average'] or len(etas.shape)==1:  
@@ -503,6 +488,7 @@ class Trajectory():
         ax2.set_ylabel(params['ylabel'][0], fontsize=params['label_fontsize'])
         ax3.set_ylabel(params['ylabel'][1], fontsize=params['label_fontsize'])
         ax4.set_ylabel(params['ylabel'][2], fontsize=params['label_fontsize'])
+        ax4.legend(fontsize=12)
         figs.append(fig_unrolled)
         
         return figs
@@ -561,7 +547,7 @@ class Trajectory():
 #         # if ||V||_2 is too small, this waypoint does not contribute to uncertainty
 #         if np.sqrt(Vnorm2) > minVnorm:      Vt[ii + 1] = time_variance_norm(Et[ii], Vnorm2, np.linalg.norm(var_vel), dv_ratio)
 #         else:                               Vt[ii + 1] = 0.0
-    
+#     
 #     # Compute ETA inferior and superior bounds
 #     # ------------------------------------------
 #     # First check if Vt is a matrix (that means that second dimension is 1)
@@ -576,6 +562,7 @@ class Trajectory():
 #         eta_inf_timestamp.append(eta_timestamp[idx] - dt.timedelta(seconds=deltatime))
 #         eta_sup_timestamp.append(eta_timestamp[idx] + dt.timedelta(seconds=deltatime))
 #     return eta_inf, eta_sup, eta_inf_timestamp, eta_sup_timestamp
+
 
 
 # def compute_average_speed(t, eta, vx, vy, vz):
@@ -849,9 +836,9 @@ def get_route(dt=1.0, gravity=9.81, desired_cruisespeed=100, takeofftime=60, lan
     route.eta_timestamp = {'upper': timestamps_up, 'lower': timestamps_low, 'avg': timestamps_avg}
     return route
 """
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-#     print("trajectory generation code")
+    print("trajectory generation code")
     
     # =======
     # END

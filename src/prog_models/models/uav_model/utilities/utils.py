@@ -1,5 +1,5 @@
 # Utility functions for trajectory sim
-from imports_ import np, stats, interp, dt, plt, animation, make_axes_locatable
+from prog_models.models.uav_model.utilities.imports_ import np, stats, interp, dt, plt, animation, make_axes_locatable
 
 # Functions
 # ==========
@@ -102,8 +102,8 @@ def gen_heatmaps_vs_time(u, v, t, longrid, latgrid, what='mag'):
         im = plt.imshow(values, origin='lower', aspect='auto', cmap=plt.get_cmap('jet'), extent=plot_lims)
         wind_heatmaps.append([im, ttl])  
     return fig, ax, wind_heatmaps
-
     
+# Basics statistics
 def compute_norm(x, m, s):
     if len(x.shape)==1:
         return (x-m)/s
@@ -310,7 +310,7 @@ def resize_wind_grid(x, order='F'):
 def compute_wind_magnitude(u, v):
     return np.sqrt(u**2.0 + v**2.0)
 
-
+# Trajectory functions
 def trajectory_sample_generator(trajs, **kwargs):
     return [traj.gen_samples(**kwargs) for traj in trajs]
 
