@@ -265,20 +265,14 @@ class TestModels(unittest.TestCase):
         m = missing_inputs()
         self.assertEqual(len(m.inputs), 0)
 
-        try: 
-            m = missing_outputs()
-            self.fail("Should not have worked, missing 'outputs'")
-        except ProgModelTypeError:
-            pass
+        m = missing_outputs()
+        self.assertEqual(len(m.outputs), 0)
 
         m = missing_initiialize()
         # Should work- initialize is now optional
 
-        try: 
-            m = missing_output()
-            self.fail("Should not have worked, missing 'output' method")
-        except TypeError:
-            pass
+        m = missing_output()
+        # Should work- output is now optional
 
     def __noise_test(self, noise_key, dist_key, keys):
         m = MockProgModel(**{noise_key: 0.0})
@@ -844,6 +838,11 @@ class TestModels(unittest.TestCase):
         x0['t'] = 100
         x = m.apply_limits(x0)
         self.assertAlmostEqual(x['t'], 100, 9)
+
+        # Vectorized inputs - high and low
+        x0 = m.StateContainer(np.array([[1]*3, [5]*3, [-3.2]*3,[50, -150, 125]]))
+        x = m.apply_limits(x0)
+        self.assertListEqual(list(x['t']), [50, -100, 100])
 
         # when state doesn't exist
         try:

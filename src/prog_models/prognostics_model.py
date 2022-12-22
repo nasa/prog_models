@@ -152,7 +152,7 @@ class PrognosticsModel(ABC):
         self.n_events = len(self.events)
 
         if not hasattr(self, 'outputs'):
-            raise ProgModelTypeError('Must have `outputs` attribute')
+            self.outputs = []
         try:
             iter(self.outputs)
         except TypeError:
@@ -381,12 +381,12 @@ class PrognosticsModel(ABC):
             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
         """
         for (key, limit) in self.state_limits.items():
-            if x[key] < limit[0]:
+            if np.any(np.array(x[key]) < limit[0]):
                 warn("State {} limited to {} (was {})".format(key, limit[0], x[key]), ProgModelStateLimitWarning)
-                x[key] = limit[0]
-            elif x[key] > limit[1]:
+                x[key] = np.maximum(x[key], limit[0])
+            if np.any(np.array(x[key]) > limit[1]):
                 warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
-                x[key] = limit[1]
+                x[key] = np.minimum(x[key], limit[1])
         return x
 
     def __next_state(self, x, u, dt : float):
@@ -462,10 +462,9 @@ class PrognosticsModel(ABC):
 
     observables = performance_metrics  # For backwards compatibility
 
-    @abstractmethod
     def output(self, x):
         """
-        Calculate outputs given state
+        Calculate :term:`output` given state
 
         Parameters
         ----------
@@ -487,7 +486,11 @@ class PrognosticsModel(ABC):
         | x = m.initialize(u, z) # Initialize first state
         | z = m.output(x) # Returns m.OutputContainer({'z1': 2.2})
         """
-        return {}
+        if self.is_direct_model:
+            warn('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
+        else:
+            warn('This model does not support output estimation.')
+        return self.OutputContainer({})
 
     def __output(self, x):
         """
@@ -598,7 +601,72 @@ class PrognosticsModel(ABC):
         return {key: event_state <= 0 \
             for (key, event_state) in self.event_state(x).items()} 
 
-    def simulate_to(self, time : float, future_loading_eqn : Callable, first_output = None, **kwargs) -> namedtuple:
+    @property
+    def is_state_transition_model(self) -> bool:
+        """
+        If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propogate state forward.
+
+        Returns:
+            bool: if the model is a state transition model
+        """
+        has_overridden_transition = type(self).next_state != PrognosticsModel.next_state or type(self).dx != PrognosticsModel.dx
+        return has_overridden_transition and len(self.states) > 0
+
+    @property
+    def is_direct_model(self) -> bool:
+        """
+        If the model is a "direct model" - i.e., a model that directly estimates time of event from system state, rather than using state transition. This is useful for data-driven models that map from sensor data to time of event, and for physics-based models where state transition differential equations can be solved.
+
+        Returns:
+            bool: if the model is a direct model
+        """
+        return type(self).time_of_event != PrognosticsModel.time_of_event
+
+    def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
+        """
+        Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met) from :term:`state`. time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
+
+        Parameters
+        ----------
+        x : StateContainer
+            state, with keys defined by model.states \n
+            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+        future_loading_eqn : callable, optional
+            Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
+
+        Returns
+        ------------
+        time_of_event : dict
+            time of each event, with keys defined by model.events \n
+            e.g., time_of_event = {'impact': 8.2, 'falling': 4.077} given events = ['impact', 'falling']
+
+        Note
+        -----------
+        Also supports arguments from :py:meth:`simulate_to_threshold`
+
+        See Also
+        --------
+        threshold_met
+        """
+        params = {
+            'future_loading_eqn': future_loading_eqn,
+        }
+        params.update(kwargs)
+
+        threshold_keys = self.events.copy()
+        t = 0
+        time_of_event = {}
+        while len(threshold_keys) > 0:
+            result = self.simulate_to_threshold(x = x, t0 = t, **params)
+            for key, value in result.event_states[-1].items():
+                if value <= 0 and key not in time_of_event:
+                    threshold_keys.remove(key)
+                    time_of_event[key] = result.times[-1]
+            x = result.states[-1]
+            t = result.times[-1]
+        return time_of_event
+
+    def simulate_to(self, time : float, future_loading_eqn : Callable = lambda t,x=None: {}, first_output = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -611,10 +679,6 @@ class PrognosticsModel(ABC):
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : OutputContainer, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
-        options: kwargs, optional
-            Configuration options for the simulation \n
-            Note: configuration of the model is set through model.parameters \n
-            Supported parameters: see `simulate_to_threshold`
         
         Returns
         -------
@@ -632,6 +696,9 @@ class PrognosticsModel(ABC):
         Raises
         ------
         ProgModelInputException
+
+        Note:
+            See simulate_to_threshold for supported keyword arguments
 
         See Also
         --------
@@ -661,7 +728,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn : Callable, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -742,7 +809,9 @@ class PrognosticsModel(ABC):
         if first_output and not all(key in first_output for key in self.outputs):
             raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
 
-        if not (callable(future_loading_eqn)):
+        if future_loading_eqn is None:
+            future_loading_eqn = lambda t,x=None: self.InputContainer({})
+        elif not (callable(future_loading_eqn)):
             raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
         
         if isinstance(threshold_keys, str):
