@@ -836,6 +836,11 @@ class TestModels(unittest.TestCase):
         x = m.apply_limits(x0)
         self.assertAlmostEqual(x['t'], 100, 9)
 
+        # Vectorized inputs - high and low
+        x0 = m.StateContainer(np.array([[1]*3, [5]*3, [-3.2]*3,[50, -150, 125]]))
+        x = m.apply_limits(x0)
+        self.assertListEqual(list(x['t']), [50, -100, 100])
+
         # when state doesn't exist
         try:
             x0['n'] = 0
