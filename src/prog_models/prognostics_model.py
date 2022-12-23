@@ -139,12 +139,10 @@ class PrognosticsModel(ABC):
 
         if not hasattr(self, 'states'):
             raise ProgModelTypeError('Must have `states` attribute')
-        if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
         try:
             iter(self.states)
         except TypeError:
-            raise ProgModelTypeError('model.states must be iterable')
+            raise ProgModelTypeError('model.states must be a list')
         self.n_states = len(self.states)
 
         if not hasattr(self, 'events'):
@@ -156,7 +154,7 @@ class PrognosticsModel(ABC):
         try:
             iter(self.outputs)
         except TypeError:
-            raise ProgModelTypeError('model.outputs must be iterable')
+            raise ProgModelTypeError('model.outputs must be a list')
         self.n_outputs = len(self.outputs)
 
         if not hasattr(self, 'performance_metric_keys'):
@@ -830,6 +828,7 @@ class PrognosticsModel(ABC):
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
             'print': False,
+            'x': None,
             'progress': False
         }
         config.update(kwargs)
@@ -850,7 +849,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
             raise ProgModelInputException("'horizon' must be positive, was {}".format(config['horizon']))
-        if 'x' in config and not all([state in config['x'] for state in self.states]):
+        if config['x'] is not None and not all([state in config['x'] for state in self.states]):
             raise ProgModelInputException("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
             raise ProgModelInputException("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
@@ -862,7 +861,7 @@ class PrognosticsModel(ABC):
         # Setup
         t = config['t0']
         u = future_loading_eqn(t)
-        if 'x' in config:
+        if config['x'] is not None:
             x = deepcopy(config['x'])
         else:
             x = self.initialize(u, first_output)
