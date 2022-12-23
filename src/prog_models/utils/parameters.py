@@ -73,7 +73,13 @@ class PrognosticsModelParameters(UserDict):
                 if isinstance(self['process_noise'], Number):
                     self['process_noise'] = self._m.StateContainer({key: self['process_noise'] for key in self._m.states})
                 elif isinstance(self['process_noise'], dict):
-                    self['process_noise'] = self._m.StateContainer(self['process_noise'])
+                    noise = self['process_noise']
+                    for key in self._m.states:
+                        # Set any missing keys to 0
+                        if key not in noise.keys():
+                            noise[key] = 0
+                            
+                    self['process_noise'] = self._m.StateContainer(noise)
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
@@ -103,7 +109,12 @@ class PrognosticsModelParameters(UserDict):
                 if isinstance(self['measurement_noise'], Number):
                     self['measurement_noise'] = self._m.OutputContainer({key: self['measurement_noise'] for key in self._m.outputs})
                 elif isinstance(self['measurement_noise'], dict):
-                    self['measurement_noise'] = self._m.OutputContainer(self['measurement_noise'])
+                    noise = self['measurement_noise']
+                    for key in self._m.outputs:
+                        # Set any missing keys to 0
+                        if key not in noise.keys():
+                            noise[key] = 0
+                    self['measurement_noise'] = self._m.OutputContainer(noise)
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:

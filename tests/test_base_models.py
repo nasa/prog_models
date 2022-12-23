@@ -330,8 +330,28 @@ class TestModels(unittest.TestCase):
     def test_process_noise(self):
         self.__noise_test('process_noise', 'process_noise_dist', MockProgModel.states)
 
+        m = MockProgModel()
+
+        # All states except for the last one
+        noise = {key: 1 for key in list(m.states)[:-1]}
+        m.parameters['process_noise'] = noise
+        for key in list(m.states)[:-1]:
+            self.assertEqual(m.parameters['process_noise'][key], 1)
+        # That key should be 0 (default)
+        self.assertEqual(m.parameters['process_noise'][list(m.states)[-1]], 0)
+
     def test_measurement_noise(self):
         self.__noise_test('measurement_noise', 'measurement_noise_dist', MockProgModel.outputs)
+
+        m = MockProgModel()
+
+        # All outputs except for the last one
+        noise = {key: 1 for key in list(m.outputs)[:-1]}
+        m.parameters['measurement_noise'] = noise
+        for key in list(m.outputs)[:-1]:
+            self.assertEqual(m.parameters['measurement_noise'][key], 1)
+        # That key should be 0 (default)
+        self.assertEqual(m.parameters['measurement_noise'][list(m.outputs)[-1]], 0)
 
     def test_prog_model(self):
         m = MockProgModel() # Should work- sets default
