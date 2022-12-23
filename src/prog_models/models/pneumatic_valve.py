@@ -256,6 +256,8 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         if pIn/pOut>=threshold:
             return C*A*pIn*np.sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
         if pIn>=pOut:
+            if pIn == 0:
+                pIn = 1e-99
             return C*A*pIn*np.sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
         if pOut/pIn>=threshold:
             return -C*A*pOut*np.sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
