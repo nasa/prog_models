@@ -1159,10 +1159,17 @@ class PrognosticsModel(ABC):
 
         config = {
             'method': 'nelder-mead',  # Optimization method
-            'bounds': ((-np.inf, np.inf) for _ in keys),
+            'bounds': tuple((-np.inf, np.inf) for _ in keys),
             'options': {'xatol': 1e-8}  # Options passed to optimizer
         }
         config.update(kwargs)
+
+        # Convert bounds
+        if isinstance(config['bounds'], dict):
+            # Allows for partial bounds definition, and definition by key name
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
+        elif len(config['bounds']) != len(keys):
+            raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
             # Convert here so it isn't done every call of calc_error

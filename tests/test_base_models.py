@@ -593,7 +593,57 @@ class TestModels(unittest.TestCase):
         for (oi, z) in zip(o, outputs): 
             # Lack of noise will make output as expected
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
-    
+
+    def test_estimate_params(self):
+        m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
+
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        keys = ['thrower_height', 'throwing_speed', 'g']
+        m.estimate_params(data, keys)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Now with limits that dont include the true values
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
+        for key in keys:
+            self.assertNotEqual(m.parameters[key], gt[key])
+
+        # Now with limits that do include the true values
+        m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Try incomplete list:
+        with self.assertRaises(ValueError):
+            # Missing bound
+            m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
+        with self.assertRaises(ValueError):
+            # Extra bound
+            m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, 0), (-20, 10)))
+
+        # Dictionary bounds
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Dictionary bounds - missing
+        # Will fill with (-inf, inf)
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Dictionary bounds - extra
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+            
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):

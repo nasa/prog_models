@@ -56,7 +56,6 @@ class EnsembleModel(PrognosticsModel):
             x0[key] = self.parameters['aggregation_method'](x0[key]) 
         return self.StateContainer(x0)
 
-
     def next_state(self, x, u, dt):
         xs = [m.next_state(m.StateContainer(x), m.InputContainer(u), dt) for m in self.parameters['models']]
         xs_final = {}
