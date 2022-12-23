@@ -13,7 +13,7 @@ sys.path.append(join(dirname(__file__), ".."))
 
 from prog_models import *
 from prog_models.models import *
-from prog_models.models.test_models.linear_models import OneInputNoOutputNoEventLM
+from prog_models.models.test_models.linear_models import OneInputNoOutputNoEventLM, FNoneNoEventStateLM
 
 
 class MockModel():
@@ -1025,6 +1025,9 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.F = True # boolean
             m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            # if F is none, we need to override event_state
+            m_noes = FNoneNoEventStateLM()
         
         # Matrix Dimension Checking
         # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)

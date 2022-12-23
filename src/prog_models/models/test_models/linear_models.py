@@ -6,6 +6,26 @@ import numpy as np
 from prog_models import LinearModel
 
 
+class FNoneNoEventStateLM(LinearModel):
+    """
+    Simple model that increases state by u1 every step. 
+    """
+    inputs = ['u1']
+    states = ['x1']
+
+    A = np.array([[0]])
+    B = np.array([[1]])
+    C = np.empty((0,1))
+    F = None
+
+    default_parameters = {
+        'process_noise': 0,
+        'x0': {
+            'x1': 0
+        }
+    }
+
+
 class OneInputNoOutputNoEventLM(LinearModel):
     """
     Simple model that increases state by u1 every step. 
