@@ -29,20 +29,6 @@ class PrognosticsModelParameters(UserDict):
     """
     def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}, _copy: bool = True):
         super().__init__()
-        self.__setstate__((model, dict_in, callbacks, _copy))
-
-    def copy(self):
-        return self.__class__(self._m, self.data, self.callbacks, _copy=False)
-
-    def __copy__(self):
-        return self.__class__(self._m, self.data, self.callbacks, _copy=False)
-    
-    def __deepcopy__(self):
-        return self.__class__(self._m, self.data, self.callbacks, _copy=True)
-
-    def __setstate__(self, state):
-        model, dict_in, callbacks, _copy = state
-
         self._m = model
         self.callbacks = {}
         # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
@@ -58,8 +44,14 @@ class PrognosticsModelParameters(UserDict):
                     changes = callback(self)
                     self.update(changes)
 
-    def __getstate__(self):
-        return (self._m, self.data, self.callbacks, False)
+    def copy(self):
+        return self.__class__(self._m, self.data, self.callbacks, _copy=False)
+
+    def __copy__(self):
+        return self.__class__(self._m, self.data, self.callbacks, _copy=False)
+    
+    def __deepcopy__(self):
+        return self.__class__(self._m, self.data, self.callbacks, _copy=True)
 
     def __setitem__(self, key : str, value : float, _copy : bool = True) -> None:
         """Set model configuration, overrides dict.__setitem__()
