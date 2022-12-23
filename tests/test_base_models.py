@@ -13,6 +13,7 @@ sys.path.append(join(dirname(__file__), ".."))
 
 from prog_models import *
 from prog_models.models import *
+from prog_models.models.test_models.linear_models import OneInputNoOutputNoEventLM
 
 
 class MockModel():
@@ -432,12 +433,29 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
         self.assertAlmostEqual(times[-1], 20.0, 5)
 
+        # No thresholds and no horizon
+        with self.assertRaises(ProgModelInputException):
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=[])
+
+        # No events and no horizon
+        m_noevents = OneInputNoOutputNoEventLM()
+        with self.assertRaises(ProgModelInputException):
+            (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+
         # Custom thresholds met eqn- both keys
         def thresh_met(thresholds):
             return all(thresholds.values())
         config = {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0, 'thresholds_met_eqn': thresh_met}
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
+
+        # With no events and no horizon, but a threshold met eqn
+        # Should still run
+        def thresh_met(thresholds):
+            return True
+        linear_load = lambda t, x=None: m_noevents.InputContainer({'u1': 1})
+        (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
+        self.assertListEqual(times, [0, 0.5]) # Only one step
 
         try:
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})

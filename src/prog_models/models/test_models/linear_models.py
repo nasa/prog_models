@@ -6,19 +6,17 @@ import numpy as np
 from prog_models import LinearModel
 
 
-class OneInputNoOutputOneEventLM(LinearModel):
+class OneInputNoOutputNoEventLM(LinearModel):
     """
-    Simple model that increases state by u1 every step. Event occurs when state == 10
+    Simple model that increases state by u1 every step. 
     """
     inputs = ['u1']
     states = ['x1']
-    events = ['x1 == 10']
 
     A = np.array([[0]])
     B = np.array([[1]])
     C = np.empty((0,1))
-    F = np.array([[-0.1]])
-    G = np.array([[1]])
+    F = np.empty((0,1))
 
     default_parameters = {
         'process_noise': 0,
@@ -26,28 +24,26 @@ class OneInputNoOutputOneEventLM(LinearModel):
             'x1': 0
         }
     }
+
+
+class OneInputNoOutputOneEventLM(OneInputNoOutputNoEventLM):
+    """
+    Simple model that increases state by u1 every step. Event occurs when state == 10
+    """
+    events = ['x1 == 10']
+
+    F = np.array([[-0.1]])
+    G = np.array([[1]])
 
 
 class OneInputNoOutputTwoEventLM(LinearModel):
     """
     Simple model that increases state by u1 every step. Event occurs when state == 10, 5
     """
-    inputs = ['u1']
-    states = ['x1']
     events = ['x1 == 10', 'x1 == 5']
 
-    A = np.array([[0]])
-    B = np.array([[1]])
-    C = np.empty((0,1))
     F = np.array([[-0.1], [-0.2]])
     G = np.array([[1], [1]])
-
-    default_parameters = {
-        'process_noise': 0,
-        'x0': {
-            'x1': 0
-        }
-    }
 
 
 class TwoInputNoOutputOneEventLM(LinearModel):

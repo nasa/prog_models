@@ -622,9 +622,9 @@ class PrognosticsModel(ABC):
 
     def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
-        Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met) from :term:`state`. time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
+        Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
-        Parameters
+        Args
         ----------
         x : StateContainer
             state, with keys defined by model.states \n
@@ -891,6 +891,9 @@ class PrognosticsModel(ABC):
             threshold_keys = self.events
         elif len(threshold_keys) == 0:
             check_thresholds = lambda _: False
+
+        if len(threshold_keys) == 0 and config.get('thresholds_met_eqn', None) is None and 'horizon' not in kwargs:
+            raise ProgModelInputException("Running simulate to threshold for a model with no events requires a horizon to be set. Otherwise simulation would never end.")
 
         # Initialization of save arrays
         saved_times = []
