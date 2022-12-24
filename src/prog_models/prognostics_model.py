@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from abc import abstractmethod, ABC
+from abc import ABC
 from collections import abc, namedtuple
 from copy import deepcopy
 import itertools
@@ -1141,35 +1141,62 @@ class PrognosticsModel(ABC):
 
         return err_total/counter
     
-    def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
+    def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
-        Args:
-            runs (list[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
-            keys (list[str]): Parameter keys to optimize
-        
-        Keyword Args: 
-            method (str, optional): Optimization method- see scipy.optimize.minimize for options
-            bounds (tuple): Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...)
-            options (dict): Options passed to optimizer. see scipy.optimize.minimize for options
+        Keyword Args:
+            keys (list[str]): 
+                Parameter keys to optimize
+            times (list[float]):
+                Array of times for each sample
+            inputs (list[InputContainer]):
+                Array of input containers where input[x] corresponds to time[x]
+            outputs (list[OutputContainer]):
+                Array of output containers where output[x] corresponds to time[x]
+            method (str, optional): 
+                Optimization method- see scipy.optimize.minimize for options
+            bounds (tuple or dict): 
+                Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
+            options (dict): 
+                Options passed to optimizer. see scipy.optimize.minimize for options
+            runs (list[tuple], depreciated): 
+                data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
 
         See: examples.param_est
         """
         from scipy.optimize import minimize
 
+        if keys is None:
+            # if no keys provided, use all
+            keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
+
         config = {
-            'method': 'nelder-mead',  # Optimization method
+            'method': 'nelder-mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8}  # Options passed to optimizer
+            'options': {'xatol': 1e-8},
         }
         config.update(kwargs)
+
+        if runs is None and (times is None or inputs is None or outputs is None):
+            raise ValueError("Must provide either runs or times, inputs, and outputs")
+        if runs is None:
+            if len(times) != len(inputs) or len(outputs) != len(inputs):
+                raise ValueError("Times, inputs, and outputs must be same length")
+            # For now- convert to runs
+            runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
             config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
-        elif len(config['bounds']) != len(keys):
-            raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
+        else:
+            if not isinstance(config['bounds'], Iterable):
+                raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
+            if len(config['bounds']) != len(keys):
+                raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
+        for bound in config['bounds']:
+            if (not isinstance(bound, Iterable)) or (len(bound) != 2):
+                raise ValueError("each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
             # Convert here so it isn't done every call of calc_error
