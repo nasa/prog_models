@@ -6,8 +6,10 @@ import prog_models.models.uav_model.trajectory.route as route
 import prog_models.models.uav_model.trajectory.trajectory as trajectory
 from prog_models.models.uav_model.vehicles import AircraftModels
 from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
+from prog_models.models.uav_model.utilities import geometry
 
 import numpy as np
+import datetime
 import prog_models.models.uav_model.utilities.geometry as geom
 from warnings import warn
 from prog_models.exceptions import ProgModelInputException
@@ -15,7 +17,7 @@ from prog_models.exceptions import ProgModelInputException
 class UAVGen(PrognosticsModel):
     """
 
-    :term:`Events<event>`: (#)
+    :term:`Events<event>`: (1)
     
     :term:`Inputs/Loading<input>`: ()
 
@@ -27,9 +29,9 @@ class UAVGen(PrognosticsModel):
     ------------
 
     """
-    events = [] # fill in ['EOD']
+    events = ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
-    states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
+    states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t']
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
     is_vectorized = True
 
@@ -53,11 +55,12 @@ class UAVGen(PrognosticsModel):
         'waypoint_weights': 20.0, # should default be 0?
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
+        'final_time_buffer_sec': 30, # time in seconds for acceptable range to reach final waypoint
+        'final_space_buffer_m': 2, # 
 
         # Vehicle params:
         'vehicle_model': 'tarot18', # 'djis1000',
         'vehicle_payload': 0.0,
-        # 'vehicle_integrator_fn': 'euler' #  this parameter currently has no effect, need to delete and define elsewhere
     }
 
     def initialize(self, u=None, z=None): 
@@ -78,7 +81,6 @@ class UAVGen(PrognosticsModel):
 
         aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
                                                model=self.parameters['vehicle_model'],
-                                               # integrator_fn=self.parameters['vehicle_integrator_fn'],
                                                payload=self.parameters['vehicle_payload'])
         self.vehicle_model = aircraft1 
 
@@ -100,6 +102,21 @@ class UAVGen(PrognosticsModel):
             route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                  parameters = self.parameters)
 
+        # Save final waypoint information for threshold_met and event_state 
+        self.parameters['final_time'] = datetime.datetime.timestamp(route_.eta[-1]) - datetime.datetime.timestamp(route_.eta[0])
+        coord_end = geometry.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
+        self.parameters['final_x'], self.parameters['final_y'], self.parameters['final_z'] = coord_end.geodetic2enu(route_.lat[-1], route_.lon[-1], route_.alt[-1])
+        wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
+        wypt_x = []
+        wypt_y = []
+        wypt_z = []
+        for iter1 in range(len(route_.lat)):
+            x_temp, y_temp, z_temp = coord_end.geodetic2enu(route_.lat[iter1], route_.lon[iter1], route_.alt[iter1])
+            wypt_x.append(x_temp)
+            wypt_y.append(y_temp)
+            wypt_z.append(z_temp)
+        self.parameters['waypoints'] = {'waypoints_time': wypt_time_unix, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
+        
         # Generate trajectory
         ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
         ref_traj.generate(dt=self.parameters['dt'], 
@@ -132,7 +149,8 @@ class UAVGen(PrognosticsModel):
             'vz': ref_traj.velocity[0,2],
             'p': ref_traj.angular_velocity[0,0],
             'q': ref_traj.angular_velocity[0,1],
-            'r': ref_traj.angular_velocity[0,2]
+            'r': ref_traj.angular_velocity[0,2],
+            't': 0
             })
     
     def dx(self, x : dict, u : dict):
@@ -199,6 +217,7 @@ class UAVGen(PrognosticsModel):
         dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.vehicle_model.geom['arm_length'] / Ixx
         dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.vehicle_model.geom['arm_length'] / Iyy
         dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
+        dxdt[12] = 1 
 
         # Set vehicle state:
         state_temp = np.array([x[iter] for iter in x.keys()])
@@ -217,101 +236,67 @@ class UAVGen(PrognosticsModel):
             np.atleast_1d(dxdt[9]),
             np.atleast_1d(dxdt[10]),
             np.atleast_1d(dxdt[11]),
+            np.atleast_1d(dxdt[12])
         ]))
-
-    """
-    def next_state(self, x : dict, u : dict, dt):
-        # Extract params
-        # -------------
-        # Jp = self.parameters['Jp']
-        # Omega_r = self.parameters['Omega_r']
-
-        self.vehicle_model.set_state(state=np.array([x[iter] for iter in x.keys()]))
-
-        # Extract values from vectors
-        # --------------------------------
-        m = self.vehicle_model.mass['total']  # vehicle mass
-        T = u['T'] 
-        tp = u['mx']
-        tq = u['my']
-        tr = u['mz']
-        Ixx, Iyy, Izz = self.vehicle_model.mass['Ixx'], self.vehicle_model.mass['Iyy'], self.vehicle_model.mass['Izz']    # vehicle inertia
-
-        # Extract state variables from current state vector
-        # -------------------------------------------------
-        phi = x['phi'] 
-        theta = x['theta'] 
-        psi = x['psi']
-        vx_a = x['vx']
-        vy_a = x['vy']
-        vz_a = x['vz']
-        p = x['p']
-        q = x['q']
-        r = x['r']
-
-        # Pre-compute Trigonometric values
-        # --------------------------------
-        sin_phi   = np.sin(phi)
-        cos_phi   = np.cos(phi)
-        sin_theta = np.sin(theta)
-        cos_theta = np.cos(theta)
-        tan_theta = np.tan(theta)
-        sin_psi   = np.sin(psi)
-        cos_psi   = np.cos(psi)
-        
-        # Compute drag forces
-        # -------------------
-        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
-        v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
-        fb_drag = self.vehicle_model.aero['drag'](v_body) 
-        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
-        fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
-
-        # Update state vector
-        # -------------------
-        dxdt     = np.zeros((len(x),))
-        
-        dxdt[0] = vx_a
-        dxdt[1] = vy_a
-        dxdt[2] = vz_a
-        
-        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
-        dxdt[4]  = q * cos_phi - r * sin_phi
-        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta
-        
-        dxdt[6]  = (sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T / m - 1.0/m * fe_drag[0]
-        dxdt[7]  = (sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T / m - 1.0/m * fe_drag[1]
-        dxdt[8]  = - self.parameters['gravity'] + cos_phi * cos_theta  * T / m - 1.0/m * fe_drag[2]
-
-        dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.vehicle_model.geom['arm_length'] / Ixx
-        dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.vehicle_model.geom['arm_length'] / Iyy
-        dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
-
-        x['x'] += dxdt[0] * self.parameters['dt']
-        x['y'] += dxdt[1] * self.parameters['dt']
-        x['z'] += dxdt[2] * self.parameters['dt']
-        x['phi'] += dxdt[3] * self.parameters['dt']
-        x['theta'] += dxdt[4] * self.parameters['dt']
-        x['psi'] += dxdt[5] * self.parameters['dt']
-        x['vx'] += dxdt[6] * self.parameters['dt']
-        x['vy'] += dxdt[7] * self.parameters['dt']
-        x['vz'] += dxdt[8] * self.parameters['dt']
-        x['p'] += dxdt[9] * self.parameters['dt']
-        x['q'] += dxdt[10] * self.parameters['dt']
-        x['r'] += dxdt[11] * self.parameters['dt']
-
-        # Update aircraft state
-        # self.vehicle_model.set_state(state=np.array([x[iter] for iter in x.keys()]))
-        
-        return x
-        """
     
     def event_state(self, x : dict) -> dict:
-        pass
-        # return {
-        #     'event_name': event_val
-        # }
+        # Extract next waypoint information 
+        num_wypts = len(self.parameters['waypoints']['waypoints_time']) - 1 # Don't include initial waypoint
+        index_next = self.parameters['waypoints']['next_waypoint']
 
+        # Check if at intial waypoint. If so, event_state is 1
+        if index_next == 0:
+            self.parameters['waypoints']['next_waypoint'] += 1
+            return {
+                'TrajectoryComplete': 1
+            }
+        # Check if passed final waypoint. If so, event_state is 0
+        if index_next > num_wypts:
+            return {
+                'TrajectoryComplete': 0
+            }
+        
+        t_next = self.parameters['waypoints']['waypoints_time'][index_next]
+        x_next = self.parameters['waypoints']['waypoints_x'][index_next]
+        y_next = self.parameters['waypoints']['waypoints_y'][index_next]
+        z_next = self.parameters['waypoints']['waypoints_z'][index_next]
+
+        # Define time interval for acceptable arrival at waypoint
+        time_buffer_left = (self.parameters['waypoints']['waypoints_time'][index_next] - self.parameters['waypoints']['waypoints_time'][index_next - 1])/2
+        if index_next == num_wypts:
+            # Final waypoint, add final buffer time 
+            time_buffer_right = t_next + self.parameters['final_time_buffer_sec']
+        else: 
+            time_buffer_right = (self.parameters['waypoints']['waypoints_time'][index_next+1] - self.parameters['waypoints']['waypoints_time'][index_next])/2
+
+        # Check if next waypoint is satisfied:
+        if x['t'] < t_next - time_buffer_left:
+            # Not yet within time of next waypoint
+            return {
+                    'TrajectoryComplete': (num_wypts - (index_next - 1))/num_wypts
+                }
+        elif t_next - time_buffer_left <= x['t'] <= t_next + time_buffer_right:
+            # Current time within ETA interval. Check if distance also within acceptable range
+            dist_now = np.sqrt((x['x']-x_next)**2 + (x['y']-y_next)**2 + (x['z']-z_next)**2)
+            if dist_now <= self.parameters['final_space_buffer_m']:
+                # Waypoint achieved
+                self.parameters['waypoints']['next_waypoint'] += 1
+                return {
+                    'TrajectoryComplete': (num_wypts - index_next)/num_wypts
+                }
+            else:
+                # Waypoint not yet achieved
+                return {
+                    'TrajectoryComplete': (num_wypts - (index_next - 1))/num_wypts
+                }
+        else:
+            # ETA passed before waypoint reached 
+            warn("Trajectory did not reach waypoint associated with ETA of {})".format(t_next))
+            self.parameters['waypoints']['next_waypoint'] += 1
+            return {
+                    'TrajectoryComplete': (num_wypts - index_next)/num_wypts
+                }
+ 
     def output(self, x : dict):
         # Currently, output is the same as the state vector
         return self.OutputContainer({
@@ -326,14 +311,33 @@ class UAVGen(PrognosticsModel):
             'vz': x['vz'],
             'p': x['p'],
             'q': x['q'],
-            'r': x['r']
+            'r': x['r'],
+            't': x['t']
             })
 
-    def threshold_met(self, x : dict, t=None) -> dict:
-        pass
-        # return {
-        #      'EOD': V < parameters['VEOD']
-        # }
+    def threshold_met(self, x : dict) -> dict:
+        if x['t'] < self.parameters['final_time'] - self.parameters['final_time_buffer_sec']: 
+            # Trajectory hasn't reached final ETA
+            return {
+                'TrajectoryComplete': False
+            }
+        elif self.parameters['final_time'] - self.parameters['final_time_buffer_sec'] <= x['t'] <= self.parameters['final_time'] + self.parameters['final_time_buffer_sec']:
+            # Trajectory is within bounds of final ETA
+            dist_now = np.sqrt((x['x']-self.parameters['final_x'])**2 + (x['y']-self.parameters['final_y'])**2 + (x['z']-self.parameters['final_z'])**2)
+            if dist_now <= self.parameters['final_space_buffer_m']:
+                return {
+                    'TrajectoryComplete': True
+                }
+            else: 
+                return {
+                    'TrajectoryComplete': False
+                }
+        else: 
+            # Trajectory has passed acceptable bounds of final ETA - simulation terminated
+            warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
+            return {
+                'TrajectoryComplete': True
+            }
 
     # def future_loading()
         # User defined: m.simulate_to(10, m.future_loading)
@@ -367,7 +371,8 @@ class UAVGen(PrognosticsModel):
                                         self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
 
                 # Define controller
-                x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix))])
+                # x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix))])
+                x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
                 u = self.vehicle_model.control_scheduled(x_temp - ref_now) 
                 u[0]      += self.vehicle_model.steadystate_input
                 u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])

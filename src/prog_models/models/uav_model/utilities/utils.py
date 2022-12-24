@@ -137,42 +137,6 @@ def interpolate_2dgrid(X, n_interp, m_interp):
     return Xinterp
 """
 
-def euler(f, h, x, u, params):
-    return f(x, u, params)
-
-
-# def rk4(f, h, x, u, params):
-#     """
-#     Fourth-order Runge-Kutta method
-# 
-#     dxdt = rk4(f, h, x, u, params)
-
-#     Provide the value increment of variable x, dx/dt,
-#     evolving according to the dynamics:
-
-#         dx/dt = f(x)
-
-#     where f is dynamic function, x is the current value, and dt is the time-step size.
-
-#     Input:
-#     f               matlab function (anonymous function, script function, etc.) defining the system's dynamics
-#                     f must be able to receive n-dimensional vector x
-#     h               scalar, time step size
-#     x               n x 1 vector, independent variable
-#     u               m x 1 vector, input to the system
-#     params
-
-#     Output:
-#     dxdt            n x 1 vector, value increment of x in time dt.
-#     """
-#     # Compute intermediate points of integration
-#     k1 = f(x, u, params)               # Compute k1 -> k1 = f(x, u, params)
-#     k2 = f(x + h/2.0 * k1, u, params)  # Compute k2 -> k2 = f(x + h/2.0*k1, u, params);
-#     k3 = f(x + h/2.0 * k2, u, params)  # Compute k3 -> k3 = f(x + h/2.0*k2, u, params);
-#     k4 = f(x + h * k3, u, params)      # Compute k4 -> k4 = f(x + h*k3, u, params);
-#     return 1.0/6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)    # Compute dxdt: sum up individual contributions
-
-
 # GPR utilities
 # ==============
 """

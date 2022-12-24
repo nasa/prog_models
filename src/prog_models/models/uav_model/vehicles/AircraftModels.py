@@ -126,12 +126,9 @@ def rotorcraft_symbolicStateMatrices():
 # def build_model(init_state_vector, dt, **kwargs):
 def build_model(**kwargs):
 
-    # params = dict(name='rotorcraft-1', model='djis1000', 
-    #               integrator_fn='RK4', payload=2.0, Q=None, R=None, qi=None, i_lag=None,
-    #               aero_effects=True, steadystate_input=None)
     params = dict(name='rotorcraft-1', model='djis1000',
                   init_state_vector=None, dt=None,
-                  integrator_fn='RK4', payload=2.0, Q=None, R=None, qi=None, i_lag=None,
+                  payload=2.0, Q=None, R=None, qi=None, i_lag=None,
                   steadystate_input=None)
     params.update(kwargs)
     params['i_lag'] = 100
@@ -159,13 +156,9 @@ def build_model(**kwargs):
     
     # Build vehicle properties
     # ------------------------
-    # uav.build(initial_state     = init_state_vector,
-    #           steadystate_input = params['steadystate_input'],     # None assigns deault value (hover condition)
-    #           integrator_fn     = params['integrator_fn'],    # Available types: Euler or RK4
-    #           dt                = dt) # should be small enough to converge (RK4 allows larger dt)
+
     uav.build(initial_state     = params['init_state_vector'],
               steadystate_input = params['steadystate_input'],     # None assigns deault value (hover condition)
-              integrator_fn     = params['integrator_fn'],    # Available types: Euler or RK4
               dt                = params['dt']) # should be small enough to converge (RK4 allows larger dt)
 
 
@@ -209,7 +202,6 @@ class Rotorcraft():
         self.state_names = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'xdot', 'ydot', 'zdot', 'p', 'q', 'r']
         self.input = None
         self.input_names = ['T', 'Mx', 'My', 'Mz']
-        self.integrator = None
         self.dt = None
         self.propulsion = None
         # self.aero_effects=aero_effects
@@ -277,7 +269,7 @@ class Rotorcraft():
         return
     """
     
-    def build(self, initial_state=None, steadystate_input=None, integrator_fn='Euler', dt=0.01):
+    def build(self, initial_state=None, steadystate_input=None, dt=0.01):
 
         # Initialize state and input
         if initial_state is None:       initial_state = np.zeros((self.dynamics['num_states'],))
@@ -302,9 +294,6 @@ class Rotorcraft():
 
         # Integration properties
         self.dt = dt
-        # if   integrator_fn.lower() == 'euler':      self.int_fn = utils.euler
-        # elif integrator_fn.lower() == 'rk4':        self.int_fn = utils.rk4
-        # else:   raise Exception("Integrator function not recognized. Available options (so far) are: Euler (default) or RK4")
         pass
     """
     # Introducing control allocation matrices for rotor speed-based control

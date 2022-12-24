@@ -47,10 +47,12 @@ def run_example():
     options = {
         'dt': 0.1,
         # 'save_freq': 0.2
-        'integration_method': 'euler'
+        'integration_method': 'euler',
+        'print': True
     }
 
-    simulated_results = traj_gen.simulate_to(200,future_loading, **options)
+    # simulated_results = traj_gen.simulate_to(300,future_loading, **options)
+    simulated_results = traj_gen.simulate_to_threshold(future_loading, **options)
 
     debug = 1
 
