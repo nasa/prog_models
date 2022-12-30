@@ -1,14 +1,12 @@
-"""
-Vehicle Models
-SWS Project
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
-Matteo Corbetta
-matteo.corbetta@nasa.gov
+"""
+Vehicle Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.gov) for the SWS project 
 """
 
 # Import functions
 # =================
-# from imports_ import np
 import numpy as np
 from prog_models.models.uav_model.vehicles.control import allocation_functions as caf
 
@@ -214,16 +212,4 @@ def observation_matrix(num_states, num_outputs):
     c = np.zeros((num_outputs, num_states))
     for ii in range(num_outputs):   c[ii, ii] = 1.0
     return c
-
-
-
-
-
-
-
-    
-if __name__ == '__main__':
-
-    print('Vehicle models')
-
-    
+  

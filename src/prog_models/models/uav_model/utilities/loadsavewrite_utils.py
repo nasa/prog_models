@@ -1,10 +1,14 @@
-"""Loading utility functions"""
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
+"""
+Loading utility functions
+"""
 
 # IMPORTS
 # =========
 import numpy as np
 import datetime as dt
-import scipy.io as inpout
 from prog_models.exceptions import ProgModelInputException
 
 # AUXILIARY CONVERSION
@@ -49,22 +53,4 @@ def load_traj_from_txt(fname, skiprows=1, comments='#', max_rows=None):
         time_unix = None
         timestamps = None
     return lat, lon, alt, time_unix, timestamps
-
-
-def load_traj_from_mat_file(fname):
-    d = inpout.loadmat(fname)
-    lat = d['waypoints'][0][0][0] * DEG2RAD
-    lon = d['waypoints'][0][0][1] * DEG2RAD
-    alt = d['waypoints'][0][0][2] * FEET2MET
-    eta = d['waypoints'][0][0][3]
-
-    eta = eta.astype(float).reshape((-1,))
-    if all(name in list(d.keys()) for name in ['cepic_date', 'etime']):
-        datetime_0 = dt.datetime.strptime(d['cepic_date'][0] + ' ' + d['etime'][0], '%Y_%m-%d %H:%M:%S')  # 
-    elif eta[0] != 0:
-        datetime_0 = dt.datetime.fromtimestamp(eta[0])
-    else:
-        raise Exception('Mat file does not contain date information.')
-
-    timestamps = [datetime_0 + dt.timedelta(seconds=eta[ii] - eta[0]) for ii in range(len(eta))]
-    return lat.reshape((-1,)), lon.reshape((-1,)), alt.reshape((-1,)), eta, timestamps
+    

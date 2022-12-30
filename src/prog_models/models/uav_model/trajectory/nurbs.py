@@ -1,9 +1,11 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
 NURBS curve functions
 """
 
 import numpy as np
-import scipy as sp
 import scipy.interpolate as interp
 
 # NURBS Functions
@@ -241,6 +243,6 @@ def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_le
     return {'px': px, 'py': py, 'pz': pz, 'time': time}
 
 
-if __name__ == '__main__':
-
-    print('NURBS functions')
+# if __name__ == '__main__':
+# 
+#     print('NURBS functions')

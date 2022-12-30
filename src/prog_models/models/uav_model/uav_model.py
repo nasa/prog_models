@@ -5,7 +5,6 @@ from prog_models.prognostics_model import PrognosticsModel
 import prog_models.models.uav_model.trajectory.route as route 
 import prog_models.models.uav_model.trajectory.trajectory as trajectory
 from prog_models.models.uav_model.vehicles import AircraftModels
-from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 from prog_models.models.uav_model.utilities import geometry
 
 import numpy as np

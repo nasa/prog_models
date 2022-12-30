@@ -1,130 +1,24 @@
-"""
-Aircraft Models
-SWS Project
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
 
-Matteo Corbetta
-matteo.corbetta@nasa.gov
+"""
+Aircraft Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.gov) for SWS project
 """
 import sys
 import os
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '../utilities/'))
 
-from sklearn.linear_model import GammaRegressor
 import numpy as np
-import sympy as sym
 
 from prog_models.models.uav_model.vehicles.control import controllers
-# from prog_models.models.uav_model.vehicles.control import dn_allocation_functions as caf
 from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
-# from control import controllers
-# import control.allocation_functions as caf
-# from aero import aerodynamics as aero
-
 import prog_models.models.uav_model.utilities.utils as utils
 import prog_models.models.uav_model.vehicles.vehicles as vehicles
 from prog_models.exceptions import ProgModelException
-# import vehicles
 
-import prog_models.models.uav_model.utilities.geometry as geom
-
-
-# Functions
-# ===========
-def build_rotorcraft_inertia(m, g):
-    
-    n_rotors   = g['num_rotors']
-    m['body']  = m['body_empty'] + n_rotors * m['arm']
-    m['total'] = m['body'] + m['payload']
-
-    # Define rotor positions on the 360 degree circle
-    # ------------------------------------------------
-    arm_angle      = 2.0 * np.pi / n_rotors
-    angular_vector = np.zeros((int(n_rotors/2),))
-    for ri in range(int(n_rotors/2)):
-        angular_vector[ri] = arm_angle/2.0 * (2*ri + 1)
-    
-    motor_distance_from_xaxis = g['arm_length'] * np.sin(angular_vector)
-    if g['body_type'].lower()=='sphere': I0 = 2.0 * m['body'] * g['body_radius']**2.0 / 5.0
-    else:                                raise Exception("Body geometries other than sphere have not been implemented yet.")
-    m['Ixx'] = I0 + 2.0 * sum(m['arm'] * motor_distance_from_xaxis**2.0)  # [kg m^2], inertia along x
-    m['Iyy'] = m['Ixx']                                                 # [kg m^2], inertia along y (symmetric uav)
-    m['Izz'] = I0 + g['num_rotors'] * (g['arm_length']**2.0 * m['arm']) # [kg m^2], inertia along z
-    
-    return m, g
-
-    
-
-# def rotorcraft_earthframe_ang_moments(phidot, thetadot, psidot, p, q, r, Ixx, Iyy, Izz, b):
-    """
-    Return moments along x, y, z on inertial reference frame (Earth's reference frame) given
-    rate of change of Euler's angles, body angular velocities, and inertia terms
-    
-    :param phidot:      first Euler's angle (phi) rate of change
-    :param thetadot:    second Euler's angle (theta) rate of change
-    :param psidot:      third Euler's angle (psi) rate of change
-    :param p:           roll velocity
-    :param q:           pitch velocity
-    :param r:           yaw velocity
-    :param Ixx:         Inertia moment around body x-axis
-    :param Iyy:         Inertia moment around body y-axis
-    :param Izz:         Inertia moment around body z-axis
-    :param b:           Body arm's length (from center of mass to rotor's center)
-    :return:            Three moments wrt inertial reference frame Mx, My, Mz
-    """
-#     Mx = phidot   - ((Iyy - Izz) * q * r) * 1.0/b
-#     My = thetadot - ((Izz - Ixx) * p * r) * 1.0/b
-#     Mz = psidot   - ((Ixx - Iyy) * p * q)
-#     return Mx, My, Mz
-
-
-# Symbolic functions
-# =================
-    """
-def rotorcraft_symbolic_f(phi, theta, psi, vx, vy, vz, p, q, r, T, tp, tq, tr, m, l, Ixx, Iyy, Izz, g):
-
-    # Calculate inertia parameters
-    a1 = (Iyy - Izz) / Ixx
-    a2 = (Izz - Ixx) / Iyy
-    a3 = (Ixx - Iyy) / Izz
-
-    b1 = l / Ixx
-    b2 = l / Iyy
-    b3 = 1 / Izz
-
-    return sym.Matrix([vx,
-                       vy,
-                       vz,
-                       p + q * sym.sin(phi) * sym.tan(theta) + r * sym.cos(phi) * sym.tan(theta),
-                       q * sym.cos(phi) - r * sym.sin(phi),
-                       q * sym.sin(phi) / sym.cos(theta) + r * sym.cos(phi) / sym.cos(theta),
-                       (sym.sin(theta) * sym.cos(psi) * sym.cos(phi) + sym.sin(phi) * sym.sin(psi)) * T / m,
-                       (sym.sin(theta) * sym.sin(psi) * sym.cos(phi) - sym.sin(phi) * sym.cos(psi)) * T / m,
-                       - g + sym.cos(phi) * sym.cos(theta) * T / m,
-                       a1 * q * r + b1 * tp,
-                       a2 * p * r + b2 * tq,
-                       a3 * p * q + b3 * tr,])
-"""    
-"""
-def rotorcraft_symbolicStateMatrices():
-
-    x, y, z, vx, vy, vz, \
-        phi, theta, psi, p, q, r, \
-            T, tp, tq, tr, \
-                l, m, Ixx, Iyy, Izz, g = sym.symbols('x y z vx vy vz phi theta psi p q r T tp tq tr l m Ixx Iyy Izz g')
-
-    stateEquation = rotorcraft_symbolic_f(phi, theta, psi, vx, vy, vz, p, q, r, T, tp, tq, tr, m, l, Ixx, Iyy, Izz, g)
-    stateVector   = sym.Matrix([x, y, z, phi, theta, psi, vx, vy, vz, p, q, r])
-    inputVector   = sym.Matrix([T, tp, tq, tr])
-
-    jacobStateMatrix = stateEquation.jacobian(stateVector)
-    jacobInputMatrix = stateEquation.jacobian(inputVector)
-
-    return  (jacobStateMatrix, jacobInputMatrix)
-"""
 
 # Initialize rotorcraft
 # =====================
-# def build_model(init_state_vector, dt, **kwargs):
 def build_model(**kwargs):
 
     params = dict(name='rotorcraft-1', model='djis1000',
@@ -221,8 +115,6 @@ class Rotorcraft():
         self.geom.update(kwargs)
         self.dynamics.update(kwargs)
         
-        # Build rotorcraft inertia properties
-        # self.mass, self.geom = build_rotorcraft_inertia(self.mass, self.geom)
         pass
 
     def set_state(self, state):
@@ -233,42 +125,6 @@ class Rotorcraft():
         self.dt = dt
         self.controller.dt = dt
         pass
-
-    """    
-    def reset_state(self, state0=None):
-        if state0 is None:  self.state = np.zeros((self.dynamics['num_states'],))
-        else:               self.state = state0.copy()
-        print('Aircraft state reset complete.')
-        return
-
-    def reset_input(self, input0=None):
-        if input0 is None: 
-            self.input = np.zeros((self.dynamics['num_inputs']))
-            self.input[0] = self.steadystate_input
-        else:
-            self.input = input0.copy()
-        print('Aircraft input reset complete')
-        return
-
-    def reset_controller(self, state0=None, input0=None):
-        
-        self.reset_state(state0=state0)
-        self.reset_input(input0=input0)
-
-        # Reset K
-        # ======
-        phi, theta, psi = self.state[3:6]
-        p,       q,   r = self.state[-3:]
-        A,            B = self.linear_model(phi, theta, psi, p, q, r, self.input[0])
-        self.controller.K, self.controller.E = self.controller.compute_gain(A, B)
-        
-        # Reset Error history (from integral action, if exist)
-        # ===================================================
-        if hasattr(self.controller, 'err_hist'):
-            self.controller.err_hist = []    
-        print("Aircraft controller reset complete")
-        return
-    """
     
     def build(self, initial_state=None, steadystate_input=None, dt=0.01):
 
@@ -283,11 +139,6 @@ class Rotorcraft():
         self.input[0]          = steadystate_input
         
         # Introduction of Aerodynamic effects:
-        # if self.aero_effects:
-        #     self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
-        #                                          Cd=self.dynamics['aero']['cd'],
-        #                                          air_density=self.air_density),
-        #                      lift=None)
         self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
                                              Cd=self.dynamics['aero']['cd'],
                                              air_density=self.air_density),
@@ -296,20 +147,6 @@ class Rotorcraft():
         # Integration properties
         self.dt = dt
         pass
-    """
-    # Introducing control allocation matrices for rotor speed-based control
-    def set_control_allocation_matrix(self, constrained_cam=False):
-        Gamma, Gamma_inv, _ = caf.rotorcraft_cam(n=self.geom['num_rotors'],
-                                                 l=self.geom['arm_length'],
-                                                 b=self.dynamics['kt'], d=self.dynamics['kq'], constrained=constrained_cam)
-        self.dynamics['Gamma'] = Gamma
-        self.dynamics['Gamma_inv'] = Gamma_inv
-        return
-
-    def set_propulsion_system(self, prop_system):
-        self.propulsion = prop_system
-        return
-    """
 
     def set_controller(self, type_='LQR', strategy='realtime', scheduled_states=None, scheduled_var='psi', Q=None, R=None, qi=None, int_lag=np.inf):
 
@@ -398,90 +235,6 @@ class Rotorcraft():
         K     = self.control_gains[:, :, k_idx]
         return self.controller.compute_input(K, error)
 
-    """
-    def compute_state(self, ref, params=None):
-        u          = self.control_fn(self.state - ref)
-        
-        u[0]      += self.steadystate_input
-        u[0]       = min(max([0., u[0]]), self.dynamics['max_thrust'])
-
-        dstatedt   = self.int_fn(self.f, self.dt, self.state, u, params=params)
-        self.state = self.state + dstatedt * self.dt     
-        self.input = u
-        return self.state
-    """
-    """
-    def f(self, x, u, params=None):
-        
-        # Extract params
-        # -------------
-        wind = params['wind']
-        wx = wind['u']
-        wy = wind['v']
-
-        # Extract values from vectors
-        # --------------------------------
-        m = self.mass['total']  # vehicle mass
-        T, tp, tq, tr = u       # extract control input
-        Ixx, Iyy, Izz = self.mass['Ixx'], self.mass['Iyy'], self.mass['Izz']    # vehicle inertia
-
-        # Extract state variables from current state vector
-        # -------------------------------------------------
-        phi, theta, psi  = x[3:6]
-        p, q, r          = x[-3:]
-        vx_a, vy_a, vz_a = x[6:9]
-
-        # Pre-compute Trigonometric values
-        # --------------------------------
-        sin_phi   = np.sin(phi)
-        cos_phi   = np.cos(phi)
-        sin_theta = np.sin(theta)
-        cos_theta = np.cos(theta)
-        tan_theta = np.tan(theta)
-        sin_psi   = np.sin(psi)
-        cos_psi   = np.cos(psi)
-        
-        # Compute drag forces
-        # -------------------
-        v_earth = np.dot(geom.rot_earth2body(phi, theta, psi),
-                        np.array([vx_a - wx, vy_a - wy, vz_a]).reshape((-1,)))
-        v_body = np.dot(geom.rot_earth2body(phi, theta, psi), v_earth)
-        fb_drag = self.aero['drag'](v_body)
-        fe_drag = np.dot(geom.rot_body2earth(phi, theta, psi), fb_drag)
-        
-        # Update state vector
-        # -------------------
-        dxdt     = np.zeros((len(x),))
-        
-        dxdt[0] = vx_a + wx   # add wind u-component to generate ground speed
-        dxdt[1] = vy_a + wy   # add wind v-component to generate ground speed
-        dxdt[2] = vz_a
-        
-        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
-        dxdt[4]  = q * cos_phi - r * sin_phi
-        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta
-        
-        dxdt[6]  = (sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T / m - 1.0/m * fe_drag[0]
-        dxdt[7]  = (sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T / m - 1.0/m * fe_drag[1]
-        dxdt[8]  = - self.gravity + cos_phi * cos_theta  * T / m - 1.0/m * fe_drag[2]
-
-        dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.geom['arm_length'] / Ixx
-        dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.geom['arm_length'] / Iyy
-        dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
-        return dxdt
-    """
-    """
-    def linear_f(self, x, u):
-        # Extract state variables from state-vector
-        phi, theta, psi = x[3:6]
-        p,       q,   r = x[-3:]
-        # Extract thrust from input vector
-        thrust = u[0]
-        # Compute linearized model
-        A, B = self.linear_model(phi, theta, psi, p, q, r, thrust)
-        return np.dot(A, x) + np.dot(B, u)
-    """
-
     def linear_model(self, phi, theta, psi, p, q, r, T):
         m         = self.mass['total']
         Ixx       = self.mass['Ixx']
@@ -523,34 +276,3 @@ class Rotorcraft():
                        [0, 0, 0, 1.0/Izz]])
 
         return A, B
-
-    """
-    # POWERTRAIN STUFF
-    def get_omega(self, prop_num, thr, ti, dt_highfreq, input_voltage):
-        x = self.propulsion[prop_num].get_next_state(ti, thr, input_voltage, dt_highfreq)
-        return x[3]
-
-    def get_all_omegas(self, thr, tf, dt_highfreq, input_voltage):
-        omegas        = np.zeros((self.geom['num_rotors'],))
-        t_vec         = np.arange(0.0, tf, dt_highfreq)
-        for ii in range(self.geom['num_rotors']):
-            for ti in t_vec:
-                omega = self.get_omega(prop_num=ii, thr=thr[ii], ti=ti, dt_highfreq=dt_highfreq, input_voltage=input_voltage)
-            omegas[ii] = omega    # Store values
-        return omegas
-
-    def get_U_from_propulsion(self, thr, tf, dt_highfreq=1e-6, input_voltage=23.1, omegas=None):
-        # dt_highfreq   = 1e-6
-        # input_voltage = 23.1
-        if omegas is None:
-            omegas = self.get_all_omegas(thr, tf, dt_highfreq, input_voltage)
-        U = self.dynamics['Gamma'] @ omegas**2.0
-        return U
-    
-    def get_omega_from_desired_input(self, u_des):
-        return np.sqrt(self.dynamics['Gamma_inv'] @ u_des.T)
-
-    @staticmethod
-    def get_throttle_from_omega_des(omega_des):
-        return caf.omega2throttle(omega_des)
-    """

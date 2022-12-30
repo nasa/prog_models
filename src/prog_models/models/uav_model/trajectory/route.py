@@ -1,3 +1,10 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
+"""
+Functions for generating route - setting waypoints, calculating ETAs 
+"""
+
 import numpy as np
 import datetime as dt
 
@@ -5,7 +12,6 @@ import os, sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/utilities'))
 
 from prog_models.models.uav_model.utilities import geometry as geom
-import datetime as dt
 from prog_models.exceptions import ProgModelInputException
 
 # FUNCTIONS
@@ -52,10 +58,10 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
     :return:                        route, from Route class.
     """
     params = dict(
-        cruise_speed=None, #6.0,       # m/s, default cruise speed
-        ascent_speed=None, #3.0,       # m/s, default ascent speed (climb)
-        descent_speed=None, #3.0,      # m/s, default descent speed
-        landing_speed=None, #1.5,      # m/s, default landing speed (when < 10ft from ground)
+        cruise_speed=None,        # m/s, default cruise speed
+        ascent_speed=None,        # m/s, default ascent speed (climb)
+        descent_speed=None,       # m/s, default descent speed
+        landing_speed=None,       # m/s, default landing speed (when < 10ft from ground)
         hovering_time=0.0,      # s, scalar, additional hovering time, default is 0.
         takeoff_time=0.0,  # scalar, additional takeoff time, default is 0.
         landing_time=0.0,  # scalar, additional landing time, default is 0.
@@ -90,52 +96,6 @@ def reshape_route_attribute(x, dim=None, msk=None):
     elif msk:
         x = np.insert(x, msk, x[msk])
     return x
-
-"""
-def read_routes(fname, str_=None, decimal=True, ft2m=False):
-    
-    # Set default name for new route:
-    # -------------------------------
-    if str_ is None:   str_ = ['SF', 'OAK', 'Freemont', 'Stanford']
-    
-    # Extract routes from files
-    # -------------------------
-    file   = open(fname, 'r')
-    lines  = file.readlines()
-    routes = []
-    for line in lines:
-        if line == '\n':    continue
-        if any(name in line for name in str_):
-            newroute = Route(line[:line.rfind('=')-1])
-            newroute.departure_time = dt.datetime.strptime(line[line.rfind('D')+2:-1], "%Y-%m-%d %H:%M:%S")
-            routes.append(newroute)
-            continue
-        lat, lon, alt = parse_coordinate_line(line, decimal=decimal, ft2m=ft2m)
-        routes[-1].add_point(lat, lon, alt)
-
-    # Add x, y, z to routes
-    # --------------------
-    for idx, route in enumerate(routes):
-        coord = geom.Coord(route.lat[0], route.lon[0], route.alt[0])
-        route.x, route.y, route.z = coord.geodetic2enu(route.lat, route.lon, route.alt)
-        routes[idx] = route
-    return routes
-"""
-
-""" 
-def parse_coordinate_line(l, decimal=True, ft2m=False):
-    # According to how the text file with trajectory is organized.
-    lat = degrees_to_decimal_from_str(l[:l.find(',')])
-    lon = degrees_to_decimal_from_str(l[l.find(',')+2:-1])
-    if decimal:
-        lat = lat / 180.0 * np.pi
-        lon = lon / 180.0 * np.pi
-
-    # Get altitude in ft or m
-    if ft2m:    alt = feet2meters_from_str(l[l.rfind(',')+2:l.rfind('\n')-2])
-    else:       alt = float(l[l.rfind(',')+2:l.rfind('\n')-2])
-    return lat, lon, alt
-"""
 
 # ROUTE CLASS
 # ============    
@@ -173,14 +133,14 @@ class Route():
         timedelta            = self.departure_time - self.eta[0]
         self.eta            = [item + timedelta  for item in self.eta]
         return
-
+    
     def add_point(self, lat, lon, alt, eta=None):
         self.lat.append(lat)
         self.lon.append(lon)
         self.alt.append(alt)
         if eta:
             self.eta.append(eta)
-        
+
     def set_waypoints(self, lat, lon, alt, eta=None):
         self.lat = lat
         self.lon = lon

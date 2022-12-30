@@ -1,119 +1,13 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
 Geometric functions
-Matteo Corbetta
 """
 
-# from abc import abstractmethod
-# import scipy.spatial as spatial
-# import scipy.interpolate as interp
-# import numpy as np
-from prog_models.models.uav_model.utilities.imports_ import np, spatial, interp
+import numpy as np
 from prog_models.exceptions import ProgModelInputException
 
-"""
-
-"""
-
-
-# DISTANCE FUNCTIONS
-# ====================
-# def sqeucdist(x, xprime):
-#     """
-#     squared distance of two vectors x and xprime. Equivalent to || x - xprime ||_2^2
-#     :param x:       n x 1, input vector, doubles
-#     :param xprime:  n x 1, query point vector, doubles
-#     :return:        n x n, norm-2 of distance of vectors x and xprime
-#     """
-#     return spatial.distance.cdist(x, xprime, metric='sqeuclidean')
-
-# def eucdist(x, xprime):
-#     """
-#     euclidean distance of two vectors x and prime. Equivalent to ||x - xprime||
-#     :param x:       n x 1, input vector, doubles
-#     :param xprime:  n x 1, query input vector, doubles
-#     :return:        n x n, norm of distance of vectors x and xprime
-#     """
-#     return spatial.distance.cdist(x, xprime, metric='euclidean')
-
-# def compute_spherical_law_terms(phi1, phi2, lam1, lam2):
-#     sin1 = np.sin(phi1)
-#     sin2 = np.sin(phi2)
-#     cos1 = np.cos(phi1)
-#     cos2 = np.cos(phi2)
-#     cosdlam = np.cos(lam1 - lam2)
-#     return sin1, cos1, sin2, cos2, cosdlam
-
-# def arg_spherical_law_cos(sin_phi1, cos_phi1, sin_phi2, cos_phi2, cos_dlon):
-#     return sin_phi1 * sin_phi2 + cos_phi1 * cos_phi2 * cos_dlon
-
-# def great_circle_central_angle(sin_phi1, cos_phi1, sin_phi2, cos_phi2, cos_dlon):
-#     return np.arccos(arg_spherical_law_cos(sin_phi1, cos_phi1, sin_phi2, cos_phi2, cos_dlon))
-
-# def great_circle_sphericalawcos(r, phi1, phi2, lam1, lam2):
-#     sin1, cos1, sin2, cos2, cosdlam = compute_spherical_law_terms(phi1, phi2, lam1, lam2)
-#     dsigma = arg_spherical_law_cos(sin1, cos1, sin2, cos2, cosdlam)
-#     return r * np.arccos(dsigma)
-
-
-
-# def compute_distance_between_trajs(ref_traj, new_traj, time_bound=None):
-#     if time_bound is None:              time_bound = ['avg', 'inf', 'sup', ['inf', 'sup'], ['sup', 'inf']]
-#     elif type(time_bound) == str:       time_bound = [time_bound,]
-#     distance_vectors, time_vectors = [], []
-#     for item in time_bound:
-#         time_unix_interp, ref_pos_interp, new_pos_interp = interpolate_position_at_timestamps(ref_traj, new_traj, time_bound=item)
-#         distance_vector = greatcircle_distance(ref_pos_interp[:, 0], new_pos_interp[:, 0], ref_pos_interp[:, 1], new_pos_interp[:, 1])
-#         distance_vectors.append(distance_vector)
-#         time_vectors.append(time_unix_interp)
-#     return distance_vectors, time_vectors
-
-"""
-def extract_pos_time_from_traj(traj1, traj2, timebound, coords='geodetic_pos'):
-    if any([name in timebound for name in ['inf', 'sup']]):
-        if type(timebound) == str:
-            pos1  = traj1[coords + '_' + timebound]
-            pos2  = traj2[coords + '_' + timebound]
-            time1 = traj1['timestamps_' + timebound]
-            time2 = traj2['timestamps_' + timebound]
-        elif type(timebound) == list and len(timebound) == 2:
-            pos1  = traj1[coords + '_' + timebound[0]]
-            pos2  = traj2[coords + '_' + timebound[1]]
-            time1 = traj1['timestamps_' + timebound[0]]
-            time2 = traj2['timestamps_' + timebound[1]]
-        else:
-            raise Exception("The only option for varriabel time_bound are strings 'inf' or 'sup', or lists ['inf', 'sup'] or ['sup', 'inf'].")
-    else:
-        pos1  = traj1[coords]
-        time1 = traj1['timestamps']
-        pos2  = traj2[coords]   
-        time2 = traj2['timestamps'] 
-    return pos1, time1, pos2, time2
-"""
-"""
-def interpolate_position_at_timestamps(ref_traj, new_traj, coordinates='geodetic_pos', time_bound='avg'):
-
-    assert any([name in time_bound for name in ['avg', 'inf', 'sup']]), "Variable time_bound can be one of the following: avg, inf, or sup"
-    # Extract position and time vectors for both trrajectories according to time bound (average, inferior or superior)
-    ref_pos, ref_timevec, new_pos, new_timevec = extract_pos_time_from_traj(ref_traj, new_traj, time_bound, coords=coordinates)
-
-    ndims = ref_pos.shape[1]
-
-    ref_time_unix = np.asarray([ref_timevec[ii].timestamp() for ii in range(len(ref_timevec))])
-    new_time_unix = np.asarray([new_timevec[ii].timestamp() for ii in range(len(new_timevec))])
-
-    time0 = max(ref_time_unix[0],  new_time_unix[0])
-    timeF = min(ref_time_unix[-1], new_time_unix[-1])
-
-    index_both_aircraft_flying = (ref_time_unix>time0) * (ref_time_unix<timeF)
-    ref_time_unix_interp = ref_time_unix[index_both_aircraft_flying]
-    ref_pos_at_interp    = ref_pos[index_both_aircraft_flying]
-    new_pos_at_interp    = np.zeros((len(ref_time_unix_interp), ndims))
-    for ii in range(ndims):
-        new_post_interp_fun      = interp.interp1d(new_time_unix, new_pos[:, ii], kind='linear')
-        new_pos_at_interp[:, ii] = new_post_interp_fun(ref_time_unix_interp)
-
-    return ref_time_unix_interp, ref_pos_at_interp, new_pos_at_interp 
-"""
 
 # EARTH-RELATED DISTANCE FUNCTIONS
 # ================================
@@ -247,72 +141,17 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
     else:                           return np.sqrt(surface_dist**2.0 + vert_dist**2.0)
     
 
-def geodetic_distance_fast(lat1, lat2, lon1, lon2, alt1, alt2):
-    return np.sqrt(greatcircle_distance(lat1, lat2, lon1, lon2)**2.0 + (alt1 - alt2)**2.0)
-
-
-
 # REFERENCE FRAMES
 # ================
-"""
-def velocity_body_frame(phi, theta, psi, as_x, as_y, as_z):
-    return np.dot( rot_earth2body(phi, theta, psi), np.array([as_x, as_y, as_z]).reshape((-1,)))
-"""
-    
-def rot_earth2body(phi, theta, psi):
-    R = np.zeros((3, 3))
-    R[0, :] = np.array([np.cos(theta) * np.cos(phi),                                               
-                        np.cos(theta) * np.sin(phi),                                                
-                       -np.sin(theta)])
-    R[1, :] = np.array([-np.cos(psi) * np.sin(phi) + np.sin(psi) * np.sin(theta) * np.cos(phi),
-                         np.cos(psi) * np.cos(phi) + np.sin(psi) * np.sin(theta) * np.sin(phi),
-                         np.sin(psi) * np.cos(theta)])
-    R[2, :] = np.array([np.sin(psi) * np.sin(phi) + np.cos(psi) * np.sin(theta) * np.cos(phi),
-                       -np.sin(psi) * np.cos(phi) + np.cos(psi) * np.sin(theta) * np.sin(phi),
-                        np.cos(psi) * np.cos(theta)])
-    return R
-
 def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     return np.array([[                        ctheta*cpsi,                       ctheta * spsi,          - stheta],
                      [-cphi * spsi + sphi * stheta * cpsi,  cphi * cpsi + sphi * stheta * spsi,     sphi * ctheta],
                      [ sphi * spsi + cphi * stheta * cpsi, -sphi * cpsi + cphi * stheta * spsi,     cphi * ctheta]])
 
-
-def rot_body2earth(phi, theta, psi):
-    R = np.zeros((3, 3))
-    R[0, :] = np.array([np.cos(psi) * np.cos(theta),
-                        np.cos(psi) * np.sin(theta) * np.sin(phi) - np.sin(psi) * np.cos(phi),
-                        np.cos(psi) * np.sin(theta) * np.cos(phi) + np.sin(psi) * np.sin(phi)])
-    R[1, :] = np.array([np.sin(psi) * np.cos(theta),
-                        np.sin(psi) * np.sin(theta) * np.sin(phi) + np.cos(psi) * np.cos(phi),
-                        np.sin(psi) * np.sin(theta) * np.cos(phi) - np.cos(psi) * np.sin(phi)])
-    R[2, :] = np.array([-np.sin(theta),
-                         np.cos(theta) * np.sin(phi),
-                         np.cos(theta) * np.cos(phi)])
-    return R
-
 def rot_body2earth_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     return np.array([[      cpsi * ctheta,          cpsi * stheta * sphi - spsi * cphi,         cpsi * stheta * cphi + spsi * sphi],
                      [      spsi * ctheta,          spsi * stheta * sphi + cpsi * cphi,         spsi * stheta * cphi - cpsi * sphi],
-                     [           - stheta,                               ctheta * sphi,                              ctheta * cphi]])
-
-
-"""
-def R_phiX(phi):
-    return np.array([ [1.0, 0.0, 0.0], 
-                      [0.0, np.cos(phi), np.sin(phi)],
-                      [0.0, -np.sin(phi), np.cos(phi)]])
-
-def R_thetaY(theta):
-    return np.array([ [np.cos(theta), 0.0, -np.sin(theta)],
-                      [0.0, 1.0, 0.0],
-                      [np.sin(theta), 0.0, np.cos(theta)]])
-
-def R_psiZ(psi):
-    return np.array([ [np.cos(psi), np.sin(psi), 0.0],
-                      [-np.sin(psi), np.cos(psi), 0.0],
-                      [0.0, 0.0, 1.0]])
-"""                      
+                     [           - stheta,                               ctheta * sphi,                              ctheta * cphi]])                    
 
 def body_ang_vel_from_eulers(phi, theta, psi, phidot, thetadot, psidot):
     """ 
@@ -332,66 +171,6 @@ def body_ang_vel_from_eulers(phi, theta, psi, phidot, thetadot, psidot):
 
 # COORDINATE TRANSFORMATION
 # ==========================
-
-# def cart2circ(x, y, wrap_to=None, ang_unit='rad'):
-#     """
-#     Conversion from cartesian to circular coordinates of a vector in 2 dimension.
-#     The function receives x and y, dimensions of the vector along horizontal (x) and vertical (y) directions (on the
-#     other hand, horizonal and vertical are totally arbitrary and they are used as a convention).
-
-#     The function returns the vector in circular coordinates (polar coordinates, but just in 2D), which is amplitude and
-#     direction. wrap_to is used to constrain the angle between certain limits, namely (0, 180), (0,360), or the corresponding
-#     radian version (0,pi), (0,2pi). Default for wrap_to is None, which means that no wrapping is applied.
-
-#     ang_unit defines the unit of the angle, either radians ('rad', default), or degrees, 'deg'.
-#     Parameters ang_unit and wrap_to must be aligned; if ang_unit is 'rad', then wrap_to must either be None or a value in radians.
-#     Similarly, if ang_unit='deg' then wrap_to must either be None or a value in degrees.
-
-#     if x and y are two 1D arrays, then the conversion is performed element-wise.
-
-#     :param x:           (n,) array, doubles, values of vector along x-direction
-#     :param y:           (n,) array, doubles, values of vector along y-direction
-#     :param wrap_to:      None or scalar, wrapping of direction.  if None (default) no wrapping, otherwise follow unit of ang_unit.
-#     :param ang_unit:     string, 'rad' (default) or 'deg', unit of angle defining vector direction.
-#     :return amp:        (n,) array, doubles amplitude of vector.
-#     :return angle:      (n,) array, doubles, direction of vector (either radians or degrees according to ang_unit).
-#     """
-#     # Compute amplitude
-#     amp = np.sqrt(x ** 2. + y ** 2.)  # Compute magnitude of wind speed
-
-#     # Calculating direction as positive counterclockwise from North (= 0)
-#     angle = np.arctan2(y / amp, x / amp) - np.pi / 2.  # compute angle in radians
-    
-#     # Convert, wrapt and return
-#     if ang_unit == 'deg':
-#         angle = angle * 180.0 / np.pi  # convert to degees
-#     if wrap_to is not None:  # wrap angle between (0,wrap) in case is wanted
-#         return amp, angle % wrap_to
-#     else:
-#        return amp, angle
-
-"""
-def circ2cart(rho, theta, theta_from_east=True):
-    if theta_from_east:     theta += np.pi / 2.0
-    x = rho * np.cos(theta)
-    y = rho * np.sin(theta)
-    return x, y
-
-
-def gen_compass_angles(wps_enu):
-    n         = wps_enu.shape[0]
-    yaw_angle = np.zeros((n,))  # ??? actually length is 1 less, so we repeat last angle at end
-    piO2      = np.pi / 2.0 #   atan2 returns -pi..pi. We subtract pi/2 so zero is +Y axis
-    for jj in range(1, n):
-        dy = wps_enu[jj, 1] - wps_enu[jj-1, 1]
-        dx = wps_enu[jj, 0] - wps_enu[jj-1, 0]
-        if dx or dy:
-            yaw_angle[jj] = np.arctan2(dy, dx) - piO2
-        else:
-            yaw_angle[jj] = yaw_angle[jj-1]
-    return yaw_angle
-"""
-
 def gen_heading_angle(lat, lon, alt):
     
     print('Generating heading angle ', end=" ")
@@ -451,22 +230,6 @@ def heading_compute_geodetic(lat, lon):
         heading[jj - 1] = head_temp
     heading[-1] = heading[-2]
     return heading
-
-
-# def coord_distance(lat, lon, alt):
-#     """
-#     distance in 3D using great circle: add altitude as cartesian coordinate
-#                                 dist = sqrt(great_circle((lat_1, lon_1), (lat_2, lon_2)).m**2, (alt_1 - alt_2)**2)
-#     Using ECEF coordinates:     
-#                                 d = sqrt{(X_2-X_1)^2 + (Y_2-Y_1)^2 + (Z_2-Z_1)^2}
-#     """
-#     dh = []
-#     dv = np.diff(alt)
-#     for ii in range(1, len(lat)):
-#         dh_tmp = greatcircle_distance(lat[ii-1], lat[ii], lon[ii-1], lon[ii])
-#         dh.append(dh_tmp)
-#     return np.asarray(dh), dv
-
 
 def transform_from_cart_to_geo(cartesian_matrix, lat0, lon0, alt0):
     coord = Coord(lat0=lat0, lon0=lon0, alt0=alt0)

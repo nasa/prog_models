@@ -22,7 +22,8 @@ def run_example():
         'cruise_speed': 6.0,
         'ascent_speed': 3.0,
         'descent_speed': 3.0, 
-        'landing_speed': 1.5
+        'landing_speed': 1.5,
+        'vehicle_model': 'tarot18', # djis1000, tarot18
     }
 
     # Generate UAV instance with waypoints defined in dictionary 
