@@ -53,6 +53,7 @@ class UAVGen(PrognosticsModel):
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
         'waypoint_weights': 20.0, # should default be 0?
+        'adjust_eta': None, # Used in route.build, dictionary with keys ['hours', 'seconds'], to adjust route time
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
         'final_time_buffer_sec': 30, # time in seconds for acceptable range to reach final waypoint

@@ -6,6 +6,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/utilities'))
 
 from prog_models.models.uav_model.utilities import geometry as geom
 import datetime as dt
+from prog_models.exceptions import ProgModelInputException
 
 # FUNCTIONS
 # ==========
@@ -77,14 +78,14 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
                   same_wp_hovering_time=params['additional_hover_time'],
                   vehicle_max_speed=vehicle_max_speed)
     if params['adjust_eta'] is not None:
-        assert params['adjust_eta']==dict, 'adjust_eta must be a dictionary with keys: "hours" and "seconds."'
+        if isinstance(params['adjust_eta'], dict) == False:
+            raise ProgModelInputException("adjust_eta parameter must be a dictionary with keys: 'hours' and 'seconds'.")
         route.adjust_eta(hours_=params['adjust_eta']['hours'], seconds_=params['adjust_eta']['seconds'])
     return route
 
 
 def reshape_route_attribute(x, dim=None, msk=None):
     if not hasattr(x, "__len__"):   
-        assert dim is not None, "Must provide dim to generate vector."
         x = x * np.ones((dim, ))
     elif msk:
         x = np.insert(x, msk, x[msk])
@@ -255,7 +256,8 @@ class Route():
         # Assign ETAS
         # ============
         if eta is not None: # if ETA is provided, assign to self.eta and that's it.
-            assert hasattr(eta, "__len__") and len(eta)==len(self.lat), "ETA must be vector array with same length as lat, lon and alt."
+            if hasattr(eta, "__len__") is False or len(eta)!=len(self.lat):
+                raise ProgModelInputException("ETA must be vector array with same length as lat, lon and alt.")
             # Assign departure timestamp
             departure_timestamp = self.departure_time.timestamp()
             eta_unix = np.zeros_like(eta, dtype=np.float64)
@@ -269,7 +271,8 @@ class Route():
             self.eta = np.asarray([dt.datetime.fromtimestamp(relative_eta_new[i] + eta_unix[0]) for i in range(len(eta))])
 
         else:   # if ETA is not provided, compute it from desired cruise speed and other speeds
-            assert self.cruise_speed is not None, "If ETA is not provided, desired speed (cruise, ascent, descent) must be provided."
+            if self.cruise_speed == None:
+                raise ProgModelInputException("If ETA is not provided, desired speed (cruise, ascent, descent) must be provided.")
 
             idx_land_pos = self.set_landing_waypoints(set_landing_eta=False)
 
@@ -300,7 +303,8 @@ class Route():
         :param landing_time:        s, extra time needed to land
         :param distance_method:     string, method used to compute the distance between two points, either 'greatcircle' or 'vincenty'. default = 'greatcircle'
         """
-        assert len(self.lat)>2, "Need at least more than 2 way-points to compute ETAS with function compute_etas."
+        if len(self.lat) <= 2:
+            raise ProgModelInputException("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
         
         # define margin on cruise speed
         # ----------------------------

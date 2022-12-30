@@ -22,6 +22,7 @@ from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 
 import prog_models.models.uav_model.utilities.utils as utils
 import prog_models.models.uav_model.vehicles.vehicles as vehicles
+from prog_models.exceptions import ProgModelException
 # import vehicles
 
 import prog_models.models.uav_model.utilities.geometry as geom
@@ -360,9 +361,12 @@ class Rotorcraft():
         # where: m is the number of points per state variation. Assuming only one state varies (psi, for yaw)
         # Check input
         n, m = states.shape
-        assert self.controller is not None, "A controller for this vehicle has not been assigned yet."
-        assert self.input is not None, "A steady-state input should be assigned before generating the controller schedule"
-        assert n == self.dynamics['num_states'], "The input states dimension does not match the dimension of the vehicle state vector."
+        if self.controller is None: 
+            raise ProgModelException("A controller for this vehicle has not been assigned yet.")
+        if self.input is None: 
+            raise ProgModelException("A steady-state input should be assigned before generating the controller schedule.")
+        if n != self.dynamics['num_states']:
+            raise ProgModelException("The input states dimension does not match the dimension of the vehicle state vector.")
         
         self.scheduled_states = states  # store states linked to control scheduling
         control_gain_size     = [self.dynamics['num_inputs'], self.dynamics['num_states'], m]   # dimensions of the control gain scheduler

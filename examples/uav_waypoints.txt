@@ -1,4 +1,4 @@
-waypoints_lat_deg	waypoints_lon_deg	waypoints_alt_ft	waypoints_time_unix
+lat_deg	lon_deg	alt_ft	time_unix
 37.09776	-76.38631	-1.9682394	1544188336
 37.09776	-76.38629	164.01995	1544188358
 37.09776	-76.38629	164.01995	1544188360

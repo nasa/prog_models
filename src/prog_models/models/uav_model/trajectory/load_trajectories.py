@@ -41,17 +41,27 @@ def get_flightplan(fname, **kwargs):
 
 def convert_dict_inputs(input_dict):
     # Check units and return warnings if incorrect:
-    if 'lat_deg' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints latitude must be defined in degrees. Use lat_deg to specify.")
-    elif 'lon_deg' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints longitude must be defined in degrees. Use lon_deg to specify.")
-    elif 'alt_ft' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints altitude must be defined in feet. Use alt_ft to specify.")
+    if 'lat_deg' not in input_dict.keys() and 'lat_rad' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints latitude must be defined in degrees (with lat_deg) or radians (with lat_rad).")
+    elif 'lon_deg' not in input_dict.keys() and 'lon_rad' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints longitude must be defined in degrees (with lon_deg) or radians (with lon_rad).")
+    elif 'alt_ft' not in input_dict.keys() and 'alt_m' not in input_dict.keys():
+        raise ProgModelInputException("Waypoints altitude must be defined in feet (with alt_ft) or meters (with alt_m).")
     if len(input_dict.keys()) > 3 and 'time_unix' not in input_dict.keys():
         raise ProgModelInputException("Waypoints input incorrectly. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
-    lat = input_dict['lat_deg'] * DEG2RAD
-    lon = input_dict['lon_deg'] * DEG2RAD
-    alt = input_dict['alt_ft'] * FEET2MET
+    
+    # Convert, if necessary
+    if 'lat_deg' in input_dict.keys():
+        lat = input_dict['lat_deg'] * DEG2RAD
+        lon = input_dict['lon_deg'] * DEG2RAD
+    else: 
+        lat = input_dict['lat_rad']
+        lon = input_dict['lon_rad']
+    if 'alt_ft' in input_dict.keys():
+        alt = input_dict['alt_ft'] * FEET2MET
+    else: 
+        alt = input_dict['alt_m']
+        
     if 'time_unix' in input_dict.keys():
         time_unix = input_dict['time_unix']
         timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]

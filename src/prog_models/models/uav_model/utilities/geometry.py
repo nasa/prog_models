@@ -8,6 +8,7 @@ Matteo Corbetta
 # import scipy.interpolate as interp
 # import numpy as np
 from prog_models.models.uav_model.utilities.imports_ import np, spatial, interp
+from prog_models.exceptions import ProgModelInputException
 
 """
 
@@ -229,9 +230,11 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
     :param return_surf_vert:        Boolean, whether to return surface distance and vertical distance separately (default=False)
     :return:                        distance between two points in meters. Tuple of values (surface and alt distance) if return_surf_vert==True; absolute distance otherwise 
     """
-    assert len(lats)==2 and len(lons)==2 and len(alts)==2, "Latitudes, longitudes and altitude values must be 2-element lists or arrays."
+    if len(lats) != 2 or len(lons) != 2 or len(alts) != 2:
+        raise ProgModelInputException("Latitudes, longitudes and altitude values must be 2-element lists or arrays.")
     if type(alts[0])==np.ndarray:   # if altitudes are vectors, compute point-wise difference (must be same length)
-        assert len(alts[0])==len(alts[1]), "If altitudes are vectors, their length must coincide."
+        if len(alts[0]) != len(alts[1]):
+            raise ProgModelInputException("If altitudes are vectors, their length must coincide.")
         vert_dist = alts[1]-alts[0]
     else:   # if alts are two points, compute difference between them
         vert_dist = np.diff(alts)   # compute difference in altitude
