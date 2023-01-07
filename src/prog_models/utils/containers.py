@@ -19,6 +19,9 @@ class DictLikeMatrixWrapper():
         The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
     """
     def __init__(self, keys : list, data : Union[dict, np.array]):
+        if not isinstance(keys, list):
+            keys = list(keys)
+
         self._keys = keys.copy()
         if isinstance(data, np.matrix):
             self.matrix = np.array(data, dtype=np.float64)
