@@ -18,15 +18,111 @@ class UAVGen(PrognosticsModel):
     """
 
     :term:`Events<event>`: (1)
+        TrajectoryComplete: percentage of waypoints remaining for trajectory to pass through
     
     :term:`Inputs/Loading<input>`: ()
+        | User-defined inputs: waypoints plus ETAs or speeds
+        | Model-defined inputs: 
+            | T: thrust
+            | mx: moment in x 
+            | my: moment in y
+            | mz: moment in z
 
-    :term:`States<state>`: (12)
+    :term:`States<state>`: (13)
+        | x: cartesian position
+        | y: cartesian position
+        | z: cartesian position
+        | phi: pitch
+        | theta: roll
+        | psi: yaw
+        | vx: velocity 
+        | vy: velocity 
+        | vz: velocity 
+        | p: angular velocity 
+        | q: angular velocity 
+        | r: angular velocity 
+        | t: time 
 
     :term:`Outputs<output>`: (12)
+        | x: cartesian position
+        | y: cartesian position
+        | z: cartesian position
+        | phi: pitch
+        | theta: roll
+        | psi: yaw
+        | vx: velocity 
+        | vy: velocity 
+        | vz: velocity 
+        | p: angular velocity 
+        | q: angular velocity 
+        | r: angular velocity 
+        | t: time 
 
     Keyword Args
     ------------
+        process_noise : Optional, float or dict[str, float]
+          :term:`Process noise<process noise>` (applied at dx/next_state). 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+        process_noise_dist : Optional, str
+          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+        measurement_noise : Optional, float or dict[str, float]
+          :term:`Measurement noise<measurement noise>` (applied in output eqn).
+          Can be number (e.g., .2) applied to every output, a dictionary of values for each
+          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+        measurement_noise_dist : Optional, str
+          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+        flight_file : Optional, str
+          Text file to specify waypoint information. Necessary columns must be in the following
+          order with units specified: latitude (labeled 'lat_deg' or 'lat_rad'), longitude 
+          (labeled 'lon_deg' or 'lon_rad'), and altitude (labeled 'alt_ft' or 'alt_m'). An 
+          additional column for ETAs may be included (labeled 'time_unix). Note that while
+          'flight_file' is optional, either 'flight_file' or 'flight_plan' must be specified.
+        flight_plan : Optional, dict[str, numpy array]
+          Dictionary to specify waypoint information. Necessary keys must include the following
+          with units specified: latitude ('lat_deg' or 'lat_rad'), longitude 
+          (labeled 'lon_deg' or 'lon_rad'), and altitude (labeled 'alt_ft' or 'alt_m'). An 
+          additional key for ETAs may be included (labeled 'time_unix). Each key must correspond
+          to a numpy array of values. Note that while 'flight_plan' is optional, either 
+          'flight_file' or 'flight_plan' must be specified.
+        flight_name : Optional, str
+          Optional string to identify flight plan.
+        aircraft_name : Optional, str
+          Optional string to identify aircraft. 
+        dt : float
+          Time step in seconds for trajectory generation
+        gravity : float
+          m/s^2, gravity magnitude
+        cruise_speed : float
+          m/s, avg speed in-between way-points
+        ascent_speed : float
+          m/s, vertical speed (up)
+        descent_speed : float
+          m/s, vertical speed (down)
+        landing_speed : float
+          m/s, landing speed when altitude < 10m
+        hovering_time : float
+          s, time to hover between waypoints
+        takeoff_time : float
+          s, additional takeoff time 
+        landing_time: float
+          s, additional landing time 
+        waypoint_weights: 
+          weights of the waypoints in nurbs calculation 
+        adjust_eta: dict 
+          Dictionary with keys ['hours', 'seconds'], to adjust route time
+        nurbs_basis_length: float
+          Length of the basis function in the nurbs algorithm
+        nurbs_order: int
+          Order of the nurbs curve
+        final_time_buffer_sec: float
+          s, defines an acceptable time range to reach the final waypoint
+        final_space_buffer_m: float
+          m, defines an acceptable distance range to reach final waypoint 
+        vehicle_model: str
+          String to specify vehicle type. 'tarot18' and 'djis1000' are supported
+        vehicle_payload: float
+          kg, payload mass
 
     """
     events = ['TrajectoryComplete']
@@ -45,10 +141,10 @@ class UAVGen(PrognosticsModel):
         # Simulation parameters:
         'dt': 0.1, 
         'gravity': 9.81,
-        'cruise_speed': None, # 6.0,
-        'ascent_speed': None, # 3.0,
-        'descent_speed': None, # 3.0, 
-        'landing_speed': None, # 1.5,
+        'cruise_speed': None, 
+        'ascent_speed': None, 
+        'descent_speed': None,  
+        'landing_speed': None, 
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
@@ -57,10 +153,10 @@ class UAVGen(PrognosticsModel):
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
         'final_time_buffer_sec': 30, # time in seconds for acceptable range to reach final waypoint
-        'final_space_buffer_m': 2, # 
+        'final_space_buffer_m': 2, # distance in meters for acceptable range to reach final waypoint
 
         # Vehicle params:
-        'vehicle_model': 'tarot18', # 'djis1000',
+        'vehicle_model': 'tarot18', 
         'vehicle_payload': 0.0,
     }
 
@@ -133,9 +229,6 @@ class UAVGen(PrognosticsModel):
         self.current_time = 0
 
         # Initialize vehicle 
-        init_pos = np.concatenate((ref_traj.cartesian_pos[0,:], ref_traj.attitude[0,:], 
-                                    ref_traj.velocity[0,:], ref_traj.angular_velocity[0,:]), axis=0)
-    
         aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
         aircraft1.set_dt(dt=self.parameters['dt'])
 
@@ -156,10 +249,6 @@ class UAVGen(PrognosticsModel):
             })
     
     def dx(self, x : dict, u : dict):
-        # Extract params
-        # -------------
-        # Jp = self.parameters['Jp']
-        # Omega_r = self.parameters['Omega_r']
 
         # Extract values from vectors
         # --------------------------------
@@ -300,7 +389,7 @@ class UAVGen(PrognosticsModel):
                 }
  
     def output(self, x : dict):
-        # Currently, output is the same as the state vector
+        # Output is the same as the state vector
         return self.OutputContainer({
             'x': x['x'],
             'y': x['y'],
@@ -372,7 +461,6 @@ class UAVGen(PrognosticsModel):
                                         self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
 
                 # Define controller
-                # x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix))])
                 x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
                 u = self.vehicle_model.control_scheduled(x_temp - ref_now) 
                 u[0]      += self.vehicle_model.steadystate_input
