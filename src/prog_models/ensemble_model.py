@@ -7,9 +7,24 @@ from . import PrognosticsModel
 
 
 class EnsembleModel(PrognosticsModel):
+    """
+    An Ensemble Model is a collection of models which run together. The results of each model are aggregated using the aggregation_method function. This is generally done to improve the accuracy of prediction when you have multiple models that each represent part of the behavior, or represent a distribution of different behaviors. 
+    
+    Ensembe Models are constructed from a set of other models (e.g., :py:`m = EnsembleModel((m1, m2, m3))`). The models then operate functionally as one prognostic model. 
+
+    See example :download:`examples.ensemble <../../../../prog_models/examples/ensemble.py>`
+
+    Args:
+        models (list): List of models that form the ensemble
+
+    Keyword Arguments:
+        aggregation_method (function): Function that aggregates the outputs of the models in the ensemble. Default is np.mean
+    """
+
     default_parameters = {
         'aggregation_method': np.mean,
     }
+
     def __init__(self, models, **kwargs):
         inputs = set()
         states = set()
@@ -40,7 +55,6 @@ class EnsembleModel(PrognosticsModel):
         for key in x0.keys():
             x0[key] = self.parameters['aggregation_method'](x0[key]) 
         return self.StateContainer(x0)
-
 
     def next_state(self, x, u, dt):
         xs = [m.next_state(m.StateContainer(x), m.InputContainer(u), dt) for m in self.parameters['models']]
@@ -83,3 +97,31 @@ class EnsembleModel(PrognosticsModel):
             es_final[key] = self.parameters['aggregation_method'](es_final[key])
 
         return es_final
+
+    def performance_metrics(self, x) -> dict:
+        pms = [m.performance_metrics(x) for m in self.parameters['models']]
+        pms_final = {}
+        for pm in pms:
+            for key in pm.keys():
+                if key in pms_final:
+                    pms_final[key].append(pm[key])
+                else:
+                    pms_final[key] = [pm[key]]
+        for key in pms_final.keys():
+            pms_final[key] = self.parameters['aggregation_method'](pms_final[key])
+
+        return pms_final
+
+    def time_of_event(self, *args, **kwargs):
+        toes = [m.time_of_event(*args, **kwargs) for m in self.parameters['models']]
+        toe_final = {}
+        for toe in toes:
+            for key in toe.keys():
+                if key in toe_final:
+                    toe_final[key].append(toe[key])
+                else:
+                    toe_final[key] = [toe[key]]
+        for key in toe_final.keys():
+            toe_final[key] = self.parameters['aggregation_method'](toe_final[key])
+
+        return toe_final

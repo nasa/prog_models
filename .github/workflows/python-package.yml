@@ -11,6 +11,7 @@ on:
 
 jobs:
   test:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,6 +32,7 @@ jobs:
     - name: Run tests
       run: python -m tests
   # test_prog_algs_released:
+  #   timeout-minutes: 30
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:
@@ -62,6 +64,7 @@ jobs:
   #       cd prog_algs 
   #       python -m tests
   test_prog_algs_dev:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -93,6 +96,7 @@ jobs:
         cd prog_algs 
         python -m tests
   copyright:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -107,6 +111,7 @@ jobs:
       run: |
         python scripts/test_copyright.py
   # coverage:
+  #   timeout-minutes: 30
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:

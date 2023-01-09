@@ -13,6 +13,7 @@ sys.path.append(join(dirname(__file__), ".."))
 
 from prog_models import *
 from prog_models.models import *
+from prog_models.models.test_models.linear_models import OneInputNoOutputNoEventLM, FNoneNoEventStateLM
 
 
 class MockModel():
@@ -256,11 +257,8 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = empty_states()
-            self.fail("Should not have worked, empty 'states'")
-        except ProgModelTypeError:
-            pass
+        m = empty_states()
+        self.assertEqual(len(m.states), 0)
 
         m = missing_inputs()
         self.assertEqual(len(m.inputs), 0)
@@ -332,8 +330,28 @@ class TestModels(unittest.TestCase):
     def test_process_noise(self):
         self.__noise_test('process_noise', 'process_noise_dist', MockProgModel.states)
 
+        m = MockProgModel()
+
+        # All states except for the last one
+        noise = {key: 1 for key in list(m.states)[:-1]}
+        m.parameters['process_noise'] = noise
+        for key in list(m.states)[:-1]:
+            self.assertEqual(m.parameters['process_noise'][key], 1)
+        # That key should be 0 (default)
+        self.assertEqual(m.parameters['process_noise'][list(m.states)[-1]], 0)
+
     def test_measurement_noise(self):
         self.__noise_test('measurement_noise', 'measurement_noise_dist', MockProgModel.outputs)
+
+        m = MockProgModel()
+
+        # All outputs except for the last one
+        noise = {key: 1 for key in list(m.outputs)[:-1]}
+        m.parameters['measurement_noise'] = noise
+        for key in list(m.outputs)[:-1]:
+            self.assertEqual(m.parameters['measurement_noise'][key], 1)
+        # That key should be 0 (default)
+        self.assertEqual(m.parameters['measurement_noise'][list(m.outputs)[-1]], 0)
 
     def test_prog_model(self):
         m = MockProgModel() # Should work- sets default
@@ -435,12 +453,29 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
         self.assertAlmostEqual(times[-1], 20.0, 5)
 
+        # No thresholds and no horizon
+        with self.assertRaises(ProgModelInputException):
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=[])
+
+        # No events and no horizon
+        m_noevents = OneInputNoOutputNoEventLM()
+        with self.assertRaises(ProgModelInputException):
+            (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+
         # Custom thresholds met eqn- both keys
         def thresh_met(thresholds):
             return all(thresholds.values())
         config = {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0, 'thresholds_met_eqn': thresh_met}
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
+
+        # With no events and no horizon, but a threshold met eqn
+        # Should still run
+        def thresh_met(thresholds):
+            return True
+        linear_load = lambda t, x=None: m_noevents.InputContainer({'u1': 1})
+        (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
+        self.assertListEqual(times, [0, 0.5]) # Only one step
 
         try:
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
@@ -558,7 +593,57 @@ class TestModels(unittest.TestCase):
         for (oi, z) in zip(o, outputs): 
             # Lack of noise will make output as expected
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
-    
+
+    def test_estimate_params(self):
+        m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
+
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        keys = ['thrower_height', 'throwing_speed', 'g']
+        m.estimate_params(data, keys)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Now with limits that dont include the true values
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
+        for key in keys:
+            self.assertNotEqual(m.parameters[key], gt[key])
+
+        # Now with limits that do include the true values
+        m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Try incomplete list:
+        with self.assertRaises(ValueError):
+            # Missing bound
+            m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
+        with self.assertRaises(ValueError):
+            # Extra bound
+            m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, 0), (-20, 10)))
+
+        # Dictionary bounds
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Dictionary bounds - missing
+        # Will fill with (-inf, inf)
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Dictionary bounds - extra
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+            
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
@@ -990,6 +1075,9 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.F = True # boolean
             m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            # if F is none, we need to override event_state
+            m_noes = FNoneNoEventStateLM()
         
         # Matrix Dimension Checking
         # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)

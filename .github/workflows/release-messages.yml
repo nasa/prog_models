@@ -7,7 +7,8 @@ on:
     types: [opened]
 
 jobs:
-  benchmark_branch: 
+  release_msg: 
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - name: Auto Comment

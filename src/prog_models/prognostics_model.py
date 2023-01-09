@@ -1,7 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from abc import abstractmethod, ABC
+from abc import ABC
 from collections import abc, namedtuple
 from copy import deepcopy
 import itertools
@@ -139,12 +139,10 @@ class PrognosticsModel(ABC):
 
         if not hasattr(self, 'states'):
             raise ProgModelTypeError('Must have `states` attribute')
-        if len(self.states) <= 0:
-            raise ProgModelTypeError('`states` attribute must have at least one state key')
         try:
             iter(self.states)
         except TypeError:
-            raise ProgModelTypeError('model.states must be iterable')
+            raise ProgModelTypeError('model.states must be a list')
         self.n_states = len(self.states)
 
         if not hasattr(self, 'events'):
@@ -156,7 +154,7 @@ class PrognosticsModel(ABC):
         try:
             iter(self.outputs)
         except TypeError:
-            raise ProgModelTypeError('model.outputs must be iterable')
+            raise ProgModelTypeError('model.outputs must be a list')
         self.n_outputs = len(self.outputs)
 
         if not hasattr(self, 'performance_metric_keys'):
@@ -624,9 +622,9 @@ class PrognosticsModel(ABC):
 
     def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
-        Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met) from :term:`state`. time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
+        Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
-        Parameters
+        Args
         ----------
         x : StateContainer
             state, with keys defined by model.states \n
@@ -830,6 +828,7 @@ class PrognosticsModel(ABC):
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
             'print': False,
+            'x': None,
             'progress': False
         }
         config.update(kwargs)
@@ -850,7 +849,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
             raise ProgModelInputException("'horizon' must be positive, was {}".format(config['horizon']))
-        if 'x' in config and not all([state in config['x'] for state in self.states]):
+        if config['x'] is not None and not all([state in config['x'] for state in self.states]):
             raise ProgModelInputException("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
             raise ProgModelInputException("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
@@ -862,7 +861,7 @@ class PrognosticsModel(ABC):
         # Setup
         t = config['t0']
         u = future_loading_eqn(t)
-        if 'x' in config:
+        if config['x'] is not None:
             x = deepcopy(config['x'])
         else:
             x = self.initialize(u, first_output)
@@ -892,6 +891,9 @@ class PrognosticsModel(ABC):
             threshold_keys = self.events
         elif len(threshold_keys) == 0:
             check_thresholds = lambda _: False
+
+        if len(threshold_keys) == 0 and config.get('thresholds_met_eqn', None) is None and 'horizon' not in kwargs:
+            raise ProgModelInputException("Running simulate to threshold for a model with no events requires a horizon to be set. Otherwise simulation would never end.")
 
         # Initialization of save arrays
         saved_times = []
@@ -1139,28 +1141,62 @@ class PrognosticsModel(ABC):
 
         return err_total/counter
     
-    def estimate_params(self, runs : List[tuple], keys : List[str], **kwargs) -> None:
+    def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
-        Args:
-            runs (list[tuple]): data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts
-            keys (list[str]): Parameter keys to optimize
-        
-        Keyword Args: 
-            method (str, optional): Optimization method- see scipy.optimize.minimize for options
-            bounds (tuple): Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...)
-            options (dict): Options passed to optimizer. see scipy.optimize.minimize for options
+        Keyword Args:
+            keys (list[str]): 
+                Parameter keys to optimize
+            times (list[float]):
+                Array of times for each sample
+            inputs (list[InputContainer]):
+                Array of input containers where input[x] corresponds to time[x]
+            outputs (list[OutputContainer]):
+                Array of output containers where output[x] corresponds to time[x]
+            method (str, optional): 
+                Optimization method- see scipy.optimize.minimize for options
+            bounds (tuple or dict): 
+                Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
+            options (dict): 
+                Options passed to optimizer. see scipy.optimize.minimize for options
+            runs (list[tuple], depreciated): 
+                data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
 
         See: examples.param_est
         """
         from scipy.optimize import minimize
 
+        if keys is None:
+            # if no keys provided, use all
+            keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
+
         config = {
-            'method': 'nelder-mead',  # Optimization method
-            'bounds': ((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8}  # Options passed to optimizer
+            'method': 'nelder-mead',
+            'bounds': tuple((-np.inf, np.inf) for _ in keys),
+            'options': {'xatol': 1e-8},
         }
         config.update(kwargs)
+
+        if runs is None and (times is None or inputs is None or outputs is None):
+            raise ValueError("Must provide either runs or times, inputs, and outputs")
+        if runs is None:
+            if len(times) != len(inputs) or len(outputs) != len(inputs):
+                raise ValueError("Times, inputs, and outputs must be same length")
+            # For now- convert to runs
+            runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
+
+        # Convert bounds
+        if isinstance(config['bounds'], dict):
+            # Allows for partial bounds definition, and definition by key name
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
+        else:
+            if not isinstance(config['bounds'], Iterable):
+                raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
+            if len(config['bounds']) != len(keys):
+                raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
+        for bound in config['bounds']:
+            if (not isinstance(bound, Iterable)) or (len(bound) != 2):
+                raise ValueError("each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
             # Convert here so it isn't done every call of calc_error

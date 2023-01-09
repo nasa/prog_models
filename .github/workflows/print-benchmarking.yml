@@ -4,6 +4,7 @@ on: pull_request
 
 jobs:
   benchmark_branch: 
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     strategy:
       matrix:

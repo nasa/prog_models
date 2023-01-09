@@ -38,6 +38,9 @@ class LinearModel(PrognosticsModel, ABC):
         super().__init__(**kwargs)
         self.matrixCheck()
 
+        if self.F is None and type(self).event_state == LinearModel.event_state:
+            raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
+
     def matrixCheck(self) -> None:
         """
         Public class method for checking matrices dimensions across all properties of the model.
