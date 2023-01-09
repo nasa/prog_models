@@ -73,6 +73,11 @@ class DictLikeMatrixWrapper():
     def __str__(self) -> str:
         return self.__repr__()
 
+    def get(self, key, default=None):
+        if key in self._keys:
+            return self[key]
+        return default
+
     def copy(self) -> "DictLikeMatrixWrapper":
         return DictLikeMatrixWrapper(self._keys, self.matrix.copy())
 

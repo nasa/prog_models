@@ -2,13 +2,15 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-TODO(CT): DESCIRPTION
+Example illustrating how to use the CompositeModel class to create a composite model from multiple models.
+
+This example creates a composite model of a DC motor with an Engine Speed Controller and a propeller load. The three composite models are interrelated. The created composite model described the nature of these interconnections. The resulting powertrain model is then simulated forward with time and the results are plotted. 
 """
 
 from prog_models.models import DCMotor, ESC
 from prog_models import PrognosticsModel, CompositeModel
 
-# Load Model- used below
+# Callback for load Model- used below
 def update_Cq(params):
     return {
         'C_q': params['c_q'] * params['rho'] * pow(params['D'], 5)
@@ -16,6 +18,9 @@ def update_Cq(params):
 
 
 class PropellerLoad(PrognosticsModel):
+    """
+    This is a simple model of a propeller load. This model estimates load torque as a function of the rotational velocity. When the propeller is spinning faster, drag increases, and the propeller load on the torque increases.
+    """
     inputs = ['v_rot']
     states = ['t_l']
     outputs = ['t_l']
@@ -37,7 +42,7 @@ class PropellerLoad(PrognosticsModel):
         }
     }
 
-    def next_state(self, _, u, dt):
+    def next_state(self, x, u, dt):
         return self.StateContainer({'t_l': self.parameters['C_q']*u['v_rot']**2})
     
     def output(self, x):
@@ -49,28 +54,38 @@ def run_example():
     m_esc = ESC()
     m_load = PropellerLoad()
 
-    # Now let's combine them into a single composite model
+    # Now let's combine them into a single composite model describing the behavior of a powertrain
     # This model will then behave as a single model
-    m_composite = CompositeModel(
+    m_powertrain = CompositeModel(
         (m_esc, m_load, m_motor), 
-        connections = [
+        connections = [ 
             ('DCMotor.theta', 'ESC.theta'),
             ('ESC.v_a', 'DCMotor.v_a'),
             ('ESC.v_b', 'DCMotor.v_b'),
             ('ESC.v_c', 'DCMotor.v_c'),
-            ('Load.t_l', 'DCMotor.t_l'),
-            ('DCMotor.v_rot', 'Load.v_rot')],
+            ('PropellerLoad.t_l', 'DCMotor.t_l'),
+            ('DCMotor.v_rot', 'PropellerLoad.v_rot')],
         outputs = {'DCMotor.v_rot', 'DCMotor.theta'})
     
-    print('inputs: ', m_composite.inputs)
-    print('states: ', m_composite.states)
-    print('outputs: ', m_composite.outputs)
-    x0 = m_composite.initialize()
-    print(x0)
-    print(m_composite.next_state(x0, {'ESC.v': 10, 'ESC.duty': 0.5}, 0.1))
-    print(m_composite.output(x0))
-    print(m_composite.event_state(x0))
-    print(m_composite.threshold_met(x0))
+    # Print out the inputs, states, and outputs of the composite model
+    print('Composite model of DCMotor, ESC, and Propeller load')
+    print('inputs: ', m_powertrain.inputs)
+    print('states: ', m_powertrain.states)
+    print('outputs: ', m_powertrain.outputs)
+
+    # Define future loading function - 100% duty all the time
+    def future_loading(t, x=None):
+        return m_powertrain.InputContainer({
+            'ESC.duty': 1,
+            'ESC.v': 23
+        })
+    
+    # Simulate to threshold
+    print('\n\n------------------------------------------------')
+    print('Simulating to threshold\n\n')
+    simulated_results = m_powertrain.simulate_to(2, future_loading, dt=2e-5, save_freq=0.1, print=True)
+
+    simulated_results.outputs.plot()
 
 if __name__ == '__main__':
     run_example()
