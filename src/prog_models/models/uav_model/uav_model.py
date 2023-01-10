@@ -166,99 +166,97 @@ class UAVGen(PrognosticsModel):
         'vehicle_payload': 0.0,
     }
 
+    def __init__(self, **kwargs):
+
+      super().__init__(**kwargs)
+      
+      if self.parameters['flight_plan'] and self.parameters['flight_file'] == None:
+          flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
+          lat = flightplan['lat_rad']
+          lon = flightplan['lon_rad']
+          alt = flightplan['alt_m']
+          tstamps = flightplan['timestamp']
+      elif self.parameters['flight_file'] and self.parameters['flight_plan'] == None:
+          flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
+          lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
+      elif self.parameters['flight_file'] and self.parameters['flight_plan']:
+          raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
+      else:
+          raise ProgModelInputException("No flight plan information supplied.")
+
+      aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
+                                              model=self.parameters['vehicle_model'],
+                                              payload=self.parameters['vehicle_payload'])
+      self.vehicle_model = aircraft1 
+
+      # Generate route
+      if len(tstamps) > 1:
+          # ETAs specified: 
+          # Check if speeds have been defined and warn user if so:
+          if self.parameters['cruise_speed'] is not None or self.parameters['ascent_speed'] is not None or self.parameters['descent_speed'] is not None:
+              warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
+          route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
+                                etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed etas if want to use desired speeds values.
+                                vehicle_max_speed = self.vehicle_model.dynamics['max_speed'],
+                                parameters = self.parameters)
+      else: 
+          # ETAs not specified:  
+          # Check that speeds have been provided:
+          if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None:
+              raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent) must be provided.")  
+          route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
+                                parameters = self.parameters)
+
+      # Save final waypoint information for threshold_met and event_state 
+      self.parameters['final_time'] = datetime.datetime.timestamp(route_.eta[-1]) - datetime.datetime.timestamp(route_.eta[0])
+      coord_end = geometry.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
+      self.coord_transform = deepcopy(coord_end)
+      self.parameters['final_x'], self.parameters['final_y'], self.parameters['final_z'] = coord_end.geodetic2enu(route_.lat[-1], route_.lon[-1], route_.alt[-1])
+      wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
+      wypt_x = []
+      wypt_y = []
+      wypt_z = []
+      for iter1 in range(len(route_.lat)):
+          x_temp, y_temp, z_temp = coord_end.geodetic2enu(route_.lat[iter1], route_.lon[iter1], route_.alt[iter1])
+          wypt_x.append(x_temp)
+          wypt_y.append(y_temp)
+          wypt_z.append(z_temp)
+      self.parameters['waypoints'] = {'waypoints_time': wypt_time_unix, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
+      
+      # Generate trajectory
+      ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
+      ref_traj.generate(dt=self.parameters['dt'], 
+                      nurbs_order=self.parameters['nurbs_order'], 
+                      gravity=self.parameters['gravity'], 
+                      weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat)),   # weight of waypoints
+                      nurbs_basis_length=self.parameters['nurbs_basis_length'],
+                      max_phi=aircraft1.dynamics['max_roll'],                    # rad, allowable roll for the aircraft
+                      max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
+
+      self.ref_traj = ref_traj
+      self.current_time = 0
+
+      # Initialize vehicle 
+      aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
+      aircraft1.set_dt(dt=self.parameters['dt'])
+
     def initialize(self, u=None, z=None): 
-        
-        if self.parameters['flight_plan'] and self.parameters['flight_file'] == None:
-            flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
-            lat = flightplan['lat_rad']
-            lon = flightplan['lon_rad']
-            alt = flightplan['alt_m']
-            tstamps = flightplan['timestamp']
-        elif self.parameters['flight_file'] and self.parameters['flight_plan'] == None:
-            flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
-            lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
-        elif self.parameters['flight_file'] and self.parameters['flight_plan']:
-            raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
-        else:
-            raise ProgModelInputException("No flight plan information supplied.")
-
-        aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
-                                               model=self.parameters['vehicle_model'],
-                                               payload=self.parameters['vehicle_payload'])
-        self.vehicle_model = aircraft1 
-
-        # Generate route
-        if len(tstamps) > 1:
-            # ETAs specified: 
-            # Check if speeds have been defined and warn user if so:
-            if self.parameters['cruise_speed'] is not None or self.parameters['ascent_speed'] is not None or self.parameters['descent_speed'] is not None:
-                warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
-            route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                 etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed etas if want to use desired speeds values.
-                                 vehicle_max_speed = self.vehicle_model.dynamics['max_speed'],
-                                 parameters = self.parameters)
-        else: 
-            # ETAs not specified:  
-            # Check that speeds have been provided:
-            if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None:
-                raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent) must be provided.")  
-            route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                 parameters = self.parameters)
-
-        # Save final waypoint information for threshold_met and event_state 
-        self.parameters['final_time'] = datetime.datetime.timestamp(route_.eta[-1]) - datetime.datetime.timestamp(route_.eta[0])
-        coord_end = geometry.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
-        self.coord_transform = deepcopy(coord_end)
-        self.parameters['final_x'], self.parameters['final_y'], self.parameters['final_z'] = coord_end.geodetic2enu(route_.lat[-1], route_.lon[-1], route_.alt[-1])
-        wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
-        wypt_x = []
-        wypt_y = []
-        wypt_z = []
-        for iter1 in range(len(route_.lat)):
-            x_temp, y_temp, z_temp = coord_end.geodetic2enu(route_.lat[iter1], route_.lon[iter1], route_.alt[iter1])
-            wypt_x.append(x_temp)
-            wypt_y.append(y_temp)
-            wypt_z.append(z_temp)
-        self.parameters['waypoints'] = {'waypoints_time': wypt_time_unix, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
-        
-        # Generate trajectory
-        ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
-        ref_traj.generate(dt=self.parameters['dt'], 
-                        nurbs_order=self.parameters['nurbs_order'], 
-                        gravity=self.parameters['gravity'], 
-                        weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat)),   # weight of waypoints
-                        nurbs_basis_length=self.parameters['nurbs_basis_length'],
-                        max_phi=aircraft1.dynamics['max_roll'],                    # rad, allowable roll for the aircraft
-                        max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
-
-        self.ref_traj = ref_traj
-        self.current_time = 0
-
-        # Initialize vehicle 
-        aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
-        aircraft1.set_dt(dt=self.parameters['dt'])
-
-        # self.parameters['x0'] = self.StateContainer({'x': ref_traj.cartesian_pos[0,0], 'y': ref_traj.cartesian_pos[0,1], 'z': ref_traj.cartesian_pos[0,2],
-        #                                         'phi': ref_traj.attitude[0,0], 'theta': ref_traj.attitude[0,1], 'psi': ref_traj.attitude[0,2],
-        #                                         'vx': ref_traj.velocity[0,0], 'vy': ref_traj.velocity[0,1], 'vz': ref_traj.velocity[0,2],
-        #                                         'p': ref_traj.angular_velocity[0,0], 'q': ref_traj.angular_velocity[0,1], 'r': ref_traj.angular_velocity[0,2],
-        #                                         't': 0})
-
-        return self.StateContainer({
-            'x': ref_traj.cartesian_pos[0,0],
-            'y': ref_traj.cartesian_pos[0,1],
-            'z': ref_traj.cartesian_pos[0,2],
-            'phi': ref_traj.attitude[0,0],
-            'theta': ref_traj.attitude[0,1],
-            'psi': ref_traj.attitude[0,2],
-            'vx': ref_traj.velocity[0,0],
-            'vy': ref_traj.velocity[0,1],
-            'vz': ref_traj.velocity[0,2],
-            'p': ref_traj.angular_velocity[0,0],
-            'q': ref_traj.angular_velocity[0,1],
-            'r': ref_traj.angular_velocity[0,2],
-            't': 0
-            })
+      # Extract initial state from reference trajectory    
+      return self.StateContainer({
+          'x': self.ref_traj.cartesian_pos[0,0],
+          'y': self.ref_traj.cartesian_pos[0,1],
+          'z': self.ref_traj.cartesian_pos[0,2],
+          'phi': self.ref_traj.attitude[0,0],
+          'theta': self.ref_traj.attitude[0,1],
+          'psi': self.ref_traj.attitude[0,2],
+          'vx': self.ref_traj.velocity[0,0],
+          'vy': self.ref_traj.velocity[0,1],
+          'vz': self.ref_traj.velocity[0,2],
+          'p': self.ref_traj.angular_velocity[0,0],
+          'q': self.ref_traj.angular_velocity[0,1],
+          'r': self.ref_traj.angular_velocity[0,2],
+          't': 0
+          })
     
     def dx(self, x : dict, u : dict):
 

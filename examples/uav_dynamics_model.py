@@ -31,9 +31,6 @@ def run_example():
     uav_1 = UAVGen(**params_1)
     uav_1.parameters['process_noise'] = 0
 
-    # Initialize model - this is necessary for the UAVGen class to initialize the vehicle model and other components 
-    # uav_1.initialize()
-
     # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
     def future_loading_1(t, x=None):
         return uav_1.InputContainer({}) 
