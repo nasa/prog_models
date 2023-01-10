@@ -62,10 +62,10 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
         ascent_speed=None,        # m/s, default ascent speed (climb)
         descent_speed=None,       # m/s, default descent speed
         landing_speed=None,       # m/s, default landing speed (when < 10ft from ground)
-        hovering_time=0.0,      # s, scalar, additional hovering time, default is 0.
-        takeoff_time=0.0,  # scalar, additional takeoff time, default is 0.
-        landing_time=0.0,  # scalar, additional landing time, default is 0.
-        adjust_eta=None,        # dictionary with keys ['hours', 'seconds'], to adjust route time
+        hovering_time=0.0,        # s, scalar, additional hovering time, default is 0.
+        takeoff_time=0.0,         # scalar, additional takeoff time, default is 0.
+        landing_time=0.0,         # scalar, additional landing time, default is 0.
+        adjust_eta=None,          # dictionary with keys ['hours', 'seconds'], to adjust route time
         additional_hover_time=0.5,  # s, additional hovering time if waypoints are identical (to avoid extreme acceleration values).
     )
     params.update(parameters)
@@ -338,3 +338,4 @@ class Route():
         eta_array = np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
         if assign_eta:  self.eta = [dt.datetime.fromtimestamp(eta_array[ii] + + self.departure_time.timestamp()) for ii in range(len(eta_array))]
         return self.eta
+        

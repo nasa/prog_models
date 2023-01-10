@@ -55,5 +55,4 @@ def rotorcraft_cam(n, l, b, d, constrained=False):
                                           [0, 0, 0, 0, 0, 1, 0, 1]]).T
 
     return Gamma, np.linalg.pinv(Gamma), optional
-
-    
+   

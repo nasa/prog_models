@@ -16,6 +16,9 @@ from prog_models.exceptions import ProgModelInputException
 
 class UAVGen(PrognosticsModel):
     """
+    Vectorized prognostics :term:`model` to generate a predicted trajectory for a UAV. 
+    
+    Model generates cartesian positions and velocities, pitch, roll, and yaw, and angular velocities throughout time to satisfy some user-define waypoints. 
 
     :term:`Events<event>`: (1)
         TrajectoryComplete: percentage of waypoints remaining for trajectory to pass through
@@ -124,6 +127,9 @@ class UAVGen(PrognosticsModel):
         vehicle_payload: float
           kg, payload mass
 
+    References 
+    ----------
+
     """
     events = ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
@@ -148,14 +154,14 @@ class UAVGen(PrognosticsModel):
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
-        'waypoint_weights': 20.0, # should default be 0?
-        'adjust_eta': None, # Used in route.build, dictionary with keys ['hours', 'seconds'], to adjust route time
+        'waypoint_weights': 20.0, 
+        'adjust_eta': None, 
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
-        'final_time_buffer_sec': 30, # time in seconds for acceptable range to reach final waypoint
-        'final_space_buffer_m': 2, # distance in meters for acceptable range to reach final waypoint
+        'final_time_buffer_sec': 30, 
+        'final_space_buffer_m': 2, 
 
-        # Vehicle params:
+        # Vehicle parameters:
         'vehicle_model': 'tarot18', 
         'vehicle_payload': 0.0,
     }
@@ -231,6 +237,12 @@ class UAVGen(PrognosticsModel):
         # Initialize vehicle 
         aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
         aircraft1.set_dt(dt=self.parameters['dt'])
+
+        # self.parameters['x0'] = self.StateContainer({'x': ref_traj.cartesian_pos[0,0], 'y': ref_traj.cartesian_pos[0,1], 'z': ref_traj.cartesian_pos[0,2],
+        #                                         'phi': ref_traj.attitude[0,0], 'theta': ref_traj.attitude[0,1], 'psi': ref_traj.attitude[0,2],
+        #                                         'vx': ref_traj.velocity[0,0], 'vy': ref_traj.velocity[0,1], 'vz': ref_traj.velocity[0,2],
+        #                                         'p': ref_traj.angular_velocity[0,0], 'q': ref_traj.angular_velocity[0,1], 'r': ref_traj.angular_velocity[0,2],
+        #                                         't': 0})
 
         return self.StateContainer({
             'x': ref_traj.cartesian_pos[0,0],
@@ -443,6 +455,9 @@ class UAVGen(PrognosticsModel):
             kwargs['save_pts'] = []
         if 'save_freq' not in kwargs:
             kwargs['save_freq'] = self.parameters['dt'] # if save_freq not specified, set at dt for best output 
+
+        # Define initial x to avoid re-initializing 
+        # kwargs['x'] = deepcopy(self.parameters['x0'])
 
         def future_loading_new(t, x=None): 
             if t == 0:

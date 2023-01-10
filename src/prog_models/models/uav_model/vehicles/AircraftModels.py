@@ -46,12 +46,10 @@ def build_model(**kwargs):
 
     # Generate UAV model
     # ------------------
-    # uav = Rotorcraft(name=params['name'], model=params['model'], payload=params['payload'], aero_effects=params['aero_effects'])
     uav = Rotorcraft(name=params['name'], model=params['model'], payload=params['payload'])
     
     # Build vehicle properties
     # ------------------------
-
     uav.build(initial_state     = params['init_state_vector'],
               steadystate_input = params['steadystate_input'],     # None assigns deault value (hover condition)
               dt                = params['dt']) # should be small enough to converge (RK4 allows larger dt)
@@ -87,7 +85,6 @@ class Rotorcraft():
                  payload = 0.0,
                  gravity = 9.81,
                  air_density=1.225,
-                 # aero_effects=False,
                  **kwargs):
         self.name = name
         self.model = model
@@ -99,7 +96,6 @@ class Rotorcraft():
         self.input_names = ['T', 'Mx', 'My', 'Mz']
         self.dt = None
         self.propulsion = None
-        # self.aero_effects=aero_effects
         self.aero = None
         self.air_density = air_density
         
@@ -186,7 +182,6 @@ class Rotorcraft():
             self.control_fn = self.control_scheduled
         elif strategy.lower() == 'realtime':    
             self.control_fn = self.control_realtime
-        # elif strategy.lower() == 'powertrain_based':
         else:
             raise Exception("The only two options for control_strategy are: scheduled or realtime")
 

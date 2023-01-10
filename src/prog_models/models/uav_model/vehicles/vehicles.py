@@ -123,13 +123,9 @@ def DJIS1000(payload=0.0, gravity=9.81):
     mass, geom = rotorcraft_inertia(mass, geom)
     if payload > mass['max_payload']:   raise Warning("Payload for DJIS1000 exceeds its maximum recommended payload.")
 
-    # dynamics['max_thrust']       = dynamics['thrust2weight'] * (mass['body'] * gravity)
-    # dynamics['max_acceleration'] = dynamics['max_thrust'] / mass['total']
     dynamics = rotorcraft_performance(dynamics, mass, gravity)
 
     # Generate observation matrix
-    # dynamics['C'] = np.zeros((dynamics['num_outputs'], dynamics['num_states']))
-    # for ii in range(dynamics['num_outputs']):   dynamics['C'][ii, ii] = 1.0
     dynamics['C'] = observation_matrix(dynamics['num_states'], dynamics['num_outputs'])
     
     # Set control allocation matrix and its inverse
@@ -145,7 +141,7 @@ def DJIS1000(payload=0.0, gravity=9.81):
 # Vehicle-agnostic functions
 # =========================
 def rotor_angles(n):
-    # n = number of rotors
+    # n: number of rotors
     arm_angle = 2.0 * np.pi / n
     nhalf     = int(n/2)    # half of number of rotors
     angular_vector = np.zeros((nhalf,))
@@ -180,10 +176,6 @@ def rotorcraft_inertia(m, g):
     # Define rotor positions on the 360 degree circle
     # ------------------------------------------------
     angular_vector = rotor_angles(n_rotors)
-    # arm_angle      = 2.0 * np.pi / n_rotors
-    # angular_vector = np.zeros((int(n_rotors/2),))
-    # for ri in range(int(n_rotors/2)):
-    #     angular_vector[ri] = arm_angle/2.0 * (2*ri + 1)
     
     motor_distance_from_xaxis = g['arm_length'] * np.sin(angular_vector)
     if g['body_type'].lower() == 'sphere':          Ix0, Iz0 = sphere_inertia(m['body'], g['body_radius'])

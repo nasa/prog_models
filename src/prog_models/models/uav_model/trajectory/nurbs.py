@@ -241,8 +241,3 @@ def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_le
 
     print('complete.')
     return {'px': px, 'py': py, 'pz': pz, 'time': time}
-
-
-# if __name__ == '__main__':
-# 
-#     print('NURBS functions')
