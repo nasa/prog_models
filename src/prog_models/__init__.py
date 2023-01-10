@@ -4,6 +4,7 @@
 # PrognosticsModel must be first, since the others build on this
 from .prognostics_model import PrognosticsModel
 from .ensemble_model import EnsembleModel
+from .composite_model import CompositeModel
 from .linear_model import LinearModel
 from .exceptions import ProgModelException, ProgModelInputException, ProgModelTypeError
 
