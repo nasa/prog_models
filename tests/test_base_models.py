@@ -644,6 +644,34 @@ class TestModels(unittest.TestCase):
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Bounds - wrong type
+        with self.assertRaises(ValueError):
+            # bounds isn't tuple or dict
+            m.estimate_params(data, keys, bounds=0)
+        with self.assertRaises(ValueError):
+            # bounds isn't tuple or dict
+            m.estimate_params(data, keys, bounds='a')
+        with self.assertRaises(ValueError):
+            # Item isn't a tuple
+            m.estimate_params(data, keys, bounds={'g': 7})
+        with self.assertRaises(ValueError):
+            # Tuple isn't of size 2
+            m.estimate_params(data, keys, bounds={'g': (7,)})
+
+        # With inputs, outputs, and times
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[results.outputs], keys=keys)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # No keys
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(data)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
             
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
