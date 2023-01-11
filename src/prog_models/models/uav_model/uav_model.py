@@ -170,19 +170,26 @@ class UAVGen(PrognosticsModel):
 
       super().__init__(**kwargs)
       
-      if self.parameters['flight_plan'] and self.parameters['flight_file'] == None:
-          flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
-          lat = flightplan['lat_rad']
-          lon = flightplan['lon_rad']
-          alt = flightplan['alt_m']
-          tstamps = flightplan['timestamp']
-      elif self.parameters['flight_file'] and self.parameters['flight_plan'] == None:
-          flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
-          lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
-      elif self.parameters['flight_file'] and self.parameters['flight_plan']:
-          raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
+      if self.parameters['flight_plan'] is not None and self.parameters['flight_file'] == None:
+        # Check for appropriate input:
+        if not isinstance(self.parameters['flight_plan'], dict):
+          raise ProgModelInputException("'flight_plan' must be a dictionary. Type {} was given".format(type(self.parameters['flight_plan'])))
+        for key in self.parameters['flight_plan'].keys():
+          if not isinstance(self.parameters['flight_plan'][key], np.ndarray):
+            raise ProgModelInputException("'flight_plan' entries must be numpy arrays specifying waypoint information. Type {} was given".format(type(self.parameters['flight_plan'])))
+
+        flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
+        lat = flightplan['lat_rad']
+        lon = flightplan['lon_rad']
+        alt = flightplan['alt_m']
+        tstamps = flightplan['timestamp']
+      elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] == None:
+        flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
+        lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
+      elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] != None:
+        raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
       else:
-          raise ProgModelInputException("No flight plan information supplied.")
+        raise ProgModelInputException("No flight plan information supplied.")
 
       aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
                                               model=self.parameters['vehicle_model'],
@@ -202,8 +209,8 @@ class UAVGen(PrognosticsModel):
       else: 
           # ETAs not specified:  
           # Check that speeds have been provided:
-          if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None:
-              raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent) must be provided.")  
+          if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None or self.parameters['landing_speed'] is None:
+              raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
           route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = self.parameters)
 

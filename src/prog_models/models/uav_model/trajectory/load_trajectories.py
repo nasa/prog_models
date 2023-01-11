@@ -60,7 +60,10 @@ def convert_dict_inputs(input_dict):
         raise ProgModelInputException("Waypoints altitude must be defined in feet (with alt_ft) or meters (with alt_m).")
     if len(input_dict.keys()) > 3 and 'time_unix' not in input_dict.keys():
         raise ProgModelInputException("Waypoints input incorrectly. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
-    
+    input_shape = [input_dict[key].shape for key in input_dict.keys()]
+    if all(input_shape[iter] == input_shape[0] for iter in range(len(input_shape))) == False:
+        raise ProgModelInputException("Waypoints input incorectly. Arrays of lat/lon/alt/time have different dimensions.")
+
     # Convert, if necessary
     if 'lat_deg' in input_dict.keys():
         lat = input_dict['lat_deg'] * DEG2RAD

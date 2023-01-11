@@ -72,10 +72,9 @@ def run_example():
         'landing_speed': 1.5,
     }
 
-    # Create a model object, define noise, and initialize
+    # Create a model object, define noise
     uav_2 = UAVGen(**params_2)
     uav_2.parameters['process_noise'] = 0
-    x0 = uav_2.initialize()
 
     # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
     def future_loading_2(t, x=None):
@@ -106,10 +105,9 @@ def run_example():
         'final_time_buffer_sec': 15, # s, Defines acceptable time interval to reach final waypoint 
     }
 
-    # Create a model object, define noise, and initialize
+    # Create a model object, define noise
     uav_3 = UAVGen(**params_3)
     uav_3.parameters['process_noise'] = 0
-    x0 = uav_3.initialize()
 
     # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
     def future_loading_3(t, x=None):
