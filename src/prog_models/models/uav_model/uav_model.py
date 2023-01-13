@@ -1,4 +1,4 @@
-# Copyright © 2022 United States Government as represented by the Administrator of the
+# Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from prog_models.prognostics_model import PrognosticsModel
@@ -129,7 +129,9 @@ class UAVGen(PrognosticsModel):
 
     References 
     ----------
-
+        References 
+    -------------
+     .. [] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
     """
     events = ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
@@ -154,7 +156,7 @@ class UAVGen(PrognosticsModel):
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
-        'waypoint_weights': 20.0, 
+        'waypoint_weights': 10.0, 
         'adjust_eta': None, 
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
@@ -215,10 +217,8 @@ class UAVGen(PrognosticsModel):
                                 parameters = self.parameters)
 
       # Save final waypoint information for threshold_met and event_state 
-      self.parameters['final_time'] = datetime.datetime.timestamp(route_.eta[-1]) - datetime.datetime.timestamp(route_.eta[0])
       coord_end = geometry.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
       self.coord_transform = deepcopy(coord_end)
-      self.parameters['final_x'], self.parameters['final_y'], self.parameters['final_z'] = coord_end.geodetic2enu(route_.lat[-1], route_.lon[-1], route_.alt[-1])
       wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
       wypt_x = []
       wypt_y = []
@@ -399,7 +399,7 @@ class UAVGen(PrognosticsModel):
                 }
         else:
             # ETA passed before waypoint reached 
-            warn("Trajectory did not reach waypoint associated with ETA of {})".format(t_next))
+            warn("Trajectory may not have reached waypoint associated with ETA of {})".format(t_next))
             self.parameters['waypoints']['next_waypoint'] += 1
             return {
                     'TrajectoryComplete': (num_wypts - index_next)/num_wypts
@@ -424,14 +424,16 @@ class UAVGen(PrognosticsModel):
             })
 
     def threshold_met(self, x : dict) -> dict:
-        if x['t'] < self.parameters['final_time'] - self.parameters['final_time_buffer_sec']: 
+        t_lower_bound = self.parameters['waypoints']['waypoints_time'][-1] - (self.parameters['waypoints']['waypoints_time'][-1] - self.parameters['waypoints']['waypoints_time'][-2])/2
+        t_upper_bound = self.parameters['waypoints']['waypoints_time'][-1] + self.parameters['final_time_buffer_sec']
+        if x['t'] < t_lower_bound:
             # Trajectory hasn't reached final ETA
             return {
                 'TrajectoryComplete': False
             }
-        elif self.parameters['final_time'] - self.parameters['final_time_buffer_sec'] <= x['t'] <= self.parameters['final_time'] + self.parameters['final_time_buffer_sec']:
+        elif t_lower_bound <= x['t'] <= t_upper_bound:
             # Trajectory is within bounds of final ETA
-            dist_now = np.sqrt((x['x']-self.parameters['final_x'])**2 + (x['y']-self.parameters['final_y'])**2 + (x['z']-self.parameters['final_z'])**2)
+            dist_now = np.sqrt((x['x']-self.parameters['waypoints']['waypoints_x'][-1])**2 + (x['y']-self.parameters['waypoints']['waypoints_y'][-1])**2 + (x['z']-self.parameters['waypoints']['waypoints_z'][-1])**2)
             if dist_now <= self.parameters['final_space_buffer_m']:
                 return {
                     'TrajectoryComplete': True
@@ -461,9 +463,6 @@ class UAVGen(PrognosticsModel):
         if 'save_freq' not in kwargs:
             kwargs['save_freq'] = self.parameters['dt'] # if save_freq not specified, set at dt for best output 
 
-        # Define initial x to avoid re-initializing 
-        # kwargs['x'] = deepcopy(self.parameters['x0'])
-
         def future_loading_new(t, x=None): 
             if t == 0:
                 ref_now = np.concatenate((self.ref_traj.cartesian_pos[0,:], self.ref_traj.attitude[0,:], 
@@ -475,7 +474,7 @@ class UAVGen(PrognosticsModel):
      
                 return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
             else:
-                t_temp = np.round(t - self.parameters['dt']/2,1) # THIS NEEDS HELP
+                t_temp = np.round(t + self.parameters['dt']/2,1) 
                 time_ind = np.argmin(np.abs(t_temp - self.ref_traj.time.tolist()))
                 ref_now = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
                                         self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)

@@ -45,7 +45,7 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
     :param lon:         1D array or list, longitude positions
     :param alt:         1D array or list, altitude positions
     :param departure_time:          timestamp, flight departure time
-    The following are kewywords for the dictionary 'route_parameters':
+    The following are keywords for the dictionary 'route_parameters':
         :param cruise_speed:            scalar, cruise speed in-between waypoints, default is None.
         :param ascent_speed:            scalar, ascent speed, default is None.
         :param descent_speed:           scalar, descent_speed, default is None.

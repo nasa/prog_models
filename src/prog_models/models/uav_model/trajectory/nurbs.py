@@ -42,7 +42,7 @@ def knot_vector(n, k):
 def basisfunction(order, u, t):
     """
     :param order:
-    :param u:           independent variable u used to generate basis funciton N(u)
+    :param u:           independent variable u used to generate basis function N(u)
     :param t:           knot vector defining the control points
     :return:            basis function of order 'order', N_order(u)
     """

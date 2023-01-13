@@ -32,18 +32,30 @@ def load_traj_from_txt(fname, skiprows=1, comments='#', max_rows=None):
         raise ProgModelInputException("Waypoints longitude must be defined in degrees (with 'lon_deg') or radians (with 'lon_rad').")
     if 'alt_ft' not in data_id and 'alt_m' not in data_id:
         raise ProgModelInputException("Waypoints altitude must be defined in feet (with 'alt_ft') or meters (with 'alt_m').")    
-    
+    if not (data_id[0] == 'lat_deg' or data_id[0] == 'lat_rad'):
+        raise ProgModelInputException("Waypoint latitudes must be the first column in text file.")
+    if not (data_id[1] == 'lon_deg' or data_id[1] == 'lon_rad'):
+        raise ProgModelInputException("Waypoint longitudes must be the second column in text file.") 
+    if not (data_id[2] == 'alt_m' or data_id[2] == 'alt_ft'):
+        raise ProgModelInputException("Waypoint altitudes must be the third column in text file.")
+    if data_id.shape[0] > 3 and data_id[3] != 'time_unix':
+        raise ProgModelInputException("ETAs must be defined in unix time (with 'time_unix').")
+    if data_id.shape[0] > 4:
+        raise ProgModelInputException("Too much waypoint information provided. Only latitude, longitude, altitude, and time is accepted.")
+
     # Convert, if necessary
     d = np.loadtxt(fname=fname, skiprows=skiprows, comments=comments, max_rows=max_rows)
     if 'lat_deg' in data_id:
         lat = d[:, 0] * DEG2RAD  # covert deg 2 rad
-        lon = d[:, 1] * DEG2RAD  # covert deg 2 rad
-    else: 
+    elif 'lat_rad' in data_id: 
         lat = d[:, 0]
+    if 'lon_deg' in data_id:
+        lon = d[:, 1] * DEG2RAD  # covert deg 2 rad
+    elif 'lon_rad' in data_id: 
         lon = d[:, 1]
     if 'alt_ft' in data_id:
         alt = d[:, 2] * FEET2MET  # covert feet 2 meters
-    else: 
+    elif 'alt_m' in data_id: 
         alt = d[:, 2]
 
     if d.shape[1] > 3:

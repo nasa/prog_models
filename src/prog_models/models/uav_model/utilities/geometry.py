@@ -314,7 +314,7 @@ class Coord():
         OUTPUT
             lat     n x 1 array, real, [rad], latitude values
             lon     n x 1 array, real, [rad], longitude values
-            alt     n x 1 array, real, [m], altitudevalues
+            alt     n x 1 array, real, [m], altitude values
         """
 
         # Ancillary variables

@@ -21,7 +21,7 @@ def lqr_fn(A, B, Q, R):
 
     :param A:       Nx x Nx state matrix, linearized w.r.t. current attitude and thrust
     :param B:       Nu x Nx input matrix, linearized w.r.t. current attitude
-    :param Q:       Nx x Nx state cost matrix, higher the values of the (i,i)-th element is the more aggresive the controller is w.r.t. that variable
+    :param Q:       Nx x Nx state cost matrix, higher the values of the (i,i)-th element is the more aggressive the controller is w.r.t. that variable
     :param R:       Nx x Nu input cost matrix, higher values imply higher cost of producing that input (used to limit the amount of power)
     :return K:      Nx x Nu, control gain matrix
     :return E:      Nx x 1, eigenvalues of the matrix A - B * K

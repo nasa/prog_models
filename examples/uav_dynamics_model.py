@@ -38,7 +38,7 @@ def run_example():
     # Set simulation options 
     options = {
         # 'dt': 0.1, # Note that this value isn't used internally, as simulate_to dt is defined as params_1['dt]; if dt is defined here as any other value, a warning will be returned
-        'save_freq': params_1['dt'] 
+        'save_freq': params_1['dt']
     }
 
     # Generate trajectory
@@ -88,18 +88,14 @@ def run_example():
     uav_2.visualize_traj(traj_results_2)
 
 
-    # Example 3: using complex UAV model parameters 
+    # Example 3: generate trajectory using complex UAV model parameters and waypoint information from text file
     # The UAV model class has other optional parameters for more specific modeling. Here, we illustrate the use of a few of these parameters.
 
     # Define model parameters - this time we must specify speeds since ETAs are not given as input
     params_3 = {
-        'flight_plan': waypoints, # Specify waypoints 
+        'flight_file': 'examples/uav_waypoints.txt', # Specify path of text file with waypoints 
         'dt': 0.1, 
         'vehicle_model': 'tarot18',
-        'cruise_speed': 6.0, # Additionally specify speeds 
-        'ascent_speed': 3.0,
-        'descent_speed': 3.0, 
-        'landing_speed': 1.5,
         'payload': 5.0, # kg, Add payload to vehicle
         'hovering_time': 10.0, # s, Add hovering time between each waypoint
         'final_time_buffer_sec': 15, # s, Defines acceptable time interval to reach final waypoint 
