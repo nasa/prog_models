@@ -6,8 +6,8 @@ Geometric functions
 """
 
 import numpy as np
-from prog_models.exceptions import ProgModelInputException
 
+from prog_models.exceptions import ProgModelInputException
 
 # EARTH-RELATED DISTANCE FUNCTIONS
 # ================================

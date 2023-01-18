@@ -8,6 +8,7 @@ Vehicle Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.g
 # Import functions
 # =================
 import numpy as np
+
 from prog_models.models.uav_model.vehicles.control import allocation_functions as caf
 
 # VEHICLE MODELS

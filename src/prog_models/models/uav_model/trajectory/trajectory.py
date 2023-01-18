@@ -5,12 +5,12 @@
 Auxiliary functions for trajectories and aircraft routes
 """
 
+import numpy as np
+import scipy.interpolate as interp
+
 import os
 import sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '../utilities/'))
-
-import numpy as np
-import scipy.interpolate as interp
 
 import geometry as geom
 from .nurbs import generate_3dnurbs, generate_intermediate_points, evaluate, knot_vector

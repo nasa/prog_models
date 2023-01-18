@@ -7,7 +7,8 @@ Functions to extract user-defined waypoint information and convert to appropriat
 # Imports 
 import numpy as np
 import datetime as dt
-from prog_models.models.uav_model.utilities import loadsavewrite_utils as loadsave
+
+from ..utilities import loadsavewrite_utils as loadsave
 from prog_models.exceptions import ProgModelInputException
 
 DEG2RAD = np.pi/180.0

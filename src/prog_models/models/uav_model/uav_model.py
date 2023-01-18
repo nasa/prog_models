@@ -1,17 +1,15 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from prog_models.prognostics_model import PrognosticsModel
-import prog_models.models.uav_model.trajectory.route as route 
-import prog_models.models.uav_model.trajectory.trajectory as trajectory
-from prog_models.models.uav_model.vehicles import AircraftModels
-from prog_models.models.uav_model.utilities import geometry
-
 import numpy as np
 import datetime
 from copy import deepcopy
-import prog_models.models.uav_model.utilities.geometry as geom
 from warnings import warn
+
+from prog_models.prognostics_model import PrognosticsModel
+from .trajectory import route, trajectory
+from .vehicles import AircraftModels
+from .utilities import geometry as geom
 from prog_models.exceptions import ProgModelInputException
 
 class UAVGen(PrognosticsModel):
@@ -20,10 +18,12 @@ class UAVGen(PrognosticsModel):
     
     Model generates cartesian positions and velocities, pitch, roll, and yaw, and angular velocities throughout time to satisfy some user-define waypoints. 
 
+    See [0]_ for modeling details. 
+
     :term:`Events<event>`: (1)
-        TrajectoryComplete: percentage of waypoints remaining for trajectory to pass through
+        TrajectoryComplete: All waypoints are completed 
     
-    :term:`Inputs/Loading<input>`: ()
+    :term:`Inputs/Loading<input>`: (0)
         | User-defined inputs: waypoints plus ETAs or speeds
         | Model-defined inputs: 
             | T: thrust
@@ -47,9 +47,9 @@ class UAVGen(PrognosticsModel):
         | t: time 
 
     :term:`Outputs<output>`: (12)
-        | x: cartesian position
-        | y: cartesian position
-        | z: cartesian position
+        | x: cartesian position, pointing East, with reference frame centered on the first waypoint
+        | y: cartesian position, pointing North, with reference frame centered on the first waypoint 
+        | z: cartesian position, pointing Up, with reference frame centered on the first waypoint 
         | phi: pitch
         | theta: roll
         | psi: yaw
@@ -59,7 +59,6 @@ class UAVGen(PrognosticsModel):
         | p: angular velocity 
         | q: angular velocity 
         | r: angular velocity 
-        | t: time 
 
     Keyword Args
     ------------
@@ -92,9 +91,9 @@ class UAVGen(PrognosticsModel):
           Optional string to identify flight plan.
         aircraft_name : Optional, str
           Optional string to identify aircraft. 
-        dt : float
+        dt : Optional, float
           Time step in seconds for trajectory generation
-        gravity : float
+        gravity : Optional, float
           m/s^2, gravity magnitude
         cruise_speed : float
           m/s, avg speed in-between way-points
@@ -104,34 +103,34 @@ class UAVGen(PrognosticsModel):
           m/s, vertical speed (down)
         landing_speed : float
           m/s, landing speed when altitude < 10m
-        hovering_time : float
+        hovering_time : Optional, float
           s, time to hover between waypoints
-        takeoff_time : float
+        takeoff_time : Optional, float
           s, additional takeoff time 
-        landing_time: float
+        landing_time: Optional, float
           s, additional landing time 
-        waypoint_weights: 
+        waypoint_weights: Optional, float
           weights of the waypoints in nurbs calculation 
-        adjust_eta: dict 
+        adjust_eta: Optional, dict 
           Dictionary with keys ['hours', 'seconds'], to adjust route time
-        nurbs_basis_length: float
+        nurbs_basis_length: Optional, float
           Length of the basis function in the nurbs algorithm
-        nurbs_order: int
+        nurbs_order: Optional, int
           Order of the nurbs curve
-        final_time_buffer_sec: float
+        final_time_buffer_sec: Optional, float
           s, defines an acceptable time range to reach the final waypoint
-        final_space_buffer_m: float
+        final_space_buffer_m: Optional, float
           m, defines an acceptable distance range to reach final waypoint 
-        vehicle_model: str
+        vehicle_model: Optional, str
           String to specify vehicle type. 'tarot18' and 'djis1000' are supported
-        vehicle_payload: float
+        vehicle_payload: Optional, float
           kg, payload mass
 
     References 
     ----------
         References 
     -------------
-     .. [] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
+     .. [0] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
     """
     events = ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
@@ -176,9 +175,9 @@ class UAVGen(PrognosticsModel):
         # Check for appropriate input:
         if not isinstance(self.parameters['flight_plan'], dict):
           raise ProgModelInputException("'flight_plan' must be a dictionary. Type {} was given".format(type(self.parameters['flight_plan'])))
-        for key in self.parameters['flight_plan'].keys():
-          if not isinstance(self.parameters['flight_plan'][key], np.ndarray):
-            raise ProgModelInputException("'flight_plan' entries must be numpy arrays specifying waypoint information. Type {} was given".format(type(self.parameters['flight_plan'])))
+        for flight_plan_element in self.parameters['flight_plan'].values():
+          if not isinstance(flight_plan_element, np.ndarray):
+            raise ProgModelInputException("'flight_plan' entries must be numpy arrays specifying waypoint information. Type {} was given".format(type(flight_plan_element)))
 
         flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
         lat = flightplan['lat_rad']
@@ -189,9 +188,9 @@ class UAVGen(PrognosticsModel):
         flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
         lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
       elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] != None:
-        raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file.")
+        raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file, not both.")
       else:
-        raise ProgModelInputException("No flight plan information supplied.")
+        raise ProgModelInputException("No flight plan information supplied. Please provide flight_plan or flight_file.")
 
       aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
                                               model=self.parameters['vehicle_model'],
@@ -217,7 +216,7 @@ class UAVGen(PrognosticsModel):
                                 parameters = self.parameters)
 
       # Save final waypoint information for threshold_met and event_state 
-      coord_end = geometry.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
+      coord_end = geom.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
       self.coord_transform = deepcopy(coord_end)
       wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
       wypt_x = []
@@ -232,13 +231,15 @@ class UAVGen(PrognosticsModel):
       
       # Generate trajectory
       ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
-      ref_traj.generate(dt=self.parameters['dt'], 
-                      nurbs_order=self.parameters['nurbs_order'], 
-                      gravity=self.parameters['gravity'], 
-                      weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat)),   # weight of waypoints
-                      nurbs_basis_length=self.parameters['nurbs_basis_length'],
-                      max_phi=aircraft1.dynamics['max_roll'],                    # rad, allowable roll for the aircraft
-                      max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
+      weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat))  
+      ref_traj.generate(
+                    dt=self.parameters['dt'], 
+                    nurbs_order=self.parameters['nurbs_order'], 
+                    gravity=self.parameters['gravity'], 
+                    weight_vector=weight_vector, # weight of waypoints
+                    nurbs_basis_length=self.parameters['nurbs_basis_length'],
+                    max_phi=aircraft1.dynamics['max_roll'],                    # rad, allowable roll for the aircraft
+                    max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
 
       self.ref_traj = ref_traj
       self.current_time = 0
@@ -354,7 +355,7 @@ class UAVGen(PrognosticsModel):
 
         # Check if at intial waypoint. If so, event_state is 1
         if index_next == 0:
-            self.parameters['waypoints']['next_waypoint'] += 1
+            self.parameters['waypoints']['next_waypoint'] = 1
             return {
                 'TrajectoryComplete': 1
             }
@@ -406,22 +407,8 @@ class UAVGen(PrognosticsModel):
                 }
  
     def output(self, x : dict):
-        # Output is the same as the state vector
-        return self.OutputContainer({
-            'x': x['x'],
-            'y': x['y'],
-            'z': x['z'],
-            'phi': x['phi'],
-            'theta': x['theta'],
-            'psi': x['psi'],
-            'vx': x['vx'],
-            'vy': x['vy'],
-            'vz': x['vz'],
-            'p': x['p'],
-            'q': x['q'],
-            'r': x['r'],
-            't': x['t']
-            })
+        # Output is the same as the state vector, without time 
+        return self.OutputContainer(x.matrix[0:-1])
 
     def threshold_met(self, x : dict) -> dict:
         t_lower_bound = self.parameters['waypoints']['waypoints_time'][-1] - (self.parameters['waypoints']['waypoints_time'][-1] - self.parameters['waypoints']['waypoints_time'][-2])/2
@@ -491,6 +478,20 @@ class UAVGen(PrognosticsModel):
         return results 
 
     def visualize_traj(self, pred):
+        """
+        This method provides functionality to visualize a predicted trajectory generated, plotted with the reference trajectory and coarse waypoints. 
+
+        Calling this returns a figure with two subplots: 1) latitude (deg) vs longitude (deg), and 2) altitude (m) vs time.
+
+        Parameters
+        ----------
+        pred : UAVGen model simulation  
+               SimulationResults from simulate_to or simulate_to_threshold for a defined UAVGen class
+
+        Returns 
+        -------
+        fig : Visualization of trajectory generation results 
+        """
 
         import matplotlib.pyplot as plt
 
