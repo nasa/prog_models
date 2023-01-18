@@ -218,8 +218,8 @@ class Route():
         if eta is not None: # if ETA is provided, assign to self.eta and that's it.
             if hasattr(eta, "__len__") is False or len(eta)!=len(self.lat):
                 raise ProgModelInputException("ETA must be vector array with same length as lat, lon and alt.")
-            # Assign departure timestamp
-            departure_timestamp = self.departure_time.timestamp()
+            # # Assign departure timestamp
+            # departure_timestamp = self.departure_time.timestamp() # Deleting departure_timestamp since it's not used.
             eta_unix = np.zeros_like(eta, dtype=np.float64)
             for i, eta_i in enumerate(eta):
                 eta_unix[i] = dt.datetime.timestamp(eta_i) 

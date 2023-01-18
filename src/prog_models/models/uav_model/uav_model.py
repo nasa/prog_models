@@ -16,7 +16,21 @@ from prog_models.exceptions import ProgModelInputException
 
 class UAVGen(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` to generate a predicted trajectory for a UAV. 
+    Vectorized prognostics :term:`model` to generate a predicted trajectory for a UAV using a n=6 degrees-of-freedom dynamic model
+    with feedback control loop. The model follows the form:
+    
+    u     = h(x, x_{ref})
+    dx/dt = f(x, \theta, u)
+    
+    where:
+      x is a 2n state vector containing position, attitude and corresponding derivatives
+      \theta is a vector of model parameters including UAV mass, inertia moment, aerodynamic coefficients, etc
+      u is the input vector: thrust along the body vertical axis, and three moments along the UAV body axis to follow the desired trajectory.
+      x_{ref} is the desired state vector at that specific time step, with dimension 2n
+      f(.) is growth rate function of all vechile state
+      h(.) is the feedback-loop control function that returns the necessary thrust and moments (u vector) to cover the error between desired state x_{ref} and current state x
+      dx/dt is the state-increment per unit time.
+
     
     Model generates cartesian positions and velocities, pitch, roll, and yaw, and angular velocities throughout time to satisfy some user-define waypoints. 
 
@@ -32,33 +46,33 @@ class UAVGen(PrognosticsModel):
             | mz: moment in z
 
     :term:`States<state>`: (13)
-        | x: cartesian position
-        | y: cartesian position
-        | z: cartesian position
-        | phi: pitch
-        | theta: roll
-        | psi: yaw
-        | vx: velocity 
-        | vy: velocity 
-        | vz: velocity 
-        | p: angular velocity 
-        | q: angular velocity 
-        | r: angular velocity 
+        | x: first position in cartesian reference frame East-North-Up (ENU), i.e., East in fixed inertia frame
+        | y: second position in cartesian reference frame East-North-Up (ENU), i.e., North in fixed inertia frame 
+        | z: third position in cartesian reference frame East-North-Up (ENU), i.e., Up in fixed inertia frame
+        | phi: Euler's first attitude angle
+        | theta: Euler's second attitude angle
+        | psi: Euler's third attitude angle
+        | vx: velocity along x-axis, i.e., velocity along East in fixed inertia frame
+        | vy: velocity along y-axis, i.e., velocity along North in fixed inertia frame
+        | vz: velocity along z-axis, i.e., velocity Up in fixed inertia frame
+        | p: angular velocity around UAV body x-axis
+        | q: angular velocity around UAV body y-axis 
+        | r: angular velocity around UAV body z-axis 
         | t: time 
 
     :term:`Outputs<output>`: (12)
-        | x: cartesian position
-        | y: cartesian position
-        | z: cartesian position
-        | phi: pitch
-        | theta: roll
-        | psi: yaw
-        | vx: velocity 
-        | vy: velocity 
-        | vz: velocity 
-        | p: angular velocity 
-        | q: angular velocity 
-        | r: angular velocity 
+        | x: first position in cartesian reference frame East-North-Up (ENU), i.e., East in fixed inertia frame
+        | y: second position in cartesian reference frame East-North-Up (ENU), i.e., North in fixed inertia frame 
+        | z: third position in cartesian reference frame East-North-Up (ENU), i.e., Up in fixed inertia frame
+        | phi: Euler's first attitude angle
+        | theta: Euler's second attitude angle
+        | psi: Euler's third attitude angle
+        | vx: velocity along x-axis, i.e., velocity along East in fixed inertia frame
+        | vy: velocity along y-axis, i.e., velocity along North in fixed inertia frame
+        | vz: velocity along z-axis, i.e., velocity Up in fixed inertia frame
+        | p: angular velocity around UAV body x-axis
+        | q: angular velocity around UAV body y-axis 
+        | r: angular velocity around UAV body z-axis 
         | t: time 
 
     Keyword Args
@@ -220,14 +234,7 @@ class UAVGen(PrognosticsModel):
       coord_end = geometry.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
       self.coord_transform = deepcopy(coord_end)
       wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
-      wypt_x = []
-      wypt_y = []
-      wypt_z = []
-      for iter1 in range(len(route_.lat)):
-          x_temp, y_temp, z_temp = coord_end.geodetic2enu(route_.lat[iter1], route_.lon[iter1], route_.alt[iter1])
-          wypt_x.append(x_temp)
-          wypt_y.append(y_temp)
-          wypt_z.append(z_temp)
+      wypt_x, wypt_y, wypt_z = coord_end.geodetic2enu(route_.lat, route_.lon, route_.alt) # computing way-points in ENU in one shot
       self.parameters['waypoints'] = {'waypoints_time': wypt_time_unix, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
       
       # Generate trajectory
@@ -250,37 +257,39 @@ class UAVGen(PrognosticsModel):
     def initialize(self, u=None, z=None): 
       # Extract initial state from reference trajectory    
       return self.StateContainer({
-          'x': self.ref_traj.cartesian_pos[0,0],
-          'y': self.ref_traj.cartesian_pos[0,1],
-          'z': self.ref_traj.cartesian_pos[0,2],
-          'phi': self.ref_traj.attitude[0,0],
-          'theta': self.ref_traj.attitude[0,1],
-          'psi': self.ref_traj.attitude[0,2],
-          'vx': self.ref_traj.velocity[0,0],
-          'vy': self.ref_traj.velocity[0,1],
-          'vz': self.ref_traj.velocity[0,2],
-          'p': self.ref_traj.angular_velocity[0,0],
-          'q': self.ref_traj.angular_velocity[0,1],
-          'r': self.ref_traj.angular_velocity[0,2],
+          'x': self.ref_traj.cartesian_pos[0, 0],
+          'y': self.ref_traj.cartesian_pos[0, 1],
+          'z': self.ref_traj.cartesian_pos[0, 2],
+          'phi': self.ref_traj.attitude[0, 0],
+          'theta': self.ref_traj.attitude[0, 1],
+          'psi': self.ref_traj.attitude[0, 2],
+          'vx': self.ref_traj.velocity[0, 0],
+          'vy': self.ref_traj.velocity[0, 1],
+          'vz': self.ref_traj.velocity[0, 2],
+          'p': self.ref_traj.angular_velocity[0, 0],
+          'q': self.ref_traj.angular_velocity[0, 1],
+          'r': self.ref_traj.angular_velocity[0, 2],
           't': 0
           })
     
     def dx(self, x : dict, u : dict):
 
-        # Extract values from vectors
-        # --------------------------------
+        # Extract useful values
+        # ---------------------
         m = self.vehicle_model.mass['total']  # vehicle mass
-        T = u['T'] 
-        tp = u['mx']
-        tq = u['my']
-        tr = u['mz']
         Ixx, Iyy, Izz = self.vehicle_model.mass['Ixx'], self.vehicle_model.mass['Iyy'], self.vehicle_model.mass['Izz']    # vehicle inertia
+        
+        # Input vector
+        T  = u['T']   # Thrust (along body z)
+        tp = u['mx']  # Moment along body x
+        tq = u['my']  # Moment along body y
+        tr = u['mz']  # Moment along body z
 
         # Extract state variables from current state vector
         # -------------------------------------------------
-        phi = x['phi'] 
+        phi   = x['phi'] 
         theta = x['theta'] 
-        psi = x['psi']
+        psi   = x['psi']
         vx_a = x['vx']
         vy_a = x['vy']
         vz_a = x['vz']
@@ -301,14 +310,14 @@ class UAVGen(PrognosticsModel):
         # Compute drag forces
         # -------------------
         v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
-        v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
+        v_body  = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
         fb_drag = self.vehicle_model.aero['drag'](v_body) 
         fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
         fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
 
         # Update state vector
         # -------------------
-        dxdt     = np.zeros((len(x),))
+        dxdt = np.zeros((len(x),))
         
         dxdt[0] = vx_a
         dxdt[1] = vy_a
@@ -318,34 +327,21 @@ class UAVGen(PrognosticsModel):
         dxdt[4]  = q * cos_phi - r * sin_phi
         dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta
         
-        dxdt[6]  = (sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T / m - 1.0/m * fe_drag[0]
-        dxdt[7]  = (sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T / m - 1.0/m * fe_drag[1]
-        dxdt[8]  = - self.parameters['gravity'] + cos_phi * cos_theta  * T / m - 1.0/m * fe_drag[2]
+        dxdt[6]  = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m
+        dxdt[7]  = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m
+        dxdt[8]  = - self.parameters['gravity'] + (cos_phi * cos_theta  * T - fe_drag[2]) / m
 
-        dxdt[9]  = (Iyy - Izz) / Ixx * q * r + tp * self.vehicle_model.geom['arm_length'] / Ixx
-        dxdt[10] = (Izz - Ixx) / Iyy * p * r + tq * self.vehicle_model.geom['arm_length'] / Iyy
-        dxdt[11] = (Ixx - Iyy) / Izz * p * q + tr *        1                / Izz
-        dxdt[12] = 1 
+        dxdt[9]  = ((Iyy - Izz) * q * r + tp * self.vehicle_model.geom['arm_length']) / Ixx
+        dxdt[10] = ((Izz - Ixx) * p * r + tq * self.vehicle_model.geom['arm_length']) / Iyy
+        dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz
+        dxdt[12] = 1
 
         # Set vehicle state:
         state_temp = np.array([x[iter] for iter in x.keys()])
         self.vehicle_model.set_state(state=state_temp + dxdt*self.parameters['dt'])
-
-        return self.StateContainer(np.array([
-            np.atleast_1d(dxdt[0]),
-            np.atleast_1d(dxdt[1]),
-            np.atleast_1d(dxdt[2]),
-            np.atleast_1d(dxdt[3]),
-            np.atleast_1d(dxdt[4]),
-            np.atleast_1d(dxdt[5]),
-            np.atleast_1d(dxdt[6]),
-            np.atleast_1d(dxdt[7]),
-            np.atleast_1d(dxdt[8]),
-            np.atleast_1d(dxdt[9]),
-            np.atleast_1d(dxdt[10]),
-            np.atleast_1d(dxdt[11]),
-            np.atleast_1d(dxdt[12])
-        ]))
+        
+        # I'd suggest a more compact way of generating the StateContainer
+        return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
     def event_state(self, x : dict) -> dict:
         # Extract next waypoint information 
@@ -407,21 +403,7 @@ class UAVGen(PrognosticsModel):
  
     def output(self, x : dict):
         # Output is the same as the state vector
-        return self.OutputContainer({
-            'x': x['x'],
-            'y': x['y'],
-            'z': x['z'],
-            'phi': x['phi'],
-            'theta': x['theta'],
-            'psi': x['psi'],
-            'vx': x['vx'],
-            'vy': x['vy'],
-            'vz': x['vz'],
-            'p': x['p'],
-            'q': x['q'],
-            'r': x['r'],
-            't': x['t']
-            })
+        return self.OutputContainer({key: x[key] for key in x.keys()})  # compress output container generation
 
     def threshold_met(self, x : dict) -> dict:
         t_lower_bound = self.parameters['waypoints']['waypoints_time'][-1] - (self.parameters['waypoints']['waypoints_time'][-1] - self.parameters['waypoints']['waypoints_time'][-2])/2
@@ -464,30 +446,27 @@ class UAVGen(PrognosticsModel):
             kwargs['save_freq'] = self.parameters['dt'] # if save_freq not specified, set at dt for best output 
 
         def future_loading_new(t, x=None): 
-            if t == 0:
-                ref_now = np.concatenate((self.ref_traj.cartesian_pos[0,:], self.ref_traj.attitude[0,:], 
-                                    self.ref_traj.velocity[0,:], self.ref_traj.angular_velocity[0,:]), axis=0)
-                
-                u = self.vehicle_model.control_scheduled(self.vehicle_model.state - ref_now)
-                u[0]      += self.vehicle_model.steadystate_input
-                u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])
-     
-                return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
+            # Extract current state at t
+            if x is None:
+              x_k = self.vehicle_model.state
             else:
-                t_temp = np.round(t + self.parameters['dt']/2,1) 
-                time_ind = np.argmin(np.abs(t_temp - self.ref_traj.time.tolist()))
-                ref_now = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
-                                        self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
-
-                # Define controller
-                x_temp = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
-                u = self.vehicle_model.control_scheduled(x_temp - ref_now) 
-                u[0]      += self.vehicle_model.steadystate_input
-                u[0]       = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])
-                return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
+              x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
+            
+            # Identify reference (desired state) at t
+            t_k      = np.round(t + self.parameters['dt']/2,1) 
+            time_ind = np.argmin(np.abs(t_k - self.ref_traj.time.tolist()))
+            x_ref_k  = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
+                                    self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
+            
+            # Compute system input using the error between current and reference state as input to the controller
+            u     = self.vehicle_model.control_scheduled(x_k - x_ref_k)            # compute differential input values
+            u[0] += self.vehicle_model.steadystate_input                              # add steady-state input (defined as hover condition)
+            u[0]  = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])   # limit thrust between 0 and vehicle's max thrust
+            
+            return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
 
         # Simulate to threshold 
-        results = super().simulate_to_threshold(future_loading_new,first_output, threshold_keys, **kwargs)
+        results = super().simulate_to_threshold(future_loading_new, first_output, threshold_keys, **kwargs)
         return results 
 
     def visualize_traj(self, pred):

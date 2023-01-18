@@ -23,25 +23,19 @@ def build_model(**kwargs):
 
     params = dict(name='rotorcraft-1', model='djis1000',
                   init_state_vector=None, dt=None,
-                  payload=2.0, Q=None, R=None, qi=None, i_lag=None,
+                  payload=0.0, Q=None, R=None, qi=None, i_lag=None,
                   steadystate_input=None)
     params.update(kwargs)
-    params['i_lag'] = 100
-    params['qi'] = np.array([100, 100, 300])
-    params['R'] = np.diag([10, 2000, 2000, 2000])
-    params['Q'] = np.diag([1000, 1000, 5000,  # x, y, z
-                           100.0, 100.0, 100.0,  # phi, theta, psi,
-                           1000, 1000, 5000,  # vx, vy, vz,
-                           1000, 1000, 1000])  # p, q, r
+    
     # Default control parameters (if not provided)
     if params['Q'] is None:
-        params['Q'] = np.diag([1000,  1000,  5000, # x, y, z
-                               100, 100, 100,      # phi, theta, psi, 
-                               10000, 10000, 10000,     # vx, vy, vz,
-                               10000, 10000, 10000])   # p, q, r
-    if params['R'] is None:         params['R']     = np.diag([50, 7e3, 7e3, 7e3])   # T, Mu, Mv, Mw
-    if params['qi'] is None:        params['qi']    = np.array([5000, 5000, 1000])  # Integral error weights in position x, y, z
-    if params['i_lag'] is None:     params['i_lag'] = 500                        # integral lag: how far back to use (in data points, so 1 point = 1 dt) for integral error
+        params['Q'] = np.diag([1000, 1000, 25000,  # x, y, z
+                               100.0, 100.0, 100.0,  # phi, theta, psi,
+                               1000, 1000, 5000,  # vx, vy, vz,
+                               1000, 1000, 1000])  # p, q, r
+    if params['R'] is None:         params['R']     = np.diag([500, 4000, 4000, 4000])   # T, Mu, Mv, Mw
+    if params['qi'] is None:        params['qi']    = np.array([100, 100, 1000])  # Integral error weights in position x, y, z
+    if params['i_lag'] is None:     params['i_lag'] = 100                        # integral lag: how far back to use (in data points, so 1 point = 1 dt) for integral error
 
 
     # Generate UAV model
@@ -216,6 +210,7 @@ class Rotorcraft():
             self.control_gains[:, :, jj] = K
             wb(jj)
         wb(m)
+        pass
 
     def control_realtime(self, error):
         phi, theta, psi = self.state[3:6]
