@@ -75,12 +75,8 @@ def run_example():
     # Create a model object, define noise
     uav_2 = UAVGen(**params_2)
 
-    # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
-    def future_loading_2(t, x=None):
-        return uav_2.InputContainer({}) 
-
     # Generate trajectory
-    traj_results_2 = uav_2.simulate_to_threshold(future_loading_2, **options)
+    traj_results_2 = uav_2.simulate_to_threshold(**options)
 
     # Visualize results:
     # Plot reference trajectory and generated trajectory
@@ -104,12 +100,8 @@ def run_example():
     # Create a model object, define noise
     uav_3 = UAVGen(**params_3)
 
-    # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
-    def future_loading_3(t, x=None):
-        return uav_3.InputContainer({}) 
-
     # Generate trajectory
-    traj_results_3 = uav_3.simulate_to_threshold(future_loading_3, **options)
+    traj_results_3 = uav_3.simulate_to_threshold(**options)
 
     # Visualize results:
     # Plot reference trajectory and generated trajectory

@@ -47,9 +47,9 @@ class UAVGen(PrognosticsModel):
             | mz: moment in z
 
     :term:`States<state>`: (13)
-        | x: first position in cartesian reference frame East-North-Up (ENU), i.e., East in fixed inertia frame
-        | y: second position in cartesian reference frame East-North-Up (ENU), i.e., North in fixed inertia frame 
-        | z: third position in cartesian reference frame East-North-Up (ENU), i.e., Up in fixed inertia frame
+        | x: first position in cartesian reference frame East-North-Up (ENU), i.e., East in fixed inertia frame, center is at first waypoint
+        | y: second position in cartesian reference frame East-North-Up (ENU), i.e., North in fixed inertia frame, center is at first waypoint
+        | z: third position in cartesian reference frame East-North-Up (ENU), i.e., Up in fixed inertia frame, center is at first waypoint
         | phi: Euler's first attitude angle
         | theta: Euler's second attitude angle
         | psi: Euler's third attitude angle
@@ -62,10 +62,9 @@ class UAVGen(PrognosticsModel):
         | t: time 
 
     :term:`Outputs<output>`: (12)
-<<<<<<< HEAD
-        | x: first position in cartesian reference frame East-North-Up (ENU), i.e., East in fixed inertia frame
-        | y: second position in cartesian reference frame East-North-Up (ENU), i.e., North in fixed inertia frame 
-        | z: third position in cartesian reference frame East-North-Up (ENU), i.e., Up in fixed inertia frame
+        | x: first position in cartesian reference frame East-North-Up (ENU), i.e., East in fixed inertia frame, center is at first waypoint
+        | y: second position in cartesian reference frame East-North-Up (ENU), i.e., North in fixed inertia frame, center is at first waypoint 
+        | z: third position in cartesian reference frame East-North-Up (ENU), i.e., Up in fixed inertia frame, center is at first waypoint
         | phi: Euler's first attitude angle
         | theta: Euler's second attitude angle
         | psi: Euler's third attitude angle
@@ -76,20 +75,6 @@ class UAVGen(PrognosticsModel):
         | q: angular velocity around UAV body y-axis 
         | r: angular velocity around UAV body z-axis 
         | t: time 
-=======
-        | x: cartesian position, pointing East, with reference frame centered on the first waypoint
-        | y: cartesian position, pointing North, with reference frame centered on the first waypoint 
-        | z: cartesian position, pointing Up, with reference frame centered on the first waypoint 
-        | phi: pitch
-        | theta: roll
-        | psi: yaw
-        | vx: velocity 
-        | vy: velocity 
-        | vz: velocity 
-        | p: angular velocity 
-        | q: angular velocity 
-        | r: angular velocity 
->>>>>>> 557553c7c48b59f1c965e30dadec4506f84a8cab
 
     Keyword Args
     ------------
@@ -202,6 +187,9 @@ class UAVGen(PrognosticsModel):
 
       super().__init__(**kwargs)
       
+      # Get Flight Plan
+      # ================
+      # Option 1: fligh_plan, in form of dict of numpy arrays with way-points and time/speed, is passed, while there's no file to load the flight plan
       if self.parameters['flight_plan'] is not None and self.parameters['flight_file'] == None:
         # Check for appropriate input:
         if not isinstance(self.parameters['flight_plan'], dict):
@@ -209,26 +197,39 @@ class UAVGen(PrognosticsModel):
         for flight_plan_element in self.parameters['flight_plan'].values():
           if not isinstance(flight_plan_element, np.ndarray):
             raise ProgModelInputException("'flight_plan' entries must be numpy arrays specifying waypoint information. Type {} was given".format(type(flight_plan_element)))
-
+        
+        # Extract data from flight plan: latitude, longitude, altitude, time stamps
         flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
         lat = flightplan['lat_rad']
         lon = flightplan['lon_rad']
         alt = flightplan['alt_m']
         tstamps = flightplan['timestamp']
+      
+      # Option 2: a file with flight plan is passed
       elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] == None:
         flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
+        # Extract data from flight plan: latitude, longitude, altitude, time stamps
         lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
+      
+      # Option 3: both file with flight plan and dictionary with flight plan are passed, throw an error. Only 1 flight plan is allowed
       elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] != None:
         raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file, not both.")
+      
+      # Option 4: no flight plan is passed. Throw an error. 
       else:
         raise ProgModelInputException("No flight plan information supplied. Please provide flight_plan or flight_file.")
 
+      # Build aircraft model
+      # ====================
+      # build aicraft, which means create rotorcraft from type (model), initialize state vector, steady-state input (i.e., hover thrust for rotorcraft), controller type 
+      # and corresponding setup (scheduled, real-time) and initialization.
       aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
                                               model=self.parameters['vehicle_model'],
                                               payload=self.parameters['vehicle_payload'])
       self.vehicle_model = aircraft1 
 
       # Generate route
+      # ==============
       if len(tstamps) > 1:
           # ETAs specified: 
           # Check if speeds have been defined and warn user if so:
@@ -243,34 +244,42 @@ class UAVGen(PrognosticsModel):
           # Check that speeds have been provided:
           if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None or self.parameters['landing_speed'] is None:
               raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
+          # Build route (set of way-points with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
           route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = self.parameters)
 
+      # Convert route 
+      # -------------
+      # in geodetic coordinates (lat, lon, alt) into cartesian coordinates (x, y, z) according to ENU reference frame (x=East, y=North, z=Up). First coordinate is x=y=z=0.
+      # coord_end = geom.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
+      # self.coord_transform = deepcopy(coord_end)
+      self.coord_transform = geom.Coord(route_.lat[0], route_.lon[0], route_.alt[0])  # generate a Coordinate transformation object centered on the first way-point (necessary for ENU conversion).
+      wypt_time_relative = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]  # relative time
+      # wypt_x, wypt_y, wypt_z = coord_end.geodetic2enu(route_.lat, route_.lon, route_.alt) 
+      wypt_x, wypt_y, wypt_z = self.coord_transform.geodetic2enu(route_.lat, route_.lon, route_.alt)  # computing way-points in ENU
+      self.parameters['waypoints'] = {'waypoints_time': wypt_time_relative, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
       # Save final waypoint information for threshold_met and event_state 
-      coord_end = geom.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
-      self.coord_transform = deepcopy(coord_end)
-      wypt_time_unix = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]
-      wypt_x, wypt_y, wypt_z = coord_end.geodetic2enu(route_.lat, route_.lon, route_.alt) # computing way-points in ENU in one shot
-      self.parameters['waypoints'] = {'waypoints_time': wypt_time_unix, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
-      
-      # Generate trajectory
-      ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_)
-      weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat))  
-      ref_traj.generate(
-                    dt=self.parameters['dt'], 
-                    nurbs_order=self.parameters['nurbs_order'], 
-                    gravity=self.parameters['gravity'], 
-                    weight_vector=weight_vector, # weight of waypoints
-                    nurbs_basis_length=self.parameters['nurbs_basis_length'],
-                    max_phi=aircraft1.dynamics['max_roll'],                    # rad, allowable roll for the aircraft
-                    max_theta=aircraft1.dynamics['max_pitch'])                 # rad, allowable pitch for the aircraft
 
-      self.ref_traj = ref_traj
+      # Generate trajectory
+      # =====================
+      ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_) # Generate trajectory object and pass the route (waypoints, eta) to it
+      weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each way-point. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
+      ref_traj.generate(
+                    dt=self.parameters['dt'],                                 # assign delta t for simulation
+                    nurbs_order=self.parameters['nurbs_order'],               # nurbs order, higher the order, smoother the derivatiges of trajectory's position profile
+                    gravity=self.parameters['gravity'],                       # m/s^2, gravity magnitude
+                    weight_vector=weight_vector,                              # weight of waypoints, defined ealier from 'waypoint_weights'
+                    nurbs_basis_length=self.parameters['nurbs_basis_length'], # how long each basis polynomial should be. Used to avoid numerical issues. This is rarely changed.
+                    max_phi=aircraft1.dynamics['max_roll'],                   # rad, allowable roll for the aircraft
+                    max_theta=aircraft1.dynamics['max_pitch'])                # rad, allowable pitch for the aircraft
+      self.ref_traj = ref_traj  
       self.current_time = 0
 
-      # Initialize vehicle 
-      aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))
-      aircraft1.set_dt(dt=self.parameters['dt'])
+      # Initialize vehicle: set initial state and dt for integration.
+      # ---------------------------------------------------------------
+      aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))  # set initial state
+      aircraft1.set_dt(dt=self.parameters['dt'])  # set dt for simulation
+      pass
 
     def initialize(self, u=None, z=None): 
       # Extract initial state from reference trajectory    
@@ -327,32 +336,32 @@ class UAVGen(PrognosticsModel):
         
         # Compute drag forces
         # -------------------
-        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))
-        v_body  = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)
-        fb_drag = self.vehicle_model.aero['drag'](v_body) 
-        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)
-        fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])
+        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,)) # velocity in Earth-fixed frame
+        v_body  = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)  # Velocity in body-axis
+        fb_drag = self.vehicle_model.aero['drag'](v_body)   # drag force in body axis
+        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag) # drag forces in Earth-fixed frame
+        fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])  # adjust vertical (z=Up) force according to velocity in fixed frame
 
         # Update state vector
         # -------------------
         dxdt = np.zeros((len(x),))
         
-        dxdt[0] = vx_a
-        dxdt[1] = vy_a
-        dxdt[2] = vz_a
+        dxdt[0] = vx_a    # x-position increment (airspeed along x-direction)
+        dxdt[1] = vy_a    # y-position increment (airspeed along y-direction)
+        dxdt[2] = vz_a    # z-position increment (airspeed along z-direction)
         
-        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta
-        dxdt[4]  = q * cos_phi - r * sin_phi
-        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta
+        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta        # Euler's angle phi increment
+        dxdt[4]  = q * cos_phi - r * sin_phi                                    # Euler's angle theta increment
+        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta            # Euler's angle psi increment
         
-        dxdt[6]  = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m
-        dxdt[7]  = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m
-        dxdt[8]  = - self.parameters['gravity'] + (cos_phi * cos_theta  * T - fe_drag[2]) / m
+        dxdt[6]  = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m   # Acceleration along x-axis
+        dxdt[7]  = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m   # Acceleration along y-axis
+        dxdt[8]  = - self.parameters['gravity'] + (cos_phi * cos_theta  * T - fe_drag[2]) / m   # Acceleration along z-axis
 
-        dxdt[9]  = ((Iyy - Izz) * q * r + tp * self.vehicle_model.geom['arm_length']) / Ixx
-        dxdt[10] = ((Izz - Ixx) * p * r + tq * self.vehicle_model.geom['arm_length']) / Iyy
-        dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz
-        dxdt[12] = 1
+        dxdt[9]  = ((Iyy - Izz) * q * r + tp * self.vehicle_model.geom['arm_length']) / Ixx     # Angular acceleration along body x-axis: roll rate
+        dxdt[10] = ((Izz - Ixx) * p * r + tq * self.vehicle_model.geom['arm_length']) / Iyy     # Angular acceleration along body y-axis: pitch rate
+        dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz                   # Angular acceleration along body z-axis: yaw rate
+        dxdt[12] = 1                                                                            # Auxiliary time variable
 
         # Set vehicle state:
         state_temp = np.array([x[iter] for iter in x.keys()])
@@ -478,7 +487,7 @@ class UAVGen(PrognosticsModel):
                                     self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
             
             # Compute system input using the error between current and reference state as input to the controller
-            u     = self.vehicle_model.control_scheduled(x_k - x_ref_k)            # compute differential input values
+            u     = self.vehicle_model.control_fn(x_k - x_ref_k)                      # compute differential input values from error
             u[0] += self.vehicle_model.steadystate_input                              # add steady-state input (defined as hover condition)
             u[0]  = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])   # limit thrust between 0 and vehicle's max thrust
             
