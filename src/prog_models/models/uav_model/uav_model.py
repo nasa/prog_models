@@ -5,6 +5,7 @@ import numpy as np
 import datetime
 from copy import deepcopy
 from warnings import warn
+from typing import Callable
 
 from prog_models.prognostics_model import PrognosticsModel
 from .trajectory import route, trajectory
@@ -449,7 +450,7 @@ class UAVGen(PrognosticsModel):
                 'TrajectoryComplete': True
             }
 
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+    def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys = None, **kwargs):
         
         if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:
             if isinstance(kwargs['dt'], int): 
