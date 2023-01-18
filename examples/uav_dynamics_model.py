@@ -4,10 +4,10 @@
 """
 Example of generating a trajectory for a rotorcraft through a set of coarse waypoints 
 """
-from prog_models.models.uav_model.uav_model import UAVGen 
-
 import numpy as np
 import matplotlib.pyplot as plt
+
+from prog_models.models.uav_model import UAVGen 
 
 def run_example(): 
 
@@ -26,25 +26,22 @@ def run_example():
         'flight_plan': waypoints, # Specify waypoints 
         'dt': 0.1, # Define time step for model generation; this value is also used for simulate_to functionality 
         'vehicle_model': 'tarot18', # Define vehicle
+        'process_noise': 0
     }
 
     # Create a model object, define noise
     uav_1 = UAVGen(**params_1)
     uav_1.parameters['process_noise'] = 0
     uav_1.initialize()
-    
-    # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
-    def future_loading_1(t, x=None):
-        return uav_1.InputContainer({}) 
 
     # Set simulation options 
     options = {
-        # 'dt': 0.1, # Note that this value isn't used internally, as simulate_to dt is defined as params_1['dt]; if dt is defined here as any other value, a warning will be returned
+        # 'dt': 0.1, # Note that this value isn't used internally, as simulate_to dt is defined as params_1['dt']; if dt is defined here as any other value, a warning will be returned
         'save_freq': params_1['dt']
     }
 
     # Generate trajectory
-    traj_results_1 = uav_1.simulate_to_threshold(future_loading_1, **options)
+    traj_results_1 = uav_1.simulate_to_threshold(**options)
 
     # Visualize results:
     # Plot reference trajectory and generated trajectory - use 'visualize_traj' function in the UAVGen class
@@ -72,11 +69,11 @@ def run_example():
         'ascent_speed': 3.0,
         'descent_speed': 3.0, 
         'landing_speed': 1.5,
+        'process_noise': 0
     }
 
     # Create a model object, define noise
     uav_2 = UAVGen(**params_2)
-    uav_2.parameters['process_noise'] = 0
 
     # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
     def future_loading_2(t, x=None):
@@ -101,11 +98,11 @@ def run_example():
         'payload': 5.0, # kg, Add payload to vehicle
         'hovering_time': 10.0, # s, Add hovering time between each waypoint
         'final_time_buffer_sec': 15, # s, Defines acceptable time interval to reach final waypoint 
+        'process_noise': 0
     }
 
     # Create a model object, define noise
     uav_3 = UAVGen(**params_3)
-    uav_3.parameters['process_noise'] = 0
 
     # Define future loading function to return empty InputContainer, since there is no user-defined loading in trajectory generation 
     def future_loading_3(t, x=None):

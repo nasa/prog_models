@@ -4,11 +4,11 @@
 """
 Aircraft Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.gov) for SWS project
 """
+import numpy as np
+
 import sys
 import os
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '../utilities/'))
-
-import numpy as np
 
 from prog_models.models.uav_model.vehicles.control import controllers
 from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
