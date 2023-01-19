@@ -6,14 +6,10 @@ Aircraft Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.
 """
 import numpy as np
 
-import sys
-import os
-sys.path.insert(1, os.path.join(os.path.dirname(__file__), '../utilities/'))
-
-from prog_models.models.uav_model.vehicles.control import controllers
-from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
-import prog_models.models.uav_model.utilities.utils as utils
-import prog_models.models.uav_model.vehicles.vehicles as vehicles
+from .control import controllers
+from .aero import aerodynamics as aero
+from ..utilities import utils
+from ..vehicles import vehicles
 from prog_models.exceptions import ProgModelException
 
 
@@ -104,17 +100,13 @@ class Rotorcraft():
 
         self.geom.update(kwargs)
         self.dynamics.update(kwargs)
-        
-        pass
 
     def set_state(self, state):
         self.state = state.copy()
-        pass
 
     def set_dt(self, dt):
         self.dt = dt
         self.controller.dt = dt
-        pass
     
     def build(self, initial_state=None, steadystate_input=None, dt=0.01):
 
@@ -136,7 +128,6 @@ class Rotorcraft():
 
         # Integration properties
         self.dt = dt
-        pass
 
     def set_controller(self, type_='LQR', strategy='realtime', scheduled_states=None, scheduled_var='psi', Q=None, R=None, qi=None, int_lag=np.inf):
 
@@ -210,7 +201,6 @@ class Rotorcraft():
             self.control_gains[:, :, jj] = K
             wb(jj)
         wb(m)
-        pass
 
     def control_realtime(self, error):
         phi, theta, psi = self.state[3:6]

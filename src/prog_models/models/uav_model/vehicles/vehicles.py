@@ -9,11 +9,10 @@ Vehicle Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.g
 # =================
 import numpy as np
 
-from prog_models.models.uav_model.vehicles.control import allocation_functions as caf
+from .control import allocation_functions as caf
 
 # VEHICLE MODELS
 # ==============
-"""     Octocopter -- TAROT T18       """
 def TAROT18(payload=0.0, gravity=9.81):
     """
     Tarot T18 Octocopter

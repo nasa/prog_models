@@ -3,7 +3,6 @@
 
 import numpy as np
 import datetime
-from copy import deepcopy
 from warnings import warn
 from typing import Callable
 
@@ -74,7 +73,6 @@ class UAVGen(PrognosticsModel):
         | p: angular velocity around UAV body x-axis
         | q: angular velocity around UAV body y-axis 
         | r: angular velocity around UAV body z-axis 
-        | t: time 
 
     Keyword Args
     ------------
@@ -189,7 +187,7 @@ class UAVGen(PrognosticsModel):
       
       # Get Flight Plan
       # ================
-      # Option 1: fligh_plan, in form of dict of numpy arrays with way-points and time/speed, is passed, while there's no file to load the flight plan
+      # Option 1: fligh_plan, in form of dict of numpy arrays with way-points and time, is passed, while there's no file to load the flight plan
       if self.parameters['flight_plan'] is not None and self.parameters['flight_file'] == None:
         # Check for appropriate input:
         if not isinstance(self.parameters['flight_plan'], dict):
@@ -279,7 +277,6 @@ class UAVGen(PrognosticsModel):
       # ---------------------------------------------------------------
       aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))  # set initial state
       aircraft1.set_dt(dt=self.parameters['dt'])  # set dt for simulation
-      pass
 
     def initialize(self, u=None, z=None): 
       # Extract initial state from reference trajectory    

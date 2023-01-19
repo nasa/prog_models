@@ -31,7 +31,6 @@ def run_example():
 
     # Create a model object, define noise
     uav_1 = UAVGen(**params_1)
-    uav_1.parameters['process_noise'] = 0
     uav_1.initialize()
 
     # Set simulation options 

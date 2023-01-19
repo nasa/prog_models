@@ -8,9 +8,6 @@ Functions for generating route - setting waypoints, calculating ETAs
 import numpy as np
 import datetime as dt
 
-import os, sys
-sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/utilities'))
-
 from ..utilities import geometry as geom
 from prog_models.exceptions import ProgModelInputException
 

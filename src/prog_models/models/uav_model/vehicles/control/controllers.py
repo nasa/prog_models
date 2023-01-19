@@ -72,7 +72,6 @@ class LQR():
 
         self.Q = Q
         self.R = R
-        pass
     
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
@@ -112,7 +111,6 @@ class LQR_I():
         self.qi = qi
         self.Qi = np.diag(np.concatenate((np.diag(self.Q), self.qi), axis=0))
         self.Ri = self.R
-        pass
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
@@ -134,7 +132,6 @@ class PDController():
     def __init__(self, kp=1.0, kd=1.0) -> None:
         self.kp = kp
         self.kd = kd
-        pass
 
     def __call__(self, x_des, x, xdot_des, xdot):
         """

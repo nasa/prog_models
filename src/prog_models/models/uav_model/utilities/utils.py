@@ -16,7 +16,6 @@ class ProgressBar():
         self.print_length = print_length
         self.fill = fill
         self.print_end = print_end
-        pass
 
     def __call__(self, iteration):
         percent = ("{0:." + str(self.decimals) + "f}").format(100 * (iteration / float(self.n)))
