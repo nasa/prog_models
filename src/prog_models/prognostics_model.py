@@ -362,6 +362,26 @@ class PrognosticsModel(ABC):
         else:
             raise ValueError(f"ValueError: dx return must be of type StateContainer, was {type(dx)}")
 
+    @property
+    def is_continuous(self):
+        """
+        Returns
+        -------
+        is_continuous : bool
+            True if model is continuous, False if discrete
+        """
+        return type(self).dx != PrognosticsModel.dx
+
+    @property
+    def is_discrete(self):
+        """
+        Returns
+        -------
+        is_discrete : bool
+            True if model is discrete, False if continuous
+        """
+        return type(self).dx == PrognosticsModel.dx
+
     def apply_limits(self, x):
         """
         Apply state bound limits. Any state outside of limits will be set to the closest limit.
