@@ -327,6 +327,15 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(**{noise_key: 0, dist_key: 'gaussian'})
         m = MockProgModel(**{noise_key: 0, dist_key: 'normal'})
         m = MockProgModel(**{noise_key: 0, dist_key: 'triangular'})
+
+    def test_isdiscrete_iscontinuous(self):
+        m = ThrownObject()
+        self.assertTrue(m.is_discrete)
+        self.assertFalse(m.is_continuous)
+
+        m = BatteryElectroChemEOD()
+        self.assertTrue(m.is_continuous)
+        self.assertFalse(m.is_discrete)
         
     def test_process_noise(self):
         self.__noise_test('process_noise', 'process_noise_dist', MockProgModel.states)
