@@ -584,33 +584,28 @@ class PrognosticsModel(ABC):
         """
         For each event threshold, calculate if it has been met
 
-        Parameters
-        ----------
-        x : StateContainer
-            state, with keys defined by model.states\n
-            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+        Args:
+            x (StateContainer):
+                state, with keys defined by model.states\n
+                e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
         
-        Returns
-        -------
-        thresholds_met : dict
-            If each threshold has been met (bool), with keys defined by prognostics_model.events\n
-            e.g., thresholds_met = {'EOL': False} given events = ['EOL']
+        Returns:
+            thresholds_met (dict):
+                If each threshold has been met (bool), with keys defined by prognostics_model.events\n
+                e.g., thresholds_met = {'EOL': False} given events = ['EOL']
 
-        Example
-        -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
+        Example:
+            | m = PrognosticsModel() # Replace with specific model being simulated
+            | u = m.InputContainer({'u1': 3.2})
+            | z = m.OutputContainer({'z1': 2.2})
+            | x = m.initialize(u, z) # Initialize first state
+            | threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
 
-        Note
-        ----
-        If not overridden, will return True if event_state is <= 0, otherwise False. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
+        Note:
+            If not overridden, will return True if event_state is <= 0, otherwise False. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
         
-        See Also
-        --------
-        event_state
+        See Also:
+            event_state
         """
         if type(self).event_state == PrognosticsModel.event_state:
             # Neither Threshold Met nor Event States are overridden
@@ -640,31 +635,67 @@ class PrognosticsModel(ABC):
         """
         return type(self).time_of_event != PrognosticsModel.time_of_event
 
+    def state_at_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs):
+        """
+        Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state tranisition model, this returns the state at which threshold_met returns true for each event.
+
+        Args:
+            x (StateContainer):
+                state, with keys defined by model.states \n
+                e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+            future_loading_eqn (callable, optional):
+                Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
+
+        Returns:
+            state_at_event (dict[str, StateContainer]):
+                state at each events occurance, with keys defined by model.events \n
+                e.g., state_at_event = {'impact': {'x1': 10, 'x2': 11}, 'falling': {'x1': 15, 'x2': 20}} given events = ['impact', 'falling'] and states = ['x1', 'x2']
+
+        Note:
+            Also supports arguments from :py:meth:`simulate_to_threshold`
+
+        See Also:
+            threshold_met
+        """
+        params = {
+            'future_loading_eqn': future_loading_eqn,
+        }
+        params.update(kwargs)
+
+        threshold_keys = self.events.copy()
+        t = 0
+        state_at_event = {}
+        while len(threshold_keys) > 0:
+            result = self.simulate_to_threshold(x = x, t0 = t, **params)
+            for key, value in result.event_states[-1].items():
+                if value <= 0 and key not in state_at_event:
+                    threshold_keys.remove(key)
+                    state_at_event[key] = result.states[-1]
+            x = result.states[-1]
+            t = result.times[-1]
+        return state_at_event
+
     def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
         Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
-        Args
-        ----------
-        x : StateContainer
-            state, with keys defined by model.states \n
-            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-        future_loading_eqn : callable, optional
-            Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
+        Args:
+            x (StateContainer):
+                state, with keys defined by model.states \n
+                e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+            future_loading_eqn (callable, optional)
+                Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
 
-        Returns
-        ------------
-        time_of_event : dict
-            time of each event, with keys defined by model.events \n
-            e.g., time_of_event = {'impact': 8.2, 'falling': 4.077} given events = ['impact', 'falling']
+        Returns:
+            time_of_event (dict)
+                time of each event, with keys defined by model.events \n
+                e.g., time_of_event = {'impact': 8.2, 'falling': 4.077} given events = ['impact', 'falling']
 
-        Note
-        -----------
-        Also supports arguments from :py:meth:`simulate_to_threshold`
+        Note:
+            Also supports arguments from :py:meth:`simulate_to_threshold`
 
-        See Also
-        --------
-        threshold_met
+        See Also:
+            threshold_met
         """
         params = {
             'future_loading_eqn': future_loading_eqn,
