@@ -26,10 +26,10 @@ class TestPowertrain(unittest.TestCase):
         # Check state transition
         x = m.next_state(x0, m.InputContainer({'v_rot': 2}), None)
         self.assertSetEqual(set(x.keys()), {'t_l'})
-        self.assertEqual(x['t_l'], m.parameters['t_l'] * 4)
+        self.assertEqual(x['t_l'], m.parameters['C_q'] * 4)
 
         x = m.next_state(x0, m.InputContainer({'v_rot': -2}), None)
-        self.assertEqual(x['t_l'], m.parameters['t_l'] * 4)
+        self.assertEqual(x['t_l'], m.parameters['C_q'] * 4)
 
         # Check output
         z = m.output(x)
@@ -37,7 +37,7 @@ class TestPowertrain(unittest.TestCase):
         self.assertEqual(z['t_l'], x['t_l'])
 
         # Events
-        self.assertSetEqual(set(m.events), {})
+        self.assertSetEqual(set(m.events), set())
 
         # State limits
         x_limited = m.apply_limits(m.StateContainer({'t_l': -1}))
