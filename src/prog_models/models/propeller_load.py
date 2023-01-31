@@ -10,6 +10,7 @@ def update_Cq(params):
         'C_q': params['c_q'] * params['rho'] * pow(params['D'], 5)
     }
 
+
 class PropellerLoad(PrognosticsModel):
     """
     This is a simple model of a propeller load. This model estimates load torque as a function of the rotational velocity. When the propeller is spinning faster, drag increases, and the propeller load on the torque increases.
