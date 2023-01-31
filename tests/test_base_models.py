@@ -913,13 +913,13 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return m.InputContainer({'i1': 1, 'i2': 2.1})
 
-        # inside bounds
+        # inside bounds using simulate_to
         x0['t'] = 0
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
-        # now using the fcn
+        # now using the apply_limits function
         x0['t'] = 0
         x = m.apply_limits(x0)
         self.assertAlmostEqual(x['t'], 0, 9)

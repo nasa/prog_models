@@ -9,5 +9,6 @@ from .dcmotor import DCMotor
 from .dcmotor_singlephase import DCMotorSP
 from .esc import ESC
 from .powertrain import Powertrain
+from .propeller_load import PropellerLoad
 from .thrown_object import ThrownObject
 from .experimental.paris_law import ParisLawCrackGrowth
