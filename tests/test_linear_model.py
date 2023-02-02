@@ -3,7 +3,6 @@
 import numpy as np
 import unittest
 
-from prog_models import *
 from prog_models.models.test_models.linear_models import FNoneNoEventStateLM
 from prog_models.models.test_models.linear_thrown_object import LinearThrownObject
 
