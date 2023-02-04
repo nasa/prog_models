@@ -5,7 +5,6 @@ import numpy as np
 
 from prog_models import LinearModel
 
-
 class FNoneNoEventStateLM(LinearModel):
     """
     Simple model that increases state by u1 every step. 
