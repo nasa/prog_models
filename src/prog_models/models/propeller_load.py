@@ -5,6 +5,7 @@ import numpy as np
 
 from .. import PrognosticsModel
 
+
 def update_Cq(params):
     return {
         'C_q': params['c_q'] * params['rho'] * pow(params['D'], 5)
@@ -28,10 +29,10 @@ class PropellerLoad(PrognosticsModel):
     }
 
     default_parameters = {
-        # Load parameters 
-        'c_q': 5.42e-7, # coefficient of torque (APC data, derived) [dimensionless]
-        'rho': 1.225, # (Kg/m^3)
-        'D': 0.381, # (m)
+        # Load parameters
+        'c_q': 5.42e-7,  # coefficient of torque (APC data, derived) [dimensionless]
+        'rho': 1.225,  # (Kg/m^3)
+        'D': 0.381,  # (m)
 
         'x0': {
             't_l': 0,
@@ -43,7 +44,8 @@ class PropellerLoad(PrognosticsModel):
     }
 
     def next_state(self, x, u, dt):
-        return self.StateContainer({'t_l': self.parameters['C_q']*u['v_rot']**2})
+        return self.StateContainer({
+            't_l': self.parameters['C_q']*u['v_rot']**2})
     
     def output(self, x):
         return x
