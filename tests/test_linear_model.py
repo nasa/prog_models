@@ -3,86 +3,15 @@
 import numpy as np
 import unittest
 
-from prog_models import *
 from prog_models.models.test_models.linear_models import FNoneNoEventStateLM
-
-class LinearThrownObject(LinearModel):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    # B = np.array([[1, 0], [0, 1]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
-        'g': -9.81  # Acceleration due to gravity in m/s^2
-    }
-
-    def initialize(self, u=None, z=None):
-        return self.StateContainer({
-            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            })
-    
-    def threshold_met(self, x):
-        return {
-            'falling': x['v'] < 0,
-            'impact': x['x'] <= 0
-        }
-
-    def event_state(self, x): 
-        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-        return {
-            'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-        }
-
-class LinearThrownObject_WrongB(LinearModel):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[1, 0], [0, 1]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
-        'g': -9.81  # Acceleration due to gravity in m/s^2
-    }
-
-    def initialize(self, u=None, z=None):
-        return self.StateContainer({
-            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            })
-    
-    def threshold_met(self, x):
-        return {
-            'falling': x['v'] < 0,
-            'impact': x['x'] <= 0
-        }
-
-    def event_state(self, x): 
-        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-        return {
-            'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-        }
-
+from prog_models.models.test_models.linear_thrown_object import LinearThrownObject, LinearThrownObject_WrongB
 
 
 # TODO: IF no inputs, parameters should be not be instantied at all. e.g) Having 0 inputs means B will be a 2x0, which is not possible.
+
+# linear_thrown_object comments...
+
+# Figure out why its an attribute error and not a typeerror FOR paramter B. line 55.
 
 class TestLinearModel(unittest.TestCase):
     def test_linear_model(self):
@@ -118,6 +47,7 @@ class TestLinearModel(unittest.TestCase):
             m.A = True # boolean
             m.matrixCheck()
         # @B
+        # PART 2: Add a test that sees the new runtime check works from linear_model line 73
         # Tests created for @B mainly because we are exploring when optional paramters are inputted.
         with self.assertRaises(AttributeError):
             m.B = "[[0, 1], [0, 0]]" # string
@@ -343,7 +273,6 @@ class TestLinearModel(unittest.TestCase):
     def test_incorrect_B(self):
         with self.assertRaises(AttributeError):
             m = LinearThrownObject_WrongB()
-
 
 
     def test_F_property_not_none(self):

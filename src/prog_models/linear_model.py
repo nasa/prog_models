@@ -70,6 +70,7 @@ class LinearModel(PrognosticsModel, ABC):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
 
         matrixShape = matrix.shape
+        # PART 1: Gives specific comment about information on error, this would be a run-time check
         if (matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
             len(matrixShape) == 1 or # check .shape returns 2-tuple, meaning all rows are of equal length
             matrixShape[1] != colsCount or # check all rows are equal to correct column count
