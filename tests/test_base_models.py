@@ -13,8 +13,7 @@ sys.path.append(join(dirname(__file__), ".."))
 
 from prog_models import *
 from prog_models.models import *
-from prog_models.models.test_models.linear_models import (
-    OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM)
+from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
 
 
 class MockModel():
@@ -1137,6 +1136,7 @@ class TestModels(unittest.TestCase):
     def test_composite(self):
         m1 = OneInputOneOutputNoEventLM()
         m2 = OneInputNoOutputOneEventLM()
+        m1_withpm = OneInputOneOutputNoEventLMPM()
 
         # Test with no connections
         m_composite = CompositeModel([m1, m1])
@@ -1144,6 +1144,7 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1', 'OneInputOneOutputNoEventLM_2.u1'})
         self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
         self.assertSetEqual(m_composite.events, set())
+        self.assertSetEqual(m_composite.performance_metric_keys, set(), "Shouldn't have any performance metrics")
 
         x0 = m_composite.initialize()
         self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
@@ -1159,6 +1160,21 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 0)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
+        pm = m_composite.performance_metrics(x)
+        self.assertSetEqual(set(pm.keys()), set())
+
+        # With Performance Metrics
+        # Everything else should behave the same, so we're only testing the performance metrics
+        m_composite = CompositeModel([m1_withpm, m1_withpm])
+        self.assertSetEqual(m_composite.performance_metric_keys, {'OneInputOneOutputNoEventLMPM_2.x1+1', 'OneInputOneOutputNoEventLMPM.x1+1'})
+
+        x0 = m_composite.initialize()
+        u = m_composite.InputContainer({'OneInputOneOutputNoEventLMPM.u1': 1, 'OneInputOneOutputNoEventLMPM_2.u1': 0})
+        x = m_composite.next_state(x0, u, 1)
+        pm = m_composite.performance_metrics(x)
+        self.assertSetEqual(set(pm.keys()), {'OneInputOneOutputNoEventLMPM_2.x1+1', 'OneInputOneOutputNoEventLMPM.x1+1'})
+        self.assertEqual(pm['OneInputOneOutputNoEventLMPM_2.x1+1'], 1)
+        self.assertEqual(pm['OneInputOneOutputNoEventLMPM.x1+1'], 2)
 
         # Test with connections - output, no event
         m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.u1')])
