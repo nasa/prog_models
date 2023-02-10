@@ -209,18 +209,18 @@ class CompositeModel(PrognosticsModel):
         return self.OutputContainer(z)
 
     def performance_metrics(self, x):
-        pf = {}
+        metrics = {}
         for (name, m) in self.parameters['models']:
             # Prepare state
             x_i = m.StateContainer({key: x[name + '.' + key] for key in m.states})
 
             # Get outputs
-            pf_i = m.performance_metrics(x_i)
+            metrics_i = m.performance_metrics(x_i)
 
             # Save to super outputs
-            for key, value in pf_i.items():
-                pf[name + '.' + key] = value
-        return pf
+            for key, value in metrics_i.items():
+                metrics[name + '.' + key] = value
+        return metrics
 
     def event_state(self, x):
         e = {}
