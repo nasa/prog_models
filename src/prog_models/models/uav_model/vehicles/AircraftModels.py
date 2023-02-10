@@ -8,7 +8,7 @@ import numpy as np
 
 from .control import controllers
 from .aero import aerodynamics as aero
-from ..utilities import utils
+from . import utils
 from ..vehicles import vehicles
 from prog_models.exceptions import ProgModelException
 

@@ -8,7 +8,7 @@ Functions for generating route - setting waypoints, calculating ETAs
 import numpy as np
 import datetime as dt
 
-from ..utilities import geometry as geom
+from prog_models.aux_fcns.traj_gen_utils import geometry as geom
 from prog_models.exceptions import ProgModelInputException
 
 # FUNCTIONS

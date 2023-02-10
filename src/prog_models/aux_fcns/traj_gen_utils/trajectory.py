@@ -8,9 +8,9 @@ Auxiliary functions for trajectories and aircraft routes
 import numpy as np
 import scipy.interpolate as interp
 
-from ..utilities import geometry as geom
+from prog_models.aux_fcns.traj_gen_utils import geometry as geom
 from .nurbs import generate_3dnurbs, generate_intermediate_points, evaluate, knot_vector
-import prog_models.models.uav_model.trajectory.load_trajectories as load
+from prog_models.aux_fcns.traj_gen_utils import load_trajectories as load
 
 
 def angular_vel_from_attitude(phi, theta, psi, delta_t=1):

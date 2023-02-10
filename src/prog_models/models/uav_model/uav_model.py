@@ -7,9 +7,8 @@ from warnings import warn
 from typing import Callable
 
 from prog_models.prognostics_model import PrognosticsModel
-from .trajectory import route, trajectory
 from .vehicles import AircraftModels
-from .utilities import geometry as geom
+from prog_models.aux_fcns.traj_gen_utils import geometry as geom
 from prog_models.exceptions import ProgModelInputException
 
 class UAVGen(PrognosticsModel):
@@ -146,7 +145,7 @@ class UAVGen(PrognosticsModel):
     -------------
      .. [0] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
     """
-    events = ['TrajectoryComplete']
+    events = [] # ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
     states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t']
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
@@ -154,8 +153,8 @@ class UAVGen(PrognosticsModel):
 
     default_parameters = {  # Set to defaults
         # Flight information
-        'flight_file': None, 
-        'flight_name': 'flight-1', 
+        # 'flight_file': None, 
+        # 'flight_name': 'flight-1', 
         'aircraft_name': 'aircraft-1', 
         'flight_plan': None,
 
@@ -169,10 +168,10 @@ class UAVGen(PrognosticsModel):
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
-        'waypoint_weights': 10.0, 
-        'adjust_eta': None, 
-        'nurbs_basis_length': 2000, 
-        'nurbs_order': 4, 
+        # 'waypoint_weights': 10.0, 
+        # 'adjust_eta': None, 
+        # 'nurbs_basis_length': 2000, 
+        # 'nurbs_order': 4, 
         'final_time_buffer_sec': 30, 
         'final_space_buffer_m': 2, 
 
@@ -185,38 +184,6 @@ class UAVGen(PrognosticsModel):
 
       super().__init__(**kwargs)
       
-      # Get Flight Plan
-      # ================
-      # Option 1: fligh_plan, in form of dict of numpy arrays with way-points and time, is passed, while there's no file to load the flight plan
-      if self.parameters['flight_plan'] is not None and self.parameters['flight_file'] == None:
-        # Check for appropriate input:
-        if not isinstance(self.parameters['flight_plan'], dict):
-          raise ProgModelInputException("'flight_plan' must be a dictionary. Type {} was given".format(type(self.parameters['flight_plan'])))
-        for flight_plan_element in self.parameters['flight_plan'].values():
-          if not isinstance(flight_plan_element, np.ndarray):
-            raise ProgModelInputException("'flight_plan' entries must be numpy arrays specifying waypoint information. Type {} was given".format(type(flight_plan_element)))
-        
-        # Extract data from flight plan: latitude, longitude, altitude, time stamps
-        flightplan = trajectory.load.convert_dict_inputs(self.parameters['flight_plan'])
-        lat = flightplan['lat_rad']
-        lon = flightplan['lon_rad']
-        alt = flightplan['alt_m']
-        tstamps = flightplan['timestamp']
-      
-      # Option 2: a file with flight plan is passed
-      elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] == None:
-        flightplan = trajectory.load.get_flightplan(fname=self.parameters['flight_file'])
-        # Extract data from flight plan: latitude, longitude, altitude, time stamps
-        lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
-      
-      # Option 3: both file with flight plan and dictionary with flight plan are passed, throw an error. Only 1 flight plan is allowed
-      elif self.parameters['flight_file'] != None and self.parameters['flight_plan'] != None:
-        raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file, not both.")
-      
-      # Option 4: no flight plan is passed. Throw an error. 
-      else:
-        raise ProgModelInputException("No flight plan information supplied. Please provide flight_plan or flight_file.")
-
       # Build aircraft model
       # ====================
       # build aicraft, which means create rotorcraft from type (model), initialize state vector, steady-state input (i.e., hover thrust for rotorcraft), controller type 
@@ -226,73 +193,29 @@ class UAVGen(PrognosticsModel):
                                               payload=self.parameters['vehicle_payload'])
       self.vehicle_model = aircraft1 
 
-      # Generate route
-      # ==============
-      if len(tstamps) > 1:
-          # ETAs specified: 
-          # Check if speeds have been defined and warn user if so:
-          if self.parameters['cruise_speed'] is not None or self.parameters['ascent_speed'] is not None or self.parameters['descent_speed'] is not None:
-              warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
-          route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed etas if want to use desired speeds values.
-                                vehicle_max_speed = self.vehicle_model.dynamics['max_speed'],
-                                parameters = self.parameters)
-      else: 
-          # ETAs not specified:  
-          # Check that speeds have been provided:
-          if self.parameters['cruise_speed'] is None or self.parameters['ascent_speed'] is None or self.parameters['descent_speed'] is None or self.parameters['landing_speed'] is None:
-              raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
-          # Build route (set of way-points with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
-          route_ = route.build(name=self.parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                parameters = self.parameters)
-
-      # Convert route 
-      # -------------
-      # in geodetic coordinates (lat, lon, alt) into cartesian coordinates (x, y, z) according to ENU reference frame (x=East, y=North, z=Up). First coordinate is x=y=z=0.
-      # coord_end = geom.Coord(route_.lat[0], route_.lon[0], route_.alt[0])
-      # self.coord_transform = deepcopy(coord_end)
-      self.coord_transform = geom.Coord(route_.lat[0], route_.lon[0], route_.alt[0])  # generate a Coordinate transformation object centered on the first way-point (necessary for ENU conversion).
-      wypt_time_relative = [datetime.datetime.timestamp(route_.eta[iter]) - datetime.datetime.timestamp(route_.eta[0]) for iter in range(len(route_.eta))]  # relative time
-      # wypt_x, wypt_y, wypt_z = coord_end.geodetic2enu(route_.lat, route_.lon, route_.alt) 
-      wypt_x, wypt_y, wypt_z = self.coord_transform.geodetic2enu(route_.lat, route_.lon, route_.alt)  # computing way-points in ENU
-      self.parameters['waypoints'] = {'waypoints_time': wypt_time_relative, 'waypoints_x': wypt_x, 'waypoints_y': wypt_y, 'waypoints_z': wypt_z, 'next_waypoint': 0}
-      # Save final waypoint information for threshold_met and event_state 
-
-      # Generate trajectory
-      # =====================
-      ref_traj = trajectory.Trajectory(name=self.parameters['flight_name'], route=route_) # Generate trajectory object and pass the route (waypoints, eta) to it
-      weight_vector=np.array([self.parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each way-point. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
-      ref_traj.generate(
-                    dt=self.parameters['dt'],                                 # assign delta t for simulation
-                    nurbs_order=self.parameters['nurbs_order'],               # nurbs order, higher the order, smoother the derivatiges of trajectory's position profile
-                    gravity=self.parameters['gravity'],                       # m/s^2, gravity magnitude
-                    weight_vector=weight_vector,                              # weight of waypoints, defined ealier from 'waypoint_weights'
-                    nurbs_basis_length=self.parameters['nurbs_basis_length'], # how long each basis polynomial should be. Used to avoid numerical issues. This is rarely changed.
-                    max_phi=aircraft1.dynamics['max_roll'],                   # rad, allowable roll for the aircraft
-                    max_theta=aircraft1.dynamics['max_pitch'])                # rad, allowable pitch for the aircraft
-      self.ref_traj = ref_traj  
       self.current_time = 0
 
       # Initialize vehicle: set initial state and dt for integration.
       # ---------------------------------------------------------------
-      aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))  # set initial state
+      # aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))  # set initial state
+      aircraft1.set_state(state=np.array([0,0,0,0,0,0,0,0,0,0,0]))  # set initial state
       aircraft1.set_dt(dt=self.parameters['dt'])  # set dt for simulation
 
     def initialize(self, u=None, z=None): 
       # Extract initial state from reference trajectory    
       return self.StateContainer({
-          'x': self.ref_traj.cartesian_pos[0, 0],
-          'y': self.ref_traj.cartesian_pos[0, 1],
-          'z': self.ref_traj.cartesian_pos[0, 2],
-          'phi': self.ref_traj.attitude[0, 0],
-          'theta': self.ref_traj.attitude[0, 1],
-          'psi': self.ref_traj.attitude[0, 2],
-          'vx': self.ref_traj.velocity[0, 0],
-          'vy': self.ref_traj.velocity[0, 1],
-          'vz': self.ref_traj.velocity[0, 2],
-          'p': self.ref_traj.angular_velocity[0, 0],
-          'q': self.ref_traj.angular_velocity[0, 1],
-          'r': self.ref_traj.angular_velocity[0, 2],
+          'x': 0, # self.ref_traj.cartesian_pos[0, 0],
+          'y': 0, #self.ref_traj.cartesian_pos[0, 1],
+          'z': 0, #self.ref_traj.cartesian_pos[0, 2],
+          'phi': 0, #self.ref_traj.attitude[0, 0],
+          'theta': 0, #self.ref_traj.attitude[0, 1],
+          'psi': 0, # self.ref_traj.attitude[0, 2],
+          'vx': 0, #self.ref_traj.velocity[0, 0],
+          'vy': 0, #self.ref_traj.velocity[0, 1],
+          'vz': 0, #self.ref_traj.velocity[0, 2],
+          'p': 0, #self.ref_traj.angular_velocity[0, 0],
+          'q': 0, #self.ref_traj.angular_velocity[0, 1],
+          'r': 0, #self.ref_traj.angular_velocity[0, 2],
           't': 0
           })
     
@@ -368,62 +291,63 @@ class UAVGen(PrognosticsModel):
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
     def event_state(self, x : dict) -> dict:
-        # Extract next waypoint information 
-        num_wypts = len(self.parameters['waypoints']['waypoints_time']) - 1 # Don't include initial waypoint
-        index_next = self.parameters['waypoints']['next_waypoint']
+        # # Extract next waypoint information 
+        # num_wypts = len(self.parameters['waypoints']['waypoints_time']) - 1 # Don't include initial waypoint
+        # index_next = self.parameters['waypoints']['next_waypoint']
 
-        # Check if at intial waypoint. If so, event_state is 1
-        if index_next == 0:
-            self.parameters['waypoints']['next_waypoint'] = 1
-            return {
-                'TrajectoryComplete': 1
-            }
-        # Check if passed final waypoint. If so, event_state is 0
-        if index_next > num_wypts:
-            return {
-                'TrajectoryComplete': 0
-            }
+        # # Check if at intial waypoint. If so, event_state is 1
+        # if index_next == 0:
+        #     self.parameters['waypoints']['next_waypoint'] = 1
+        #     return {
+        #         'TrajectoryComplete': 1
+        #     }
+        # # Check if passed final waypoint. If so, event_state is 0
+        # if index_next > num_wypts:
+        #     return {
+        #         'TrajectoryComplete': 0
+        #     }
         
-        t_next = self.parameters['waypoints']['waypoints_time'][index_next]
-        x_next = self.parameters['waypoints']['waypoints_x'][index_next]
-        y_next = self.parameters['waypoints']['waypoints_y'][index_next]
-        z_next = self.parameters['waypoints']['waypoints_z'][index_next]
+        # t_next = self.parameters['waypoints']['waypoints_time'][index_next]
+        # x_next = self.parameters['waypoints']['waypoints_x'][index_next]
+        # y_next = self.parameters['waypoints']['waypoints_y'][index_next]
+        # z_next = self.parameters['waypoints']['waypoints_z'][index_next]
 
-        # Define time interval for acceptable arrival at waypoint
-        time_buffer_left = (self.parameters['waypoints']['waypoints_time'][index_next] - self.parameters['waypoints']['waypoints_time'][index_next - 1])/2
-        if index_next == num_wypts:
-            # Final waypoint, add final buffer time 
-            time_buffer_right = t_next + self.parameters['final_time_buffer_sec']
-        else: 
-            time_buffer_right = (self.parameters['waypoints']['waypoints_time'][index_next+1] - self.parameters['waypoints']['waypoints_time'][index_next])/2
+        # # Define time interval for acceptable arrival at waypoint
+        # time_buffer_left = (self.parameters['waypoints']['waypoints_time'][index_next] - self.parameters['waypoints']['waypoints_time'][index_next - 1])/2
+        # if index_next == num_wypts:
+        #     # Final waypoint, add final buffer time 
+        #     time_buffer_right = t_next + self.parameters['final_time_buffer_sec']
+        # else: 
+        #     time_buffer_right = (self.parameters['waypoints']['waypoints_time'][index_next+1] - self.parameters['waypoints']['waypoints_time'][index_next])/2
 
-        # Check if next waypoint is satisfied:
-        if x['t'] < t_next - time_buffer_left:
-            # Not yet within time of next waypoint
-            return {
-                    'TrajectoryComplete': (num_wypts - (index_next - 1))/num_wypts
-                }
-        elif t_next - time_buffer_left <= x['t'] <= t_next + time_buffer_right:
-            # Current time within ETA interval. Check if distance also within acceptable range
-            dist_now = np.sqrt((x['x']-x_next)**2 + (x['y']-y_next)**2 + (x['z']-z_next)**2)
-            if dist_now <= self.parameters['final_space_buffer_m']:
-                # Waypoint achieved
-                self.parameters['waypoints']['next_waypoint'] += 1
-                return {
-                    'TrajectoryComplete': (num_wypts - index_next)/num_wypts
-                }
-            else:
-                # Waypoint not yet achieved
-                return {
-                    'TrajectoryComplete': (num_wypts - (index_next - 1))/num_wypts
-                }
-        else:
-            # ETA passed before waypoint reached 
-            warn("Trajectory may not have reached waypoint associated with ETA of {})".format(t_next))
-            self.parameters['waypoints']['next_waypoint'] += 1
-            return {
-                    'TrajectoryComplete': (num_wypts - index_next)/num_wypts
-                }
+        # # Check if next waypoint is satisfied:
+        # if x['t'] < t_next - time_buffer_left:
+        #     # Not yet within time of next waypoint
+        #     return {
+        #             'TrajectoryComplete': (num_wypts - (index_next - 1))/num_wypts
+        #         }
+        # elif t_next - time_buffer_left <= x['t'] <= t_next + time_buffer_right:
+        #     # Current time within ETA interval. Check if distance also within acceptable range
+        #     dist_now = np.sqrt((x['x']-x_next)**2 + (x['y']-y_next)**2 + (x['z']-z_next)**2)
+        #     if dist_now <= self.parameters['final_space_buffer_m']:
+        #         # Waypoint achieved
+        #         self.parameters['waypoints']['next_waypoint'] += 1
+        #         return {
+        #             'TrajectoryComplete': (num_wypts - index_next)/num_wypts
+        #         }
+        #     else:
+        #         # Waypoint not yet achieved
+        #         return {
+        #             'TrajectoryComplete': (num_wypts - (index_next - 1))/num_wypts
+        #         }
+        # else:
+        #     # ETA passed before waypoint reached 
+        #     warn("Trajectory may not have reached waypoint associated with ETA of {})".format(t_next))
+        #     self.parameters['waypoints']['next_waypoint'] += 1
+        #     return {
+        #             'TrajectoryComplete': (num_wypts - index_next)/num_wypts
+        #         }
+        pass
  
     def output(self, x : dict):
         # Output is the same as the state vector, without time 
@@ -431,68 +355,31 @@ class UAVGen(PrognosticsModel):
 
 
     def threshold_met(self, x : dict) -> dict:
-        t_lower_bound = self.parameters['waypoints']['waypoints_time'][-1] - (self.parameters['waypoints']['waypoints_time'][-1] - self.parameters['waypoints']['waypoints_time'][-2])/2
-        t_upper_bound = self.parameters['waypoints']['waypoints_time'][-1] + self.parameters['final_time_buffer_sec']
-        if x['t'] < t_lower_bound:
-            # Trajectory hasn't reached final ETA
-            return {
-                'TrajectoryComplete': False
-            }
-        elif t_lower_bound <= x['t'] <= t_upper_bound:
-            # Trajectory is within bounds of final ETA
-            dist_now = np.sqrt((x['x']-self.parameters['waypoints']['waypoints_x'][-1])**2 + (x['y']-self.parameters['waypoints']['waypoints_y'][-1])**2 + (x['z']-self.parameters['waypoints']['waypoints_z'][-1])**2)
-            if dist_now <= self.parameters['final_space_buffer_m']:
-                return {
-                    'TrajectoryComplete': True
-                }
-            else: 
-                return {
-                    'TrajectoryComplete': False
-                }
-        else: 
-            # Trajectory has passed acceptable bounds of final ETA - simulation terminated
-            warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
-            return {
-                'TrajectoryComplete': True
-            }
-
-    def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys = None, **kwargs):
-        
-        if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:
-            if isinstance(kwargs['dt'], int): 
-                warn("dt value for simulation must be equal to the constant dt value defined in model generation. To change the simulate_to time step, change the model parameter 'dt' value")
-            else: 
-                warn("dt value for simulation must be equal to the constant dt value defined in model generation. Other time step functionalities (e.g. 'auto' or function definition) are not supported with trajectory generation.")
-        kwargs['dt'] = self.parameters['dt']
-        if 'save_pts' in kwargs:
-            warn("'save_pts' functionality is not available with trajectory generation. A trajectory can only be generated for the same dt value as specified in the model generation.")
-            kwargs['save_pts'] = []
-        if 'save_freq' not in kwargs:
-            kwargs['save_freq'] = self.parameters['dt'] # if save_freq not specified, set at dt for best output 
-
-        def future_loading_new(t, x=None): 
-            # Extract current state at t
-            if x is None:
-              x_k = self.vehicle_model.state
-            else:
-              x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
-            
-            # Identify reference (desired state) at t
-            t_k      = np.round(t + self.parameters['dt']/2,1) 
-            time_ind = np.argmin(np.abs(t_k - self.ref_traj.time.tolist()))
-            x_ref_k  = np.concatenate((self.ref_traj.cartesian_pos[time_ind,:], self.ref_traj.attitude[time_ind,:], 
-                                    self.ref_traj.velocity[time_ind,:], self.ref_traj.angular_velocity[time_ind,:]), axis=0)
-            
-            # Compute system input using the error between current and reference state as input to the controller
-            u     = self.vehicle_model.control_fn(x_k - x_ref_k)                      # compute differential input values from error
-            u[0] += self.vehicle_model.steadystate_input                              # add steady-state input (defined as hover condition)
-            u[0]  = min(max([0., u[0]]), self.vehicle_model.dynamics['max_thrust'])   # limit thrust between 0 and vehicle's max thrust
-            
-            return self.InputContainer({'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]})
-
-        # Simulate to threshold 
-        results = super().simulate_to_threshold(future_loading_new, first_output, threshold_keys, **kwargs)
-        return results 
+        # t_lower_bound = self.parameters['waypoints']['waypoints_time'][-1] - (self.parameters['waypoints']['waypoints_time'][-1] - self.parameters['waypoints']['waypoints_time'][-2])/2
+        # t_upper_bound = self.parameters['waypoints']['waypoints_time'][-1] + self.parameters['final_time_buffer_sec']
+        # if x['t'] < t_lower_bound:
+        #     # Trajectory hasn't reached final ETA
+        #     return {
+        #         'TrajectoryComplete': False
+        #     }
+        # elif t_lower_bound <= x['t'] <= t_upper_bound:
+        #     # Trajectory is within bounds of final ETA
+        #     dist_now = np.sqrt((x['x']-self.parameters['waypoints']['waypoints_x'][-1])**2 + (x['y']-self.parameters['waypoints']['waypoints_y'][-1])**2 + (x['z']-self.parameters['waypoints']['waypoints_z'][-1])**2)
+        #     if dist_now <= self.parameters['final_space_buffer_m']:
+        #         return {
+        #             'TrajectoryComplete': True
+        #         }
+        #     else: 
+        #         return {
+        #             'TrajectoryComplete': False
+        #         }
+        # else: 
+        #     # Trajectory has passed acceptable bounds of final ETA - simulation terminated
+        #     warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
+        #     return {
+        #         'TrajectoryComplete': True
+        #     }
+        pass
 
     def visualize_traj(self, pred):
         """
