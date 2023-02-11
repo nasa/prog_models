@@ -59,11 +59,16 @@ class TestLinearModel(unittest.TestCase):
         # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)
         # @A 2x2
         with self.assertRaises(AttributeError):
-            m.A = np.array([[0, 1]]) # 1-D array
+            m.A = np.array([0, 1]) # 1-D array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.A = np.array([[0, 1], [0, 0], [1, 0]]) # 3-D array
+            m.A = np.array([[[[0, 1], [0, 0], [1, 0]]]]) # 3-D array
             m.matrixCheck()
+
+        # # Test to make sure when correct dimensions, it passes...
+        # m.A = np.array()
+        # with self.assertTrue():
+
         # When Matrix is improperly formed
         with self.assertRaises(AttributeError):
             m.A = np.array([[0, 1, 2, 3], [0, 0, 1, 2]]) # extra column values per row

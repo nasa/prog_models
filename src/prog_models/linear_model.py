@@ -53,7 +53,8 @@ class LinearModel(PrognosticsModel, ABC):
 
         if self.F is None and type(self).event_state == LinearModel.event_state:
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
-        self._G = np.zeros(self.n_events)        
+
+        self.matrixCheck()
 
 
     def matrixCheck(self) -> None:
@@ -93,8 +94,8 @@ class LinearModel(PrognosticsModel, ABC):
                 raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
         # PART 1: Gives specific comment about information on error, this would be a run-time check
         elif (matrixShape == () or
-            matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
-            matrix.ndim != 2 or # check matrix is 2 dimensional
+            matrixShape[0] != rowsCount or # check matrix is 2 dimensional,
+            matrix.ndim < 2 or
             matrixShape[1] != colsCount): # check all rows are equal to correct column count
                 raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
 
@@ -117,7 +118,14 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def E(self):
-        return np.zeros(self.n_states, 1)
+        return self._E
+    
+    @E.setter
+    def E(self, value):
+        if (value == 'setDefault'):
+            self._E = np.zeros(self.n_states)
+        else:
+            self._E = value
 
     @property
     @abstractmethod
