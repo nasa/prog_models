@@ -115,7 +115,7 @@ class DictLikeMatrixWrapper():
 
     # returns keys and values as a list of tuples (for iterating)
     def items(self) -> zip:
-        # if the first row of the matrix has one value
+        # if the first row of the matrix has one value (non-vectorized case)
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
             return zip(self._keys, np.array([value[0] for value in self.matrix]))
         return zip(self._keys, self.matrix)
