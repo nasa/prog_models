@@ -77,6 +77,8 @@ class DictLikeMatrixWrapper():
             # checks to see that each row matches
             matrix_check = (self.matrix == np.array([[other[key]] for key in self._keys])).all()
             return list_key_check and matrix_check
+        
+        # Case where other is a DictLikeMatrixWrapper as well
         list_key_check = self.keys() == other.keys()
         matrix_check = (self.matrix == other.matrix).all()
         return list_key_check and matrix_check
