@@ -69,7 +69,7 @@ class DictLikeMatrixWrapper():
     def __len__(self) -> int:
         return len(self._keys)
 
-    # checks if the other is a dictionary
+    # Compares two DictLikeMatrixWrappers (i.e. *Containers) or a DictLikeMatrixWrapper and a dictionary
     def __eq__(self, other: "DictLikeMatrixWrapper") -> bool:
         if isinstance(other, dict):
             # checks that the list of keys for each matrix match
