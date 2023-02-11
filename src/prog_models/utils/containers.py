@@ -120,7 +120,7 @@ class DictLikeMatrixWrapper():
             return zip(self._keys, np.array([value[0] for value in self.matrix]))
         return zip(self._keys, self.matrix)
 
-    # update values
+    # update values by merging in other DictLikeMatrixWrapper
     def update(self, other: "DictLikeMatrixWrapper") -> None:
         for key in other.keys():
             if key in self._keys:
