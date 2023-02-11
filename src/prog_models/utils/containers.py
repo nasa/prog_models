@@ -113,7 +113,7 @@ class DictLikeMatrixWrapper():
         # else returns the matrix
         return self.matrix
 
-    # returns keys and values as a list of tuples
+    # returns keys and values as a list of tuples (for iterating)
     def items(self) -> zip:
         # if the first row of the matrix has one value
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
