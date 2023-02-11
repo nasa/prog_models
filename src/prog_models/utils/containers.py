@@ -110,7 +110,7 @@ class DictLikeMatrixWrapper():
         # if the first row of the matrix has one value
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
             return np.array([value[0] for value in self.matrix])  # returns the value from the first row
-        # else returns the matrix
+        # else returns the matrix (vectorized case)
         return self.matrix
 
     # returns keys and values as a list of tuples (for iterating)
