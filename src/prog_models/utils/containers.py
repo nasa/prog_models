@@ -107,7 +107,7 @@ class DictLikeMatrixWrapper():
 
     # returns array of matrix values
     def values(self) -> np.array:
-        # if the first row of the matrix has one value
+        # if the first row of the matrix has one value (i.e., non-vectorized)
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
             return np.array([value[0] for value in self.matrix])  # returns the value from the first row
         # else returns the matrix (vectorized case)
