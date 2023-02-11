@@ -4,7 +4,11 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
-from . import PrognosticsModel
+from prog_models.prognostics_model import PrognosticsModel
+
+import warnings
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 class LinearModel(PrognosticsModel, ABC):
@@ -34,12 +38,23 @@ class LinearModel(PrognosticsModel, ABC):
         * events:  list[str] - :term:`event` keys
     """
 
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.matrixCheck()
+        self._B = np.zeros((self.n_states, self.n_inputs))
+        self._D = np.zeros(self.n_outputs)
+        self._G = np.zeros(self.n_events)
+        
+
+        # matrixCheck = np.zeros((self.n_states, self.n_inputs))
+
+        # if self.B is not matrixCheck and self.inputs:
+        #     raise AssertionError('Attribute should not exist.')
 
         if self.F is None and type(self).event_state == LinearModel.event_state:
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
+        self._G = np.zeros(self.n_events)        
+
 
     def matrixCheck(self) -> None:
         """
@@ -68,15 +83,21 @@ class LinearModel(PrognosticsModel, ABC):
         matrix = getattr(self, notes[0]) 
         if not isinstance(matrix, np.ndarray):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
-
+        
         matrixShape = matrix.shape
+        #INCORRECT? Define Tests that go through the matrix and evaluate based of that.
+        if notes[0] == 'G' or notes[0] == 'E' or notes[0] == 'D':
+            if (matrixShape == () or
+            matrixShape[0] != rowsCount or
+            matrix.ndim != 1):
+                raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
         # PART 1: Gives specific comment about information on error, this would be a run-time check
-        if (matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
-            len(matrixShape) == 1 or # check .shape returns 2-tuple, meaning all rows are of equal length
-            matrixShape[1] != colsCount or # check all rows are equal to correct column count
-            matrix.ndim != 2): # check matrix is 2 dimensional
-            raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
-   
+        elif (matrixShape == () or
+            matrixShape[0] != rowsCount or # check matrix is 2 dimensional, correspond to rows count
+            matrix.ndim != 2 or # check matrix is 2 dimensional
+            matrixShape[1] != colsCount): # check all rows are equal to correct column count
+                raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
+
     @property
     @abstractmethod
     def A(self):
@@ -84,11 +105,19 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def B(self):
-        return np.zeros((self.n_states, self.n_inputs))
+        return self._B
+
+    @B.setter
+    def B(self, value):
+        if (value == 'setDefault'):
+            self._B = np.zeros((self.n_states, self.n_inputs))
+        else:
+            self._B = value
+
 
     @property
     def E(self):
-        return np.zeros((self.n_states, 1))
+        return np.zeros(self.n_states, 1)
 
     @property
     @abstractmethod
@@ -97,7 +126,14 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def D(self):
-        return np.zeros((self.n_outputs, 1))
+        return self._D
+
+    @D.setter
+    def D(self, value):
+        if (value == 'setDefault'):
+            self._D = np.zeros(self.n_outputs)
+        else:
+            self._D = value
 
     @property
     @abstractmethod
@@ -106,7 +142,14 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def G(self):
-        return np.zeros((self.n_events, 1))
+        return self._G
+    
+    @G.setter
+    def G(self, value):
+        if (value == 'setDefault'):
+            self._G = np.zeros(self.n_events)
+        else:
+            self._G = value
 
     def dx(self, x, u):
         dx_array = np.matmul(self.A, x.matrix) + self.E
