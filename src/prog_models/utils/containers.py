@@ -87,7 +87,7 @@ class DictLikeMatrixWrapper():
     def __hash__(self):
         return hash(self.keys) + hash(self.matrix)
 
-    # (?) why
+    # Notation for when object is represented as a string
     def __str__(self) -> str:
         return self.__repr__()
 
