@@ -95,7 +95,7 @@ class LinearModel(PrognosticsModel, ABC):
         # PART 1: Gives specific comment about information on error, this would be a run-time check
         elif (matrixShape == () or
             matrixShape[0] != rowsCount or # check matrix is 2 dimensional,
-            matrix.ndim < 2 or
+            matrix.ndim != 2 or
             matrixShape[1] != colsCount): # check all rows are equal to correct column count
                 raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
 
@@ -115,18 +115,6 @@ class LinearModel(PrognosticsModel, ABC):
         else:
             self._B = value
 
-
-    @property
-    def E(self):
-        return self._E
-    
-    @E.setter
-    def E(self, value):
-        if (value == 'setDefault'):
-            self._E = np.zeros(self.n_states)
-        else:
-            self._E = value
-
     @property
     @abstractmethod
     def C(self):
@@ -142,6 +130,17 @@ class LinearModel(PrognosticsModel, ABC):
             self._D = np.zeros(self.n_outputs)
         else:
             self._D = value
+
+    @property
+    def E(self):
+        return self._E
+    
+    @E.setter
+    def E(self, value):
+        if (value == 'setDefault'):
+            self._E = np.zeros(self.n_states)
+        else:
+            self._E = value
 
     @property
     @abstractmethod

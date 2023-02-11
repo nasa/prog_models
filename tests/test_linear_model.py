@@ -4,7 +4,7 @@ import numpy as np
 import unittest
 
 from prog_models.models.test_models.linear_models import *
-from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB
+from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB, ThrownObject
 
 
 # TODO: IF no inputs, parameters should be not be instantied at all. e.g) Having 0 inputs means B will be a 2x0, which is not possible.
@@ -13,16 +13,13 @@ from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObj
 
 # Figure out why its an attribute error and not a typeerror FOR paramter B. line 55.
 
-# 
-
 class TestLinearModel(unittest.TestCase):
     def test_linear_model(self):
         m = LinearThrownObject()
 
         # Parameters for reference
-
         # A = np.array([[0, 1], [0, 0]])
-        # E = np.array([[0], [-9.81]])
+        # E = np.array([0, -9.81])
         # C = np.array([[1, 0]])
 
         m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
@@ -30,6 +27,7 @@ class TestLinearModel(unittest.TestCase):
         #         1      2      0      1
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
         # when matrix is not of type NumPy ndarray or standard list
+        
         # @A
         with self.assertRaises(TypeError):
             m.A = "[[0, 1], [0, 0]]" # string
@@ -57,14 +55,12 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         # Matrix Dimension Checking
         # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)
-        # @A 2x2
         with self.assertRaises(AttributeError):
             m.A = np.array([0, 1]) # 1-D array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.A = np.array([[[[0, 1], [0, 0], [1, 0]]]]) # 3-D array
             m.matrixCheck()
-
         # # Test to make sure when correct dimensions, it passes...
         # m.A = np.array()
         # with self.assertTrue():
@@ -110,6 +106,26 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.B = True # boolean
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array(2) # 0-D array
+            # this provides a 2 dimensional Array???
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[0, 0], [1, 1]]) # 2-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[1, 0, 2]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.B = np.array([[1]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[0, 0], [1, 1], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.B = np.array([[]]) # less row 
+            # How is this any different from the first test...
             m.matrixCheck()
         m.B = 'setDefault' #sets paramter B to defaulted value
         m.matrixCheck()
@@ -163,6 +179,52 @@ class TestLinearModel(unittest.TestCase):
         m.C = np.array([[1, 0]])
         m.matrixCheck()
 
+        with self.assertRaises(TypeError):
+            m.D = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.D = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.D = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.D = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.D = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.D = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.D = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.D = True # boolean
+            m.matrixCheck()
+        # @D 1x
+        with self.assertRaises(AttributeError):
+            m.D = np.array(1) # 0-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[0], [1]]) # 2-D array with incorrect values ?????
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([1, 2]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.D = np.array([[]]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.D = np.array([[0], [1]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.D = np.array([[]]) # less row
+            m.matrixCheck()
+        m.D = 'setDefault' # sets to Default Value
+        m.matrixCheck()
+
         # @E
         with self.assertRaises(TypeError):
             m.E = "[[0, 1], [0, 0]]" # string
@@ -189,13 +251,13 @@ class TestLinearModel(unittest.TestCase):
             m.E = True # boolean
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.E = np.array([[0]]) # 1-D array
+            m.E = np.array([[0]]) # 2-D array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.E = np.array([[0], [1], [2]]) # 3-D array
             m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.E = np.array([0,0], [-9.81, -1]) # extra column values per row
+        with self.assertRaises(AttributeError):
+            m.E = np.array([[0,0], [-9.81, -1]]) # extra column values per row
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.E = np.array([[], []]) # less column values per row
@@ -232,38 +294,73 @@ class TestLinearModel(unittest.TestCase):
             m.F = True # boolean
             m.matrixCheck()
         with self.assertRaises(AttributeError):
+            m.F = np.array([[0]]) # 2-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.F = np.array([[0], [1], [2]]) # 3-D array
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.F = np.array([[0,0], [-9.81, -1]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.F = np.array([[], []]) # less column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError): 
+            m.F = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
             # if F is none, we need to override event_state
             m_noes = FNoneNoEventStateLM()
+        #Check when these are true.
+        m.F = np.array([[0, 1]]) # less row
+        m.matrixCheck()
         m.F = None
         m.matrixCheck()
 
-        # @D 1x
-        with self.assertRaises(AttributeError):
-            m.D = np.array(1) # 0-D array
+
+        #G
+        with self.assertRaises(TypeError):
+            m.G = "[[0, 1], [0, 0]]" # string
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.G = None # None
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.G = 0 # int
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.G = 3.14 # float
+            m.matrixCheck()
+        with self.assertRaises(TypeError):
+            m.G = {} # dict
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.G = () # tuple
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.G = set() # set
+            m.matrixCheck() 
+        with self.assertRaises(TypeError):
+            m.G = True # boolean
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.D = np.array([[0], [1]]) # 2-D array with incorrect values ?????
+            m.G = np.array([[0]]) # 2-D Array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.D = np.array([1, 2]) # extra column values per row
+            m.G = np.array([[[0], [1], [2]]]) # 3-D array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.D = np.array([[]]) # less column values per row
+            m.G = np.array([[0,0], [-9.81, -1]]) # extra column values per row
+            m.matrixCheck()
+        with self.assertRaises(AttributeError):
+            m.G = np.array([[], []]) # less column values per row
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
-            m.D = np.array([[0], [1]]) # extra row
+            m.G = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
-            m.D = np.array([[]]) # less row
+            m.G = np.array([[0, 1]]) # less row
             m.matrixCheck()
-        m.D = 'setDefault' # sets to Default Value
-        m.matrixCheck()
-
-        # G Matrix Testing
-
-        # INCORRECT? REMOVE OUTSIDE SET OF [] / ADD OUTSIDE SET OF []
-        # Figure out what exactly would error for parameter G
-
         with self.assertRaises(AttributeError):
             m.G = np.array([0, 1]) # extra column values per row
             m.matrixCheck()
@@ -276,6 +373,9 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.G = np.array([[]]) # less row
             m.matrixCheck()
+        #Correct Testing
+        m.G = np.array([0]) # 1-D Array
+        m.matrixCheck()
         m.G = 'setDefault' # sets to Default Value
         m.matrixCheck()
 
