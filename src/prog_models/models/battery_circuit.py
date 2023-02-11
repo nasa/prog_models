@@ -132,6 +132,8 @@ class BatteryCircuit(PrognosticsModel):
         }
     }
 
+
+
     state_limits = {
         'tb': (0, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
         'qb': (0, inf)

@@ -22,7 +22,7 @@ class SimResult(UserList):
     __slots__ = ['times', 'data']  # Optimization 
     
     def __init__(self, times : list = None, data : list = None, _copy = True):
-        if times is None or data is None:
+        if times is None or data is None:   # in case the error is that there is no output (theory)
             self.times = [] 
             self.data = []
         else:
