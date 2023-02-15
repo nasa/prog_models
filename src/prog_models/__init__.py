@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 # PrognosticsModel must be first, since the others build on this
-from .prognostics_model import PrognosticsModel
+from prog_models.prognostics_model import PrognosticsModel
 from .ensemble_model import EnsembleModel
 from .composite_model import CompositeModel
 from .linear_model import LinearModel

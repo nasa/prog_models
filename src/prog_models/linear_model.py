@@ -4,7 +4,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 import warnings
 
@@ -14,16 +14,11 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 class LinearModel(PrognosticsModel, ABC):
     """
     A linear prognostics :term:`model`. Used when behavior can be described using a simple linear time-series model defined by the following equations:
-
     .. math::
         \dfrac{dx}{dt} = Ax + Bu + E
-
         z = Cx + D
-
         es = Fx + G
-
     where x is :term:`state`, u is :term:`input`, z is :term:`output` and es is :term:`event state`
-
     Linear Models must inherit from this class and define the following properties:
         * A: 2-d np.array[float], dimensions: n_states x n_states
         * B: 2-d np.array[float], optional (zeros by default), dimensions: n_states x n_inputs
@@ -41,9 +36,9 @@ class LinearModel(PrognosticsModel, ABC):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._B = np.zeros((self.n_states, self.n_inputs))
-        self._D = np.zeros(self.n_outputs)
-        self._G = np.zeros(self.n_events)
+        self._B = 'setDefault'
+        self._D = 'setDefault'
+        self._G = 'setDefault'
         
 
         # matrixCheck = np.zeros((self.n_states, self.n_inputs))
@@ -87,13 +82,8 @@ class LinearModel(PrognosticsModel, ABC):
         
         matrixShape = matrix.shape
         #INCORRECT? Define Tests that go through the matrix and evaluate based of that.
-        if notes[0] == 'G' or notes[0] == 'E' or notes[0] == 'D':
-            if (matrixShape == () or
-            matrixShape[0] != rowsCount or
-            matrix.ndim != 1):
-                raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
         # PART 1: Gives specific comment about information on error, this would be a run-time check
-        elif (matrixShape == () or
+        if (matrixShape == () or
             matrixShape[0] != rowsCount or # check matrix is 2 dimensional,
             matrix.ndim != 2 or
             matrixShape[1] != colsCount): # check all rows are equal to correct column count
@@ -127,7 +117,7 @@ class LinearModel(PrognosticsModel, ABC):
     @D.setter
     def D(self, value):
         if (value == 'setDefault'):
-            self._D = np.zeros(self.n_outputs)
+            self._D = np.zeros((self.n_outputs, 1))
         else:
             self._D = value
 
@@ -137,8 +127,9 @@ class LinearModel(PrognosticsModel, ABC):
     
     @E.setter
     def E(self, value):
+        print('work?')
         if (value == 'setDefault'):
-            self._E = np.zeros(self.n_states)
+            self._E = np.zeros((self.n_states, 1))
         else:
             self._E = value
 
@@ -154,7 +145,8 @@ class LinearModel(PrognosticsModel, ABC):
     @G.setter
     def G(self, value):
         if (value == 'setDefault'):
-            self._G = np.zeros(self.n_events)
+            self._G = np.zeros((self.n_events, 1))
+
         else:
             self._G = value
 

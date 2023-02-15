@@ -19,7 +19,7 @@ class TestLinearModel(unittest.TestCase):
 
         # Parameters for reference
         # A = np.array([[0, 1], [0, 0]])
-        # E = np.array([0, -9.81])
+        # E = np.array([[0], [-9.81]])
         # C = np.array([[1, 0]])
 
         m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
@@ -268,8 +268,10 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.E = np.array([[0, 1]]) # less row
             m.matrixCheck()
-        m.E = np.array([0, -9.81])
+        m.E = np.array([[0], [-9.81]])
         m.matrixCheck()
+        # m.E = 'setDefault'
+        # m.matrixCheck()
 
         # @F
         with self.assertRaises(TypeError):
@@ -344,7 +346,7 @@ class TestLinearModel(unittest.TestCase):
             m.G = True # boolean
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.G = np.array([[0]]) # 2-D Array
+            m.G = np.array([0]) # 1-D Array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.G = np.array([[[0], [1], [2]]]) # 3-D array
@@ -374,7 +376,7 @@ class TestLinearModel(unittest.TestCase):
             m.G = np.array([[]]) # less row
             m.matrixCheck()
         #Correct Testing
-        m.G = np.array([0]) # 1-D Array
+        m.G = np.array([[0]]) # 1-D Array
         m.matrixCheck()
         m.G = 'setDefault' # sets to Default Value
         m.matrixCheck()
@@ -430,7 +432,7 @@ class TestLinearModel(unittest.TestCase):
         
         class ThrownObject(LinearThrownObject):
             A = [[0, 1], [0, 0]]
-            E = [0, -9.81]
+            E = [[0], [-9.81]]
             C = [[1, 0]]
 
         m = ThrownObject()
@@ -440,7 +442,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertIsInstance(m.A, np.ndarray)
         self.assertTrue(np.array_equal(m.A, np.array([[0, 1], [0, 0]])))
         self.assertIsInstance(m.E, np.ndarray)
-        self.assertTrue(np.array_equal(m.E, np.array([0, -9.81])))
+        self.assertTrue(np.array_equal(m.E, np.array([[0], [-9.81]])))
         self.assertIsInstance(m.C, np.ndarray)
         self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
 

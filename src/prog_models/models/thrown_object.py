@@ -132,7 +132,7 @@ class LinearThrownObject(LinearModel):
     events = ['impact']
 
     A = np.array([[0, 1], [0, 0]])
-    E = np.array([0, -9.81])
+    E = np.array([[0], [-9.81]])
     C = np.array([[1, 0]])
     F = None # Will override method
 
@@ -169,7 +169,7 @@ class LinearThrownObject_WrongB(LinearThrownObject):
 
     A = np.array([[0, 1], [0, 0]])
     B = np.array([[1, 0], [0, 1]])
-    E = np.array([0, -9.81])
+    E = np.array([[0], [-9.81]])
     C = np.array([[1, 0]])
     F = None # Will override method
 
