@@ -17,7 +17,7 @@ from prog_models.exceptions import ProgModelException
 # =====================
 def build_model(**kwargs):
 
-    params = dict(name='rotorcraft-1', model='djis1000',
+    params = dict(model='djis1000',
                   init_state_vector=None, dt=None,
                   payload=0.0, Q=None, R=None, qi=None, i_lag=None,
                   steadystate_input=None)
@@ -36,7 +36,7 @@ def build_model(**kwargs):
 
     # Generate UAV model
     # ------------------
-    uav = Rotorcraft(name=params['name'], model=params['model'], payload=params['payload'])
+    uav = Rotorcraft(model=params['model'], payload=params['payload'])
     
     # Build vehicle properties
     # ------------------------
@@ -70,13 +70,11 @@ def build_model(**kwargs):
 class Rotorcraft():
     """ Lumped-mass Rotorcraft Model """
     def __init__(self, 
-                 name    = 'rotorcraft-1', 
                  model   = 'djis1000',
                  payload = 0.0,
                  gravity = 9.81,
                  air_density=1.225,
                  **kwargs):
-        self.name = name
         self.model = model
         self.controller = None
         self.gravity = gravity
@@ -169,8 +167,6 @@ class Rotorcraft():
             self.control_fn = self.control_realtime
         else:
             raise Exception("The only two options for control_strategy are: scheduled or realtime")
-
-        print('Controller Set correctly for ' + self.name + '.\n')
 
     def build_scheduled_control(self, states):
         # states = 12 x m

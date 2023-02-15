@@ -27,8 +27,8 @@ def check_and_adjust_eta_feasibility(lat, lon, alt, eta, vehicle_max_speed, vehi
         while dh / d_eta[point] > vehicle_max_speed or dv / d_eta[point] > vehicle_max_speed_vert:
             d_eta[point] += 1.0
     return np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
-
-def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, vehicle_max_speed=None):
+    
+def build(lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, vehicle_max_speed=None):
     """
     Generate route given waypoints (lat, lon, alt), departure time, 
     etas or speed in-between way-points, additional time for hovering, takeoff, landing, and eventually adjust eta in case 
@@ -67,7 +67,7 @@ def build(name, lat, lon, alt, departure_time, parameters: dict = dict(), etas=N
     )
     params.update(parameters)
 
-    route = Route(name=name, 
+    route = Route(# name=name, 
                   departure_time=departure_time, 
                   cruise_speed=params['cruise_speed'], 
                   ascent_speed=params['ascent_speed'], 
@@ -98,14 +98,12 @@ def reshape_route_attribute(x, dim=None, msk=None):
 # ============    
 class Route():
     def __init__(self, 
-                 name, 
                  departure_time=None, 
                  cruise_speed=None, 
                  ascent_speed=None, 
                  descent_speed=None, 
                  landing_speed=None, 
                  landing_alt=10.5):
-        self.name             = name
         if type(departure_time) != dt.datetime:
             departure_time = departure_time.to_pydatetime()
         self.departure_time   = departure_time

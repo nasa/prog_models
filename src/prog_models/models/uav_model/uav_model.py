@@ -100,10 +100,6 @@ class UAVGen(PrognosticsModel):
           additional key for ETAs may be included (labeled 'time_unix). Each key must correspond
           to a numpy array of values. Note that while 'flight_plan' is optional, either 
           'flight_file' or 'flight_plan' must be specified.
-        flight_name : Optional, str
-          Optional string to identify flight plan.
-        aircraft_name : Optional, str
-          Optional string to identify aircraft. 
         dt : Optional, float
           Time step in seconds for trajectory generation
         gravity : Optional, float
@@ -152,11 +148,6 @@ class UAVGen(PrognosticsModel):
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
-        # Flight information
-        # 'flight_file': None, 
-        # 'flight_name': 'flight-1', 
-        'aircraft_name': 'aircraft-1', 
-        'flight_plan': None,
 
         # Simulation parameters:
         'dt': 0.1, 
@@ -168,10 +159,6 @@ class UAVGen(PrognosticsModel):
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0, 
-        # 'waypoint_weights': 10.0, 
-        # 'adjust_eta': None, 
-        # 'nurbs_basis_length': 2000, 
-        # 'nurbs_order': 4, 
         'final_time_buffer_sec': 30, 
         'final_space_buffer_m': 2, 
 
@@ -188,8 +175,7 @@ class UAVGen(PrognosticsModel):
       # ====================
       # build aicraft, which means create rotorcraft from type (model), initialize state vector, steady-state input (i.e., hover thrust for rotorcraft), controller type 
       # and corresponding setup (scheduled, real-time) and initialization.
-      aircraft1 = AircraftModels.build_model(name=self.parameters['aircraft_name'],
-                                              model=self.parameters['vehicle_model'],
+      aircraft1 = AircraftModels.build_model(model=self.parameters['vehicle_model'],
                                               payload=self.parameters['vehicle_payload'])
       self.vehicle_model = aircraft1 
 

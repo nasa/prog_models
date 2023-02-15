@@ -15,8 +15,6 @@ def trajectory_gen_fcn(waypoints_info, **params):
         # Flight information
         'flight_file': None, 
         'flight_plan': None,
-        'flight_name': 'flight1',
-        'aircraftname': 'aircraft1',
 
         # Simulation parameters:
         'dt': 0.1, 
@@ -32,8 +30,6 @@ def trajectory_gen_fcn(waypoints_info, **params):
         'adjust_eta': None, 
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
-        # 'final_time_buffer_sec': 30, 
-        # 'final_space_buffer_m': 2, 
 
         # Vehicle parameters:
         'vehicle_max_speed': 15.0, #### NEED TO FIX THIS 
@@ -91,7 +87,7 @@ def trajectory_gen_fcn(waypoints_info, **params):
         # Check if speeds have been defined and warn user if so:
         if parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None:
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
-        route_ = route.build(name=parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
+        route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed etas if want to use desired speeds values.
                                 vehicle_max_speed = parameters['vehicle_max_speed'],
                                 parameters = parameters)
@@ -101,12 +97,12 @@ def trajectory_gen_fcn(waypoints_info, **params):
         if parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None:
             raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
         # Build route (set of way-points with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
-        route_ = route.build(name=parameters['flight_name'], lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
+        route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = parameters) 
 
     # Generate trajectory
     # =====================
-    ref_traj = trajectory.Trajectory(name=parameters['flight_name'], route=route_) # Generate trajectory object and pass the route (waypoints, eta) to it
+    ref_traj = trajectory.Trajectory(route=route_) # Generate trajectory object and pass the route (waypoints, eta) to it
     weight_vector=np.array([parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each way-point. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
     ref_traj.generate(
                     dt=parameters['dt'],                                 # assign delta t for simulation

@@ -89,8 +89,7 @@ def generate_smooth_yaw(etas, yaw_points, time):
     return psi_smooth
 
 class Trajectory():
-    def __init__(self, name, route, gravity=9.81, airspeed_std=0., dt=0.1):
-        self.name = name
+    def __init__(self, route, gravity=9.81, airspeed_std=0., dt=0.1):
 
         # Store relevant route variables
         self.route            = route
