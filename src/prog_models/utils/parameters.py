@@ -57,7 +57,7 @@ class PrognosticsModelParameters(UserDict):
     def __deepcopy__(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=True)
 
-    def __setitem__(self, key : str, value : float, _copy : bool = True) -> None:
+    def __setitem__(self, key : str, value : float, _copy : bool = False) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
