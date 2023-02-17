@@ -8,6 +8,7 @@ from numbers import Number
 import types
 from typing import Callable
 
+from prog_models.utils.size import getsizeof
 from .noise_functions import measurement_noise_functions, process_noise_functions
 from .serialization import *
 from ..exceptions import ProgModelTypeError
@@ -43,6 +44,9 @@ class PrognosticsModelParameters(UserDict):
                 for callback in callbacks[key]:
                     changes = callback(self)
                     self.update(changes)
+    
+    def __sizeof__(self):
+        return getsizeof(self)
 
     def copy(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)

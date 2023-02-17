@@ -154,6 +154,40 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
+    def test_size(self):
+        m = MockProgModel()
+        size = sys.getsizeof(m)
+        self.assertLess(size, 7500)
+
+        # Adding a parameter
+        m.parameters['test'] = 8675309
+        size2 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size, size2)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        # Note- have to use an uncommon number for this to work
+        # This is because of python's memory allocation
+        diff = size2 - size
+        sum_of_parts = sys.getsizeof('test') + sys.getsizeof(8675309)
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
+
+        # Adding other attributes
+        m._test_value = 123456789
+        size3 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size2, size3)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        diff = size3 - size2
+        sum_of_parts = sys.getsizeof('_test_value') + sys.getsizeof(123456789)
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
 
     def test_templates(self):
         import prog_model_template

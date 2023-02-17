@@ -17,6 +17,7 @@ from .utils import ProgressBar
 from .utils.containers import DictLikeMatrixWrapper
 from .utils.parameters import PrognosticsModelParameters
 from .utils.serialization import *
+from .utils.size import getsizeof
 
 
 class PrognosticsModel(ABC):
@@ -1138,6 +1139,9 @@ class PrognosticsModel(ABC):
             saved_outputs, 
             saved_event_states
         )
+
+    def __sizeof__(self):
+        return getsizeof(self)
 
     def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
