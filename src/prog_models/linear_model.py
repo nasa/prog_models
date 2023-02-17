@@ -33,12 +33,27 @@ class LinearModel(PrognosticsModel, ABC):
         * events:  list[str] - :term:`event` keys
     """
 
+    # Set these to None
+    default_parameters = {
+        '_B' : 'setDefault',
+        '_D' : 'setDefault',
+        '_E' : 'setDefault',
+        '_G' : 'setDefault'
+    }
 
+# Set it to None instead of setDefault
+# Look into creating __copy__ function that 
+    # __deepcopy__ 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._B = 'setDefault'
-        self._D = 'setDefault'
-        self._G = 'setDefault'
+        params = LinearModel.default_parameters.copy()
+        params.update(self.default_parameters)
+        params.update(kwargs)
+        super().__init__(**params)
+
+        self.B = self.B
+        self.D = self.D
+        self.E = self.E
+        self.G = self.G
         
 
         # matrixCheck = np.zeros((self.n_states, self.n_inputs))
@@ -96,14 +111,14 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def B(self):
-        return self._B
+        return self.parameters['_B']
 
     @B.setter
     def B(self, value):
         if (value == 'setDefault'):
-            self._B = np.zeros((self.n_states, self.n_inputs))
+            self.parameters['_B'] = np.zeros((self.n_states, self.n_inputs))
         else:
-            self._B = value
+            self.parameters['_B'] = value
 
     @property
     @abstractmethod
@@ -112,26 +127,25 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def D(self):
-        return self._D
+        return self.parameters['_D']
 
     @D.setter
     def D(self, value):
         if (value == 'setDefault'):
-            self._D = np.zeros((self.n_outputs, 1))
+            self.parameters['_D'] = np.zeros((self.n_outputs, 1))
         else:
-            self._D = value
+            self.parameters['_D'] = value
 
     @property
     def E(self):
-        return self._E
+        return self.parameters['_E']
     
     @E.setter
     def E(self, value):
-        print('work?')
         if (value == 'setDefault'):
-            self._E = np.zeros((self.n_states, 1))
+            self.parameters['_E'] = np.zeros((self.n_states, 1))
         else:
-            self._E = value
+            self.parameters['_E'] = value
 
     @property
     @abstractmethod
@@ -140,15 +154,14 @@ class LinearModel(PrognosticsModel, ABC):
 
     @property
     def G(self):
-        return self._G
+        return self.parameters['_G']
     
     @G.setter
     def G(self, value):
         if (value == 'setDefault'):
-            self._G = np.zeros((self.n_events, 1))
-
+            self.parameters['_G'] = np.zeros((self.n_events, 1))
         else:
-            self._G = value
+            self.parameters['_G'] = value
 
     def dx(self, x, u):
         dx_array = np.matmul(self.A, x.matrix) + self.E

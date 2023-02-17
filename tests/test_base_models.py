@@ -41,7 +41,7 @@ class MockModel():
         return self.OutputContainer({'o1': x['a'] + x['b'] + x['c']})
 
 
-class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
+class MockProgModel(MockModel, PrognosticsModel):
     events = ['e1', 'e2']
 
     def event_state(self, x):
@@ -146,7 +146,7 @@ class TestModels(unittest.TestCase):
     def test_broken_models(self):
 
 
-        class missing_states(prognostics_model.PrognosticsModel):
+        class missing_states(PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
             parameters = {'process_noise':0.1}
@@ -158,7 +158,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class empty_states(prognostics_model.PrognosticsModel):
+        class empty_states(PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
             outputs = ['o1']
@@ -171,7 +171,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_inputs(prognostics_model.PrognosticsModel):
+        class missing_inputs(PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
             parameters = {'process_noise':0.1}
@@ -183,7 +183,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_outputs(prognostics_model.PrognosticsModel):
+        class missing_outputs(PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
             parameters = {'process_noise':0.1}
@@ -195,7 +195,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_initiialize(prognostics_model.PrognosticsModel):
+        class missing_initiialize(PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -206,7 +206,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_output(prognostics_model.PrognosticsModel):
+        class missing_output(PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -353,7 +353,7 @@ class TestModels(unittest.TestCase):
 
     def test_default_es_and_tm(self):
         # Test 1: TM only
-        class NoES(MockModel, prognostics_model.PrognosticsModel):
+        class NoES(MockModel, PrognosticsModel):
             events = ['e1', 'e2']
 
             def threshold_met(self, _):
@@ -365,7 +365,7 @@ class TestModels(unittest.TestCase):
         self.assertDictEqual(m.event_state({}), {'e1': 1.0, 'e2': 0.0})
 
         # Test 2: ES only
-        class NoTM(MockModel, prognostics_model.PrognosticsModel):
+        class NoTM(MockModel, PrognosticsModel):
             events = ['e1', 'e2']
 
             def event_state(self, _):
@@ -377,7 +377,7 @@ class TestModels(unittest.TestCase):
         self.assertDictEqual(m.event_state({}), {'e1': 0.0, 'e2': 1.0})
 
         # Test 3: Neither ES or TM 
-        class NoESTM(MockModel, prognostics_model.PrognosticsModel):
+        class NoESTM(MockModel, PrognosticsModel):
             events = []
 
         m = NoESTM()
@@ -1108,7 +1108,7 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1', 'OneInputOneOutputNoEventLM_2.u1'})
         self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
         self.assertSetEqual(m_composite.events, set())
-
+ 
         x0 = m_composite.initialize()
         self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)

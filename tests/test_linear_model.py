@@ -11,8 +11,19 @@ from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObj
 
 # linear_thrown_object comments...
 
+
+
 # Figure out why its an attribute error and not a typeerror FOR paramter B. line 55.
 
+# Self Service
+# Contact help otherwise
+
+#Create better error messages if possible (i.e inilization)
+#Create a test that is specifically testing default values!!!
+#Check to see if linear_model can be seralized and de-seralized. with pickle and json. tojson fromjson
+    #Making sure copy & deepcopy works
+#equality works wiht different objects, specfically
+    # __eq__ 
 class TestLinearModel(unittest.TestCase):
     def test_linear_model(self):
         m = LinearThrownObject()
@@ -270,8 +281,6 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         m.E = np.array([[0], [-9.81]])
         m.matrixCheck()
-        # m.E = 'setDefault'
-        # m.matrixCheck()
 
         # @F
         with self.assertRaises(TypeError):

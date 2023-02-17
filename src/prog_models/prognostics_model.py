@@ -11,12 +11,12 @@ import numpy as np
 from typing import Callable, Iterable, List
 from warnings import warn
 
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
-from .sim_result import SimResult, LazySimResult
-from .utils import ProgressBar
-from .utils.containers import DictLikeMatrixWrapper
-from .utils.parameters import PrognosticsModelParameters
-from .utils.serialization import *
+from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
+from prog_models.sim_result import SimResult, LazySimResult
+from prog_models.utils import ProgressBar
+from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.utils.parameters import PrognosticsModelParameters
+from prog_models.utils.serialization import *
 
 
 class PrognosticsModel(ABC):
@@ -113,7 +113,7 @@ class PrognosticsModel(ABC):
         # Add params specific passed via command line arguments
         try:
             params.update(kwargs)
-        except TypeError:
+        except TypeError:   
             raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
 
         PrognosticsModel.__setstate__(self, params)
