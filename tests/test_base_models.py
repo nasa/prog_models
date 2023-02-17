@@ -189,6 +189,37 @@ class TestModels(unittest.TestCase):
         self.assertLess(sum_of_parts, diff)
         self.assertLess(diff-sum_of_parts, 100)
 
+        # Add list into parameters
+        m.parameters['test_list'] = [79534, 84392, 93333, -243934, 23233]
+        size4 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size3, size4)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        diff = size4 - size3
+        sum_of_parts = sys.getsizeof('test_list') + sys.getsizeof([79534, 84392, 93333, -243934, 23233])
+        self.assertLess(sum_of_parts, diff)
+
+        # Note that adding as a parameter is expected to be similar
+        # This is because it uses the same logic in the callback
+
+        # Adding something already seen
+        m.parameters['recursive'] = m
+        size5 = sys.getsizeof(m)
+
+        # Check that size increases (for key)
+        self.assertLess(size4, size5)
+
+        # Size difference should be slightly more than the size of key
+        # size of value is skipped because it is already seen
+        # The difference is overhead for the dict
+        diff = size5 - size4
+        sum_of_parts = sys.getsizeof('recursive')
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
+
     def test_templates(self):
         import prog_model_template
         m = prog_model_template.ProgModelTemplate()
