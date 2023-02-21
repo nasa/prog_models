@@ -8,10 +8,10 @@ from numbers import Number
 import types
 from typing import Callable
 
+from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
+from prog_models.utils.serialization import *
 from prog_models.utils.size import getsizeof
-from .noise_functions import measurement_noise_functions, process_noise_functions
-from .serialization import *
-from ..exceptions import ProgModelTypeError
+from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init

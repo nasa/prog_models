@@ -11,13 +11,13 @@ import numpy as np
 from typing import Callable, Iterable, List
 from warnings import warn
 
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
-from .sim_result import SimResult, LazySimResult
-from .utils import ProgressBar
-from .utils.containers import DictLikeMatrixWrapper
-from .utils.parameters import PrognosticsModelParameters
-from .utils.serialization import *
-from .utils.size import getsizeof
+from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
+from prog_models.sim_result import SimResult, LazySimResult
+from prog_models.utils import ProgressBar
+from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.utils.parameters import PrognosticsModelParameters
+from prog_models.utils.serialization import *
+from prog_models.utils.size import getsizeof
 
 
 class PrognosticsModel(ABC):
