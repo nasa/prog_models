@@ -35,10 +35,11 @@ class LinearModel(PrognosticsModel, ABC):
 
     # Set these to None
     default_parameters = {
-        '_B' : 'setDefault',
-        '_D' : 'setDefault',
-        '_E' : 'setDefault',
-        '_G' : 'setDefault'
+        '_B' : None,
+        '_C' : None,
+        '_D' : None,
+        '_E' : None,
+        '_G' : None
     }
 
 # Set it to None instead of setDefault
@@ -50,14 +51,14 @@ class LinearModel(PrognosticsModel, ABC):
         params.update(kwargs)
         super().__init__(**params)
 
+        self.A = self.A
         self.B = self.B
+        self.C = self.C
         self.D = self.D
         self.E = self.E
         self.G = self.G
-        
 
-        # matrixCheck = np.zeros((self.n_states, self.n_inputs))
-
+        # Add Error when wrong parameter
         # if self.B is not matrixCheck and self.inputs:
         #     raise AssertionError('Attribute should not exist.')
 
@@ -65,7 +66,7 @@ class LinearModel(PrognosticsModel, ABC):
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
 
         self.matrixCheck()
-
+    
 
     def matrixCheck(self) -> None:
         """
@@ -95,19 +96,21 @@ class LinearModel(PrognosticsModel, ABC):
         if not isinstance(matrix, np.ndarray):
             raise TypeError("Matrix type check failed: @property {} dimensions is not of type list or NumPy array.".format(notes[0]))
         
+
         matrixShape = matrix.shape
-        #INCORRECT? Define Tests that go through the matrix and evaluate based of that.
-        # PART 1: Gives specific comment about information on error, this would be a run-time check
-        if (matrixShape == () or
-            matrixShape[0] != rowsCount or # check matrix is 2 dimensional,
-            matrix.ndim != 2 or
+        
+        if (matrix.ndim != 2 or # Checks too see if matrix is two-dimensional
+            matrixShape[0] != rowsCount or # checks if matrix has correct row count 
             matrixShape[1] != colsCount): # check all rows are equal to correct column count
                 raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
 
     @property
-    @abstractmethod
     def A(self):
-        pass
+        return self.parameters['_A']
+
+    @A.setter
+    def A(self, value):
+        self.parameters['_A'] = value
 
     @property
     def B(self):
@@ -115,15 +118,21 @@ class LinearModel(PrognosticsModel, ABC):
 
     @B.setter
     def B(self, value):
-        if (value == 'setDefault'):
+        if (value is None):
             self.parameters['_B'] = np.zeros((self.n_states, self.n_inputs))
         else:
             self.parameters['_B'] = value
 
     @property
-    @abstractmethod
     def C(self):
-        pass
+        return self.parameters['_C']
+
+    @C.setter
+    def C(self, value):
+        if (value is None):
+            self.parameters['_C'] = np.zeros((self.n_outputs, self.n_states))
+        else:
+            self.parameters['_C'] = value
 
     @property
     def D(self):
@@ -131,7 +140,7 @@ class LinearModel(PrognosticsModel, ABC):
 
     @D.setter
     def D(self, value):
-        if (value == 'setDefault'):
+        if (value is None):
             self.parameters['_D'] = np.zeros((self.n_outputs, 1))
         else:
             self.parameters['_D'] = value
@@ -142,7 +151,7 @@ class LinearModel(PrognosticsModel, ABC):
     
     @E.setter
     def E(self, value):
-        if (value == 'setDefault'):
+        if (value is None):
             self.parameters['_E'] = np.zeros((self.n_states, 1))
         else:
             self.parameters['_E'] = value
@@ -158,7 +167,7 @@ class LinearModel(PrognosticsModel, ABC):
     
     @G.setter
     def G(self, value):
-        if (value == 'setDefault'):
+        if (value is None):
             self.parameters['_G'] = np.zeros((self.n_events, 1))
         else:
             self.parameters['_G'] = value

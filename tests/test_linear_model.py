@@ -2,43 +2,26 @@
 
 import numpy as np
 import unittest
+import copy
 
 from prog_models.models.test_models.linear_models import *
-from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB, ThrownObject
+from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB
 
 
-# TODO: IF no inputs, parameters should be not be instantied at all. e.g) Having 0 inputs means B will be a 2x0, which is not possible.
-
-# linear_thrown_object comments...
-
-
-
-# Figure out why its an attribute error and not a typeerror FOR paramter B. line 55.
-
-# Self Service
-# Contact help otherwise
-
-#Create better error messages if possible (i.e inilization)
-#Create a test that is specifically testing default values!!!
-#Check to see if linear_model can be seralized and de-seralized. with pickle and json. tojson fromjson
-    #Making sure copy & deepcopy works
-#equality works wiht different objects, specfically
-    # __eq__ 
 class TestLinearModel(unittest.TestCase):
     def test_linear_model(self):
         m = LinearThrownObject()
 
-        # Parameters for reference
-        # A = np.array([[0, 1], [0, 0]])
-        # E = np.array([[0], [-9.81]])
-        # C = np.array([[1, 0]])
+        #Checking too see if initalization would error when passing in incorrect parameter forms
+        with self.assertRaises(AttributeError):
+            b = LinearThrownObject_WrongB()
 
         m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         # len() = events states inputs outputs
         #         1      2      0      1
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
         # when matrix is not of type NumPy ndarray or standard list
-        
+
         # @A
         with self.assertRaises(TypeError):
             m.A = "[[0, 1], [0, 0]]" # string
@@ -98,9 +81,6 @@ class TestLinearModel(unittest.TestCase):
             m.B = "[[0, 1], [0, 0]]"
             m.matrixCheck()
         with self.assertRaises(TypeError):
-            m.B = None # None
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
             m.B = 0 # int
             m.matrixCheck()
         with self.assertRaises(TypeError):
@@ -138,16 +118,12 @@ class TestLinearModel(unittest.TestCase):
             m.B = np.array([[]]) # less row 
             # How is this any different from the first test...
             m.matrixCheck()
-        m.B = 'setDefault' #sets paramter B to defaulted value
+        m.B = None #sets parameter B to defaulted value
         m.matrixCheck()
-        # PART 2: Add a test that sees the new runtime check works from linear_model line 73
-        # Tests created for @B mainly because we are exploring when optional paramters are inputted.
+
         # @C
         with self.assertRaises(TypeError):
             m.C = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.C = None # None
             m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.C = 0 # int
@@ -169,7 +145,6 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.C = np.array(2) # 0-D array
-            # this provides a 2 dimensional Array???
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.C = np.array([[0, 0], [1, 1]]) # 2-D array
@@ -185,16 +160,13 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
             m.C = np.array([[]]) # less row 
-            # How is this any different from the first test...
             m.matrixCheck()
         m.C = np.array([[1, 0]])
         m.matrixCheck()
 
+
         with self.assertRaises(TypeError):
             m.D = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.D = None # None
             m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.D = 0 # int
@@ -219,7 +191,7 @@ class TestLinearModel(unittest.TestCase):
             m.D = np.array(1) # 0-D array
             m.matrixCheck()
         with self.assertRaises(AttributeError):
-            m.D = np.array([[0], [1]]) # 2-D array with incorrect values ?????
+            m.D = np.array([[2], [1]]) # 2-D array with incorrect values passed in
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.D = np.array([1, 2]) # extra column values per row
@@ -233,15 +205,12 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.D = np.array([[]]) # less row
             m.matrixCheck()
-        m.D = 'setDefault' # sets to Default Value
+        m.D = None # sets to Default Value
         m.matrixCheck()
 
         # @E
         with self.assertRaises(TypeError):
             m.E = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.E = None # None
             m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.E = 0 # int
@@ -328,13 +297,9 @@ class TestLinearModel(unittest.TestCase):
         m.F = None
         m.matrixCheck()
 
-
         #G
         with self.assertRaises(TypeError):
             m.G = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.G = None # None
             m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.G = 0 # int
@@ -387,38 +352,12 @@ class TestLinearModel(unittest.TestCase):
         #Correct Testing
         m.G = np.array([[0]]) # 1-D Array
         m.matrixCheck()
-        m.G = 'setDefault' # sets to Default Value
+        m.G = None # sets to Default Value
         m.matrixCheck()
 
-# Testing when LinearModel is initiated when no inputs are given but matrix B is defined.
-    # def test_incorrect_B(self):
-    #     with self.assertRaises(AttributeError):
-    #         m = LinearThrownObject_WrongB()
-
-
-        # with self.assertRaises(AttributeError):
-        #     m.B = np.array([[]]) # 0-D array
-        #     m.matrixCheck()
-        # with self.assertRaises(AttributeError):
-        #     m.B = np.array([[], [], []]) # 3-D array
-        #     m.matrixCheck()
-        # with self.assertRaises(AttributeError):
-        #     m.B = np.array([[], [], [], []]) # 4-D array
-        #     m.matrixCheck()
-        #     # @B 2x0
-        # with self.assertRaises(AttributeError):
-        #     m.B = np.array([[0, 1 ,2]]) # extra column values per row
-        #     m.matrixCheck()
-        # with self.assertRaises(AttributeError):
-        #     m.B = np.array([[0]]) # less column values per row
-        #     m.matrixCheck()
-        # with self.assertRaises(AttributeError): 
-        #     m.B = np.array([[0, 1], [1, 1], [2, 2]]) # extra row
-        #     m.matrixCheck()
-        # with self.assertRaises(AttributeError): 
-        #     m.B = np.array([[0, 1]]) # less row
-        #     m.matrixCheck()
-
+# Future Testing Classes
+    # def test_classoverriden(self):
+        # m = LinearThrownOverrideClassLevel()
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):

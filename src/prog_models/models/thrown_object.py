@@ -135,6 +135,7 @@ class LinearThrownObject(LinearModel):
     E = np.array([[0], [-9.81]])
     C = np.array([[1, 0]])
     F = None # Will override method
+    
 
     default_parameters = {
         'thrower_height': 1.83,  # m
@@ -173,5 +174,12 @@ class LinearThrownObject_WrongB(LinearThrownObject):
     C = np.array([[1, 0]])
     F = None # Will override method
 
-class LinearThrownIncorrect(LinearThrownObject):
-    states = []
+#future implementation
+class LinearThrownOverrideClassLevel(LinearModel):
+    def __init__ (self):
+
+        self.A = np.array([[0, 1], [0, 0]])
+        self.E = np.array([[0], [-9.81]])
+        self.C = np.array([[1, 0]])
+        self.D = np.array([[1], [0]])
+        self.F = None
