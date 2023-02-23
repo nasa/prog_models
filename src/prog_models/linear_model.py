@@ -36,9 +36,6 @@ class LinearModel(PrognosticsModel, ABC):
         '_G' : None
     }
 
-# Set it to None instead of setDefault
-# Look into creating __copy__ function that 
-    # __deepcopy__ 
     def __init__(self, **kwargs):
         params = LinearModel.default_parameters.copy()
         params.update(self.default_parameters)
@@ -52,17 +49,12 @@ class LinearModel(PrognosticsModel, ABC):
         self.E = self.E
         self.G = self.G
 
-        # Add Error when wrong parameter
-        # if self.B is not matrixCheck and self.inputs:
-        #     raise AssertionError('Attribute should not exist.')
-
         if self.F is None and type(self).event_state == LinearModel.event_state:
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
 
         self.matrixCheck()
  
-#check to see if things are overridden
-#check if event states and threshold are overridden
+#check to see if attributes are different and if functions within the models are overriden as well (i.e threshold_met and event_state)
     def __eq__(self, other):
         return isinstance(other, LinearModel) \
                 and np.all(self.A == other.A) \

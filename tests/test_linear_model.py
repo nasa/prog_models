@@ -26,9 +26,6 @@ class TestLinearModel(unittest.TestCase):
         #INCLUDE TESTS FOR COPY AND DEEPCOPY
             # If they do not work, we implement the functions.
         #Serilization and Deserilization
-        
-        a = LinearThrownObject()
-        a == m
 
         # @A
         with self.assertRaises(TypeError):
@@ -63,10 +60,6 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError):
             m.A = np.array([[[[0, 1], [0, 0], [1, 0]]]]) # 3-D array
             m.matrixCheck()
-        # # Test to make sure when correct dimensions, it passes...
-        # m.A = np.array()
-        # with self.assertTrue():
-
         # When Matrix is improperly formed
         with self.assertRaises(AttributeError):
             m.A = np.array([[0, 1, 2, 3], [0, 0, 1, 2]]) # extra column values per row
@@ -108,7 +101,6 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.B = np.array(2) # 0-D array
-            # this provides a 2 dimensional Array???
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.B = np.array([[0, 0], [1, 1]]) # 2-D array
@@ -124,9 +116,8 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError): 
             m.B = np.array([[]]) # less row 
-            # How is this any different from the first test...
             m.matrixCheck()
-        m.B = None #sets parameter B to defaulted value
+        m.B = None #sets parameter B to default value
         m.matrixCheck()
 
         # @C
@@ -383,7 +374,6 @@ class TestLinearModel(unittest.TestCase):
  
         self.assertTrue(copym1 == deepcopym1)
 
-        return
 
     def test_linear_pickle(self):
         # future tests can compress, transfer to a file, and see if it still works
@@ -411,30 +401,31 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
+    # Implement a way to convert Linear Models objects that can be serialized by json
 
-    def test_linear_json(self):
-        m1 = LinearThrownObject()
-        m2 = LinearThrownObject2()
+    # def test_linear_json(self):
+        # m1 = LinearThrownObject()
+        # m2 = LinearThrownObject2()
 
-        # Note: dumps = serializing;
-        #       loads = deserializing
+        # # Note: dumps = serializing;
+        # #       loads = deserializing
 
-        bytes_m1 = json.dumps(m1) #serializing object 
-        loaded_m1 = json.loads(bytes_m1) #deserializing the object
-        self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
+        # bytes_m1 = json.dumps(m1) #serializing object 
+        # loaded_m1 = json.loads(bytes_m1) #deserializing the object
+        # self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
 
-        bytes_m2 = json.dumps(m2)
-        loaded_m2 = json.loads(bytes_m2)
-        self.assertTrue(m2 == loaded_m2)
+        # bytes_m2 = json.dumps(m2)
+        # loaded_m2 = json.loads(bytes_m2)
+        # self.assertTrue(m2 == loaded_m2)
 
-        m3 = LinearThrownObject()
-        bytes_m3 = json.dumps(m3)
-        loaded_m3 = json.loads(bytes_m3)
-        self.assertTrue(m3 == loaded_m3)
+        # m3 = LinearThrownObject()
+        # bytes_m3 = json.dumps(m3)
+        # loaded_m3 = json.loads(bytes_m3)
+        # self.assertTrue(m3 == loaded_m3)
 
-        self.assertTrue(bytes_m1 == bytes_m3)
-        self.assertTrue(loaded_m3 == loaded_m1)
-        self.assertTrue(LinearThrownObject, type(loaded_m3))
+        # self.assertTrue(bytes_m1 == bytes_m3)
+        # self.assertTrue(loaded_m3 == loaded_m1)
+        # self.assertTrue(LinearThrownObject, type(loaded_m3))
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):

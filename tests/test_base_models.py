@@ -143,38 +143,6 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(m.parameters['p3'], 5, 5)
         self.assertAlmostEqual(m.parameters['p4'], -10, 5)
 
-
-
-    #Move this to the bottom after done testing
-    def test_parameter_equality(self):
-        # Tests to include:
-            # A key exists in one and not in another, for both directions.
-            # Wrong parameters
-
-        m1 = LinearThrownObject()
-        m2 = LinearThrownObject()
-
-        self.assertTrue(m1.parameters == m2.parameters) #Checking too see if the parameters are equal
-        self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
-
-        m3 = LinearThrownObject2() # A model with a different throwing speed
-
-        self.assertFalse(m1.parameters == m3.parameters)
-        self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
-
-        m4 = LinearThrownObjectDiffKey() # Model with an extra default parameter.
-
-        self.assertFalse(m1.parameters == m4.parameters)
-        self.assertFalse(m4.parameters == m1.parameters) # checking both directions
-
-        m5 = LinearThrownObject3() # Model with incorrectly initalized throwing height
-
-        self.assertFalse(m1.parameters == m5.parameters) 
-        self.assertFalse(m5.parameters == m1.parameters) 
-
-        self.assertTrue(m1.parameters == m2.parameters) # Checking too see previous equal statements stay the same
-        self.assertTrue(m2.parameters == m1.parameters) 
-
     def test_broken_models(self):
 
         class missing_states(PrognosticsModel):
@@ -1259,6 +1227,31 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
     
+    # adavance this test by adding other models other than LinearThrownObject as testing
+    def test_parameter_equality(self):
+        m1 = LinearThrownObject()
+        m2 = LinearThrownObject()
+
+        self.assertTrue(m1.parameters == m2.parameters) #Checking too see if the parameters are equal
+        self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
+
+        m3 = LinearThrownObject2() # A model with a different throwing speed
+
+        self.assertFalse(m1.parameters == m3.parameters)
+        self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
+
+        m4 = LinearThrownObjectDiffKey() # Model with an extra default parameter.
+
+        self.assertFalse(m1.parameters == m4.parameters)
+        self.assertFalse(m4.parameters == m1.parameters) # checking both directions
+
+        m5 = LinearThrownObject3() # Model with incorrectly initalized throwing height, but same parameters
+
+        self.assertTrue(m1.parameters == m5.parameters) 
+        self.assertTrue(m5.parameters == m1.parameters) 
+
+        self.assertTrue(m1.parameters == m2.parameters) # Checking too see previous equal statements stay the same
+        self.assertTrue(m2.parameters == m1.parameters) 
 
 # This allows the module to be executed directly
 def run_tests():

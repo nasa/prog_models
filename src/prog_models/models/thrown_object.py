@@ -232,7 +232,7 @@ class LinearThrownObjectDiffKey(LinearThrownObject):
         'x': 1111
     }
 
-#future implementation
+# future implementation
 class LinearThrownOverrideClassLevel(LinearThrownObject):
     def __init__ (self):
 
