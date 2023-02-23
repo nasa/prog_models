@@ -27,7 +27,7 @@ class LinearModel(PrognosticsModel, ABC):
         * events:  list[str] - :term:`event` keys
     """
 
-    # Set these to None
+    # Default Values are set to None
     default_parameters = {
         '_B' : None,
         '_C' : None,
@@ -36,9 +36,6 @@ class LinearModel(PrognosticsModel, ABC):
         '_G' : None
     }
 
-# Set it to None instead of setDefault
-# Look into creating __copy__ function that 
-    # __deepcopy__ 
     def __init__(self, **kwargs):
         params = LinearModel.default_parameters.copy()
         params.update(self.default_parameters)
@@ -51,10 +48,6 @@ class LinearModel(PrognosticsModel, ABC):
         self.D = self.D
         self.E = self.E
         self.G = self.G
-
-        # Add Error when wrong parameter
-        # if self.B is not matrixCheck and self.inputs:
-        #     raise AssertionError('Attribute should not exist.')
 
         if self.F is None and type(self).event_state == LinearModel.event_state:
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
