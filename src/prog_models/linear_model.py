@@ -47,6 +47,7 @@ class LinearModel(PrognosticsModel, ABC):
         self.C = self.C
         self.D = self.D
         self.E = self.E
+        self.F = self.F
         self.G = self.G
 
         if self.F is None and type(self).event_state == LinearModel.event_state:
@@ -163,10 +164,6 @@ class LinearModel(PrognosticsModel, ABC):
             self.parameters['_E'] = np.zeros((self.n_states, 1))
         else:
             self.parameters['_E'] = value
-
-    @property
-    def E(self):
-        return np.zeros((self.n_states, 1))
 
     @property
     @abstractmethod
