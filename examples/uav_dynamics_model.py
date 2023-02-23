@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
 from prog_models.models.uav_model import UAVGen 
-from prog_models.loading_fcns.controller_test import ExampleController
+from prog_models.loading.controller_test import ExampleController
 
 def run_example(): 
 
