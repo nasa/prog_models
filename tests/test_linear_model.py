@@ -4,8 +4,9 @@ import numpy as np
 import unittest
 import copy
 import pickle
+import json
 from prog_models.models.test_models.linear_models import *
-from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB
+from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB, LinearThrownObject2
 
 
 class TestLinearModel(unittest.TestCase):
@@ -381,9 +382,59 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(m1 == deepcopym1)
  
         self.assertTrue(copym1 == deepcopym1)
-    
 
         return
+
+    def test_linear_pickle(self):
+        # future tests can compress, transfer to a file, and see if it still works
+
+        m1 = LinearThrownObject()
+        m2 = LinearThrownObject2()
+
+        # Note: dumps = serializing;
+        #       loads = deserializing
+
+        bytes_m1 = pickle.dumps(m1) #serializing object 
+        loaded_m1 = pickle.loads(bytes_m1) #deserializing the object
+        self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
+
+        bytes_m2 = pickle.dumps(m2)
+        loaded_m2 = pickle.loads(bytes_m2)
+        self.assertTrue(m2 == loaded_m2)
+
+        m3 = LinearThrownObject()
+        bytes_m3 = pickle.dumps(m3)
+        loaded_m3 = pickle.loads(bytes_m3)
+        self.assertTrue(m3 == loaded_m3)
+
+        self.assertTrue(bytes_m1 == bytes_m3)
+        self.assertTrue(loaded_m3 == loaded_m1)
+        self.assertTrue(LinearThrownObject, type(loaded_m3))
+
+
+    def test_linear_json(self):
+        m1 = LinearThrownObject()
+        m2 = LinearThrownObject2()
+
+        # Note: dumps = serializing;
+        #       loads = deserializing
+
+        bytes_m1 = json.dumps(m1) #serializing object 
+        loaded_m1 = json.loads(bytes_m1) #deserializing the object
+        self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
+
+        bytes_m2 = json.dumps(m2)
+        loaded_m2 = json.loads(bytes_m2)
+        self.assertTrue(m2 == loaded_m2)
+
+        m3 = LinearThrownObject()
+        bytes_m3 = json.dumps(m3)
+        loaded_m3 = json.loads(bytes_m3)
+        self.assertTrue(m3 == loaded_m3)
+
+        self.assertTrue(bytes_m1 == bytes_m3)
+        self.assertTrue(loaded_m3 == loaded_m1)
+        self.assertTrue(LinearThrownObject, type(loaded_m3))
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):

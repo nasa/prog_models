@@ -15,7 +15,7 @@ from prog_models import *
 from prog_models.models import *
 from prog_models.models.test_models.linear_models import (
     OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM)
-from prog_models.models.thrown_object import LinearThrownObject
+from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject2, LinearThrownObjectDiffKey, LinearThrownObject3
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -148,19 +148,34 @@ class TestModels(unittest.TestCase):
     #Move this to the bottom after done testing
     def test_parameter_equality(self):
         # Tests to include:
-            # A key exists in one and not in another, for both directions. Both as well
+            # A key exists in one and not in another, for both directions.
             # Wrong parameters
 
         m1 = LinearThrownObject()
         m2 = LinearThrownObject()
 
-        self.assertTrue(m1.parameters == m2.parameters)
+        self.assertTrue(m1.parameters == m2.parameters) #Checking too see if the parameters are equal
+        self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
 
+        m3 = LinearThrownObject2() # A model with a different throwing speed
+
+        self.assertFalse(m1.parameters == m3.parameters)
+        self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
+
+        m4 = LinearThrownObjectDiffKey() # Model with an extra default parameter.
+
+        self.assertFalse(m1.parameters == m4.parameters)
+        self.assertFalse(m4.parameters == m1.parameters) # checking both directions
+
+        m5 = LinearThrownObject3() # Model with incorrectly initalized throwing height
+
+        self.assertFalse(m1.parameters == m5.parameters) 
+        self.assertFalse(m5.parameters == m1.parameters) 
+
+        self.assertTrue(m1.parameters == m2.parameters) # Checking too see previous equal statements stay the same
+        self.assertTrue(m2.parameters == m1.parameters) 
 
     def test_broken_models(self):
-
-
-
 
         class missing_states(PrognosticsModel):
             inputs = ['i1', 'i2']
@@ -173,7 +188,6 @@ class TestModels(unittest.TestCase):
             def output(self, x):
                 pass
         
-
         class empty_states(PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']

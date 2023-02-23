@@ -9,9 +9,9 @@ import numpy as np
 import types
 from typing import Callable
 
-from .noise_functions import measurement_noise_functions, process_noise_functions
-from .serialization import *
-from ..exceptions import ProgModelTypeError
+from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
+from prog_models.utils.serialization import *
+from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
@@ -46,7 +46,8 @@ class PrognosticsModelParameters(UserDict):
                     self.update(changes)
 
     def __eq__(self, other):
-        if set(self.data.keys()) != set(other.data.keys()):
+        if set(self.data.keys()) != set(other.data.keys()) \
+            and set(other.data.keys()) != set(self.data.keys()):
             return False
         for key, value in self.data.items():
             if not np.all(value == other[key]): #override the numpy equalities
