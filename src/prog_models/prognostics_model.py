@@ -11,12 +11,12 @@ import numpy as np
 from typing import Callable, Iterable, List
 from warnings import warn
 
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
-from .sim_result import SimResult, LazySimResult
-from .utils import ProgressBar
-from .utils.containers import DictLikeMatrixWrapper
-from .utils.parameters import PrognosticsModelParameters
-from .utils.serialization import *
+from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
+from prog_models.sim_result import SimResult, LazySimResult
+from prog_models.utils import ProgressBar
+from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.utils.parameters import PrognosticsModelParameters
+from prog_models.utils.serialization import *
 
 
 class PrognosticsModel(ABC):
@@ -563,7 +563,7 @@ class PrognosticsModel(ABC):
         | u = m.InputContainer({'u1': 3.2})
         | z = m.OutputContainer({'z1': 2.2})
         | x = m.initialize(u, z) # Initialize first state
-        | event_state = m.event_state(x) # Returns {'e1': 0.8, 'e2': 0.6}
+        | event_state = m.event_state(x) # Returns {'EOD': 1.0}, when m = BatteryCircuit()
 
         Note
         ----
