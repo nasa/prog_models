@@ -1,0 +1,111 @@
+Parameter A: 
+
+    TypeErrors: 
+        string
+        int
+        dictionary
+        EmptyList
+        float
+        None
+        tuple
+        set 
+        boolean
+    AttributeError: 
+        
+
+
+
+REVIEW FOR CHANGE 
+
+214
+
+
+
+REQUEST:
+
+Rerun correct parameters after every string of incorrect tests.
+
+Move Matrix Checks underneath TypeErrors for all parameters
+
+Create Private Variables and Setter methods
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

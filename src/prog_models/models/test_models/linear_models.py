@@ -150,3 +150,11 @@ class TwoInputNoOutputTwoEventLM(LinearModel):
             'x1': 0
         }
     }
+
+class ThreeStatesTwoB(LinearModel):
+    inputs = ['u1']
+    states = ['x1']
+    A = np.array([[0]])
+    B = np.array([[1, 2]])
+    C = np.empty((0,1))
+    F = None
