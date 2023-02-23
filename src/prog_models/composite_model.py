@@ -43,6 +43,7 @@ class CompositeModel(PrognosticsModel):
         self.states = set()
         self.outputs = set()
         self.events = set()
+        self.performance_metric_keys = set()
         self.model_names = set()
         duplicate_names = {}
         kwargs['models'] = []
@@ -76,6 +77,7 @@ class CompositeModel(PrognosticsModel):
             self.states |= set([name + DIVIDER + x for x in m.states])
             self.outputs |= set([name + DIVIDER + z for z in m.outputs])
             self.events |= set([name + DIVIDER + e for e in m.events])
+            self.performance_metric_keys |= set([name + DIVIDER + p for p in m.performance_metric_keys])
         
         # Handle outputs
         if 'outputs' in kwargs:
@@ -205,6 +207,20 @@ class CompositeModel(PrognosticsModel):
             for key, value in z_i.items():
                 z[name + '.' + key] = value
         return self.OutputContainer(z)
+
+    def performance_metrics(self, x):
+        metrics = {}
+        for (name, m) in self.parameters['models']:
+            # Prepare state
+            x_i = m.StateContainer({key: x[name + '.' + key] for key in m.states})
+
+            # Get outputs
+            metrics_i = m.performance_metrics(x_i)
+
+            # Save to super outputs
+            for key, value in metrics_i.items():
+                metrics[name + '.' + key] = value
+        return metrics
 
     def event_state(self, x):
         e = {}

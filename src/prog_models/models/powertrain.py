@@ -3,6 +3,7 @@
 
 from prog_models import PrognosticsModel
 
+
 def update_Cq(params):
     return {
         'C_q': params['c_q'] * params['rho'] * pow(params['D'], 5)
@@ -93,9 +94,9 @@ class Powertrain(PrognosticsModel):
 
     default_parameters = {
         # Load parameters 
-        'c_q': 5.42e-7, # coefficient of torque (APC data, derived) [dimensionless]
-        'rho': 1.225, # (Kg/m^3)
-        'D': 0.381, # (m)
+        'c_q': 5.42e-7,  # coefficient of torque (APC data, derived) [dimensionless]
+        'rho': 1.225,  # (Kg/m^3)
+        'D': 0.381,  # (m)
     }
 
     def __init__(self, esc, motor, **kwargs):
@@ -119,7 +120,7 @@ class Powertrain(PrognosticsModel):
     def next_state(self, x, u, dt):
         x_esc = self.esc.StateContainer(x)
         u_esc = {
-            'duty': u['duty'], 
+            'duty': u['duty'],
             'theta': x['theta'],
             'v': u['v']}
         u_esc = self.esc.InputContainer(u_esc)

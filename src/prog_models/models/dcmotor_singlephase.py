@@ -118,8 +118,8 @@ class DCMotorSP(PrognosticsModel):
         x0 : dict[str, float]
             Initial :term:`state`
     """
-    states  = ['i', 'v_rot']
-    inputs  = ['v', 't_l']
+    states = ['i', 'v_rot']
+    inputs = ['v', 't_l']
     outputs = ['v_rot']
 
     param_callbacks = {
@@ -142,7 +142,6 @@ class DCMotorSP(PrognosticsModel):
                               )
 
     def dx(self, x: dict, u: dict):
-        
         # Get parameters
         parameters     = self.parameters
         friction_coeff = parameters['B']
@@ -166,7 +165,7 @@ class DCMotorSP(PrognosticsModel):
             np.atleast_1d(dvrotdt)          # rotor speed
         ]))
 
-    def output(self, x : dict):
+    def output(self, x: dict):
         rotor_speed = x['v_rot']
         return self.OutputContainer(np.array([
             np.atleast_1d(rotor_speed),

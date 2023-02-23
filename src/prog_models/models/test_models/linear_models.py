@@ -5,7 +5,6 @@ import numpy as np
 
 from prog_models import LinearModel
 
-
 class FNoneNoEventStateLM(LinearModel):
     """
     Simple model that increases state by u1 every step. 
@@ -65,6 +64,16 @@ class OneInputOneOutputNoEventLM(LinearModel):
             'x1': 0
         }
     }
+
+
+class OneInputOneOutputNoEventLMPM(OneInputOneOutputNoEventLM):
+    """
+    Same as OneInputOneOutputNoEventLM, but with performance metrics defined as a function. Has a single performance metric that is always the state, plus 1
+    """
+    performance_metric_keys = ['x1+1']
+
+    def performance_metrics(self, x) -> dict:
+        return {'x1+1': x['x1']+1}
 
 
 class OneInputNoOutputOneEventLM(OneInputNoOutputNoEventLM):

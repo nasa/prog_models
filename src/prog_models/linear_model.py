@@ -27,7 +27,7 @@ class LinearModel(PrognosticsModel, ABC):
         * events:  list[str] - :term:`event` keys
     """
 
-    # Set these to None
+    # Default Values are set to None
     default_parameters = {
         '_B' : None,
         '_C' : None,
@@ -163,6 +163,10 @@ class LinearModel(PrognosticsModel, ABC):
             self.parameters['_E'] = np.zeros((self.n_states, 1))
         else:
             self.parameters['_E'] = value
+
+    @property
+    def E(self):
+        return np.zeros((self.n_states, 1))
 
     @property
     @abstractmethod

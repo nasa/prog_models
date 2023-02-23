@@ -354,17 +354,13 @@ class TestLinearModel(unittest.TestCase):
         m.G = None # sets to Default Value
         m.matrixCheck()
 
-# Future Testing Classes
-    # def test_classoverriden(self):
-        # m = LinearThrownOverrideClassLevel()
-
     def test_copy_linear(self):
         
         m1 = LinearThrownObject()
         copym1 = copy.copy(m1)  
         self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
 
-#what is simulate to threshold even doing
+        # Is simulate to threshold even doing anything in this scenario?
         m1.simulate_to_threshold(lambda t, x = None: m1.InputContainer({}))
         self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
 
@@ -374,7 +370,7 @@ class TestLinearModel(unittest.TestCase):
  
         self.assertTrue(copym1 == deepcopym1)
 
-
+        
     def test_linear_pickle(self):
         # future tests can compress, transfer to a file, and see if it still works
 
@@ -401,31 +397,32 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
-    # Implement a way to convert Linear Models objects that can be serialized by json
+# Future implementation includes testing json objects.
+# Currently does not work since LinearThrownObject() is not serilizable and needs implmentation
 
     # def test_linear_json(self):
-        # m1 = LinearThrownObject()
-        # m2 = LinearThrownObject2()
+    #     m1 = LinearThrownObject()
+    #     m2 = LinearThrownObject2()
 
-        # # Note: dumps = serializing;
-        # #       loads = deserializing
+    #     # Note: dumps = serializing;
+    #     #       loads = deserializing
 
-        # bytes_m1 = json.dumps(m1) #serializing object 
-        # loaded_m1 = json.loads(bytes_m1) #deserializing the object
-        # self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
+    #     bytes_m1 = json.dumps(m1) #serializing object 
+    #     loaded_m1 = json.loads(bytes_m1) #deserializing the object
+    #     self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
 
-        # bytes_m2 = json.dumps(m2)
-        # loaded_m2 = json.loads(bytes_m2)
-        # self.assertTrue(m2 == loaded_m2)
+    #     bytes_m2 = json.dumps(m2)
+    #     loaded_m2 = json.loads(bytes_m2)
+    #     self.assertTrue(m2 == loaded_m2)
 
-        # m3 = LinearThrownObject()
-        # bytes_m3 = json.dumps(m3)
-        # loaded_m3 = json.loads(bytes_m3)
-        # self.assertTrue(m3 == loaded_m3)
+    #     m3 = LinearThrownObject()
+    #     bytes_m3 = json.dumps(m3)
+    #     loaded_m3 = json.loads(bytes_m3)
+    #     self.assertTrue(m3 == loaded_m3)
 
-        # self.assertTrue(bytes_m1 == bytes_m3)
-        # self.assertTrue(loaded_m3 == loaded_m1)
-        # self.assertTrue(LinearThrownObject, type(loaded_m3))
+    #     self.assertTrue(bytes_m1 == bytes_m3)
+    #     self.assertTrue(loaded_m3 == loaded_m1)
+    #     self.assertTrue(LinearThrownObject, type(loaded_m3))
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):
@@ -473,7 +470,6 @@ class TestLinearModel(unittest.TestCase):
                 }
         # Needs more development; test coverage needs testing of event_state not overridden
 
-# This allows the module to be executed directly
 def run_tests():
     unittest.main()
     
