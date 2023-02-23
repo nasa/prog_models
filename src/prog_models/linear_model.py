@@ -3,13 +3,7 @@
 
 from abc import ABC, abstractmethod
 import numpy as np
-
 from prog_models import PrognosticsModel
-
-import warnings
-
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
 
 class LinearModel(PrognosticsModel, ABC):
     """
@@ -66,7 +60,29 @@ class LinearModel(PrognosticsModel, ABC):
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
 
         self.matrixCheck()
-    
+ 
+#check to see if things are overridden
+#check if event states and threshold are overridden
+    def __eq__(self, other):
+        return isinstance(other, LinearModel) \
+                and np.all(self.A == other.A) \
+                and np.all(self.B == other.B) \
+                and np.all(self.C == other.C) \
+                and np.all(self.D == other.D) \
+                and np.all(self.E == other.E) \
+                and np.all(self.F == other.F) \
+                and np.all(self.G == other.G) \
+                and self.inputs == other.inputs \
+                and self.outputs == other.outputs \
+                and self.events == other.events \
+                and self.states == other.states \
+                and self.parameters == other.parameters \
+                and self.performance_metric_keys == other.performance_metric_keys \
+                and self.state_limits == other.state_limits \
+                and type(self).threshold_met == type(other).threshold_met \
+                and type(self).event_state == type(other).event_state \
+                and type(self).dx == type(other).dx \
+                and type(self).output == type(other).output
 
     def matrixCheck(self) -> None:
         """
@@ -98,7 +114,7 @@ class LinearModel(PrognosticsModel, ABC):
         
 
         matrixShape = matrix.shape
-        
+
         if (matrix.ndim != 2 or # Checks too see if matrix is two-dimensional
             matrixShape[0] != rowsCount or # checks if matrix has correct row count 
             matrixShape[1] != colsCount): # check all rows are equal to correct column count

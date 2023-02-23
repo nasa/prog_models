@@ -5,6 +5,7 @@ from collections import UserDict
 from copy import deepcopy
 import json
 from numbers import Number
+import numpy as np
 import types
 from typing import Callable
 
@@ -43,6 +44,15 @@ class PrognosticsModelParameters(UserDict):
                 for callback in callbacks[key]:
                     changes = callback(self)
                     self.update(changes)
+
+    def __eq__(self, other):
+        if set(self.data.keys()) != set(other.data.keys()):
+            return False
+        for key, value in self.data.items():
+            if not np.all(value == other[key]): #override the numpy equalities
+                return False
+        return True
+        
 
     def copy(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)

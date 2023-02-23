@@ -3,7 +3,7 @@
 import numpy as np
 import unittest
 import copy
-
+import pickle
 from prog_models.models.test_models.linear_models import *
 from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB
 
@@ -21,6 +21,13 @@ class TestLinearModel(unittest.TestCase):
         #         1      2      0      1
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
         # when matrix is not of type NumPy ndarray or standard list
+
+        #INCLUDE TESTS FOR COPY AND DEEPCOPY
+            # If they do not work, we implement the functions.
+        #Serilization and Deserilization
+        
+        a = LinearThrownObject()
+        a == m
 
         # @A
         with self.assertRaises(TypeError):
@@ -358,6 +365,25 @@ class TestLinearModel(unittest.TestCase):
 # Future Testing Classes
     # def test_classoverriden(self):
         # m = LinearThrownOverrideClassLevel()
+
+    def test_copy_linear(self):
+        
+        m1 = LinearThrownObject()
+        copym1 = copy.copy(m1)  
+        self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
+
+#what is simulate to threshold even doing
+        m1.simulate_to_threshold(lambda t, x = None: m1.InputContainer({}))
+        self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
+
+        deepcopym1 = copy.deepcopy(m1)
+        deepcopym1.simulate_to_threshold(lambda t, x = None: deepcopym1.InputContainer({}))
+        self.assertTrue(m1 == deepcopym1)
+ 
+        self.assertTrue(copym1 == deepcopym1)
+    
+
+        return
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):

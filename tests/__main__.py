@@ -68,15 +68,15 @@ if __name__ == '__main__':
     except Exception:
         was_successful = False
         
-    # try:
-    #     battery_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        battery_main()
+    except Exception:
+        was_successful = False
 
-    # try:
-    #     centrifugal_pump_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        centrifugal_pump_main()
+    except Exception:
+        was_successful = False
 
     try:
         pneumatic_valve_main()

@@ -143,7 +143,23 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(m.parameters['p3'], 5, 5)
         self.assertAlmostEqual(m.parameters['p4'], -10, 5)
 
+
+
+    #Move this to the bottom after done testing
+    def test_parameter_equality(self):
+        # Tests to include:
+            # A key exists in one and not in another, for both directions. Both as well
+            # Wrong parameters
+
+        m1 = LinearThrownObject()
+        m2 = LinearThrownObject()
+
+        self.assertTrue(m1.parameters == m2.parameters)
+
+
     def test_broken_models(self):
+
+
 
 
         class missing_states(PrognosticsModel):
@@ -1228,6 +1244,7 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'m1.u1',})
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
+    
 
 # This allows the module to be executed directly
 def run_tests():
