@@ -184,11 +184,12 @@ class UAVGen(PrognosticsModel):
       # Initialize vehicle: set initial state and dt for integration.
       # ---------------------------------------------------------------
       # aircraft1.set_state(state=np.concatenate((ref_traj.cartesian_pos[0, :], ref_traj.attitude[0, :], ref_traj.velocity[0, :], ref_traj.angular_velocity[0, :]), axis=0))  # set initial state
-      aircraft1.set_state(state=np.array([0,0,0,0,0,0,0,0,0,0,0]))  # set initial state
+      aircraft1.set_state(state=np.array([0,0,0,0,0,0,0,0,0,0,0]))  # TODO: needs to be more general (see line above), but no longer have ref_traj here 
       aircraft1.set_dt(dt=self.parameters['dt'])  # set dt for simulation
 
     def initialize(self, u=None, z=None): 
       # Extract initial state from reference trajectory    
+      # TODO: needs to be more general, but don't have ref_traj here 
       return self.StateContainer({
           'x': 0, # self.ref_traj.cartesian_pos[0, 0],
           'y': 0, #self.ref_traj.cartesian_pos[0, 1],
@@ -367,81 +368,94 @@ class UAVGen(PrognosticsModel):
         #     }
         pass
 
-    def visualize_traj(self, pred):
-        """
-        This method provides functionality to visualize a predicted trajectory generated, plotted with the reference trajectory and coarse waypoints. 
+    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
 
-        Calling this returns a figure with two subplots: 1) latitude (deg) vs longitude (deg), and 2) altitude (m) vs time.
+        # Check for appropriately defined dt - must be same as vehicle model 
+        if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:
+          kwargs['dt'] = self.parameters['dt']
+          warn("Simulation dt must be equal to dt defined for the vehicle model. dt = {} is used.".format(self.parameters['dt'])) 
+        elif 'dt' not in kwargs:
+          kwargs['dt'] = self.parameters['dt']
 
-        Parameters
-        ----------
-        pred : UAVGen model simulation  
-               SimulationResults from simulate_to or simulate_to_threshold for a defined UAVGen class
+        # Simulate to threshold at DMD time step
+        super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs)
 
-        Returns 
-        -------
-        fig : Visualization of trajectory generation results 
-        """
+    # TODO: fix visualzation; currently requires ref_traj internally 
+    # def visualize_traj(self, pred):
+    #     """
+    #     This method provides functionality to visualize a predicted trajectory generated, plotted with the reference trajectory and coarse waypoints. 
 
-        import matplotlib.pyplot as plt
+    #     Calling this returns a figure with two subplots: 1) latitude (deg) vs longitude (deg), and 2) altitude (m) vs time.
 
-        # Conversions
-        # -----------
-        deg2rad = np.pi/180.0
-        rad2deg = 180.0/np.pi
+    #     Parameters
+    #     ----------
+    #     pred : UAVGen model simulation  
+    #            SimulationResults from simulate_to or simulate_to_threshold for a defined UAVGen class
+
+    #     Returns 
+    #     -------
+    #     fig : Visualization of trajectory generation results 
+    #     """
+
+    #     import matplotlib.pyplot as plt
+
+    #     # Conversions
+    #     # -----------
+    #     deg2rad = np.pi/180.0
+    #     rad2deg = 180.0/np.pi
         
-        # Extract reference trajectory information
-        # ----------------------------------------
-        waypoints   = self.ref_traj.route
-        eta         = self.ref_traj.route.eta
-        depart_time = self.ref_traj.route.departure_time
-        time        = self.ref_traj.time
-        ref_pos     = self.ref_traj.geodetic_pos
+    #     # Extract reference trajectory information
+    #     # ----------------------------------------
+    #     waypoints   = self.ref_traj.route
+    #     eta         = self.ref_traj.route.eta
+    #     depart_time = self.ref_traj.route.departure_time
+    #     time        = self.ref_traj.time
+    #     ref_pos     = self.ref_traj.geodetic_pos
 
-        # Extract predicted trajectory information
-        # ----------------------------------------
-        pred_time = pred.times
-        pred_x = [pred.outputs[iter]['x'] for iter in range(len(pred_time))]
-        pred_y = [pred.outputs[iter]['y'] for iter in range(len(pred_time))]
-        pred_z = [pred.outputs[iter]['z'] for iter in range(len(pred_time))]
+    #     # Extract predicted trajectory information
+    #     # ----------------------------------------
+    #     pred_time = pred.times
+    #     pred_x = [pred.outputs[iter]['x'] for iter in range(len(pred_time))]
+    #     pred_y = [pred.outputs[iter]['y'] for iter in range(len(pred_time))]
+    #     pred_z = [pred.outputs[iter]['z'] for iter in range(len(pred_time))]
 
-        pred_lat = []
-        pred_lon = []
-        pred_alt = []
+    #     pred_lat = []
+    #     pred_lon = []
+    #     pred_alt = []
 
-        for iter1 in range(len(pred_time)):
-            x_temp, y_temp, z_temp = self.coord_transform.enu2geodetic(pred_x[iter1], pred_y[iter1], pred_z[iter1])
-            pred_lat.append(x_temp)
-            pred_lon.append(y_temp)
-            pred_alt.append(z_temp)
+    #     for iter1 in range(len(pred_time)):
+    #         x_temp, y_temp, z_temp = self.coord_transform.enu2geodetic(pred_x[iter1], pred_y[iter1], pred_z[iter1])
+    #         pred_lat.append(x_temp)
+    #         pred_lon.append(y_temp)
+    #         pred_alt.append(z_temp)
         
-        pred_lat_deg = [pred_lat[iter] * rad2deg for iter in range(len(pred_lat))]
-        pred_lon_deg = [pred_lon[iter] * rad2deg for iter in range(len(pred_lon))]
+    #     pred_lat_deg = [pred_lat[iter] * rad2deg for iter in range(len(pred_lat))]
+    #     pred_lon_deg = [pred_lon[iter] * rad2deg for iter in range(len(pred_lon))]
 
-        # Initialize Figure
-        # ----------------
-        params = dict(figsize=(13, 9), fontsize=14, linewidth=2.0, alpha_preds=0.6)
-        fig, (ax1, ax2) = plt.subplots(2)
+    #     # Initialize Figure
+    #     # ----------------
+    #     params = dict(figsize=(13, 9), fontsize=14, linewidth=2.0, alpha_preds=0.6)
+    #     fig, (ax1, ax2) = plt.subplots(2)
 
-        # Plot trajectory predictions
-        # -------------------------
-        # First plot waypoints (dots) and reference trajectory (commanded, line)
-        ax1.plot(waypoints.lon * rad2deg, waypoints.lat  * rad2deg, 'o', color='tab:orange', alpha=0.5, markersize=10, label='__nolegend__')
-        ax1.plot(ref_pos[:, 1] * rad2deg, ref_pos[:, 0] * rad2deg, '--', linewidth=params['linewidth'], color='tab:orange', alpha=0.5, label='traj')
-        ax1.plot(pred_lon_deg, pred_lat_deg,'-', color='tab:blue', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
+    #     # Plot trajectory predictions
+    #     # -------------------------
+    #     # First plot waypoints (dots) and reference trajectory (commanded, line)
+    #     ax1.plot(waypoints.lon * rad2deg, waypoints.lat  * rad2deg, 'o', color='tab:orange', alpha=0.5, markersize=10, label='__nolegend__')
+    #     ax1.plot(ref_pos[:, 1] * rad2deg, ref_pos[:, 0] * rad2deg, '--', linewidth=params['linewidth'], color='tab:orange', alpha=0.5, label='traj')
+    #     ax1.plot(pred_lon_deg, pred_lat_deg,'-', color='tab:blue', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
 
-        ax1.set_xlabel('longitude, deg', fontsize=params['fontsize'])
-        ax1.set_ylabel('latitude, deg', fontsize=params['fontsize'])
-        ax1.legend(fontsize=params['fontsize'])
+    #     ax1.set_xlabel('longitude, deg', fontsize=params['fontsize'])
+    #     ax1.set_ylabel('latitude, deg', fontsize=params['fontsize'])
+    #     ax1.legend(fontsize=params['fontsize'])
 
-        # Add altitude plot
-        # -------------------------------------------------------
-        time_vector = [depart_time + datetime.timedelta(seconds=pred_time[ii]) for ii in range(len(pred_time))]
-        ax2.plot_date(eta, waypoints.alt, '--o', color='tab:orange', alpha=0.5, linewidth=params['linewidth'], label='__nolegend__')
-        ax2.plot(time_vector, pred_alt,'-', color='tab:blue',
-                      alpha=params['alpha_preds'], linewidth=params['linewidth'], label='__nolegend__')
+    #     # Add altitude plot
+    #     # -------------------------------------------------------
+    #     time_vector = [depart_time + datetime.timedelta(seconds=pred_time[ii]) for ii in range(len(pred_time))]
+    #     ax2.plot_date(eta, waypoints.alt, '--o', color='tab:orange', alpha=0.5, linewidth=params['linewidth'], label='__nolegend__')
+    #     ax2.plot(time_vector, pred_alt,'-', color='tab:blue',
+    #                   alpha=params['alpha_preds'], linewidth=params['linewidth'], label='__nolegend__')
         
-        ax2.set_xlabel('time stamp, -', fontsize=params['fontsize'])
-        ax2.set_ylabel('altitude, m', fontsize=params['fontsize'])
+    #     ax2.set_xlabel('time stamp, -', fontsize=params['fontsize'])
+    #     ax2.set_ylabel('altitude, m', fontsize=params['fontsize'])
 
-        return fig
+    #     return fig

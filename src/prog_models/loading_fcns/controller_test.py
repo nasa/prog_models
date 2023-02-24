@@ -2,10 +2,10 @@ import numpy as np
 
 class ExampleController():
 
-    def __init__(self, x_ref, **kwargs):
+    def __init__(self, x_ref, vehicle):
 
         # Inputs to controller are vehicle parameters and x_ref
-        self.parameters = kwargs
+        self.parameters = vehicle.parameters
         self.ref_traj = x_ref
     
     def __call__(self, t, x=None):
