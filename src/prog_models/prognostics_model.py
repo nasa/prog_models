@@ -11,12 +11,13 @@ import numpy as np
 from typing import Callable, Iterable, List
 from warnings import warn
 
-from .exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
-from .sim_result import SimResult, LazySimResult
-from .utils import ProgressBar
-from .utils.containers import DictLikeMatrixWrapper
-from .utils.parameters import PrognosticsModelParameters
-from .utils.serialization import *
+from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
+from prog_models.sim_result import SimResult, LazySimResult
+from prog_models.utils import ProgressBar
+from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.utils.parameters import PrognosticsModelParameters
+from prog_models.utils.serialization import *
+from prog_models.utils.size import getsizeof
 
 
 class PrognosticsModel(ABC):
@@ -1138,6 +1139,9 @@ class PrognosticsModel(ABC):
             saved_outputs, 
             saved_event_states
         )
+
+    def __sizeof__(self):
+        return getsizeof(self)
 
     def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
