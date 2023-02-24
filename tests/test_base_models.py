@@ -1283,6 +1283,7 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
     
     # adavance this test by adding other models other than LinearThrownObject as testing
+    # Fill parameters with different types of objects instead
     def test_parameter_equality(self):
         m1 = LinearThrownObject()
         m2 = LinearThrownObject()

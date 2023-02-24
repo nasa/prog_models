@@ -236,7 +236,6 @@ class LinearThrownObjectDiffKey(LinearThrownObject):
 # future implementation
 class LinearThrownOverrideClassLevel(LinearThrownObject):
     def __init__ (self):
-
         self.A = np.array([[0, 1], [0, 0]])
         self.E = np.array([[0], [-9.81]])
         self.C = np.array([[1, 0]])
