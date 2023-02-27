@@ -564,7 +564,7 @@ class PrognosticsModel(ABC):
         | u = m.InputContainer({'u1': 3.2})
         | z = m.OutputContainer({'z1': 2.2})
         | x = m.initialize(u, z) # Initialize first state
-        | event_state = m.event_state(x) # Returns {'e1': 0.8, 'e2': 0.6}
+        | event_state = m.event_state(x) # Returns {'EOD': 1.0}, when m = BatteryCircuit()
 
         Note
         ----
