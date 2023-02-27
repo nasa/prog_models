@@ -4,7 +4,7 @@
 import numpy as np
 from typing import Union
 
-from ..exceptions import ProgModelTypeError
+from prog_models.exceptions import ProgModelTypeError
 
 
 class DictLikeMatrixWrapper():
