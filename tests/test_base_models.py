@@ -8,12 +8,13 @@ import pickle
 import sys
 import unittest
 
-
 # This ensures that the directory containing ProgModelTemplate is in the python search directory
 sys.path.append(join(dirname(__file__), ".."))
 
-from prog_models import *
-from prog_models.models import *
+from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel, LinearModel
+from prog_models.models import ThrownObject, BatteryElectroChemEOD
+from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
+from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParameters)
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -1137,9 +1138,7 @@ class TestModels(unittest.TestCase):
         self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
 
     def test_composite_broken(self):
-        from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
         m1 = OneInputOneOutputNoEventLM()
-
         # Insufficient number of models
         with self.assertRaises(ValueError):
             CompositeModel([])
@@ -1198,9 +1197,7 @@ class TestModels(unittest.TestCase):
             # extra
             CompositeModel([m1, m1], outputs=['OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1', 'z1'])
 
-    def test_composite(self):
-        from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
-        
+    def test_composite(self):        
         m1 = OneInputOneOutputNoEventLM()
         m2 = OneInputNoOutputOneEventLM()
         m1_withpm = OneInputOneOutputNoEventLMPM()
@@ -1350,8 +1347,6 @@ class TestModels(unittest.TestCase):
     
     # Fill parameters with different types of objects instead
     def test_parameter_equality(self):
-        from prog_models.models.thrown_object import LinearThrownObject
-        from prog_models.models.test_models.linear_thrown_object import LinearThrownObject2, LinearThrownObjectDiffKey, LinearThrownObject3
 
         m1 = LinearThrownObject()
         m2 = LinearThrownObject()
@@ -1359,20 +1354,19 @@ class TestModels(unittest.TestCase):
         self.assertTrue(m1.parameters == m2.parameters) #Checking to see if the parameters are equal
         self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
 
-        m3 = LinearThrownObject2() # A model with a different throwing speed
-
+        m3 = LinearThrownDiffThrowingSpeed() # A model with a different throwing speed
         self.assertFalse(m1.parameters == m3.parameters)
         self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
 
-        m4 = LinearThrownObjectDiffKey() # Model with an extra default parameter.
+        m4 = LinearThrownObjectDiffDefaultParameters() # Model with an extra default parameter.
 
         self.assertFalse(m1.parameters == m4.parameters)
         self.assertFalse(m4.parameters == m1.parameters) # checking both directions
 
-        m5 = LinearThrownObject3() # Model with incorrectly initalized throwing height, but same parameters
+        m5 = LinearThrownObjectUpdatedInitalizedMethod() # Model with incorrectly initalized throwing height, but same parameters
 
-        self.assertTrue(m1.parameters == m5.parameters) 
-        self.assertTrue(m5.parameters == m1.parameters) 
+        self.assertFalse(m1.parameters == m5.parameters) 
+        self.assertFalse(m5.parameters == m1.parameters) 
 
         self.assertTrue(m1.parameters == m2.parameters) # Checking to see previous equal statements stay the same
         self.assertTrue(m2.parameters == m1.parameters) 

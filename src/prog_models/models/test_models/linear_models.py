@@ -15,7 +15,6 @@ class FNoneNoEventStateLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1]])
     C = np.empty((0,1))
-    D = np.empty((0,1))
     F = None
 
     default_parameters = {
@@ -24,7 +23,6 @@ class FNoneNoEventStateLM(LinearModel):
             'x1': 0
         }
     }
-
 
 class OneInputNoOutputNoEventLM(LinearModel):
     """
@@ -36,7 +34,6 @@ class OneInputNoOutputNoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1]])
     C = np.empty((0,1))
-    D = np.empty((0,1))
     F = np.empty((0,1))
 
     default_parameters = {
@@ -58,7 +55,6 @@ class OneInputOneOutputNoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1]])
     C = np.array([[1]])
-    D = np.array([[1]])
     F = np.empty((0,1))
 
     default_parameters = {
@@ -123,6 +119,7 @@ class TwoInputNoOutputOneEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1]])
     G = np.array([[1]])
 
@@ -145,6 +142,7 @@ class TwoInputNoOutputTwoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1], [-0.2]])
     G = np.array([[1], [1]])
 
@@ -161,4 +159,6 @@ class ThreeStatesTwoB(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 2]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
+
     F = None

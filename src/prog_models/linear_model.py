@@ -20,8 +20,8 @@ class LinearModel(PrognosticsModel, ABC):
     Linear Models must inherit from this class and define the following properties:
         * A: 2-d np.array[float], dimensions: n_states x n_states
         * B: 2-d np.array[float], optional (zeros by default), dimensions: n_states x n_inputs
-        * C: 2-d np.array[float], optional (zeros by default), dimensions: n_outputs x n_states
-        * D: 1-d np.array[float], dimensions: n_outputs x 1
+        * C: 2-d np.array[float], dimensions: n_outputs x n_states
+        * D: 1-d np.array[float], optional (zeros by default), dimensions: n_outputs x 1
         * E: 1-d np.array[float], optional (zeros by default), dimensions: n_states x 1
         * F: 2-d np.array[float], dimensions: n_es x n_states
         * G: 1-d np.array[float], optional (zeros by default), dimensions: n_es x 1
@@ -34,7 +34,6 @@ class LinearModel(PrognosticsModel, ABC):
     # Default Values are set to None
     default_parameters = {
         '_B' : None,
-        '_C' : None,
         '_D' : None,
         '_E' : None,
         '_G' : None
@@ -50,7 +49,6 @@ class LinearModel(PrognosticsModel, ABC):
         # This triggers the default value logic in the setter
         # for cases where the property has not been overwritten
         self.B = self.B
-        self.C = self.C
         self.D = self.D
         self.E = self.E
         self.G = self.G
@@ -122,11 +120,7 @@ class LinearModel(PrognosticsModel, ABC):
     @property
     @abstractmethod
     def A(self):
-        return self.parameters['_A']
-
-    @A.setter
-    def A(self, value):
-        self.parameters['_A'] = value
+        pass
 
     @property
     def B(self):
@@ -137,31 +131,37 @@ class LinearModel(PrognosticsModel, ABC):
         if (value is None):
             self.parameters['_B'] = np.zeros((self.n_states, self.n_inputs))
         else:
+            prev_value = self.parameters['_B']
             self.parameters['_B'] = value
-
-    @property
-    def C(self):
-        return self.parameters['_C']
-
-    @C.setter
-    def C(self, value):
-        if (value is None):
-            self.parameters['_C'] = np.zeros((self.n_outputs, self.n_states))
-        else:
-            self.parameters['_C'] = value
+            try:
+                self._propertyCheck(self.n_states, self.n_inputs, ["B", "outputs", "inputs"])
+            except (TypeError, AttributeError) as ex:
+                self.parameters['_B'] = prev_value
+                raise ex
 
     @property
     @abstractmethod
+    def C(self):
+        pass
+
+    @property
     def D(self):
         return self.parameters['_D']
-
+    
     @D.setter
     def D(self, value):
         if (value is None):
             self.parameters['_D'] = np.zeros((self.n_outputs, 1))
         else:
+            prev_value = self.parameters['_D']
             self.parameters['_D'] = value
-
+            try:
+                 self._propertyCheck(self.n_outputs, 1, ["D","outputs","1"])
+            except (TypeError, AttributeError) as ex:
+                 # Unacceptable value, reset and re-raise
+                 self.parameters['_D'] = prev_value
+                 raise ex
+    
     @property
     def E(self):
         return self.parameters['_E']
@@ -171,7 +171,13 @@ class LinearModel(PrognosticsModel, ABC):
         if (value is None):
             self.parameters['_E'] = np.zeros((self.n_states, 1))
         else:
+            prev_value = self.parameters['_E']
             self.parameters['_E'] = value
+            try:
+                self._propertyCheck(self.n_states, 1, ["E", "states", "1"])
+            except (TypeError, AttributeError) as ex:
+                self.paramters['_E'] = prev_value
+                raise ex
 
     @property
     @abstractmethod
@@ -187,7 +193,13 @@ class LinearModel(PrognosticsModel, ABC):
         if (value is None):
             self.parameters['_G'] = np.zeros((self.n_events, 1))
         else:
+            prev_value = self.parameters['_G']
             self.parameters['_G'] = value
+            try:
+                self._propertyCheck(self.n_states, 1, ["E", "events", "1"])
+            except (TypeError, AttributeError) as ex:
+                self.paramters['_G'] = prev_value
+                raise ex
 
     def dx(self, x, u):
         dx_array = np.matmul(self.A, x.matrix) + self.E

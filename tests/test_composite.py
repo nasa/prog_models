@@ -226,3 +226,18 @@ class TestCompositeModel(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'m1.u1',})
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
+
+def run_tests():
+    unittest.main()
+    
+def main():
+    l = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+    print("\n\nTesting Base Models")
+    result = runner.run(l.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
+
+    if not result:
+        raise Exception("Failed test")
+
+if __name__ == '__main__':
+    main()

@@ -4,8 +4,6 @@ import numpy as np
 import unittest
 import copy
 import pickle
-import json
-# from prog_models.models.test_models import *
 from prog_models.models.test_models.linear_thrown_object import *
 from prog_models.models.test_models.linear_models import *
 
@@ -16,7 +14,7 @@ class TestLinearModel(unittest.TestCase):
 
         #Checking too see if initalization would error when passing in incorrect parameter forms
         with self.assertRaises(AttributeError):
-            b = LinearThrownObject_WrongB()
+            b = LinearThrownObjectWrongB()
 
         m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         # len() = events states inputs outputs
@@ -165,6 +163,7 @@ class TestLinearModel(unittest.TestCase):
         m.matrixCheck()
 
 
+# Included some tests that are checking if exceptions are being thrown without matrxiCheck being invoked
         with self.assertRaises(TypeError):
             m.D = "[[0, 1], [0, 0]]" # string
             m.matrixCheck() 
@@ -179,10 +178,8 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.D = () # tuple
-            m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.D = set() # set
-            m.matrixCheck() 
         with self.assertRaises(TypeError):
             m.D = True # boolean
             m.matrixCheck()
@@ -198,15 +195,11 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         with self.assertRaises(AttributeError):
             m.D = np.array([[]]) # less column values per row
-            m.matrixCheck()
         with self.assertRaises(AttributeError): 
             m.D = np.array([[0], [1]]) # extra row
-            m.matrixCheck()
         with self.assertRaises(AttributeError): 
             m.D = np.array([[]]) # less row
-            m.matrixCheck()
         m.D = np.array([[1]]) # sets to Default Value
-        m.matrixCheck()
 
         # @E
         with self.assertRaises(TypeError):
@@ -376,7 +369,7 @@ class TestLinearModel(unittest.TestCase):
         # future tests can compress, transfer to a file, and see if it still works
 
         m1 = LinearThrownObject()
-        m2 = LinearThrownObject2()
+        m2 = LinearThrownDiffThrowingSpeed()
 
         # Note: dumps = serializing;
         #       loads = deserializing

@@ -14,10 +14,8 @@ class LinearThrownObject(LinearModel):
 
     A = np.array([[0, 1], [0, 0]])
     C = np.array([[1, 0]])
-    D = np.array([[1]])
     E = np.array([[0], [-9.81]])
     F = None # Will override method
-    
 
     default_parameters = {
         'thrower_height': 1.83,  # m
@@ -44,21 +42,7 @@ class LinearThrownObject(LinearModel):
             'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
         }
 
-
-class LinearThrownObject_WrongB(LinearThrownObject):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[1, 0], [0, 1]])
-    C = np.array([[1, 0]])
-    D = np.array([[1]])
-    E = np.array([[0], [-9.81]])
-    F = None # Will override method
-
-class LinearThrownObject2(LinearThrownObject):
+class LinearThrownDiffThrowingSpeed(LinearThrownObject):
     inputs = [] 
     states = ['x', 'v']
     outputs = ['x']
@@ -76,8 +60,22 @@ class LinearThrownObject2(LinearThrownObject):
         'g': -9.81  # Acceleration due to gravity in m/s^2
     }
 
+class LinearThrownObjectWrongB(LinearThrownObject):
+    inputs = [] 
+    states = ['x', 'v']
+    outputs = ['x']
+    events = ['impact']
+
+    A = np.array([[0, 1], [0, 0]])
+    B = np.array([[1, 0], [0, 1]])
+    C = np.array([[1, 0]])
+    D = np.array([[1]])
+    E = np.array([[0], [-9.81]])
+    F = None # Will override method
+
+
 # Wrong x statecontainer parameter. Has Throwing_speed when it should be thrower_height
-class LinearThrownObjectUpdatedThrowingHeight(LinearThrownObject):
+class LinearThrownObjectUpdatedInitalizedMethod(LinearThrownObject):
     inputs = [] 
     states = ['x', 'v']
     outputs = ['x']
@@ -100,7 +98,7 @@ class LinearThrownObjectUpdatedThrowingHeight(LinearThrownObject):
             'x': self.parameters['throwing_speed'],  # Thrown, so initial altitude is height of thrower
             })
 
-class LinearThrownObjectDiffKey(LinearThrownObject):
+class LinearThrownObjectDiffDefaultParameters(LinearThrownObject):
     inputs = [] 
     states = ['x', 'v']
     outputs = ['x']
