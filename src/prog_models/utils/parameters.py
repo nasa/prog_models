@@ -50,12 +50,13 @@ class PrognosticsModelParameters(UserDict):
         return getsizeof(self)
 
     def __eq__(self, other):
-        if set(self.data.keys()) != set(other.data.keys()) \
-            and set(other.data.keys()) != set(self.data.keys()):
+        if set(self.data.keys()) != set(other.data.keys()):
             return False
         for key, value in self.data.items():
-            if not np.all(value == other[key]): #override the numpy equalities
-                return False
+            if not np.all(value == other[key]): 
+                  # Note: np.all is used to handle numpy array elements
+                  # Otherwise value == other[key] would return a numpy array of bools for each element
+                  return False
         return True
         
 

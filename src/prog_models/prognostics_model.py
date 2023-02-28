@@ -114,7 +114,7 @@ class PrognosticsModel(ABC):
         # Add params specific passed via command line arguments
         try:
             params.update(kwargs)
-        except TypeError:   
+        except TypeError:
             raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
 
         PrognosticsModel.__setstate__(self, params)

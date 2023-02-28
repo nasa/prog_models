@@ -14,8 +14,6 @@ sys.path.append(join(dirname(__file__), ".."))
 
 from prog_models import *
 from prog_models.models import *
-from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
-from prog_models.models.thrown_object import *
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -1139,6 +1137,7 @@ class TestModels(unittest.TestCase):
         self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
 
     def test_composite_broken(self):
+        from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
         m1 = OneInputOneOutputNoEventLM()
 
         # Insufficient number of models
@@ -1200,6 +1199,8 @@ class TestModels(unittest.TestCase):
             CompositeModel([m1, m1], outputs=['OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1', 'z1'])
 
     def test_composite(self):
+        from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
+        
         m1 = OneInputOneOutputNoEventLM()
         m2 = OneInputNoOutputOneEventLM()
         m1_withpm = OneInputOneOutputNoEventLMPM()
@@ -1347,13 +1348,15 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
     
-    # adavance this test by adding other models other than LinearThrownObject as testing
     # Fill parameters with different types of objects instead
     def test_parameter_equality(self):
+        from prog_models.models.thrown_object import LinearThrownObject
+        from prog_models.models.test_models.linear_thrown_object import LinearThrownObject2, LinearThrownObjectDiffKey, LinearThrownObject3
+
         m1 = LinearThrownObject()
         m2 = LinearThrownObject()
 
-        self.assertTrue(m1.parameters == m2.parameters) #Checking too see if the parameters are equal
+        self.assertTrue(m1.parameters == m2.parameters) #Checking to see if the parameters are equal
         self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
 
         m3 = LinearThrownObject2() # A model with a different throwing speed
@@ -1371,7 +1374,7 @@ class TestModels(unittest.TestCase):
         self.assertTrue(m1.parameters == m5.parameters) 
         self.assertTrue(m5.parameters == m1.parameters) 
 
-        self.assertTrue(m1.parameters == m2.parameters) # Checking too see previous equal statements stay the same
+        self.assertTrue(m1.parameters == m2.parameters) # Checking to see previous equal statements stay the same
         self.assertTrue(m2.parameters == m1.parameters) 
 
 # This allows the module to be executed directly

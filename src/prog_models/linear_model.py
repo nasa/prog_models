@@ -10,9 +10,13 @@ class LinearModel(PrognosticsModel, ABC):
     A linear prognostics :term:`model`. Used when behavior can be described using a simple linear time-series model defined by the following equations:
     .. math::
         \dfrac{dx}{dt} = Ax + Bu + E
+
         z = Cx + D
+
         es = Fx + G
+
     where x is :term:`state`, u is :term:`input`, z is :term:`output` and es is :term:`event state`
+
     Linear Models must inherit from this class and define the following properties:
         * A: 2-d np.array[float], dimensions: n_states x n_states
         * B: 2-d np.array[float], optional (zeros by default), dimensions: n_states x n_inputs
@@ -42,14 +46,14 @@ class LinearModel(PrognosticsModel, ABC):
         params.update(kwargs)
         super().__init__(**params)
 
-        self.A = self.A
+        # Set each property to itself
+        # This triggers the default value logic in the setter
+        # for cases where the property has not been overwritten
         self.B = self.B
         self.C = self.C
         self.D = self.D
         self.E = self.E
-        self.F = self.F
         self.G = self.G
-
         if self.F is None and type(self).event_state == LinearModel.event_state:
             raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
 
@@ -69,13 +73,15 @@ class LinearModel(PrognosticsModel, ABC):
                 and self.outputs == other.outputs \
                 and self.events == other.events \
                 and self.states == other.states \
-                and self.parameters == other.parameters \
                 and self.performance_metric_keys == other.performance_metric_keys \
+                and self.parameters == other.parameters \
                 and self.state_limits == other.state_limits \
                 and type(self).threshold_met == type(other).threshold_met \
                 and type(self).event_state == type(other).event_state \
                 and type(self).dx == type(other).dx \
-                and type(self).output == type(other).output
+                and type(self).next_state == type(other).next_state \
+                and type(self).output == type(other).output \
+                and type(self).performance_metrics == type(other).performance_metrics
 
     def matrixCheck(self) -> None:
         """
@@ -114,6 +120,7 @@ class LinearModel(PrognosticsModel, ABC):
                 raise AttributeError("Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0],notes[1],notes[2]))
 
     @property
+    @abstractmethod
     def A(self):
         return self.parameters['_A']
 
@@ -144,6 +151,7 @@ class LinearModel(PrognosticsModel, ABC):
             self.parameters['_C'] = value
 
     @property
+    @abstractmethod
     def D(self):
         return self.parameters['_D']
 

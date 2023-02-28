@@ -5,8 +5,9 @@ import unittest
 import copy
 import pickle
 import json
+# from prog_models.models.test_models import *
+from prog_models.models.test_models.linear_thrown_object import *
 from prog_models.models.test_models.linear_models import *
-from prog_models.models.thrown_object import LinearThrownObject, LinearThrownObject_WrongB, LinearThrownObject2
 
 
 class TestLinearModel(unittest.TestCase):
@@ -204,7 +205,7 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.D = np.array([[]]) # less row
             m.matrixCheck()
-        m.D = None # sets to Default Value
+        m.D = np.array([[1]]) # sets to Default Value
         m.matrixCheck()
 
         # @E

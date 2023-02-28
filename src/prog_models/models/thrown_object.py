@@ -2,9 +2,7 @@
 
 import numpy as np
 
-from prog_models import PrognosticsModel
-from prog_models import LinearModel
-
+from prog_models import PrognosticsModel, LinearModel
 
 def calc_lumped_param(params):
     return {
@@ -133,6 +131,7 @@ class LinearThrownObject(LinearModel):
     events = ['impact']
 
     A = np.array([[0, 1], [0, 0]])
+    D = np.array([[1]])
     E = np.array([[0], [-9.81]])
     C = np.array([[1, 0]])
     F = None # Will override method
@@ -162,82 +161,3 @@ class LinearThrownObject(LinearModel):
             'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
             'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
         }
-
-class LinearThrownObject_WrongB(LinearThrownObject):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    B = np.array([[1, 0], [0, 1]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-class LinearThrownObject2(LinearThrownObject):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 20,  # m/s
-        'g': -9.81  # Acceleration due to gravity in m/s^2
-    }
-
-# Wrong x statecontainer parameter. Has Throwing_speed when it should be thrower_height
-class LinearThrownObject3(LinearThrownObject):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
-        'g': -9.81  # Acceleration due to gravity in m/s^2
-    }
-
-    def initialize(self, u=None, z=None):
-        return self.StateContainer({
-            'x': self.parameters['throwing_speed'],  # Thrown, so initial altitude is height of thrower
-            })
-
-class LinearThrownObjectDiffKey(LinearThrownObject):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
-        'g': -9.81,  # Acceleration due to gravity in m/s^2
-        'x': 1111
-    }
-
-# future implementation
-class LinearThrownOverrideClassLevel(LinearThrownObject):
-    def __init__ (self):
-        self.A = np.array([[0, 1], [0, 0]])
-        self.E = np.array([[0], [-9.81]])
-        self.C = np.array([[1, 0]])
-        self.D = np.array([[1], [0]])
-        self.F = None
