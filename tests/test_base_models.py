@@ -633,6 +633,13 @@ class TestModels(unittest.TestCase):
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
 
     def test_estimate_params(self):
+        # Some things to consider, dictionary vs tuple. The function is accepting both it would seem.
+        # Personal opinion on which data type to use. Tuples make the most amount of sense.
+
+        # gt copy works as intended. Going to a different object location
+
+        # Potentially include something that focuses on specifically the key value pairs between gt and m.parameters? mayb not
+
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         data = [(results.times, results.inputs, results.outputs)]
@@ -643,21 +650,24 @@ class TestModels(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
         keys = ['thrower_height', 'throwing_speed', 'g']
         m.estimate_params(data, keys)
-        for key in keys:
+
+        for key in keys: # using assert not equal also works.
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
         # Now with limits that dont include the true values
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
+        # Not the most accurate way of seeing when these values are not accurate.
         for key in keys:
-            self.assertNotEqual(m.parameters[key], gt[key])
+            self.assertNotAlmostEqual(m.parameters[key], gt[key], 1, "Limits of the Bounds do not include the true values")
 
         # Now with limits that do include the true values
         m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
         for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2, "Limits of the Bounds do not include the true values")
 
+        #Implememnt different variations of lists and tuples and see if they work as intended
         # Try incomplete list:
         with self.assertRaises(ValueError):
             # Missing bound
@@ -676,7 +686,7 @@ class TestModels(unittest.TestCase):
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
+        
         # Dictionary bounds - extra
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
         for key in keys:
@@ -693,8 +703,24 @@ class TestModels(unittest.TestCase):
             # Item isn't a tuple
             m.estimate_params(data, keys, bounds={'g': 7})
         with self.assertRaises(ValueError):
-            # Tuple isn't of size 2
+            m.estimate_params(data, keys, bounds=None)
+        with self.assertRaises(ValueError):
+            # Tuple isn't of size 2, more specfically, tuple is size less than 2
             m.estimate_params(data, keys, bounds={'g': (7,)})
+        with self.assertRaises(ValueError):
+            # Tuple is a size greater than 2
+            m.estimate_params(data, keys, bounds={'g': (7, 8, 9)})
+        with self.assertRaises(ValueError):
+            # Item is a list of length 1
+            m.estimate_params(data, keys, bounds={'g': [7]})
+        with self.assertNoLogs(): # SHOULD BE ASSERT RAISES
+            # Item is a list of length 2.
+            # This works, even though it is not following the format of any of the given estimate_params calls prior.
+            # Update documentation and/or change some comments.
+            m.estimate_params(data, keys, bounds={'g': [7, 8]})
+        with self.assertNoLogs(): # SHOULD BE ASSERT RAISES
+            # Item is a set of length 2
+            m.estimate_params(data, keys, bounds={'g': {1, 2}})
 
         # With inputs, outputs, and times
         m.parameters['thrower_height'] = 1.5
@@ -709,6 +735,15 @@ class TestModels(unittest.TestCase):
         m.estimate_params(data)
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # No Data
+        with self.assertRaises(ValueError):
+            m.estimate_params()
+        m.estimate_params()
+        # m.parameters['thrower_height'] = 1.5
+        # m.parameters['throwing_speed'] = 25
+        # for key in keys:
+        #     self.assertAlmostEqual(m.parameters[key], gt[key], 2)
             
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
