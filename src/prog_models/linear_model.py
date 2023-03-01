@@ -176,7 +176,8 @@ class LinearModel(PrognosticsModel, ABC):
             try:
                 self._propertyCheck(self.n_states, 1, ["E", "states", "1"])
             except (TypeError, AttributeError) as ex:
-                self.paramters['_E'] = prev_value
+                # Unacceptable value, reset and re-raise
+                self.parameters['_E'] = prev_value
                 raise ex
 
     @property

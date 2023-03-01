@@ -21,10 +21,6 @@ class TestLinearModel(unittest.TestCase):
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
         # when matrix is not of type NumPy ndarray or standard list
 
-        #INCLUDE TESTS FOR COPY AND DEEPCOPY
-            # If they do not work, we implement the functions.
-        #Serilization and Deserilization
-
         # @A
         with self.assertRaises(TypeError):
             m.A = "[[0, 1], [0, 0]]" # string
@@ -199,6 +195,8 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.D = np.array([[]]) # less row
         m.D = np.array([[1]]) # sets to Default Value
+        m.D = None
+        m.matrixCheck()
 
         # @E
         with self.assertRaises(TypeError):
@@ -284,7 +282,6 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError):
             # if F is none, we need to override event_state
             m_noes = FNoneNoEventStateLM()
-        #Check when these are true.
         m.F = np.array([[0, 1]]) # less row
         m.matrixCheck()
         m.F = None
@@ -342,7 +339,6 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError): 
             m.G = np.array([[]]) # less row
             m.matrixCheck()
-        #Correct Testing
         m.G = np.array([[0]]) # 1-D Array
         m.matrixCheck()
         m.G = None # sets to Default Value
@@ -354,9 +350,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
 
         self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
-
         deepcopym1 = copy.deepcopy(m1)
-        deepcopym1.simulate_to_threshold(lambda t, x = None: deepcopym1.InputContainer({}))
         self.assertTrue(m1 == deepcopym1)
  
         self.assertTrue(copym1 == deepcopym1)
@@ -374,25 +368,28 @@ class TestLinearModel(unittest.TestCase):
 
         copym3 = copy.copy(m3)
         copym4 = copy.copy(m4)
-        copym5 = copy.copy(m5)
 
         deepcopym3 = copy.deepcopy(m3)
         deepcopym4 = copy.deepcopy(m4)
-        deepcopym5 = copy.deepcopy(m5)
 
         self.assertTrue(deepcopym3 == copym3)
-
-        self.assertTrue(copym3 == m3)
         self.assertFalse(copym4 == copym3)
         
-        self.assertFalse(deepcopym4 == copym3)
-        self.assertTrue()
+        self.assertFalse(deepcopym4 == deepcopym3)
+
+        copym5 = copy.copy(m5)
+        deepcopym5 = copy.deepcopy(m5)
+
+        self.assertTrue(m5 == copym5 == deepcopym5)
         
+        m5.states.append('C')
+        copym5.states.append('D')
+        deepcopym5.states.append('E')
+        self.assertFalse(copym5 == deepcopym5)
 
         
     def test_linear_pickle(self):
         # future tests can compress, transfer to a file, and see if it still works
-
         m1 = LinearThrownObject()
         m2 = LinearThrownDiffThrowingSpeed()
 

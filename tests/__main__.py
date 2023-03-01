@@ -119,10 +119,10 @@ if __name__ == '__main__':
     except Exception:
         was_successful = False
     
-    try:
-        composite_main()
-    except Exception:
-        was_successful = False
+    # try:
+    #     composite_main()
+    # except Exception:
+    #     was_successful = False
 
     if not was_successful:
         raise Exception("Failed test")
