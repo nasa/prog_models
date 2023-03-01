@@ -349,13 +349,10 @@ class TestLinearModel(unittest.TestCase):
         m.matrixCheck()
 
     def test_copy_linear(self):
-        
         m1 = LinearThrownObject()
         copym1 = copy.copy(m1)  
         self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
 
-        # Is simulate to threshold even doing anything in this scenario?
-        m1.simulate_to_threshold(lambda t, x = None: m1.InputContainer({}))
         self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
 
         deepcopym1 = copy.deepcopy(m1)
@@ -367,7 +364,30 @@ class TestLinearModel(unittest.TestCase):
         m2 = LinearThrownObject()
         copym2 = copy.copy(m2)
         self.assertTrue(m1 == m2)
+        self.assertTrue(m1 == copym2)
         self.assertTrue(m2 == copym1)
+        self.assertTrue(copym2 == copym1)
+
+        m3 = LinearThrownObjectNoE()
+        m4 = LinearThrownDiffThrowingSpeed()
+        m5 = LinearThrownObjectUpdatedInitalizedMethod()
+
+        copym3 = copy.copy(m3)
+        copym4 = copy.copy(m4)
+        copym5 = copy.copy(m5)
+
+        deepcopym3 = copy.deepcopy(m3)
+        deepcopym4 = copy.deepcopy(m4)
+        deepcopym5 = copy.deepcopy(m5)
+
+        self.assertTrue(deepcopym3 == copym3)
+
+        self.assertTrue(copym3 == m3)
+        self.assertFalse(copym4 == copym3)
+        
+        self.assertFalse(deepcopym4 == copym3)
+        self.assertTrue()
+        
 
         
     def test_linear_pickle(self):
