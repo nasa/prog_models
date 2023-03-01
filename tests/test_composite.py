@@ -233,8 +233,8 @@ def run_tests():
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
-    result = runner.run(l.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
+    print("\n\nTesting Composite Models")
+    result = runner.run(l.loadTestsFromTestCase(TestCompositeModel)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

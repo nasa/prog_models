@@ -344,16 +344,25 @@ class TestLinearModel(unittest.TestCase):
         m.G = None # sets to Default Value
         m.matrixCheck()
 
+
+# continue tests
     def test_copy_linear(self):
         m1 = LinearThrownObject()
         copym1 = copy.copy(m1)  
-        self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
 
-        self.assertTrue(m1 == copym1) #Testing Copy for Linear Model
+        self.assertTrue(m1 == copym1) # Testing Copy for Linear Model
         deepcopym1 = copy.deepcopy(m1)
+        # Checking to see if all the copies are equal to one another before making changes to one or the other
         self.assertTrue(m1 == deepcopym1)
- 
         self.assertTrue(copym1 == deepcopym1)
+
+        # Example of how to break our current functionality. Needs fixing
+        
+        # m1.states.append(1)
+        # copym1.states.append(2)
+        # deepcopym1.states.append(3)
+        # # self.assertTrue(m1 == copym1)
+        # self.assertFalse(m1 == deepcopym1) 
 
         m2 = LinearThrownObject()
         copym2 = copy.copy(m2)
@@ -364,7 +373,6 @@ class TestLinearModel(unittest.TestCase):
 
         m3 = LinearThrownObjectNoE()
         m4 = LinearThrownDiffThrowingSpeed()
-        m5 = LinearThrownObjectUpdatedInitalizedMethod()
 
         copym3 = copy.copy(m3)
         copym4 = copy.copy(m4)
@@ -377,6 +385,8 @@ class TestLinearModel(unittest.TestCase):
         
         self.assertFalse(deepcopym4 == deepcopym3)
 
+
+        m5 = LinearThrownObjectUpdatedInitalizedMethod()
         copym5 = copy.copy(m5)
         deepcopym5 = copy.deepcopy(m5)
 
@@ -386,7 +396,7 @@ class TestLinearModel(unittest.TestCase):
         copym5.states.append('D')
         deepcopym5.states.append('E')
         # This test should be failing, but it is passing
-        # self.assertFalse(copym5 == deepcopym5)
+        self.assertFalse(copym5 == deepcopym5)
 
         
     def test_linear_pickle(self):
@@ -471,7 +481,7 @@ def run_tests():
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
+    print("\n\nTesting Linear Models")
     result = runner.run(l.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
 
     if not result:
