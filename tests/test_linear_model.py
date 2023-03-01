@@ -12,11 +12,10 @@ class TestLinearModel(unittest.TestCase):
     def test_linear_model(self):
         m = LinearThrownObject()
 
-        #Checking too see if initalization would error when passing in incorrect parameter forms
+        #Checking to see if initalization would error when passing in incorrect parameter forms
         with self.assertRaises(AttributeError):
             b = LinearThrownObjectWrongB()
 
-        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
         # len() = events states inputs outputs
         #         1      2      0      1
         # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
@@ -243,6 +242,7 @@ class TestLinearModel(unittest.TestCase):
             m.matrixCheck()
         m.E = np.array([[0], [-9.81]])
         m.matrixCheck()
+        
 
         # @F
         with self.assertRaises(TypeError):
@@ -364,6 +364,11 @@ class TestLinearModel(unittest.TestCase):
  
         self.assertTrue(copym1 == deepcopym1)
 
+        m2 = LinearThrownObject()
+        copym2 = copy.copy(m2)
+        self.assertTrue(m1 == m2)
+        self.assertTrue(m2 == copym1)
+
         
     def test_linear_pickle(self):
         # future tests can compress, transfer to a file, and see if it still works
@@ -391,32 +396,10 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
-# Future implementation includes testing json objects.
-# Currently does not work since LinearThrownObject() is not serilizable and needs implmentation
-
-    # def test_linear_json(self):
-    #     m1 = LinearThrownObject()
-    #     m2 = LinearThrownObject2()
-
-    #     # Note: dumps = serializing;
-    #     #       loads = deserializing
-
-    #     bytes_m1 = json.dumps(m1) #serializing object 
-    #     loaded_m1 = json.loads(bytes_m1) #deserializing the object
-    #     self.assertTrue(m1 == loaded_m1) # see if serializing and deserializing changes original form
-
-    #     bytes_m2 = json.dumps(m2)
-    #     loaded_m2 = json.loads(bytes_m2)
-    #     self.assertTrue(m2 == loaded_m2)
-
-    #     m3 = LinearThrownObject()
-    #     bytes_m3 = json.dumps(m3)
-    #     loaded_m3 = json.loads(bytes_m3)
-    #     self.assertTrue(m3 == loaded_m3)
-
-    #     self.assertTrue(bytes_m1 == bytes_m3)
-    #     self.assertTrue(loaded_m3 == loaded_m1)
-    #     self.assertTrue(LinearThrownObject, type(loaded_m3))
+        l = LinearThrownObjectUpdatedInitalizedMethod()
+        bytes_l = pickle.dumps(l)
+        loaded_l = pickle.loads(bytes_l)
+        self.assertTrue(l == loaded_l)
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):

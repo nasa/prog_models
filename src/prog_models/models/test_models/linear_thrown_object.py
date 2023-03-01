@@ -42,6 +42,9 @@ class LinearThrownObject(LinearModel):
             'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
         }
 
+class LinearThrownObjectNoE(LinearThrownObject):
+    E = np.array([[0], [-9.81]])
+
 class LinearThrownDiffThrowingSpeed(LinearThrownObject):
     inputs = [] 
     states = ['x', 'v']
