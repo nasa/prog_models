@@ -8,9 +8,10 @@ from numbers import Number
 import types
 from typing import Callable
 
-from .noise_functions import measurement_noise_functions, process_noise_functions
-from .serialization import *
-from ..exceptions import ProgModelTypeError
+from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
+from prog_models.utils.serialization import *
+from prog_models.utils.size import getsizeof
+from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
@@ -43,6 +44,9 @@ class PrognosticsModelParameters(UserDict):
                 for callback in callbacks[key]:
                     changes = callback(self)
                     self.update(changes)
+    
+    def __sizeof__(self):
+        return getsizeof(self)
 
     def copy(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)
@@ -53,7 +57,7 @@ class PrognosticsModelParameters(UserDict):
     def __deepcopy__(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=True)
 
-    def __setitem__(self, key : str, value : float, _copy : bool = True) -> None:
+    def __setitem__(self, key : str, value : float, _copy : bool = False) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
