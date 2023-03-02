@@ -64,46 +64,46 @@ if __name__ == '__main__':
     except Exception:
         was_successful = False
 
-    # try:
+    try:
     
-    #     examples_main()
-    # except Exception:
-    #     was_successful = False
+        examples_main()
+    except Exception:
+        was_successful = False
         
-    # try:
-    #     battery_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        battery_main()
+    except Exception:
+        was_successful = False
 
-    # try:
-    #     centrifugal_pump_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        centrifugal_pump_main()
+    except Exception:
+        was_successful = False
 
-    # try:
-    #     pneumatic_valve_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        pneumatic_valve_main()
+    except Exception:
+        was_successful = False
 
-    # try:
-    #     dict_like_matrix_wrapper_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        dict_like_matrix_wrapper_main()
+    except Exception:
+        was_successful = False
 
-    # try:
-    #     tutorials_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        tutorials_main()
+    except Exception:
+        was_successful = False
 
-    # try:
-    #     datasets_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        datasets_main()
+    except Exception:
+        was_successful = False
         
-    # try:
-    #     powertrain_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        powertrain_main()
+    except Exception:
+        was_successful = False
 
     try:
         surrogates_main()
@@ -115,10 +115,10 @@ if __name__ == '__main__':
     except Exception:
         was_successful = False
 
-    # try:
-    #     linear_main()
-    # except Exception:
-    #     was_successful = False
+    try:
+        linear_main()
+    except Exception:
+        was_successful = False
     
     try:
         composite_main()

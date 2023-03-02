@@ -162,18 +162,6 @@ class PrognosticsModel(ABC):
             self.performance_metric_keys = []
         self.n_performance = len(self.performance_metric_keys)
 
-        # Make class attributes instance attributes to ensure copy and deepcopy function as intended.
-        # Without this, deepcopy would not create a new copy these attributes.
-
-        self.states = self.states.copy()
-        self.inputs = self.inputs.copy()
-        self.outputs = self.outputs.copy()
-        self.events = self.events.copy()
-        self.performance_metric_keys = self.performance_metric_keys.copy()
-        self.param_callbacks = self.param_callbacks.copy()
-        self.state_limits = self.state_limits.copy()
-        self.default_parameters = self.default_parameters.copy()
-
         # Setup Containers
         # These containers should be used instead of dictionaries for models that use the internal matrix state
 
