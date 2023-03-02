@@ -16,8 +16,11 @@ class CompositeModel(PrognosticsModel):
         models (list[PrognosticsModel] or list[tuple[str, PrognosticsModel]]): 
             A list of PrognosticsModels to be combined into a single model. 
             Provided in one of two forms:
-                1. A list of PrognosticsModels. The name of each model will be the class name. A number will be added for duplicates
-                2. A list of tuples where the first element is the model name and the second element is the model
+
+            1. A list of PrognosticsModels. The name of each model will be the class name. A number will be added for duplicates
+
+            2. A list of tuples where the first element is the model name and the second element is the model
+
             Note: Order provided will be the order that models are executed
         connections (list[tuple[str, str]], optional):
             A list of tuples where the first element is the name of the output or state of one model and the second element is the name of the input of another model. 
