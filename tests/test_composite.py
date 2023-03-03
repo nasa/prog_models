@@ -17,6 +17,9 @@ from prog_models.models.test_models.linear_models import (
     OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
 from prog_models.models.thrown_object import LinearThrownObject
 
+
+
+#Not testing more than two models at the same time?
 class TestCompositeModel(unittest.TestCase):
     def test_composite_broken(self):
         m1 = OneInputOneOutputNoEventLM()
@@ -226,6 +229,10 @@ class TestCompositeModel(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'m1.u1',})
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
+
+        # three models passed in but the tests are still working...
+        m_composite = CompositeModel([m1, m1, m2], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')])
+
 
 def run_tests():
     unittest.main()

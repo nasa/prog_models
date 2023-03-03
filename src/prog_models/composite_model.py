@@ -3,7 +3,7 @@
 
 from collections.abc import Iterable
 
-from . import PrognosticsModel
+from prog_models import PrognosticsModel
 
 DIVIDER = '.'
 
@@ -30,6 +30,11 @@ class CompositeModel(PrognosticsModel):
         outputs (list[str]):
             Model outputs in format "model_name.output_name". Must be subset of all outputs from models. If not provided, all outputs will be included. 
     """
+
+    # Connections are always checking if there exists 2, however, shouldn't this be checking if the number of connections is the same
+    # as the nnumber of models? Or more if you thinik about it...
+
+    # what exactly is connections doing here.
     def __init__(self, models, connections = [], **kwargs):
         # General Input Validation
         if not isinstance(models, Iterable):
