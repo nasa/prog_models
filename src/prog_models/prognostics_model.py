@@ -1168,7 +1168,7 @@ class PrognosticsModel(ABC):
             while t_last < t:
                 t_new = min(t_last + dt, t)
                 x = self.next_state(x, u, t_new-t_last)
-                t_last = t
+                t_last = t_new
                 if t >= t_last:
                     # Only recalculate if required
                     z_obs = self.output(x)
