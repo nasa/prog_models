@@ -148,10 +148,10 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError):
             m.C = np.array([[1]]) # less column values per row
             m.matrixCheck()
-        with self.assertRaises(AttributeError): 
+        with self.assertRaises(AttributeError):
             m.C = np.array([[0, 0], [1, 1], [2, 2]]) # extra row
             m.matrixCheck()
-        with self.assertRaises(AttributeError): 
+        with self.assertRaises(AttributeError):
             m.C = np.array([[]]) # less row 
             m.matrixCheck()
         m.C = np.array([[1, 0]])

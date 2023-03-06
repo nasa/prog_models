@@ -21,7 +21,17 @@ from prog_models.models.thrown_object import LinearThrownObject
 
 #Not testing more than two models at the same time?
 class TestCompositeModel(unittest.TestCase):
+    def test_composite_working(self):
+        # Checking to see if autonaming feature for model names works as intended.
+        # e.g. [m1, m1, m1] should be [OneInputOneOutputNoEventLM, OneInputOneOutputNoEventLM_2, OneInputOneOutputNoEventLM_3] respectivly
+        m1 = OneInputOneOutputNoEventLM()
+        CompositeModel([m1, m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.u1'), ('OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM_3.u1')])
+
     def test_composite_broken(self):
+        # Passing in no models to composite model object
+        with self.assertRaises(Exception):
+            m = CompositeModel()
+
         m1 = OneInputOneOutputNoEventLM()
 
         # Insufficient number of models
@@ -49,18 +59,42 @@ class TestCompositeModel(unittest.TestCase):
             CompositeModel([(m1, )])
 
         # Incorrect connections
+
+        # Provide an error repsonse that gives information about format of input.
         with self.assertRaises(ValueError):
             # without model name
+
             CompositeModel([m1, m1], connections=[('z1', 'u1')])
         with self.assertRaises(ValueError):
-            # broken in
+            # broken input
             CompositeModel([m1, m1], connections=[('z1', 'OneInputOneOutputNoEventLM.u1')])
         with self.assertRaises(ValueError):
-            # broken out
+            # broken output
             CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'u1')])
         with self.assertRaises(ValueError):
             # Switched
             CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.u1', 'OneInputOneOutputNoEventLM_2.z1')])
+        m2 = OneInputNoOutputOneEventLM()
+
+        # Need at least two models
+        # CompositeModel([m1], connections = [('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.u1')])
+
+        # Quesationable ValueError.
+        # Not allowing models to be the same, the error message should not include the *model* as an option for output.
+        #ValueError: The output key, u1, must be an input to one of the composite models. Options include {'OneInputOneOutputNoEventLM.u1', 'OneInputNoOutputOneEventLM.u1'}
+        # CompositeModel([m1, m2], connections=[('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM.u1')])
+
+        # Make sure autonamtic naming is working correctly for models.
+
+
+        with self.assertRaises(ValueError):
+            m2 = OneInputNoOutputOneEventLM()
+            # Attempting to make a connection with a model that does not exist
+            CompositeModel([m1, m2], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputNoOutputNoEventLM.u1')])
+        
+        with self.assertRaises(ValueError):
+            CompositeModel([m1, m2], connections=[])
+
         with self.assertRaises(ValueError):
             # Improper format - too long
             CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM.u1', 'Something else')])
@@ -73,7 +107,6 @@ class TestCompositeModel(unittest.TestCase):
         with self.assertRaises(ValueError):
             # Improper format - not a tuple
             CompositeModel([m1, m1], connections=['m1'])
-
         # Incorrect outputs
         with self.assertRaises(ValueError):
             # without model name
@@ -81,6 +114,7 @@ class TestCompositeModel(unittest.TestCase):
         with self.assertRaises(ValueError):
             # extra
             CompositeModel([m1, m1], outputs=['OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1', 'z1'])
+    
 
     def test_composite(self):
         m1 = OneInputOneOutputNoEventLM()
@@ -230,8 +264,10 @@ class TestCompositeModel(unittest.TestCase):
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
 
-        # three models passed in but the tests are still working...
-        m_composite = CompositeModel([m1, m1, m2], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')])
+
+        m_composite = CompositeModel([m1, m2, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputNoOutputOneEventLM.u1')])
+        
+        # m_composite = CompositeModel([m1, m1, m2], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1'), ('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')])
 
 
 def run_tests():
