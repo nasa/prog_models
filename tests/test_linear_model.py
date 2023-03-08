@@ -6,7 +6,7 @@ import copy
 import pickle
 from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownObjectNoE, LinearThrownObjectWrongB,
                                                                  LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod,
-                                                                 LinThrownObject4States)
+                                                                 LinearThrownObjectFourStates)
 from prog_models.models.test_models.linear_models import FNoneNoEventStateLM
 
 
@@ -347,7 +347,7 @@ class TestLinearModel(unittest.TestCase):
         m.matrixCheck()
 
         # Error Demonstration
-        mTest = LinThrownObject4States()
+        mTest = LinearThrownObjectFourStates()
 
         mTest.B = np.array([[0], [1], [2], [3]])
 

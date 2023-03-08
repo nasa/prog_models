@@ -14,7 +14,7 @@ sys.path.append(join(dirname(__file__), ".."))
 from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel, LinearModel
 from prog_models.models import ThrownObject, BatteryElectroChemEOD
 from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
-from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinThrwnObjectDiffDefaultParams)
+from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParams)
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -1322,7 +1322,7 @@ class TestModels(unittest.TestCase):
         self.assertFalse(m1.parameters == m3.parameters)
         self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
 
-        m4 = LinThrwnObjectDiffDefaultParams() # Model with an extra default parameter.
+        m4 = LinearThrownObjectDiffDefaultParams() # Model with an extra default parameter.
 
         self.assertFalse(m1.parameters == m4.parameters)
         self.assertFalse(m4.parameters == m1.parameters) # checking both directions
