@@ -12,6 +12,7 @@ class LinearThrownObject(LinearModel):
     outputs = ['x']
     events = ['impact']
 
+    A = np.array([[0, 1], [0, 0]])
     C = np.array([[1, 0]])
     E = np.array([[0], [-9.81]])
     F = None # Will override method
