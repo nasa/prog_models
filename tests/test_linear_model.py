@@ -4,8 +4,10 @@ import numpy as np
 import unittest
 import copy
 import pickle
-from prog_models.models.test_models.linear_thrown_object import *
-from prog_models.models.test_models.linear_models import *
+from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownObjectNoE, LinearThrownObjectWrongB,
+                                                                 LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod,
+                                                                 LinThrownObject4States)
+from prog_models.models.test_models.linear_models import FNoneNoEventStateLM
 
 
 class TestLinearModel(unittest.TestCase):
@@ -344,6 +346,11 @@ class TestLinearModel(unittest.TestCase):
         m.G = None # sets to Default Value
         m.matrixCheck()
 
+        # Error Demonstration
+        mTest = LinThrownObject4States()
+
+        mTest.B = np.array([[0], [1], [2], [3]])
+
     @unittest.skip
     def test_copy_linear(self):
         m1 = LinearThrownObject()
@@ -420,6 +427,7 @@ class TestLinearModel(unittest.TestCase):
         bytes_l = pickle.dumps(l)
         loaded_l = pickle.loads(bytes_l)
         self.assertTrue(l == loaded_l)
+        self.assertFalse(bytes_l == bytes_m1)
 
     def test_F_property_not_none(self):
         class ThrownObject(LinearThrownObject):
