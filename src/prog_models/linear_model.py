@@ -53,10 +53,11 @@ class LinearModel(PrognosticsModel, ABC):
         self.D = self.D
         self.E = self.E
         self.G = self.G
+
         if self.F is None and type(self).event_state == LinearModel.event_state:
             raise AttributeError(
                 'LinearModel must define F if event_state is not defined. Either override event_state or define F.')
-
+        
         self.matrixCheck()
 
 # check to see if attributes are different and if functions within the models are overriden as well (i.e threshold_met and event_state)
@@ -93,9 +94,12 @@ class LinearModel(PrognosticsModel, ABC):
                             ["B", "states", "inputs"])
         self._propertyCheck(self.n_outputs, self.n_states,
                             ["C", "outputs", "states"])
-        self._propertyCheck(self.n_outputs, 1, ["D", "outputs", "1"])
-        self._propertyCheck(self.n_states, 1, ["E", "states", "1"])
-        self._propertyCheck(self.n_events, 1, ["G", "events", "1"])
+        self._propertyCheck(self.n_outputs, 1,
+                            ["D", "outputs", "1"])
+        self._propertyCheck(self.n_states, 1, 
+                            ["E", "states", "1"])
+        self._propertyCheck(self.n_events, 1, 
+                            ["G", "events", "1"])
 
         if self.F is not None:
             self._propertyCheck(self.n_events, self.n_states, [
@@ -118,10 +122,9 @@ class LinearModel(PrognosticsModel, ABC):
 
         matrixShape = matrix.shape
 
-        if (matrix.ndim != 2 or  # Checks too see if matrix is two-dimensional
-            # checks if matrix has correct row count
-            matrixShape[0] != rowsCount or
-                matrixShape[1] != colsCount):  # check all rows are equal to correct column count
+        if (matrix.ndim != 2 or  # Checks to see if matrix is two-dimensional
+            matrixShape[0] != rowsCount or  # checks if matrix has correct row count
+            matrixShape[1] != colsCount):  # check all rows are equal to correct column count
             raise AttributeError(
                 "Matrix size check failed: @property {} dimensions improperly formed along {} x {}.".format(notes[0], notes[1], notes[2]))
 
@@ -143,8 +146,9 @@ class LinearModel(PrognosticsModel, ABC):
             self.parameters['_B'] = value
             try:
                 self._propertyCheck(self.n_states, self.n_inputs, [
-                                    "B", "outputs", "inputs"])
+                                    "B", "states", "inputs"])
             except (TypeError, AttributeError) as ex:
+                # Unacceptable value, reset and re-raise
                 self.parameters['_B'] = prev_value
                 raise ex
 
@@ -206,9 +210,10 @@ class LinearModel(PrognosticsModel, ABC):
             prev_value = self.parameters['_G']
             self.parameters['_G'] = value
             try:
-                self._propertyCheck(self.n_states, 1, ["E", "events", "1"])
+                self._propertyCheck(self.n_events, 1, ["G", "events", "1"])
             except (TypeError, AttributeError) as ex:
-                self.paramters['_G'] = prev_value
+                # Unacceptable value, reset and re-raise
+                self.parameters['_G'] = prev_value
                 raise ex
 
     def dx(self, x, u):

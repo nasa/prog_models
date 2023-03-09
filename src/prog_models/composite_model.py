@@ -8,7 +8,6 @@ from prog_models import PrognosticsModel
 DIVIDER = '.'
 
 
-#Can connect states and outputs. Circuilt Connections (output -> Input, State of the Second -> Event of the first)
 class CompositeModel(PrognosticsModel):
     """
     A CompositeModel is a PrognosticsModel that is composed of multiple PrognosticsModels. This is a tool for modeling system-of-systems. I.e., interconnected systems, where the behavior and state of one system effects the state of another system. The composite prognostics models are connected using defined connections between the output or state of one model, and the input of another model. The resulting CompositeModel behaves as a single model. 
@@ -17,8 +16,11 @@ class CompositeModel(PrognosticsModel):
         models (list[PrognosticsModel] or list[tuple[str, PrognosticsModel]]): 
             A list of PrognosticsModels to be combined into a single model. 
             Provided in one of two forms:
-                1. A list of PrognosticsModels. The name of each model will be the class name. A number will be added for duplicates
-                2. A list of tuples where the first element is the model name and the second element is the model
+
+            1. A list of PrognosticsModels. The name of each model will be the class name. A number will be added for duplicates
+
+            2. A list of tuples where the first element is the model name and the second element is the model
+
             Note: Order provided will be the order that models are executed
         connections (list[tuple[str, str]], optional):
             A list of tuples where the first element is the name of the output or state of one model and the second element is the name of the input of another model. 

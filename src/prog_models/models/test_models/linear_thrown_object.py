@@ -101,7 +101,7 @@ class LinearThrownObjectUpdatedInitalizedMethod(LinearThrownObject):
             'x': self.parameters['throwing_speed'],  # Thrown, so initial altitude is height of thrower
             })
 
-class LinearThrownObjectDiffDefaultParameters(LinearThrownObject):
+class LinearThrownObjectDiffDefaultParams(LinearThrownObject):
     inputs = [] 
     states = ['x', 'v']
     outputs = ['x']
@@ -119,3 +119,13 @@ class LinearThrownObjectDiffDefaultParameters(LinearThrownObject):
         'g': -9.81,  # Acceleration due to gravity in m/s^2
         'x': 1111
     }
+
+class LinearThrownObjectFourStates(LinearThrownObject):
+    inputs = []
+    states = ['x', 'v', 'y' ,'z']
+    outputs = ['x']
+    events = ['impact']
+
+    A = np.array([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])
+    C = np.array([[0, 1, 2, 3]])
+    E = np.array([[0], [1], [2], [3]])

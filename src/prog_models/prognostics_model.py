@@ -565,7 +565,7 @@ class PrognosticsModel(ABC):
         | u = m.InputContainer({'u1': 3.2})
         | z = m.OutputContainer({'z1': 2.2})
         | x = m.initialize(u, z) # Initialize first state
-        | event_state = m.event_state(x) # Returns {'e1': 0.8, 'e2': 0.6}
+        | event_state = m.event_state(x) # Returns {'EOD': 1.0}, when m = BatteryCircuit()
 
         Note
         ----
@@ -597,11 +597,11 @@ class PrognosticsModel(ABC):
                 e.g., thresholds_met = {'EOL': False} given events = ['EOL']
 
         Example:
-            | m = PrognosticsModel() # Replace with specific model being simulated
-            | u = m.InputContainer({'u1': 3.2})
-            | z = m.OutputContainer({'z1': 2.2})
-            | x = m.initialize(u, z) # Initialize first state
-            | threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
+            >>> m = PrognosticsModel() # Replace with specific model being simulated
+            >>> u = m.InputContainer({'u1': 3.2})
+            >>> z = m.OutputContainer({'z1': 2.2})
+            >>> x = m.initialize(u, z) # Initialize first state
+            >>> threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
 
         Note:
             If not overridden, will return True if event_state is <= 0, otherwise False. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
@@ -757,14 +757,14 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | def future_load_eqn(t):
-        |     if t< 5.0: # Load is 3.0 for first 5 seconds
-        |         return 3.0
-        |     else:
-        |         return 5.0
-        | first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
+        >>> def future_load_eqn(t):
+        >>>    if t< 5.0: # Load is 3.0 for first 5 seconds
+        >>>        return 3.0
+        >>>    else:
+        >>>        return 5.0
+        >>> first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
+        >>> m = PrognosticsModel() # Replace with specific model being simulated
+        >>> (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
         """
         # Input Validation
         if not isinstance(time, Number) or time < 0:
@@ -843,14 +843,14 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | def future_load_eqn(t):
-        |     if t< 5.0: # Load is 3.0 for first 5 seconds
-        |         return m.InputContainer({'load': 3.0})
-        |     else:
-        |         return m.InputContainer({'load': 5.0})
-        | first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
-        | (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
+        >>> m = PrognosticsModel() # Replace with specific model being simulated
+        >>> def future_load_eqn(t):
+        >>>    if t< 5.0: # Load is 3.0 for first 5 seconds
+        >>>        return m.InputContainer({'load': 3.0})
+        >>>    else:
+        >>>        return m.InputContainer({'load': 5.0})
+        >>> first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
+        >>> (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
 
         Note
         ----
@@ -1184,7 +1184,7 @@ class PrognosticsModel(ABC):
             while t_last < t:
                 t_new = min(t_last + dt, t)
                 x = self.next_state(x, u, t_new-t_last)
-                t_last = t
+                t_last = t_new
                 if t >= t_last:
                     # Only recalculate if required
                     z_obs = self.output(x)
