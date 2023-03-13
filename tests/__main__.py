@@ -120,7 +120,7 @@ if __name__ == '__main__':
         was_successful = False
 
     try:
-        serialization_main()()
+        serialization_main()
     except Exception:
         was_successful = False
 
