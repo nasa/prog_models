@@ -56,7 +56,7 @@ class TestEstimateParams(unittest.TestCase):
         gt = m.parameters.copy()
 
 
-        # Now lets reset some parameters
+        # Reset some parameters
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         keys = ['thrower_height', 'throwing_speed', 'g']
@@ -209,11 +209,15 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(data, keys, bounds=bound, method='Powell', options= {'1':3, 'disp':1})
         
         # Not setting up 'maxiter' and/or 'disp'
+        # Needs to be str: int format.
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=bound, method='Powell', options= {1:2, True:False})
         # with self.assertRaises(TypeError):
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': '3', 'disp': False})
+
+        # Keys that are not defined in specs 
+
         m.estimate_params(data, keys, bounds=bound, method='TNC', options={'1':2, '2':2, '3':3})
 
         m = ThrownObject()
@@ -223,7 +227,7 @@ class TestEstimateParams(unittest.TestCase):
         m1.parameters['thrower_height'] = 1.5
         m1.parameters['throwing_speed'] = 25
 
-        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 5, 'disp': False})
+        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 1e-9, 'disp': False})
         m1.estimate_params(data, keys, bounds=bound, method='Powell', options={'1':2, '2':2, '3':3})
         times = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         inputs = [{}]*9
@@ -241,6 +245,7 @@ class TestEstimateParams(unittest.TestCase):
 
         # Ask questions about what exactly is method doing
 
+        # reformat testing
         # Testing if results of options is being properly applied
         self.assertNotEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
 
@@ -248,7 +253,14 @@ class TestEstimateParams(unittest.TestCase):
         m1.estimate_params(data, keys, bounds=bound, method='CG')
 
         # What does method do.
-        # self.assertAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
+        self.assertAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
+        
+        # 
+
+        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 1e-9, 'disp': False})
+        m1.estimate_params(data, keys, bounds=bound, method='CG', options={'maxiter': 1e-9, 'disp': False})
+
+        self.assertNotEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
     
 
     # Testing calc_error works? Part of the param estimate functionality if anything.
