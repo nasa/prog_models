@@ -15,6 +15,7 @@ from tests.test_data_model import main as lstm_main
 from tests.test_direct import main as direct_main
 from tests.test_linear_model import main as linear_main
 from tests.test_composite import main as composite_main
+from .test_serialization import main as serialization_main
 
 from io import StringIO
 import matplotlib.pyplot as plt
@@ -122,6 +123,11 @@ if __name__ == '__main__':
     
     try:
         composite_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        serialization_main()
     except Exception:
         was_successful = False
 
