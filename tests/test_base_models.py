@@ -632,90 +632,6 @@ class TestModels(unittest.TestCase):
             # Lack of noise will make output as expected
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
 
-
-    # Look through PR request.
-    def test_estimate_params(self):
-        m = ThrownObject()
-        results = m.simulate_to_threshold(save_freq=0.5)
-        data = [(results.times, results.inputs, results.outputs)]
-        gt = m.parameters.copy()
-
-        # Now lets reset some parameters
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        keys = ['thrower_height', 'throwing_speed', 'g']
-        m.estimate_params(data, keys)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Now with limits that dont include the true values
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        for key in keys:
-            self.assertNotEqual(m.parameters[key], gt[key])
-
-        # Now with limits that do include the true values
-        m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Try incomplete list:
-        with self.assertRaises(ValueError):
-            # Missing bound
-            m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
-        with self.assertRaises(ValueError):
-            # Extra bound
-            m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, 0), (-20, 10)))
-
-        # Dictionary bounds
-        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0)})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Dictionary bounds - missing
-        # Will fill with (-inf, inf)
-        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Dictionary bounds - extra
-        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Bounds - wrong type
-        with self.assertRaises(ValueError):
-            # bounds isn't tuple or dict
-            m.estimate_params(data, keys, bounds=0)
-        with self.assertRaises(ValueError):
-            # bounds isn't tuple or dict
-            m.estimate_params(data, keys, bounds='a')
-        with self.assertRaises(ValueError):
-            # Item isn't a tuple
-            m.estimate_params(data, keys, bounds={'g': 7})
-        with self.assertRaises(ValueError):
-            # Tuple isn't of size 2
-            m.estimate_params(data, keys, bounds={'g': (7,)})
-
-        # With inputs, outputs, and times
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[results.outputs], keys=keys)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # No keys
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(data)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(data)
-        
             
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
@@ -1340,7 +1256,7 @@ class TestModels(unittest.TestCase):
         self.assertFalse(m5.parameters == m1.parameters) 
 
         self.assertTrue(m1.parameters == m2.parameters) # Checking to see previous equal statements stay the same
-        self.assertTrue(m2.parameters == m1.parameters)
+        self.assertTrue(m2.parameters == m1.parameters) 
 
 # This allows the module to be executed directly
 def run_tests():

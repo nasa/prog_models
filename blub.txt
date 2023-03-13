@@ -1,0 +1,25 @@
+estimate_params from this link needs to be updated: https://nasa.github.io/progpy/api_ref/prog_models/PrognosticModel.html#prog_models.PrognosticsModel.estimate_params
+, updated in the function definition, however not on the website.
+
+ - Created test to see what happens if bounds go the wrong way. i.e (30, 7) instead of (7, 30)
+
+Think of ways to create more descriptive error messages
+
+Begin checking other parameters for params_estimate
+
+Statement ____ Swap ordering in params_estimate for bounds and method. ^^website
+
+Question*** Shouldn't changing optimization method chagne end values?
+
+Are default options set to make it various questions more optimal
+
+Idea: on line 1238 of pringistcs_model, I provide change the logic to provide a more acurate error message and detail what exactly is not equal to one another.
+            and potneitally have their values shown.
+
+Question*** Is runs 'depreciated' since one of the parameters is marked as 'depreciated'
+
+        # with self.assertRaises(ValueError):
+        # Does not do anything. Probably want to include an error message or some indicator to let the user know
+        # in case user is expected change however is not seeing it.
+
+148 does not work as intended?

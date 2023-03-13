@@ -1201,7 +1201,7 @@ class PrognosticsModel(ABC):
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
-            keys (list[str]): 
+            keys (list[str]):
                 Parameter keys to optimize
             times (list[float]):
                 Array of times for each sample
@@ -1209,13 +1209,13 @@ class PrognosticsModel(ABC):
                 Array of input containers where input[x] corresponds to time[x]
             outputs (list[OutputContainer]):
                 Array of output containers where output[x] corresponds to time[x]
-            method (str, optional): 
+            method (str, optional):
                 Optimization method- see scipy.optimize.minimize for options
-            bounds (tuple or dict): 
+            bounds (tuple or dict):
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
-            options (dict): 
+            options (dict):
                 Options passed to optimizer. see scipy.optimize.minimize for options
-            runs (list[tuple], depreciated): 
+            runs (list[tuple], depreciated):
                 data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
 
         See: examples.param_est
