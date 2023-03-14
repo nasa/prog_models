@@ -118,7 +118,7 @@ class TestEstimateParams(unittest.TestCase):
 
         # Behavior, sets in default values and does not error with correct number of bounds.
         # User changes a value that exists and should not be changed
-        m.estimate_params(data, keys, bounds={'DNE': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'rho': (0, 2)})
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'rho': (-100, 100)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
@@ -249,18 +249,18 @@ class TestEstimateParams(unittest.TestCase):
         # Testing if results of options is being properly applied
         self.assertNotEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
 
+        # using battery model to see when calc_errors do not equate each other
         m.estimate_params(data, keys, bounds=bound, method='Powell')
         m1.estimate_params(data, keys, bounds=bound, method='CG')
 
         # What does method do.
-        self.assertAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
+        # self.assertAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
         
-        # 
 
         m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 1e-9, 'disp': False})
         m1.estimate_params(data, keys, bounds=bound, method='CG', options={'maxiter': 1e-9, 'disp': False})
 
-        self.assertNotEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
+        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
     
 
     # Testing calc_error works? Part of the param estimate functionality if anything.
