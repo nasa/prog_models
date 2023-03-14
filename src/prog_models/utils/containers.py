@@ -10,14 +10,14 @@ from prog_models.exceptions import ProgModelTypeError
 class DictLikeMatrixWrapper():
     """
     A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessable. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
+    
+    Arguments:
+        keys -- list: The keys of the dictionary. e.g., model.states or model.inputs
+        data -- dict or numpy array: The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
     """
 
     def __init__(self, keys: list, data: Union[dict, np.array]):
         """ Initializes the container
-
-        Arguments:
-        keys -- list: The keys of the dictionary. e.g., model.states or model.inputs
-        data -- dict or numpy array: The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
         """
         if not isinstance(keys, list):
             keys = list(keys)   # creates list with keys
