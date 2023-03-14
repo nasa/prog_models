@@ -1,19 +1,20 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .test_base_models import main as base_models_main
-from .test_sim_result import main as sim_result_main
-from .test_dict_like_matrix_wrapper import main as dict_like_matrix_wrapper_main
-from .test_examples import main as examples_main
-from .test_centrifugal_pump import main as centrifugal_pump_main
-from .test_pneumatic_valve import main as pneumatic_valve_main
-from .test_battery import main as battery_main
-from .test_tutorials import main as tutorials_main
-from .test_datasets import main as datasets_main
-from .test_powertrain import main as powertrain_main
-from .test_surrogates import main as surrogates_main
-from .test_data_model import main as lstm_main
-from .test_direct import main as direct_main
-from .test_linear_model import main as linear_main
+from tests.test_base_models import main as base_models_main
+from tests.test_sim_result import main as sim_result_main
+from tests.test_dict_like_matrix_wrapper import main as dict_like_matrix_wrapper_main
+from tests.test_examples import main as examples_main
+from tests.test_centrifugal_pump import main as centrifugal_pump_main
+from tests.test_pneumatic_valve import main as pneumatic_valve_main
+from tests.test_battery import main as battery_main
+from tests.test_tutorials import main as tutorials_main
+from tests.test_datasets import main as datasets_main
+from tests.test_powertrain import main as powertrain_main
+from tests.test_surrogates import main as surrogates_main
+from tests.test_data_model import main as lstm_main
+from tests.test_direct import main as direct_main
+from tests.test_linear_model import main as linear_main
+from tests.test_composite import main as composite_main
 from .test_serialization import main as serialization_main
 
 from io import StringIO
@@ -65,6 +66,7 @@ if __name__ == '__main__':
         was_successful = False
 
     try:
+    
         examples_main()
     except Exception:
         was_successful = False
@@ -116,6 +118,11 @@ if __name__ == '__main__':
 
     try:
         linear_main()
+    except Exception:
+        was_successful = False
+    
+    try:
+        composite_main()
     except Exception:
         was_successful = False
 

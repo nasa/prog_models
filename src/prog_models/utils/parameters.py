@@ -5,6 +5,7 @@ from collections import UserDict
 from copy import deepcopy
 import json
 from numbers import Number
+import numpy as np
 import types
 from typing import Callable
 
@@ -47,6 +48,17 @@ class PrognosticsModelParameters(UserDict):
     
     def __sizeof__(self):
         return getsizeof(self)
+
+    def __eq__(self, other):
+        if set(self.data.keys()) != set(other.data.keys()):
+            return False
+        for key, value in self.data.items():
+            if not np.all(value == other[key]): 
+                  # Note: np.all is used to handle numpy array elements
+                  # Otherwise value == other[key] would return a numpy array of bools for each element
+                  return False
+        return True
+        
 
     def copy(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)
