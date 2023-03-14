@@ -302,6 +302,20 @@ class TestEstimateParams(unittest.TestCase):
         # Does not change the values
         value3 = m.calc_error(times, inputs, outputs, dt=1e-4)
 
+        self.assertEqual(value3, value1)
+
+    # Should there be a BatteryElectroChemEODEOL example?
+    def test_big_example(self):
+        m = BatteryElectroChemEOD()
+
+        m.parameters
+
+        return None
+
+        
+        
+
+
 
 def run_tests():
     unittest.main()
