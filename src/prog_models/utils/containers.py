@@ -134,7 +134,7 @@ class DictLikeMatrixWrapper():
         """
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:   #if the first row of the matrix has one value (i.e., non-vectorized)
             return np.array([value[0] for value in self.matrix])    #the value from the first row
-        return self.matrix_check    #he matrix (vectorized case)
+        return self.matrix    # the matrix (vectorized case)
 
     def items(self) -> zip:
         """
