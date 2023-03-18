@@ -20,7 +20,7 @@ if __name__ == "__main__":
     print(f'{t} |')
 
     print(FORMAT_STR.format('model initialization'), end='')
-    t = timeit.timeit('ThrownObject()', 'from prog_models.models import ThrownObject', timer = process_time)
+    t = timeit.timeit('ThrownObject()', 'from prog_models.models import ThrownObject', number = 1000, timer = process_time)
     print(f'{t} |')
 
     m = ThrownObject()

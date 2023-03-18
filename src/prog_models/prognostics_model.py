@@ -133,7 +133,7 @@ class PrognosticsModel(ABC):
 
     def __setstate__(self, params : dict) -> None:
         # This method is called when depickling and in construction. It builds the model from the parameters
-
+        
         if not hasattr(self, 'inputs'):
             self.inputs = []
         self.n_inputs = len(self.inputs)
@@ -164,6 +164,7 @@ class PrognosticsModel(ABC):
 
         # Setup Containers
         # These containers should be used instead of dictionaries for models that use the internal matrix state
+
         states = self.states
 
         class StateContainer(DictLikeMatrixWrapper):
@@ -1183,7 +1184,7 @@ class PrognosticsModel(ABC):
             while t_last < t:
                 t_new = min(t_last + dt, t)
                 x = self.next_state(x, u, t_new-t_last)
-                t_last = t
+                t_last = t_new
                 if t >= t_last:
                     # Only recalculate if required
                     z_obs = self.output(x)

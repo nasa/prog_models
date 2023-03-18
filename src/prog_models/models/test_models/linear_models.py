@@ -24,7 +24,6 @@ class FNoneNoEventStateLM(LinearModel):
         }
     }
 
-
 class OneInputNoOutputNoEventLM(LinearModel):
     """
     Simple model that increases state by u1 every step. 
@@ -97,6 +96,7 @@ class OneInputNoOutputTwoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1], [-0.2]])
     G = np.array([[1], [1]])
 
@@ -119,6 +119,7 @@ class TwoInputNoOutputOneEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1]])
     G = np.array([[1]])
 
@@ -141,6 +142,7 @@ class TwoInputNoOutputTwoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1], [-0.2]])
     G = np.array([[1], [1]])
 
