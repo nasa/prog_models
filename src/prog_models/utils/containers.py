@@ -49,7 +49,7 @@ class DictLikeMatrixWrapper():
         row = self.matrix[self._keys.index(key)]    #creates list from a row of matrix
         if len(row) == 1:   #list contains 1 value, returns that value (non-vectorized)
             return row[0]
-        return rows #returns entire row/list (vectorized case)
+        return row #returns entire row/list (vectorized case)
 
     def __setitem__(self, key: str, value: int) -> None:
         """
