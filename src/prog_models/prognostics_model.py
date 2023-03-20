@@ -8,7 +8,7 @@ import itertools
 import json
 from numbers import Number
 import numpy as np
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, List, Sequence
 from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
@@ -1148,13 +1148,13 @@ class PrognosticsModel(ABC):
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
-            times (list[float]): array of times for each sample
-            inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-            outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
-        
+            times (list[float]): Array of times for each sample.
+            inputs (list[dict]): Array of input dictionaries where input[x] corresponds to time[x].
+            outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
+
         Keyword Args:
-            x0 (dict, optional): Initial state
-            dt (double, optional): time step
+            x0 (dict, optional): Initial state.
+            dt (double, optional): Maximum time step.
 
         Returns:
             double: Total error
@@ -1233,18 +1233,45 @@ class PrognosticsModel(ABC):
         }
         config.update(kwargs)
 
+        # if parameters not in parent wrapper sequence, then place them into one.
+        if not runs and times and inputs and outputs:
+            if not isinstance(times[0], Sequence):
+                times = [times]
+            if not isinstance(inputs[0], Sequence):
+                inputs = [inputs]
+            if not isinstance(outputs[0], Sequence):
+                outputs = [outputs]
+
+
         if runs is None and (times is None or inputs is None or outputs is None):
-            raise ValueError("Must provide either runs or times, inputs, and outputs")
+            if times is None and inputs is None and outputs is None:
+                # estimate paramters requires times, inputs and outputs. Missing x
+                raise ValueError("Must pass in times, inputs, and outputs")
+            if times is None and inputs is None:
+                raise ValueError("Must pass in times and inputs")
+            if times is None and outputs is None:
+                raise ValueError("Must pass in times and outputs")
+            if inputs is None and outputs is None:
+                raise ValueError("Must pass in inpupts and outputs")
+            if times is None:
+                raise ValueError("Must pass in times")
+            if inputs is None:
+                raise ValueError("Must pass in inputs")
+            if outputs is None:
+                raise ValueError("Must pass in outputs")
+            raise ValueError("Must provide either runs")
         if runs is None:
             if len(times) != len(inputs) or len(outputs) != len(inputs):
-                raise ValueError("Times, inputs, and outputs must be same length")
+                raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
+            if len(times) == 0:
+                raise ValueError(f"times, inputs, and outputs must have at least one element")
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
-            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys] 
         else:
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
@@ -1252,7 +1279,9 @@ class PrognosticsModel(ABC):
                 raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
         for bound in config['bounds']:
             if (not isinstance(bound, Iterable)) or (len(bound) != 2):
-                raise ValueError("each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
+                raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
+            if (isinstance(bound, set)):
+                raise TypeError(f"Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
             # Convert here so it isn't done every call of calc_error
@@ -1264,14 +1293,15 @@ class PrognosticsModel(ABC):
 
         for i, (times, inputs, outputs) in enumerate(runs):
             has_changed = False
+            if len(times) != len(inputs) or len(outputs) != len(outputs):
+                raise ValueError(f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if not isinstance(inputs[0], self.InputContainer):
+                # Error for recent test occurs here.
                 inputs = [self.InputContainer(u_i) for u_i in inputs]
                 has_changed = True
-
             if isinstance(outputs, np.ndarray):
                 outputs = [self.OutputContainer(u_i) for u_i in outputs]
                 has_changed = True
-
             if has_changed:
                 runs[i] = (times, inputs, outputs)
 
