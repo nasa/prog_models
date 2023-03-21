@@ -1233,6 +1233,13 @@ class PrognosticsModel(ABC):
         }
         config.update(kwargs)
 
+        if isinstance(times, set):
+            times = list(times)
+        if isinstance(inputs, set):
+            inputs = list(inputs)
+        if isinstance(outputs, set):
+            outputs = list(outputs)
+
         # if parameters not in parent wrapper sequence, then place them into one.
         if not runs and times and inputs and outputs:
             if not isinstance(times[0], Sequence):
@@ -1264,10 +1271,13 @@ class PrognosticsModel(ABC):
             if len(times) != len(inputs) or len(outputs) != len(inputs):
                 raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if len(times) == 0:
-                raise ValueError(f"times, inputs, and outputs must have at least one element")
+                # since they are all the same length, does not matter as much
+                raise ValueError(f"Times, inputs, and outputs must have at least one element")
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
+
+        
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
@@ -1293,8 +1303,10 @@ class PrognosticsModel(ABC):
 
         for i, (times, inputs, outputs) in enumerate(runs):
             has_changed = False
-            if len(times) != len(inputs) or len(outputs) != len(outputs):
+            if len(times) != len(inputs) or len(inputs) != len(outputs):
                 raise ValueError(f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
+            if len(times) == 0:
+                raise ValueError(f"Run {i} does not have a defined times, inputs, and outputs.")
             if not isinstance(inputs[0], self.InputContainer):
                 # Error for recent test occurs here.
                 inputs = [self.InputContainer(u_i) for u_i in inputs]
