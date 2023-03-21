@@ -1233,12 +1233,8 @@ class PrognosticsModel(ABC):
         }
         config.update(kwargs)
 
-        if isinstance(times, set):
-            times = list(times)
-        if isinstance(inputs, set):
-            inputs = list(inputs)
-        if isinstance(outputs, set):
-            outputs = list(outputs)
+        if isinstance(times, set) or isinstance(inputs, set) or isinstance(outputs, set):
+            raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by construction, so ordering may have undefined behavior.")
 
         # if parameters not in parent wrapper sequence, then place them into one.
         if not runs and times and inputs and outputs:
@@ -1248,7 +1244,6 @@ class PrognosticsModel(ABC):
                 inputs = [inputs]
             if not isinstance(outputs[0], Sequence):
                 outputs = [outputs]
-
 
         if runs is None and (times is None or inputs is None or outputs is None):
             if times is None and inputs is None and outputs is None:

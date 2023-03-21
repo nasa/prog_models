@@ -29,27 +29,49 @@ class TestEstimateParams(unittest.TestCase):
         # Now lets reset some parameters
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
-        keys = ['thrower_height', 'throwing_speed', 'g']
+        keys = ['thrower_height', 'throwing_speed']
         m.estimate_params(data, keys)
         for key in keys: # using assert not equal also works.
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        
+        m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
+        # Enforce if parameters are within bounds after estimate_params()
+        check = m.calc_error(results.times, results.inputs, results.outputs)
+        # m.estimate_params(data, keys, bounds=((1.243, 4.0), (19.13212, 39.12301), (-21.123, 2.000991)))
+        # check2= m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Note about estimate_params. Calling it on extremely big values and/or having bounds be very obviously incorrect will
+        # result in a incorrectly defined behavior. I can make examples detailing common examples of this occuring would be using  
+        # the battery and having some parameters be VERY wrong. Also need to look into making other parameters here very wrong.
+        # For the latter case, would this confirm that it would be possible for a chain of estimate_params to be called? Makes sense
+        # however, a bit interesting... After giving one bounds, possible for other bounds to change? With same bounds does not happen,
+        # with different bounds occurs? How are we supposed to clearly keep track of this behavior...
+
+        # calc_error is a much bigger value compared to other values. Not including a good range?
+        # Should not affect other calls...
+        before = m.parameters
+        m.estimate_params(data, keys, bounds=((1.243, 4.0), (-12.9234, 3.33333333)))
+        check3 = m.calc_error(results.times, results.inputs, results.outputs)
+        after = m.parameters
+
+        # Now with limits that do include the true values
+        # only returning the upper bounds? Why after this defined behavior?
+        # m.parameters['throwing_speed'] = 15
+        m.estimate_params(data, keys, bounds=((0, 8), (20, 42)))
+        ax = m.parameters
+        value3 = m.calc_error(results.times, results.inputs, results.outputs)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2, "Limits of the Bounds do not include the true values")
         
         # self.assertTrue(m.parameters == gt)
 
 
     def test_estimate_params(self):
-        # Some things to consider, dictionary vs tuple. The function is accepting both it would seem.
-        # Personal opinion on which data type to use. Tuples make the most amount of sense.
-
         # gt copy works as intended. Going to a different object location
 
         # Potentially include something that focuses on specifically the key value pairs between gt and m.parameters? mayb not
 
-        #MAKE SURE IT WORKS WITH AN ARRAY AND A NUMPY ARRAY.
-
         # Create a model that will easily raise an Exception with calc_error.
-
-        # Write a test that fails with the examples bug.
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         data = [(results.times, results.inputs, results.outputs)]
@@ -66,12 +88,6 @@ class TestEstimateParams(unittest.TestCase):
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
         m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        # m.estimate_params(data, keys, bounds=((1.243, 4.0), (-12.9234, 3.33333333), (0, 3)))
-        # value1 = m.calc_error(results.times, results.inputs, results.outputs)
-        # m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        # value5 = m.calc_error(results.times, results.inputs, results.outputs)
-        # m.estimate_params(data, keys, bounds=((1.243, 4.0), (-12.9234, 3.33333333), (0, 3)))
-        # sanityCheck = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Need at least one data point
         with self.assertRaises(ValueError):
@@ -91,16 +107,6 @@ class TestEstimateParams(unittest.TestCase):
         # Not the most accurate way of seeing when these values are not accurate.
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 1, "Limits of the Bounds do not include the true values")
-        
-        m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        check = m.calc_error(results.times, results.inputs, results.outputs)
-        m.estimate_params(data, keys, bounds=((1.243, 4.0), (19.13212, 39.12301), (-21.123, 2.000991)))
-        check2= m.calc_error(results.times, results.inputs, results.outputs)
-
-        # calc_error is a much bigger value compared to other values. Not including a good range?
-        # Should not affect other calls...
-        # m.estimate_params(data, keys, bounds=((1.243, 4.0), (-12.9234, 3.33333333), (0, 3)))
-        # check3 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Now with limits that do include the true values
         m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
@@ -372,7 +378,6 @@ class TestEstimateParams(unittest.TestCase):
         # Needs to be str: int format.
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=bound, method='Powell', options= {1:2, True:False})
-        # with self.assertRaises(TypeError):
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': '3', 'disp': False})
 
@@ -481,7 +486,10 @@ class TestEstimateParams(unittest.TestCase):
         # Same as last test, but times in list wrapper and outputs is around dictionary wrapper.
         m.estimate_params(times=set(times), inputs=inputs, outputs=[outputs])
 
+        # NOTE - Cannot have set() around inputs and/or outputs. Provides unhashable errors
         m.estimate_params(times=set(times), inputs=(inputs), outputs=[outputs])
+
+        m.estimate_params(times=[times], inputs=set(inputs), outputs=[outputs])
 
         # This fails because inputs and outputs are both dictionaries within a Set. Sometimes, an empty set within a Set.
         # m.estimate_params(times=[times], inputs=inputs, outputs=set(outputs))
