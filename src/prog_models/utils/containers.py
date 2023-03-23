@@ -164,7 +164,7 @@ class DictLikeMatrixWrapper():
         example
         -------
         >>> from prog_models.models import DictLikeMatrixWrapper
-        >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], [[1], [2], [3]])
+        >>> dlmw = ['a', 'b', 'c'], np.array([1, 2, 3], dtype=np.float64)
         >>> 'a' in dlmw  # True
         """
         return key in self._keys
