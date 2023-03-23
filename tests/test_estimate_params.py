@@ -326,48 +326,74 @@ class TestEstimateParams(unittest.TestCase):
         # Checking to make sure original equals the previous ones
         self.assertEqual(check, check3)
 
+        # Passing in an integer for a singular test
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('a', '12'), ('1', '20'), ('-5', '30')))
         
+        # Incorrect length of a singular bound
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('-3'), ('1', '20'), ('-5', '30')))
         
+        # Upper bound greater than lower bound
         with self.assertRaises(ValueError):
-            m.estimate_params(data, keys, bounds=(('a', '12'), ('30', '20'), ('-5', '30')))
+            m.estimate_params(data, keys, bounds=(('9', '12'), ('30', '20'), ('-5', '30')))
         
+        # Both string literals and upper bound being less than lower bound
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('a', 'b'), ('30', '20'), ('-5', '30')))
-
+        
+        # Having an incorrect bound length of three
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('-3', '12'), ('20', '30', '40'), ('-5', '30')))
 
+        # Passing in too many bounds
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('-3', '12'), ('20', '30'), ('-5', '30'), ('-20, 20')))
         
+        # Passing in not enough bounds
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('-3', '12'), ('20', '30')))
         
-        with self.assertRaises(ValueError):
-            m.estimate_params(data, keys, bounds=[np.array(['a', 's']), np.array([2, 3]), np.array([4, 5])])
-        
+        # Using np.array for each bound. Different typing for each
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[np.array(['a', '9']), np.array(['2', '3']), np.array(['4', '5'])])
 
+        # Using np.array for each bound specifically. Different typings for them
+        with self.assertRaises(ValueError):
+            m.estimate_params(data, keys, bounds=[np.array(['a', 's']), np.array([2, 3]), np.array([4, 5])])
+
+        # Too many bounds given in np.array for each bound
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[np.array(['4', '9']), np.array(['2', '3']), np.array(['4', '5']), np.array(['-2', '4'])])
         
-        # Lower Bound greater than Upper Bound
+        # Lower Bound greater than Upper Bound with np.array wrapper around each bound 
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[np.array(['9', '4']), np.array(['2', '3']), np.array(['4', '5'])])
         
-        # Same bounds
-        # with self.assertRaises(ValueError):
-        m.estimate_params(data, keys, bounds=[np.array(['9', '9']), np.array(['2', '3']), np.array(['4', '5'])])
+        # Checking comparing between a string literal integer and an int
+        m.estimate_params(data, keys, bounds=[np.array(['1', 9]), np.array([2, 3]), np.array([4, 5])])
 
+        # Testing bounds equality
         m.estimate_params(data, keys, bounds=((1, 1), (2, 4), (-1, 24)))
 
+        # Testing bounds equality with strings in np.array
+        m.estimate_params(data, keys, bounds=[np.array(['9', '9']), np.array(['2', '3']), np.array(['4', '5'])])
+
+
+# Testing features where keys are not parameters in the model
     def test_keys(self):
         m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+
+        keys = ['x', 'y', 'g']
+        bound=((0, 8), (20, 42), (-20, -5))
+        with self.assertRaises(ValueError):
+            m.estimate_params(data, keys, bounds=bound)
+
 
     def test_parameters(self):
         m = ThrownObject()

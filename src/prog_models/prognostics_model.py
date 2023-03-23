@@ -1228,11 +1228,15 @@ class PrognosticsModel(ABC):
         if keys is None:
             # if no keys provided, use all
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
+        
+        for key in keys:
+            if key not in self.parameters:
+                raise ValueError("Passing in key that does not exist.")
 
         config = {
             'method': 'nelder-mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8},
+            'options': {'xatol': 1e-8}
         }
         config.update(kwargs)
 
@@ -1274,8 +1278,6 @@ class PrognosticsModel(ABC):
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
-
-        
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
@@ -1284,10 +1286,12 @@ class PrognosticsModel(ABC):
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
             if len(config['bounds']) != len(keys):
-                raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
+                error = f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})"
+                raise ValueError(error)
         for bound in config['bounds']:
             if (isinstance(bound, set)):
-                raise TypeError(f"Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
+                error = f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order."
+                raise TypeError(error)
             if (not isinstance(bound, Iterable)) or (len(bound) != 2):
                 raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
@@ -1302,7 +1306,8 @@ class PrognosticsModel(ABC):
         for i, (times, inputs, outputs) in enumerate(runs):
             has_changed = False
             if len(times) != len(inputs) or len(inputs) != len(outputs):
-                raise ValueError(f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
+                error = f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}"
+                raise ValueError(error)
             if len(times) == 0:
                 raise ValueError(f"Times, inputs, and outputs for Run {i} must have at least one element")
             if not isinstance(inputs[0], self.InputContainer):
@@ -1336,6 +1341,7 @@ class PrognosticsModel(ABC):
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise   
+
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
         """
