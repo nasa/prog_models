@@ -6,6 +6,7 @@ from collections import abc, namedtuple
 from copy import deepcopy
 import itertools
 import json
+import re
 from numbers import Number
 import numpy as np
 from typing import Callable, Iterable, List, Sequence
@@ -1026,6 +1027,8 @@ class PrognosticsModel(ABC):
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
+        
+        y = self.next_state(x.copy(), u, dt0)
 
         if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around next_state
@@ -1179,7 +1182,7 @@ class PrognosticsModel(ABC):
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
-        z_obs = self.output(x)  # Initialize
+        z_obs = self.output(x)  # Initialize:? What exaclty is this parameter doing
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + dt, t)
@@ -1220,7 +1223,7 @@ class PrognosticsModel(ABC):
 
         See: examples.param_est
         """
-        from scipy.optimize import minimize
+        from scipy.optimize import minimize, show_options
 
         if keys is None:
             # if no keys provided, use all
@@ -1234,15 +1237,15 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
 
         if isinstance(times, set) or isinstance(inputs, set) or isinstance(outputs, set):
-            raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by construction, so ordering may have undefined behavior.")
+            raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by definition, so passing in arguments as Sets may have undefined behavior.")
 
         # if parameters not in parent wrapper sequence, then place them into one.
         if not runs and times and inputs and outputs:
-            if not isinstance(times[0], Sequence):
+            if not isinstance(times[0], (Sequence, np.ndarray)):
                 times = [times]
-            if not isinstance(inputs[0], Sequence):
+            if not isinstance(inputs[0], (Sequence, np.ndarray)):
                 inputs = [inputs]
-            if not isinstance(outputs[0], Sequence):
+            if not isinstance(outputs[0], (Sequence, np.ndarray)):
                 outputs = [outputs]
 
         if runs is None and (times is None or inputs is None or outputs is None):
@@ -1283,10 +1286,10 @@ class PrognosticsModel(ABC):
             if len(config['bounds']) != len(keys):
                 raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
         for bound in config['bounds']:
-            if (not isinstance(bound, Iterable)) or (len(bound) != 2):
-                raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
             if (isinstance(bound, set)):
                 raise TypeError(f"Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
+            if (not isinstance(bound, Iterable)) or (len(bound) != 2):
+                raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
             # Convert here so it isn't done every call of calc_error
@@ -1301,7 +1304,7 @@ class PrognosticsModel(ABC):
             if len(times) != len(inputs) or len(inputs) != len(outputs):
                 raise ValueError(f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if len(times) == 0:
-                raise ValueError(f"Run {i} does not have a defined times, inputs, and outputs.")
+                raise ValueError(f"Times, inputs, and outputs for Run {i} must have at least one element")
             if not isinstance(inputs[0], self.InputContainer):
                 # Error for recent test occurs here.
                 inputs = [self.InputContainer(u_i) for u_i in inputs]
