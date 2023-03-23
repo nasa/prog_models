@@ -87,8 +87,6 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params(times=None, inputs=None, output=None)
         with self.assertRaises(ValueError):
             m.estimate_params(times='', inputs='', outputs='')
-        # with self.assertRaises(ValueError):
-        #     m.estimate_params(times='[]', inputs='[]', outputs='[]')
         with self.assertRaises(ValueError):
             m.estimate_params(times=[[]], inputs=[[]], outputs=[[]])
 
@@ -634,7 +632,6 @@ class TestEstimateParams(unittest.TestCase):
         # Another test case that would be fixed with future changes to Containers
         # with self.assertRaises(ValueError):
         #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
-        
 
 def run_tests():
     unittest.main()
