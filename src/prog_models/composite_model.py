@@ -29,6 +29,7 @@ class CompositeModel(PrognosticsModel):
         outputs (list[str]):
             Model outputs in format "model_name.output_name". Must be subset of all outputs from models. If not provided, all outputs will be included. 
     """
+
     def __init__(self, models, connections = [], **kwargs):
         # General Input Validation
         if not isinstance(models, Iterable):

@@ -508,6 +508,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         # Negative Surface
         xnS = x['qnS']/params['qSMax']
         xnS2 = xnS+xnS  # Note: in python x+x is more efficient than 2*x
+
         one_minus_xnS = 1 - xnS
         xnS2_minus_1 = xnS2 - 1
         VenParts = [

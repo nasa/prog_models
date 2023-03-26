@@ -1024,7 +1024,11 @@ class PrognosticsModel(ABC):
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
+<<<<<<< Updated upstream
 
+=======
+        
+>>>>>>> Stashed changes
         if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around next_state
             def next_state(x, u, dt):
@@ -1174,7 +1178,11 @@ class PrognosticsModel(ABC):
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
+<<<<<<< Updated upstream
         z_obs = self.output(x)  # Initialize
+=======
+        z_obs = self.output(x)
+>>>>>>> Stashed changes
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + dt, t)
@@ -1228,11 +1236,44 @@ class PrognosticsModel(ABC):
         }
         config.update(kwargs)
 
+<<<<<<< Updated upstream
         if runs is None and (times is None or inputs is None or outputs is None):
             raise ValueError("Must provide either runs or times, inputs, and outputs")
         if runs is None:
             if len(times) != len(inputs) or len(outputs) != len(inputs):
                 raise ValueError("Times, inputs, and outputs must be same length")
+=======
+        if isinstance(times, set) or isinstance(inputs, set) or isinstance(outputs, set):
+            raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by definition, so passing in arguments as Sets may have undefined behavior.")
+
+        # if parameters not in parent wrapper sequence, then place them into one.
+        if not runs and times and inputs and outputs:
+            if not isinstance(times[0], (Sequence, np.ndarray)):
+                times = [times]
+            if not isinstance(inputs[0], (Sequence, np.ndarray)):
+                inputs = [inputs]
+            if not isinstance(outputs[0], (Sequence, np.ndarray)):
+                outputs = [outputs]
+        
+        if runs is None:
+            # If depreciated feature runs is not provided (will be removed in future version)
+
+            # Check if required times, inputs, and outputs are present
+            missing_args = [arg for arg in ('times', 'inputs', 'outputs') if locals().get(arg) is None]
+            if len(missing_args) > 0:
+                # Concat into string
+                missing_args_str = ', '.join(missing_args)
+                # missing_args_str = missing_args_str[:-2] # Remove last comma and space
+                raise ValueError(f"Missing keyword arguments {missing_args_str}")
+            
+            # Check lengths of args
+            if len(times) != len(inputs): 
+                raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
+            if len(times) == 0:
+                # since they are all the same length, does not matter as much
+                raise ValueError(f"Times, inputs, and outputs must have at least one element")
+            
+>>>>>>> Stashed changes
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
