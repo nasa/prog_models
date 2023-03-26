@@ -6,9 +6,10 @@ from collections import abc, namedtuple
 from copy import deepcopy
 import itertools
 import json
+import re
 from numbers import Number
 import numpy as np
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, List, Sequence
 from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
@@ -1026,11 +1027,8 @@ class PrognosticsModel(ABC):
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
-<<<<<<< Updated upstream
-
-=======
         
->>>>>>> Stashed changes
+
         if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around next_state
             def next_state(x, u, dt):
@@ -1152,13 +1150,13 @@ class PrognosticsModel(ABC):
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
-            times (list[float]): array of times for each sample
-            inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-            outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
-        
+            times (list[float]): Array of times for each sample.
+            inputs (list[dict]): Array of input dictionaries where input[x] corresponds to time[x].
+            outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
+
         Keyword Args:
-            x0 (dict, optional): Initial state
-            dt (double, optional): time step
+            x0 (dict, optional): Initial state.
+            dt (double, optional): Maximum time step.
 
         Returns:
             double: Total error
@@ -1183,11 +1181,7 @@ class PrognosticsModel(ABC):
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
-<<<<<<< Updated upstream
-        z_obs = self.output(x)  # Initialize
-=======
         z_obs = self.output(x)
->>>>>>> Stashed changes
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + dt, t)
@@ -1209,7 +1203,7 @@ class PrognosticsModel(ABC):
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
-            keys (list[str]): 
+            keys (list[str]):
                 Parameter keys to optimize
             times (list[float]):
                 Array of times for each sample
@@ -1217,13 +1211,13 @@ class PrognosticsModel(ABC):
                 Array of input containers where input[x] corresponds to time[x]
             outputs (list[OutputContainer]):
                 Array of output containers where output[x] corresponds to time[x]
-            method (str, optional): 
+            method (str, optional):
                 Optimization method- see scipy.optimize.minimize for options
-            bounds (tuple or dict): 
+            bounds (tuple or dict, optional):
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
-            options (dict): 
+            options (dict, optional):
                 Options passed to optimizer. see scipy.optimize.minimize for options
-            runs (list[tuple], depreciated): 
+            runs (list[tuple], depreciated):
                 data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
 
         See: examples.param_est
@@ -1233,21 +1227,18 @@ class PrognosticsModel(ABC):
         if keys is None:
             # if no keys provided, use all
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
+        
+        for key in keys:
+            if key not in self.parameters:
+                raise ValueError("Passing in key that does not exist.")
 
         config = {
             'method': 'nelder-mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8},
+            'options': {'xatol': 1e-8}
         }
         config.update(kwargs)
 
-<<<<<<< Updated upstream
-        if runs is None and (times is None or inputs is None or outputs is None):
-            raise ValueError("Must provide either runs or times, inputs, and outputs")
-        if runs is None:
-            if len(times) != len(inputs) or len(outputs) != len(inputs):
-                raise ValueError("Times, inputs, and outputs must be same length")
-=======
         if isinstance(times, set) or isinstance(inputs, set) or isinstance(outputs, set):
             raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by definition, so passing in arguments as Sets may have undefined behavior.")
 
@@ -1278,22 +1269,25 @@ class PrognosticsModel(ABC):
                 # since they are all the same length, does not matter as much
                 raise ValueError(f"Times, inputs, and outputs must have at least one element")
             
->>>>>>> Stashed changes
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
-            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys] 
         else:
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
             if len(config['bounds']) != len(keys):
-                raise ValueError("Bounds must be same length as keys. To define partial bounds, use a dict (e.g., {'param1': (0, 5), 'param3': (-5.5, 10)})")
+                error = f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})"
+                raise ValueError(error)
         for bound in config['bounds']:
+            if (isinstance(bound, set)):
+                error = f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order."
+                raise TypeError(error)
             if (not isinstance(bound, Iterable)) or (len(bound) != 2):
-                raise ValueError("each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
+                raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
             # Convert here so it isn't done every call of calc_error
@@ -1305,14 +1299,18 @@ class PrognosticsModel(ABC):
 
         for i, (times, inputs, outputs) in enumerate(runs):
             has_changed = False
+            if len(times) != len(inputs) or len(inputs) != len(outputs):
+                error = f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}"
+                raise ValueError(error)
+            if len(times) == 0:
+                raise ValueError(f"Times, inputs, and outputs for Run {i} must have at least one element")
             if not isinstance(inputs[0], self.InputContainer):
+                # Error for recent test occurs here.
                 inputs = [self.InputContainer(u_i) for u_i in inputs]
                 has_changed = True
-
             if isinstance(outputs, np.ndarray):
                 outputs = [self.OutputContainer(u_i) for u_i in outputs]
                 has_changed = True
-
             if has_changed:
                 runs[i] = (times, inputs, outputs)
 
@@ -1337,6 +1335,7 @@ class PrognosticsModel(ABC):
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise   
+
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
         """
