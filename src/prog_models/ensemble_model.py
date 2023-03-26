@@ -9,8 +9,12 @@ from . import PrognosticsModel
 class EnsembleModel(PrognosticsModel):
     """
     An Ensemble Model is a collection of models which run together. The results of each model are aggregated using the aggregation_method function. This is generally done to improve the accuracy of prediction when you have multiple models that each represent part of the behavior, or represent a distribution of different behaviors. 
+
+    .. role:: python(code)
+        :language: python
+        :class: highlight
     
-    Ensembe Models are constructed from a set of other models (e.g., :py:`m = EnsembleModel((m1, m2, m3))`). The models then operate functionally as one prognostic model. 
+    Ensembe Models are constructed from a set of other models (e.g., :python:`m = EnsembleModel((m1, m2, m3))`). The models then operate functionally as one prognostic model. 
 
     See example :download:`examples.ensemble <../../../../prog_models/examples/ensemble.py>`
 

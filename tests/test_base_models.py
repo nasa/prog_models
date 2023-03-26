@@ -11,10 +11,10 @@ import unittest
 # This ensures that the directory containing ProgModelTemplate is in the python search directory
 sys.path.append(join(dirname(__file__), ".."))
 
-from prog_models import *
-from prog_models.models import *
+from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel, LinearModel
+from prog_models.models import ThrownObject, BatteryElectroChemEOD
 from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
-
+from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParams)
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -68,42 +68,6 @@ def derived_callback3(config):
         'p4': -2 * config['p2'], 
     }
 
-class LinearThrownObject(LinearModel):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
-        'g': -9.81  # Acceleration due to gravity in m/s^2
-    }
-
-    def initialize(self, u=None, z=None):
-        return self.StateContainer({
-            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            })
-    
-    def threshold_met(self, x):
-        return {
-            'falling': x['v'] < 0,
-            'impact': x['x'] <= 0
-        }
-
-    def event_state(self, x): 
-        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-        return {
-            'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-        }
-
 class MockModelWithDerived(MockProgModel):
     param_callbacks = {
             'p1': [derived_callback],
@@ -154,6 +118,71 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
+    def test_size(self):
+        m = MockProgModel()
+        size = sys.getsizeof(m)
+        self.assertLess(size, 7500)
+
+        # Adding a parameter
+        m.parameters['test'] = 8675309
+        size2 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size, size2)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        # Note- have to use an uncommon number for this to work
+        # This is because of python's memory allocation
+        diff = size2 - size
+        sum_of_parts = sys.getsizeof('test') + sys.getsizeof(8675309)
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
+
+        # Adding other attributes
+        m._test_value = 123456789
+        size3 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size2, size3)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        diff = size3 - size2
+        sum_of_parts = sys.getsizeof('_test_value') + sys.getsizeof(123456789)
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
+
+        # Add list into parameters
+        m.parameters['test_list'] = [79534, 84392, 93333, -243934, 23233]
+        size4 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size3, size4)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        diff = size4 - size3
+        sum_of_parts = sys.getsizeof('test_list') + sys.getsizeof([79534, 84392, 93333, -243934, 23233])
+        self.assertLess(sum_of_parts, diff)
+
+        # Note that adding as a parameter is expected to be similar
+        # This is because it uses the same logic in the callback
+
+        # Adding something already seen
+        m.parameters['recursive'] = m
+        size5 = sys.getsizeof(m)
+
+        # Check that size increases (for key)
+        self.assertLess(size4, size5)
+
+        # Size difference should be slightly more than the size of key
+        # size of value is skipped because it is already seen
+        # The difference is overhead for the dict
+        diff = size5 - size4
+        sum_of_parts = sys.getsizeof('recursive')
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
 
     def test_templates(self):
         import prog_model_template
@@ -506,11 +535,11 @@ class TestModels(unittest.TestCase):
             return {'i1': 1, 'i2': 2.1}
         (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         named_results = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-        self.assertEquals(times, named_results.times)
-        self.assertEquals(inputs, named_results.inputs)
-        self.assertEquals(states, named_results.states)
-        self.assertEquals(outputs, named_results.outputs)
-        self.assertEquals(event_states, named_results.event_states)
+        self.assertEqual(times, named_results.times)
+        self.assertEqual(inputs, named_results.inputs)
+        self.assertEqual(states, named_results.states)
+        self.assertEqual(outputs, named_results.outputs)
+        self.assertEqual(event_states, named_results.event_states)
         
     def test_next_time_fcn(self):
         m = MockProgModel(process_noise = 0.0)
@@ -1074,7 +1103,6 @@ class TestModels(unittest.TestCase):
 
     def test_composite_broken(self):
         m1 = OneInputOneOutputNoEventLM()
-
         # Insufficient number of models
         with self.assertRaises(ValueError):
             CompositeModel([])
@@ -1133,7 +1161,7 @@ class TestModels(unittest.TestCase):
             # extra
             CompositeModel([m1, m1], outputs=['OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1', 'z1'])
 
-    def test_composite(self):
+    def test_composite(self):        
         m1 = OneInputOneOutputNoEventLM()
         m2 = OneInputNoOutputOneEventLM()
         m1_withpm = OneInputOneOutputNoEventLMPM()
@@ -1280,6 +1308,32 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'m1.u1',})
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
+    
+    # Fill parameters with different types of objects instead
+    def test_parameter_equality(self):
+
+        m1 = LinearThrownObject()
+        m2 = LinearThrownObject()
+
+        self.assertTrue(m1.parameters == m2.parameters) #Checking to see if the parameters are equal
+        self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
+
+        m3 = LinearThrownDiffThrowingSpeed() # A model with a different throwing speed
+        self.assertFalse(m1.parameters == m3.parameters)
+        self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
+
+        m4 = LinearThrownObjectDiffDefaultParams() # Model with an extra default parameter.
+
+        self.assertFalse(m1.parameters == m4.parameters)
+        self.assertFalse(m4.parameters == m1.parameters) # checking both directions
+
+        m5 = LinearThrownObjectUpdatedInitalizedMethod() # Model with incorrectly initalized throwing height, but same parameters
+
+        self.assertFalse(m1.parameters == m5.parameters) 
+        self.assertFalse(m5.parameters == m1.parameters) 
+
+        self.assertTrue(m1.parameters == m2.parameters) # Checking to see previous equal statements stay the same
+        self.assertTrue(m2.parameters == m1.parameters)
 
 # This allows the module to be executed directly
 def run_tests():

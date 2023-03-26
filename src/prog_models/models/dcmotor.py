@@ -8,7 +8,7 @@ from prog_models import PrognosticsModel
 RAD_TO_DEG = 180/np.pi
 PI2 = 2 * np.pi
 
-# Support Functions
+
 def backemf(theta):
     """
     Backemf for the current opsition of rotor (theta)
@@ -23,7 +23,7 @@ def backemf(theta):
     tuple[float, float, float]: f_a, f_b, f_c
         f_a, f_b, f_c are the three components of the backemf
     """
-    theta *= RAD_TO_DEG # convert rad to deg
+    theta *= RAD_TO_DEG  # convert rad to deg
     if 0. <= theta <= 60:
         return (1, -1, -(1/30)*theta+1)
     if 60 < theta <= 120:
@@ -156,18 +156,18 @@ class DCMotor(PrognosticsModel):
     default_parameters = {
         # motor parameters
         'L': 83e-6,  # (H) inductance
-        'M': 0, # (H) Mutual inductance
-        'R': 0.081, # (Ohm) Resistance
-        'K': 0.0265, # (V/rad/sec)  back emf constant / Torque constant (Nm/A) 
-        'B': 0, # Nm/(rad/s) Friction in motor / Damping (Not a function of thrust)
-        'Po': 28, # no of poles in rotor
+        'M': 0,  # (H) Mutual inductance
+        'R': 0.081,  # (Ohm) Resistance
+        'K': 0.0265,  # (V/rad/sec)  back emf constant / Torque constant (Nm/A) 
+        'B': 0,  # Nm/(rad/s) Friction in motor / Damping (Not a function of thrust)
+        'Po': 28,  # no of poles in rotor
 
-        # Load parameters 
-        'J': 26.967e-6, # (Kg*m^2) Load moment of inertia (neglecting motor shaft inertia)
+        # Load parameters
+        'J': 26.967e-6,  # (Kg*m^2) Load moment of inertia (neglecting motor shaft inertia)
 
         # Matricies
         'Cc': np.array([[1, 1, 1, 1, 1]], dtype=np.float64),
-        'Dc': np.array([0,0,0,0], dtype=np.float64),
+        'Dc': np.array([0, 0, 0, 0], dtype=np.float64),
 
         # Initial State
         'x0': {
@@ -191,12 +191,11 @@ class DCMotor(PrognosticsModel):
         Ac[3][2] *= F_c
         # TODO(CT): Move F_* to U_vector
 
-        dxdt = np.dot(Ac, x.matrix) + np.dot(self.parameters['Bc'], u.matrix) 
-        x.matrix +=  dxdt * dt  # Update inplace
+        dxdt = np.dot(Ac, x.matrix) + np.dot(self.parameters['Bc'], u.matrix)
+        x.matrix += dxdt * dt  # Update inplace
         x.matrix[4] %= PI2  # Wrap angle
 
         return x
 
     def output(self, x):
         return self.OutputContainer(x.matrix[3:])
-        
