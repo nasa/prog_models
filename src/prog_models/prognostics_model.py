@@ -6,7 +6,6 @@ from collections import abc, namedtuple
 from copy import deepcopy
 import itertools
 import json
-import re
 from numbers import Number
 import numpy as np
 from typing import Callable, Iterable, List, Sequence
@@ -1028,7 +1027,6 @@ class PrognosticsModel(ABC):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
         
-
         if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around next_state
             def next_state(x, u, dt):
@@ -1256,26 +1254,29 @@ class PrognosticsModel(ABC):
             if not isinstance(outputs[0], (Sequence, np.ndarray)):
                 outputs = [outputs]
 
-        if runs is None and (times is None or inputs is None or outputs is None):
-            if times is None and inputs is None and outputs is None:
-                # estimate paramters requires times, inputs and outputs. Missing x
-                raise ValueError("Must pass in times, inputs, and outputs")
-            if times is None and inputs is None:
-                raise ValueError("Must pass in times and inputs")
-            if times is None and outputs is None:
-                raise ValueError("Must pass in times and outputs")
-            if inputs is None and outputs is None:
-                raise ValueError("Must pass in inpupts and outputs")
-            if times is None:
-                raise ValueError("Must pass in times")
-            if inputs is None:
-                raise ValueError("Must pass in inputs")
-            if outputs is None:
-                raise ValueError("Must pass in outputs")
-            raise ValueError("Must provide either runs")
+        # If depreciated feature runs is not provided (will be removed in future version)
         if runs is None:
-            if len(times) != len(inputs) or len(outputs) != len(inputs):
-                raise ValueError("Times, inputs, and outputs must be same length")
+            # Check if required times, inputs, and outputs are present
+            missing_args = []
+            for arg in ('times', 'inputs', 'outputs'):
+                # convert = type(locals.get(arg))
+                if locals().get(arg) is None:
+                    missing_args.append(arg)
+                if arg not in missing_args:
+                    convert = list(locals().get(arg))
+                    if convert == []: missing_args.append(arg)
+            if len(missing_args) > 0:
+                # Concat into string
+                missing_args_str = ', '.join(missing_args)
+                # missing_args_str = missing_args_str[:-2] # Remove last comma and space
+                raise ValueError(f"Missing keyword arguments {missing_args_str}")
+            
+            # Check lengths of args
+            if len(times) != len(inputs): 
+                raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
+            if len(times) == 0:
+                # Since inputs, times, and outputs are already confirmed to be the same length, only check that one is not empty
+                raise ValueError(f"Times, inputs, and outputs must have at least one element")
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
@@ -1312,7 +1313,6 @@ class PrognosticsModel(ABC):
             if len(times) == 0:
                 raise ValueError(f"Times, inputs, and outputs for Run {i} must have at least one element")
             if not isinstance(inputs[0], self.InputContainer):
-                # Error for recent test occurs here.
                 inputs = [self.InputContainer(u_i) for u_i in inputs]
                 has_changed = True
             if isinstance(outputs, np.ndarray):
