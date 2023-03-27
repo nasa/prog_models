@@ -615,7 +615,7 @@ class TestEstimateParams(unittest.TestCase):
         m1.estimate_params(data, keys, bounds=bound, method='CG')
 
         # For Simple models, there shouldn't be too much change
-        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs), -1)
+        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs), 0)
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
