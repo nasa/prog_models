@@ -1222,15 +1222,20 @@ class PrognosticsModel(ABC):
 
         See: examples.param_est
         """
-        from scipy.optimize import minimize
+        from scipy.optimize import minimize, show_options
 
         if keys is None:
             # if no keys provided, use all
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
         
+        if isinstance(keys, set):
+            raise ValueError(f"Can not pass in keys as a Set. Sets are unordered by construction, so bounds may be out of order.")
+        
         for key in keys:
+            # if isinstance(key, Sequence):
+            #     raise ValueError(f"Key '{key}' cannot be a Sequence")
             if key not in self.parameters:
-                raise ValueError("Passing in key that does not exist.")
+                raise ValueError(f"Key '{key}' not in model parameters")
 
         config = {
             'method': 'nelder-mead',
@@ -1250,25 +1255,27 @@ class PrognosticsModel(ABC):
                 inputs = [inputs]
             if not isinstance(outputs[0], (Sequence, np.ndarray)):
                 outputs = [outputs]
-        
-        if runs is None:
-            # If depreciated feature runs is not provided (will be removed in future version)
 
-            # Check if required times, inputs, and outputs are present
-            missing_args = [arg for arg in ('times', 'inputs', 'outputs') if locals().get(arg) is None]
-            if len(missing_args) > 0:
-                # Concat into string
-                missing_args_str = ', '.join(missing_args)
-                # missing_args_str = missing_args_str[:-2] # Remove last comma and space
-                raise ValueError(f"Missing keyword arguments {missing_args_str}")
-            
-            # Check lengths of args
-            if len(times) != len(inputs): 
-                raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
-            if len(times) == 0:
-                # since they are all the same length, does not matter as much
-                raise ValueError(f"Times, inputs, and outputs must have at least one element")
-            
+        if runs is None and (times is None or inputs is None or outputs is None):
+            if times is None and inputs is None and outputs is None:
+                # estimate paramters requires times, inputs and outputs. Missing x
+                raise ValueError("Must pass in times, inputs, and outputs")
+            if times is None and inputs is None:
+                raise ValueError("Must pass in times and inputs")
+            if times is None and outputs is None:
+                raise ValueError("Must pass in times and outputs")
+            if inputs is None and outputs is None:
+                raise ValueError("Must pass in inpupts and outputs")
+            if times is None:
+                raise ValueError("Must pass in times")
+            if inputs is None:
+                raise ValueError("Must pass in inputs")
+            if outputs is None:
+                raise ValueError("Must pass in outputs")
+            raise ValueError("Must provide either runs")
+        if runs is None:
+            if len(times) != len(inputs) or len(outputs) != len(inputs):
+                raise ValueError("Times, inputs, and outputs must be same length")
             # For now- convert to runs
             runs = [(t, u, z) for t, u, z in zip(times, inputs, outputs)]
 
