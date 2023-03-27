@@ -1259,12 +1259,8 @@ class PrognosticsModel(ABC):
             # Check if required times, inputs, and outputs are present
             missing_args = []
             for arg in ('times', 'inputs', 'outputs'):
-                # convert = type(locals.get(arg))
                 if locals().get(arg) is None:
                     missing_args.append(arg)
-                if arg not in missing_args:
-                    convert = list(locals().get(arg))
-                    if convert == []: missing_args.append(arg)
             if len(missing_args) > 0:
                 # Concat into string
                 missing_args_str = ', '.join(missing_args)
@@ -1272,7 +1268,7 @@ class PrognosticsModel(ABC):
                 raise ValueError(f"Missing keyword arguments {missing_args_str}")
             
             # Check lengths of args
-            if len(times) != len(inputs): 
+            if len(times) != len(inputs) or len(inputs) != len(outputs): 
                 raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if len(times) == 0:
                 # Since inputs, times, and outputs are already confirmed to be the same length, only check that one is not empty
