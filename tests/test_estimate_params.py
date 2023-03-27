@@ -824,8 +824,13 @@ class TestEstimateParams(unittest.TestCase):
 
         check = m.calc_error(results.times, results.inputs, results.outputs)
 
-        print('x')
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
+        
+        check2 = m.calc_error(results.times, results.inputs, results.outputs)
 
+        print('x')
 
 
     
