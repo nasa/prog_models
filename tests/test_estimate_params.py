@@ -2,14 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from copy import deepcopy
-import io
 import numpy as np
 import unittest
 
-# This ensures that the directory containing ProgModelTemplate is in the python search directory
-
 from prog_models import *
 from prog_models.models import *
+
 
 class TestEstimateParams(unittest.TestCase):
     def test_estimate_params_works(self):
@@ -60,9 +58,7 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2, "Limits of the Bounds do not include the true values")
         
-        # self.assertTrue(m.parameters == gt)
-
-
+        
     def test_estimate_params(self):
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
