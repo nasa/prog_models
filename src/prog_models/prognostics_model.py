@@ -1238,7 +1238,8 @@ class PrognosticsModel(ABC):
         config = {
             'method': 'nelder-mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8}
+            'options': {'xatol': 1e-8},
+            'tol': 1e-9
         }
         config.update(kwargs)
 
@@ -1331,7 +1332,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'])
+        res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'], tol=config['tol'])
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
 

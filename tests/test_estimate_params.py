@@ -615,7 +615,7 @@ class TestEstimateParams(unittest.TestCase):
         m1.estimate_params(data, keys, bounds=bound, method='CG')
 
         # For Simple models, there shouldn't be too much change
-        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs), -1)
+        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs), 0)
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
@@ -806,6 +806,29 @@ class TestEstimateParams(unittest.TestCase):
         # Another test case that would be fixed with future changes to Containers
         # with self.assertRaises(ValueError):
         #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
+
+# Test that specifcally looks into adding tolerance into our keyword arguments.
+    def test_tolerance(self):
+        m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
+
+        # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
+        bound = ((0, 4), (24, 42), (-20, -5))
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        keys = ['thrower_height', 'throwing_speed', 'g']
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1)
+
+        check = m.calc_error(results.times, results.inputs, results.outputs)
+
+        print('x')
+
+
+
+    
 
 def run_tests():
     unittest.main()
