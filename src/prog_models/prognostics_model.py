@@ -1236,7 +1236,7 @@ class PrognosticsModel(ABC):
                 raise ValueError(f"Key '{key}' not in model parameters")
 
         config = {
-            'method': 'nelder-mead',
+            'method': 'Nelder-Mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
             'options': {'xatol': 1e-8},
             'tol': 1e-9

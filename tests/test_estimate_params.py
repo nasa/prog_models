@@ -817,23 +817,30 @@ class TestEstimateParams(unittest.TestCase):
         # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
         bound = ((0, 4), (24, 42), (-20, -5))
         # Now lets reset some parameters
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
+        m.parameters['thrower_height'] = 5
+        m.parameters['throwing_speed'] = 21
+        m.parameters['g'] = 10
         keys = ['thrower_height', 'throwing_speed', 'g']
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1)
+
+        # High tolerance would result in a higher calc_error
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 100)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
         check = m.calc_error(results.times, results.inputs, results.outputs)
 
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
+        m.parameters['thrower_height'] = 5
+        m.parameters['throwing_speed'] = 21
+        m.parameters['g'] = 10
+        # Low tolernace would result in a lower calc_error
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         
         check2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        print('x')
+        # self.assertLess(check2, check)
 
-
-    
 
 def run_tests():
     unittest.main()
