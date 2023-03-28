@@ -332,3 +332,45 @@ Q - str to x format stays consistent with future releases?
 # in between 0-1, then we would have a negative number, which may also be a problem (-inf, is returned whereas, we would have nan)
 # finally, these values are not directly influenced by our change, however, this is probably being changed away from default parameters,
 # from dx() parameter in prognostics_model.py
+
+
+There is an upperbound for tolerance values, tpyically 1e-3 for TNC and Nelder-mead
+
+
+
+
+        m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        gt = m.parameters.copy()
+
+        # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
+        bound = ((0, 4), (24, 42), (-20, -5))
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = -8
+        keys = ['thrower_height', 'throwing_speed', 'g']
+
+        bound = ((0, 4), (24,42), (-20, -5))
+
+
+        # High tolerance would result in a higher calc_error
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
+                          bounds=bound, keys = keys, tol = 100)
+        if all(abs(m.parameters[key] - gt[key]) <= 0.02 for key in keys):
+            raise ValueError("m.parameter shouldn't be too close to the original parameters")
+        check = m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Reset parameters
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = -19.9
+
+        # Low tolernace would result in a lower calc_error
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
+                          bounds=bound, keys = keys, tol = 1e-9)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        check2 = m.calc_error(results.times, results.inputs, results.outputs)
+
+Found local Min/Max even though there should not be one

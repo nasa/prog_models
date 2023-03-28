@@ -1238,8 +1238,9 @@ class PrognosticsModel(ABC):
         config = {
             'method': 'Nelder-Mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8},
-            'tol': 1e-9
+            'tol': 1e-8,
+            'options': None
+            # 'options': {'xatol': 1e-8},
         }
         config.update(kwargs)
 
@@ -1280,7 +1281,10 @@ class PrognosticsModel(ABC):
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
-            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys] 
+            for key in config['bounds'].keys():
+                if key not in self.parameters:
+                    warn(f"{key} is not a valid parameter that should be passed in to the bounds") 
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
