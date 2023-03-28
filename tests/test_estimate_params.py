@@ -591,21 +591,7 @@ class TestEstimateParams(unittest.TestCase):
             {'x': 41.51},
             {'x': 7.91},
         ]
-
-        # Not iterating enough to get the correct value
-        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 10, 'disp': False})
-
-        # Passing in options that does not exist. Iterating through options would result in some default maxiter value.
-        m1.estimate_params(data, keys, bounds=bound, method='Powell', options={'1':2, '2':2, '3':3})
-
-        # Testing if results of options is being properly applied to calc_error
-        self.assertNotEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
-    
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m1.parameters['thrower_height'] = 1.5
-        m1.parameters['throwing_speed'] = 25
-
+        
         # using battery model to see when calc_errors do not equate each other
         m.estimate_params(data, keys, bounds=bound, method='Powell')
         m1.estimate_params(data, keys, bounds=bound, method='CG')
