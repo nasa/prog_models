@@ -579,6 +579,7 @@ class TestEstimateParams(unittest.TestCase):
 
         times = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         inputs = [{}]*9
+        # Garbage values being passed in.
         outputs = [
             {'x': 1.83},
             {'x': 36.95},
@@ -591,16 +592,11 @@ class TestEstimateParams(unittest.TestCase):
             {'x': 7.91},
         ]
 
-        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 50, 'disp': False})
-        # for key in keys:
-        #     self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        # Not iterating enough to get the correct value
+        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 10, 'disp': False})
 
+        # Passing in options that does not exist. Iterating through options would result in some default maxiter value.
         m1.estimate_params(data, keys, bounds=bound, method='Powell', options={'1':2, '2':2, '3':3})
-        for key in keys:
-            if abs(m.parameters[key] - gt[key]) > 0.02:
-                self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Ask questions about what exactly is method doing
 
         # Testing if results of options is being properly applied to calc_error
         self.assertNotEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
