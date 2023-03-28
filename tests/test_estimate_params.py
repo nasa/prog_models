@@ -809,14 +809,13 @@ class TestEstimateParams(unittest.TestCase):
         gt = m.parameters.copy()
 
         # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
-        bound = ((0, 4), (24, 42), (-20, -5))
         # Now lets reset some parameters
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = -8
         keys = ['thrower_height', 'throwing_speed', 'g']
 
-        bound = ((0, 4), (24,42), (-20, -5))
+        bound = ((0, 4), (24,42), (-20, -9))
 
 
         # High tolerance would result in a higher calc_error
@@ -843,7 +842,7 @@ class TestEstimateParams(unittest.TestCase):
         # Note that tolerance does not convert here
         with self.assertRaises(TypeError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                              bounds=bound, keys = keys ,tol = "12")
+                              bounds=bound, keys = keys , tol = "12")
 
         # When tolerance is in a list, it rasies a ValueError.
 
