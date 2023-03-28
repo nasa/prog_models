@@ -577,6 +577,37 @@ class TestEstimateParams(unittest.TestCase):
         m1.parameters['thrower_height'] = 1.5
         m1.parameters['throwing_speed'] = 25
 
+        
+        # using battery model to see when calc_errors do not equate each other
+        m.estimate_params(data, keys, bounds=bound, method='Powell')
+        check1 = m.calc_error(results.times, results.inputs, results.outputs)
+        m1.estimate_params(data, keys, bounds=bound, method='CG')
+
+        # For Simple models, there shouldn't be too much change
+        self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs), 
+                            m1.calc_error(results.times, results.inputs, results.outputs))
+        
+        # For Simple models, there shouldn't be too much change
+
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+
+        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 500})
+        self.assertLess(m.calc_error(results.times, results.inputs, results.outputs), check1)
+
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m1.parameters['thrower_height'] = 1.5
+        m1.parameters['throwing_speed'] = 25
+        
+        # Increasing total amount of iterations, having different methods would matter proportionally.
+        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 50, 'disp': False})
+        m1.estimate_params(data, keys, bounds=bound, method='CG', options={'maxiter': 50, 'disp': False})
+
+        self.assertNotAlmostEqual(m.calc_error(results.times, results.inputs, results.outputs),
+                                m1.calc_error(results.times, results.inputs, results.outputs))
+
+        m = ThrownObject()
         times = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         inputs = [{}]*9
         # Garbage values being passed in.
@@ -591,26 +622,6 @@ class TestEstimateParams(unittest.TestCase):
             {'x': 41.51},
             {'x': 7.91},
         ]
-        
-        # using battery model to see when calc_errors do not equate each other
-        m.estimate_params(data, keys, bounds=bound, method='Powell')
-        m1.estimate_params(data, keys, bounds=bound, method='CG')
-
-        # For Simple models, there shouldn't be too much change
-        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs), 0)
-
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m1.parameters['thrower_height'] = 1.5
-        m1.parameters['throwing_speed'] = 25
-        
-        # Increasing total amount of iterations, having different methods would matter proportionally.
-        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 50, 'disp': False})
-        m1.estimate_params(data, keys, bounds=bound, method='CG', options={'maxiter': 50, 'disp': False})
-
-        self.assertNotAlmostEqual(m.calc_error(times, inputs, outputs), m1.calc_error(times, inputs, outputs))
-
-        m = ThrownObject()
         # Defining wrongIntuptLen to test parameter length tests.
         wrongInputLen = [{}]*8
 
