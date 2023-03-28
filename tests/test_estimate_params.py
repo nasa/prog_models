@@ -829,7 +829,7 @@ class TestEstimateParams(unittest.TestCase):
         # Reset parameters
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = -19.9
+        m.parameters['g'] = -8
 
         # Low tolernace would result in a lower calc_error
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
@@ -908,7 +908,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys,method = 'TNC', tol = 1e-3)
+                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-3)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 3.1
