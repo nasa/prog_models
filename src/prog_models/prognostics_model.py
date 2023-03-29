@@ -7,6 +7,7 @@ from copy import deepcopy
 import itertools
 import json
 from numbers import Number
+import math
 import numpy as np
 from typing import Callable, Iterable, List, Sequence
 from warnings import warn
@@ -1144,7 +1145,7 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], configurable = 0.95, **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1176,10 +1177,16 @@ class PrognosticsModel(ABC):
         if not isinstance(outputs[0], self.OutputContainer):
             outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
+        # Creates a value that would correctly have everything set
+        if configurable > 1:
+            configurable = configurable / 10
+
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
         z_obs = self.output(x)
+        configThreshold = math.floor(configurable * len(times))
+        configCount = 0
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + dt, t)
@@ -1189,11 +1196,15 @@ class PrognosticsModel(ABC):
                     # Only recalculate if required
                     z_obs = self.output(x)
             if not (None in z_obs.matrix or None in z.matrix):
-                if any(np.isnan(z_obs.matrix)):
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
-                    break
+                if any (np.isnan(z_obs.matrix)):
+                    if configCount < configThreshold:
+                        raise ValueError("NaN Error has occured")
+                    else:
+                        warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                        break
                 err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
                 counter += 1
+            configCount += 1
 
         return err_total/counter
     

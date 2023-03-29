@@ -794,6 +794,8 @@ class TestEstimateParams(unittest.TestCase):
 
         m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
 
+        xd = m.calc_error(times=[time1, time2], inputs=inputs, outputs=outputs)
+
         # Another test case that would be fixed with future changes to Containers
         # with self.assertRaises(ValueError):
         #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
