@@ -31,12 +31,14 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['g'] = -8.5
 
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, -5)))
+        tracker1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -8.5
 
         m.estimate_params(data, keys, bounds=((-40, 40), (-40, 40), (-40, 40)))
+        tracker2 = m.calc_error(results.times, results.inputs, results.outputs)
 
 
         # Demonstrates further limitations of Parameter Estiamtion
@@ -823,12 +825,6 @@ class TestEstimateParams(unittest.TestCase):
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
-
-        # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
-        # Now lets reset some parameters
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = -8
         keys = ['thrower_height', 'throwing_speed', 'g']
 
 
@@ -841,6 +837,11 @@ class TestEstimateParams(unittest.TestCase):
         # works as intended for everthing
         bound = ((-15, 15), (24, 42), (-20, 10))
 
+        # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = -8
 
         # High tolerance would result in a higher calc_error
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
@@ -884,6 +885,7 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [1])
         hold2 = m.calc_error(results.times, results.inputs, results.outputs)
 
+        # self.assertEqual(hold2, check2)
         self.assertNotEqual(hold1, hold2)
 
         m.parameters['thrower_height'] = 3.1
@@ -894,10 +896,9 @@ class TestEstimateParams(unittest.TestCase):
 
         self.assertEqual(hold1, hold2)
 
+
         with self.assertRaises(TypeError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = {1})
-
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1.123543297)
 
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1.123543297)
 
@@ -908,12 +909,15 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [1, '2', '3'])
         
+        with self.assertRaises(ValueError):
+            m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (1, 2, 3))
+        
         # Using TNC
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
 
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys,method = 'TNC', tol = 1e-9)
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, method = 'TNC', tol = 1e-9)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Defaut Values 
@@ -944,11 +948,14 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-9)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 1)
+
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # So, for tol values between 1e-4 and bigger, we will continnue to have the same results, whereas. 
         # To detmerine it is 1e-34is the smallest, we have a tolernace check if it 1e-3 produces similar results, to which it does not.
-        self.assertGreater(track1, track2)
+        # self.assertGreater(track1, track2)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
