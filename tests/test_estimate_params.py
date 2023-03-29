@@ -963,7 +963,6 @@ class TestEstimateParams(unittest.TestCase):
         self.assertEqual(override2, override3)
 
 
-
 def run_tests():
     unittest.main()
     
