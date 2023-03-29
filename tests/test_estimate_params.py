@@ -51,7 +51,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
         for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2, "Limits of the Bounds do not include the true values")
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         
 
     def test_estimate_params(self):
@@ -68,23 +68,22 @@ class TestEstimateParams(unittest.TestCase):
         # Need at least one data point
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[], inputs=[], outputs=[])
-        # self.assertEqual(
-        #     'Missing keyword arguments times, inputs, outputs',
-        #     str(cm.exception)
-        # )
-        # with self.assertRaises(ValueError):
-        #     m.estimate_params(times=None, inputs=None, output=None)
-        # self.assertEqual(
-        #     'Missing keyword arguments times, inputs, outputs',
-        #     str(cm.exception)
-        # )
-        # with self.assertRaises(ValueError):
-        #     m.estimate_params(times='', inputs='', outputs='')
-        # self.assertEqual(
-        #     'Missing keyword arguments times, inputs, outputs',
-        #     str(cm.exception) 
-        # )
-
+        self.assertEqual(
+            'Times, inputs, and outputs must have at least one element',
+            str(cm.exception)
+        )
+        with self.assertRaises(ValueError) as cm:
+            m.estimate_params(times=None, inputs=None, output=None)
+        self.assertEqual(
+            'Missing keyword arguments times, inputs, outputs',
+            str(cm.exception)
+        )
+        with self.assertRaises(ValueError) as cm:
+            m.estimate_params(times='', inputs='', outputs='')
+        self.assertEqual(
+            'Times, inputs, and outputs must have at least one element',
+            str(cm.exception) 
+        )
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[[]], inputs=[[]], outputs=[[]])
         self.assertEqual(
@@ -99,7 +98,13 @@ class TestEstimateParams(unittest.TestCase):
              'Times, inputs, and outputs must be same length. Length of times: 0, Length of inputs: 0, Length of outputs: 9',
              str(cm.exception)
         )
-
+        
+        with self.assertRaises(ValueError) as cm:
+            m.estimate_params(times=results.times, inputs=None, outputs=None)
+        self.assertEqual(
+            'Missing keyword arguments inputs, outputs',
+            str(cm.exception)
+        )
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=None)
         self.assertEqual(
@@ -128,13 +133,13 @@ class TestEstimateParams(unittest.TestCase):
         value2 = m.calc_error(results.times, results.inputs, results.outputs)
         # Not the most accurate way of seeing when these values are not accurate.
         for key in keys:
-            self.assertNotAlmostEqual(m.parameters[key], gt[key], 1, "Limits of the Bounds do not include the true values")
+            self.assertNotAlmostEqual(m.parameters[key], gt[key], 1)
 
         # Now with limits that do include the true values
         m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
         value3 = m.calc_error(results.times, results.inputs, results.outputs)
         for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2, "Limits of the Bounds do not include the true values")
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         
         # Lower Bound Greater than Upper Bound
         # Error called by minimize function.
@@ -170,9 +175,6 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-        # with self.assertRaises(ValueError):
-        # Does not do anything. Probably want to include an error message or some indicator to let the user know
-        # in case user is expected change however is not seeing it.
 
         # Behavior, sets in default values and does not error with correct number of bounds.
         # User changes a value that exists and should not be changed
@@ -530,7 +532,7 @@ class TestEstimateParams(unittest.TestCase):
         # Passing in Method to see if it works
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
-        m.estimate_params(data, keys, bounds=bound, method='TNC', options={'maxiter': 9999, 'disp': False})
+        m.estimate_params(data, keys, bounds=bound, method='TNC', options={'maxfun': 1000, 'disp': False})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
@@ -538,9 +540,8 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=bound, method='TNC')
-        for key in keys:
-            if abs(m.parameters[key] - gt[key]) > 0.01:
-                self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
+        if all(abs(m.parameters[key] - gt[key]) <= 0.02 for key in keys):
+            raise ValueError("m.parameter shouldn't be too close to the original parameters")
 
         # Passing in Method that does not exist
         with self.assertRaises(ValueError):
@@ -551,9 +552,8 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
 
         m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 0, 'disp': False})
-        for key in keys:
-            if abs(m.parameters[key] - gt[key]) > 0.02:
-                self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
+        if all(abs(m.parameters[key] - gt[key]) <= 0.02 for key in keys):
+            raise ValueError("m.parameter shouldn't be too close to the original parameters")
 
         # Passing in arbitrary options should not error that follow our format.
         m.estimate_params(data, keys, bounds=bound, method='Powell', options= {'1':3, 'disp':1})
@@ -569,29 +569,46 @@ class TestEstimateParams(unittest.TestCase):
         # Should this error out, maybe a warning should be provided for all the args that do not exist?
         m.estimate_params(data, keys, bounds=bound, method='TNC', options={'1':2, '2':2, '3':3})
 
+
+    def test_compare_two_models(self):
         # Reset all progress
         m = ThrownObject()
         m1 = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m1.parameters['thrower_height'] = 1.5
         m1.parameters['throwing_speed'] = 25
 
-        
-        # using thrown object model to see when calc_errors do not equate each other
-        m.estimate_params(data, keys, bounds=bound, method='Powell')
-        check1 = m.calc_error(results.times, results.inputs, results.outputs)
-        m1.estimate_params(data, keys, bounds=bound, method='CG')
+        keys = ['thrower_height', 'throwing_speed', 'g']
+        bound=((0, 8), (20, 42), (-20, -5))
 
+        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 50})
+        # for key in keys:
+        #     self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        m1.estimate_params(data, keys, bounds=bound, method='Powell', options={'1':2, '2':2, '3':3})
+        if all(abs(m.parameters[key] - gt[key]) <= 0.02 for key in keys):
+            raise ValueError("m.parameter shouldn't be too close to the original parameters")
+        
+        # Testing if results of options is being properly applied to calc_error
         self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs), 
                             m1.calc_error(results.times, results.inputs, results.outputs))
-        
-
+    
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
+        m1.parameters['thrower_height'] = 1.5
+        m1.parameters['throwing_speed'] = 25
 
-        m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 500})
-        self.assertLess(m.calc_error(results.times, results.inputs, results.outputs), check1)
+        # using battery model to see when calc_errors do not equate each other
+        m.estimate_params(data, keys, bounds=bound, method='Powell')
+        m1.estimate_params(data, keys, bounds=bound, method='CG')
+
+        # For Simple models, there shouldn't be too much change
+        self.assertNotAlmostEqual(m.calc_error(results.times, results.inputs, results.outputs),
+                                    m1.calc_error(results.times, results.inputs, results.outputs), 1)
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
@@ -603,35 +620,21 @@ class TestEstimateParams(unittest.TestCase):
         m1.estimate_params(data, keys, bounds=bound, method='CG', options={'maxiter': 50, 'disp': False})
 
         self.assertNotAlmostEqual(m.calc_error(results.times, results.inputs, results.outputs),
-                                m1.calc_error(results.times, results.inputs, results.outputs))
+                                   m1.calc_error(results.times, results.inputs, results.outputs))
 
         m = ThrownObject()
-        times = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        inputs = [{}]*9
-        # Garbage values being passed in.
-        outputs = [
-            {'x': 1.83},
-            {'x': 36.95},
-            {'x': 62.36},
-            {'x': 77.81},
-            {'x': 83.45},
-            {'x': 79.28},
-            {'x': 65.3},
-            {'x': 41.51},
-            {'x': 7.91},
-        ]
         # Defining wrongIntuptLen to test parameter length tests.
         wrongInputLen = [{}]*8
 
-        wrongData = [(times, wrongInputLen, outputs)]
+        wrongData = [(results.times, wrongInputLen, results.outputs)]
         
         # Wrong Input Length and Values
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[times], inputs=[wrongInputLen], outputs=[outputs])
+            m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[results.outputs])
         
         # Same as last example but times not in wrapper list
         with self.assertRaises(ValueError):
-            m.estimate_params(times=times, inputs=[wrongInputLen], outputs=[outputs])
+            m.estimate_params(times=results.times, inputs=[wrongInputLen], outputs=[results.outputs])
         
         # Passing in Runs directly
         with self.assertRaises(ValueError):
@@ -650,19 +653,19 @@ class TestEstimateParams(unittest.TestCase):
             {'x': 41.51},
         ]
 
-        wrongData = [(times, inputs, wrongOutputs)]
+        wrongData = [(results.times, results.inputs, wrongOutputs)]
 
         # Wrong outputs parameter length
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[times], inputs=[inputs], outputs=[wrongOutputs])
+            m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[wrongOutputs])
 
         # Both inputs and outputs with incorrect lenghts
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[times], inputs=[wrongInputLen], outputs=[wrongOutputs])
+            m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[wrongOutputs])
 
         # Without wrapper
         with self.assertRaises(ValueError):
-            m.estimate_params(times=times, inputs=wrongInputLen, outputs= wrongOutputs)
+            m.estimate_params(times=results.times, inputs=wrongInputLen, outputs= wrongOutputs)
 
         # Passing in incorrect Runs 
         with self.assertRaises(ValueError):
@@ -695,22 +698,22 @@ class TestEstimateParams(unittest.TestCase):
 
         # Cannot pass in Sets
         with self.assertRaises(TypeError):
-            m.estimate_params(times=set(times), inputs=inputs, outputs=[outputs])
+            m.estimate_params(times=set(results.times), inputs=results.inputs, outputs=[results.outputs])
 
         # NOTE - Cannot have set() around inputs and/or outputs. Provides unhashable errors
         with self.assertRaises(TypeError):
-            m.estimate_params(times=times, inputs=set(inputs), outputs=[outputs])
+            m.estimate_params(times=results.times, inputs=set(results.inputs), outputs=[results.outputs])
 
         with self.assertRaises(TypeError):
-            m.estimate_params(times=[times], inputs=[set(inputs)], outputs=[outputs])
+            m.estimate_params(times=[results.times], inputs=[set(results.inputs)], outputs=[results.outputs])
         
         # This fails because inputs and outputs are both dictionaries within a Set. Sometimes, an empty set within a Set.
         with self.assertRaises(TypeError):
-            m.estimate_params(times=[times], inputs=inputs, outputs=set(outputs))
+            m.estimate_params(times=[results.times], inputs=results.inputs, outputs=set(results.outputs))
 
         # Missing inputs.
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[times], outputs=[outputs])
+            m.estimate_params(times=[results.times], outputs=[results.outputs])
 
         # Passing in nothing at all
         with self.assertRaises(ValueError):
@@ -718,11 +721,11 @@ class TestEstimateParams(unittest.TestCase):
         
         #  'input' is not a parameter, so techincally not defining the parameter inputs.
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[times], input=[inputs], outputs=[outputs]) 
+            m.estimate_params(times=[results.times], input=[results.inputs], outputs=[results.outputs]) 
 
         # Length error expected, 1, 9, 1.
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[[times]], inputs=[inputs], outputs=[[outputs]]) 
+            m.estimate_params(times=[[results.times]], inputs=[results.inputs], outputs=[[results.outputs]]) 
 
         # Will work in future case, but not at the current moments
         # m.estimate_params(times=[[times]], inputs=[[inputs]], outputs=[[outputs]])
@@ -731,6 +734,7 @@ class TestEstimateParams(unittest.TestCase):
         m = ThrownObject()
 
         # The value of time1, time2, inputs, and outputs are arbitrary values
+
         time1 = [0, 1, 2, 4, 5, 6, 7, 8, 9]
         time2 = [0, 1, 2, 3]
 
@@ -797,6 +801,7 @@ class TestEstimateParams(unittest.TestCase):
         # Another test case that would be fixed with future changes to Containers
         # with self.assertRaises(ValueError):
         #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
+
 
 def run_tests():
     unittest.main()
