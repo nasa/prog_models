@@ -38,15 +38,11 @@ class TestEstimateParams(unittest.TestCase):
         # Demonstrates further limitations of Parameter Estiamtion
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
-        m.estimate_params(data, keys, bounds=((0, 4), (20, 41.99)))
+        m.estimate_params(data, keys, bounds=((0, 4.5), (21.1234, 41.99)))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-        # Now with limits that do include the true values
-        # only returning the upper bounds? Why after this defined behavior?
-        # m.parameters['throwing_speed'] = 15
 
-        # Or two calls to estimate_params would resolve this issue
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
