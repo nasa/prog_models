@@ -1178,15 +1178,20 @@ class PrognosticsModel(ABC):
             outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
         # Creates a value that would correctly have everything set
+        # Throwing an error or
+        # use default after the warning.
         if configurable > 1:
-            configurable = configurable / 10
+            warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {configurable}. Resetting value to 0.95")
+            configurable = 0.95
 
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
         z_obs = self.output(x)
+
         configThreshold = math.floor(configurable * len(times))
         configCount = 0
+
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
                 t_new = min(t_last + dt, t)
@@ -1198,9 +1203,10 @@ class PrognosticsModel(ABC):
             if not (None in z_obs.matrix or None in z.matrix):
                 if any (np.isnan(z_obs.matrix)):
                     if configCount < configThreshold:
-                        raise ValueError("NaN Error has occured")
+                        raise ValueError("NaN Error has occured") # ?
                     else:
                         warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                        return err_total/counter
                         break
                 err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
                 counter += 1
