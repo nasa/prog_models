@@ -832,10 +832,10 @@ class TestEstimateParams(unittest.TestCase):
         bound = ((0, 4), (24, 42), (-20, -5))
 
         # there seems to be a maximum tolernace before no changes occur
-        bound = ((0, 4), (24, 42), (-20, 10))
+        # bound = ((0, 4), (24, 42), (-20, 10))
 
         # works as intended for everthing
-        bound = ((-15, 15), (24, 42), (-20, 10))
+        # bound = ((-15, 15), (24, 42), (-20, 10))
 
         # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
         # Now lets reset some parameters
@@ -940,7 +940,7 @@ class TestEstimateParams(unittest.TestCase):
         # m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
         #                   bounds=bound, keys=keys, tol = 1e-4)
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
+                          bounds=bound, keys=keys, method = 'dogleg', tol = 1e-4)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 3.1
