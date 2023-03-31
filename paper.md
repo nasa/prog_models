@@ -42,13 +42,7 @@ Prognostics and Health Management (PHM) is a fast-growing field. Successful PHM 
 
 Often, software is written for an ad-hoc single prognostic application and cannot be transferred to others, or is limited in scope. A few related softwares are described here. Simantha is a discrete manufacturing system simulation package that simulates degradation, but it is limted to a Discrete-Time Markov Chain and doesn't include prognostic capabilities [@Simantha]. Lifelines is a survival analysis tool that can be used for reliability analysis to establish fixed-interval maintenance schedules, a different problem than that solved by ProgPy [@davidson_pilon_cameron_2022_7329096].
 
-Lifelines is a python package for survival analysis. Survival analysis is typically an actuary tool, but it can also be used to model the distribution lifespan of machines. This is a reliability tool that helps with the establishment of fixed-interval maintenance schedules, a different problem than the online state estimation and prognostics of ProgPy
-
- 
-
-
-
-Thus, there is a need for a foundational set of efficient tools to enable new PHM technologies. 
+There is a need for a foundational set of efficient tools to enable new PHM technologies. 
 
 ProgPy provides a set of support packages for individuals researching and developing prognostic technologies. ProgPy consists of three packages: prog_models, prog_algs, and prog_server. prog_models provides tools aiding the development, evaluation, simulation, and tuning of prognostic models, whether physics-based or data-driven. prog_models also supports downloading select relevant datasets [@Dataset_RWBattery] [@Dataset_CMAPPS]. prog_algs supports uncertainty representation, state estimation, prognostics, the evaluation and visualization of prognostic results, and the creation of new prognostic algorithms. prog_server is a Service-Oriented Architecture for prognostics and state estimation. prog_server is also distributed with a python client, prog_client. 
 
