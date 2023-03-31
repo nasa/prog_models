@@ -1196,9 +1196,7 @@ class PrognosticsModel(ABC):
         t_last = times[0]
         err_total = 0
         z_obs = self.output(x)
-
         cutoffThreshold = math.floor(stability_tol * len(times))
-        configCount = 0
 
         for t, u, z in zip(times, inputs, outputs):
             while t_last < t:
@@ -1217,7 +1215,6 @@ class PrognosticsModel(ABC):
                         return err_total/counter
                 err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
                 counter += 1
-            configCount += 1
 
         return err_total/counter
     
