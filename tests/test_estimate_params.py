@@ -582,9 +582,9 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=bound)
 
-        # keys = [['thrower_height'], ['throwing_speed'], ['g']]
-        # with self.assertRaises(ValueError):
-        #     m.estimate_params(data, keys, bounds=bound)
+        keys = [['thrower_height'], ['throwing_speed'], ['g']]
+        with self.assertRaises(TypeError):
+            m.estimate_params(data, keys, bounds=bound)
 
     def test_parameters(self):
         m = ThrownObject()
@@ -709,16 +709,13 @@ class TestEstimateParams(unittest.TestCase):
         wrongInputLen = [{}]*8
 
         wrongData = [(results.times, wrongInputLen, results.outputs)]
-        wrongData = [(results.times, wrongInputLen, results.outputs)]
         
         # Wrong Input Length and Values
         with self.assertRaises(ValueError):
             m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[results.outputs])
-            m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[results.outputs])
         
         # Same as last example but times not in wrapper list
         with self.assertRaises(ValueError):
-            m.estimate_params(times=results.times, inputs=[wrongInputLen], outputs=[results.outputs])
             m.estimate_params(times=results.times, inputs=[wrongInputLen], outputs=[results.outputs])
         
         # Passing in Runs directly
@@ -739,16 +736,13 @@ class TestEstimateParams(unittest.TestCase):
         ]
 
         wrongData = [(results.times, results.inputs, wrongOutputs)]
-        wrongData = [(results.times, results.inputs, wrongOutputs)]
 
         # Wrong outputs parameter length
         with self.assertRaises(ValueError):
             m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[wrongOutputs])
-            m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[wrongOutputs])
 
         # Both inputs and outputs with incorrect lenghts
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[wrongOutputs])
             m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[wrongOutputs])
 
         # Without wrapper
