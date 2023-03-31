@@ -826,6 +826,90 @@ class TestEstimateParams(unittest.TestCase):
         # with self.assertRaises(ValueError):
         #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
 
+
+    # @unittest.skip
+    def test_big_example(self):
+        # Note, lowering timesteps or increasing simulate threshold may cause this model to not run (takes too long)
+        m = BatteryElectroChemEOD()
+
+        options = {
+            'save_freq': 200, # Frequency at which results are saved
+            'dt': 1, # Timestep
+        }
+
+        def future_loading(t, x=None):
+            if (t < 600):
+                i = 2
+            elif (t < 900):
+                i = 1
+            elif (t < 1800):
+                i = 4
+            elif (t < 3000):
+                i = 2
+            else:
+                i = 3
+            return m.InputContainer({'i': i})
+    
+        simulated_results = m.simulate_to(1200, future_loading, **options)
+
+        value = m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
+
+        # Creating errors
+        m.parameters['qMax'] = 12000
+        keys = ['qMax']
+
+        error = m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
+
+        m.estimate_params([(simulated_results.times, simulated_results.inputs, simulated_results.outputs)], keys, dt=0.5)
+
+        value1 = m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
+        
+        # After estimating parameters, value1 needs to at least be less than error
+        self.assertLessEqual(value1, error)
+
+        m1 = BatteryElectroChemEOD()
+
+        m.parameters['kp'] = m1.parameters['kp'] = 10000
+        # m.parameters['vMax'] = m1.parameters['vMax'] = 3000
+        m.parameters['kn'] = m1.parameters['kn'] = 1000 #Does not error out even though value is unbelivably off
+        m.parameters['qpMax'] = m1.parameters['qpMax'] = 4500
+        m.parameters['qMax'] = m1.parameters['qMax'] = 9000
+        keys = ['kp', 'kn', 'qpMax', 'qMax']
+
+        simulated_results = m.simulate_to(2000, future_loading, **options)
+        m1_sim_results = m1.simulate_to(2000, future_loading, **options)
+
+        data = [(simulated_results.times, simulated_results.inputs, simulated_results.outputs)]
+        data_m1 = [(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs)]
+
+        # Check out the warnings that are occuring here...
+        # They are being spammed almost. Increasing save_frequency increases spam
+        m.estimate_params(data, keys, method='Powell')
+        m1.estimate_params(data_m1, keys, method='CG')
+
+        self.assertNotAlmostEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), 
+                                  m1.calc_error(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs, dt = 1))
+
+        m.estimate_params(data, keys, method='Powell', options={'maxiter': 1e-9, 'disp': False})
+        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
+
+        self.assertNotAlmostEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), 
+                                  m1.calc_error(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs, dt = 1))
+        
+        m.estimate_params(data, keys, method='Powell', options={'maxiter': 2, 'disp': False})
+        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
+
+        self.assertNotAlmostEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), 
+                                  m1.calc_error(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs, dt = 1))
+
+        
+        m.estimate_params(data, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
+        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
+
+        # self.assertEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), float('nan'))
+
+        # self.assertEqual(m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), float('nan'))
+
 def run_tests():
     unittest.main()
     
