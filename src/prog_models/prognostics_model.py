@@ -1220,7 +1220,8 @@ class PrognosticsModel(ABC):
 
         See: examples.param_est
         """
-        from scipy.optimize import minimize, show_options
+        # Documenting 
+        from scipy.optimize import minimize
 
         if keys is None:
             # if no keys provided, use all
@@ -1238,9 +1239,8 @@ class PrognosticsModel(ABC):
         config = {
             'method': 'Nelder-Mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'tol': 1e-8,
+            'tol': None,
             'options': None
-            # 'options': {'xatol': 1e-8},
         }
         config.update(kwargs)
 
@@ -1337,12 +1337,18 @@ class PrognosticsModel(ABC):
         params = np.array([self.parameters[key] for key in keys])
 
         res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'], tol=config['tol'])
+
+        if not res.success:
+            warn(f"Parameter Estimation did not converge: {res.message}")
+
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
-
+        
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
-        self.parameters['process_noise'] = p_noise   
+        self.parameters['process_noise'] = p_noise
+
+        return res   
 
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
