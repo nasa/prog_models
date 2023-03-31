@@ -927,17 +927,16 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
         
+
+        
         self.assertNotAlmostEqual(track1, track2)
 
-        # There is some upper bounds for tolerance until it is not very useful to use as a metric.
-        # However, does it exist for every method?
+
+        # Reset parameters
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
 
-        # Produces much worse results
-        # m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-        #                  bounds=bound, keys=keys, tol = 1e-4)
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
@@ -992,7 +991,6 @@ class TestEstimateParams(unittest.TestCase):
 
         self.assertNotAlmostEqual(override1, override2)
 
-        
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
