@@ -84,7 +84,9 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, -8)))
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
-        
+
+        m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, -8)))
+
         self.assertEqual(m.parameters['thrower_height'], 4)
         self.assertEqual(m.parameters['throwing_speed'], 42)
         self.assertEqual(m.parameters['g'], -20)
@@ -781,25 +783,20 @@ class TestEstimateParams(unittest.TestCase):
         # Cannot pass in Sets
         with self.assertRaises(TypeError):
             m.estimate_params(times=set(results.times), inputs=results.inputs, outputs=[results.outputs])
-            m.estimate_params(times=set(results.times), inputs=results.inputs, outputs=[results.outputs])
 
         # NOTE - Cannot have set() around inputs and/or outputs. Provides unhashable errors
         with self.assertRaises(TypeError):
             m.estimate_params(times=results.times, inputs=set(results.inputs), outputs=[results.outputs])
-            m.estimate_params(times=results.times, inputs=set(results.inputs), outputs=[results.outputs])
 
         with self.assertRaises(TypeError):
-            m.estimate_params(times=[results.times], inputs=[set(results.inputs)], outputs=[results.outputs])
             m.estimate_params(times=[results.times], inputs=[set(results.inputs)], outputs=[results.outputs])
         
         # This fails because inputs and outputs are both dictionaries within a Set. Sometimes, an empty set within a Set.
         with self.assertRaises(TypeError):
             m.estimate_params(times=[results.times], inputs=results.inputs, outputs=set(results.outputs))
-            m.estimate_params(times=[results.times], inputs=results.inputs, outputs=set(results.outputs))
 
         # Missing inputs.
         with self.assertRaises(ValueError):
-            m.estimate_params(times=[results.times], outputs=[results.outputs])
             m.estimate_params(times=[results.times], outputs=[results.outputs])
 
         # Passing in nothing at all
@@ -809,14 +806,13 @@ class TestEstimateParams(unittest.TestCase):
         #  'input' is not a parameter, so techincally not defining the parameter inputs.
         with self.assertRaises(ValueError):
             m.estimate_params(times=[results.times], input=[results.inputs], outputs=[results.outputs]) 
-            m.estimate_params(times=[results.times], input=[results.inputs], outputs=[results.outputs]) 
 
         # Length error expected, 1, 9, 1.
         with self.assertRaises(ValueError):
             m.estimate_params(times=[[results.times]], inputs=[results.inputs], outputs=[[results.outputs]]) 
-            m.estimate_params(times=[[results.times]], inputs=[results.inputs], outputs=[[results.outputs]]) 
 
         # Will work in future case, but not at the current moments
+        # with self.assertRaises(ValueError)
         # m.estimate_params(times=[[times]], inputs=[[inputs]], outputs=[[outputs]])
 
     def test_multiple_runs(self):
