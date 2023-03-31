@@ -1145,7 +1145,7 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], stability_tol = 0.95, **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1156,7 +1156,14 @@ class PrognosticsModel(ABC):
         Keyword Args:
             x0 (dict, optional): Initial state.
             dt (double, optional): Maximum time step.
-            stabilityTol (double, optional): Configurable cutoff of minimum percent of events that should not go unstable.
+            stability_tol (double, optional): Configurable parameter.
+                Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
+                In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
+                stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
+                before the model goes unstable in order to produce a valid estimate of mean squared error. 
+
+                If the model goes unstable before stability_tol is met, NaN is returned. 
+                If the model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
         Returns:
             double: Total error
@@ -1180,9 +1187,8 @@ class PrognosticsModel(ABC):
             outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
         # Creates a value that would correctly have everything set
-        # Throwing an error or
-        # use default after the warning.
-        if stability_tol > 1:
+        # Throwing an error or use default after the warning.
+        if stability_tol >= 1 or stability_tol < 0:
             warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
             stability_tol = 0.95
 
@@ -1204,14 +1210,11 @@ class PrognosticsModel(ABC):
                     z_obs = self.output(x)
             if not (None in z_obs.matrix or None in z.matrix):
                 if any (np.isnan(z_obs.matrix)):
-                    if configCount < cutoffThreshold:
-                        # raise ValueError("NaN Error has occured") # ?
-                        warn(f"")
-                        return math.nan
+                    if counter < cutoffThreshold:
+                        raise ValueError("NaN Error has occured")
                     else:
                         warn("Model unstable- NaN reached in simulation (t={})".format(t))
                         return err_total/counter
-                        break
                 err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
                 counter += 1
             configCount += 1
