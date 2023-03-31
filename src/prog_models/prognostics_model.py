@@ -1145,7 +1145,7 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], configurable = 0.95, **kwargs) -> float:
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1156,6 +1156,7 @@ class PrognosticsModel(ABC):
         Keyword Args:
             x0 (dict, optional): Initial state.
             dt (double, optional): Maximum time step.
+            stabilityTol (double, optional): Configurable cutoff of minimum percent of events that should not go unstable.
 
         Returns:
             double: Total error
@@ -1167,6 +1168,7 @@ class PrognosticsModel(ABC):
 
         x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
         dt = kwargs.get('dt', 1e99)
+        stability_tol = kwargs.get('stability_tol', 0.95)
 
         if not isinstance(x, self.StateContainer):
             x = [self.StateContainer(x_i) for x_i in x]
@@ -1180,16 +1182,16 @@ class PrognosticsModel(ABC):
         # Creates a value that would correctly have everything set
         # Throwing an error or
         # use default after the warning.
-        if configurable > 1:
-            warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {configurable}. Resetting value to 0.95")
-            configurable = 0.95
+        if stability_tol > 1:
+            warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+            stability_tol = 0.95
 
         counter = 0  # Needed to account for skipped (i.e., none) values
         t_last = times[0]
         err_total = 0
         z_obs = self.output(x)
 
-        configThreshold = math.floor(configurable * len(times))
+        cutoffThreshold = math.floor(stability_tol * len(times))
         configCount = 0
 
         for t, u, z in zip(times, inputs, outputs):
@@ -1202,8 +1204,10 @@ class PrognosticsModel(ABC):
                     z_obs = self.output(x)
             if not (None in z_obs.matrix or None in z.matrix):
                 if any (np.isnan(z_obs.matrix)):
-                    if configCount < configThreshold:
-                        raise ValueError("NaN Error has occured") # ?
+                    if configCount < cutoffThreshold:
+                        # raise ValueError("NaN Error has occured") # ?
+                        warn(f"")
+                        return math.nan
                     else:
                         warn("Model unstable- NaN reached in simulation (t={})".format(t))
                         return err_total/counter

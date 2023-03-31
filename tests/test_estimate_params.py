@@ -28,12 +28,22 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        self.assertLessEqual(m.parameters['thrower_height'], 4)
+        self.assertGreaterEqual(m.parameters['thrower_height'], 0)
+        self.assertLessEqual(m.parameters['throwing_speed'], 42)
+        self.assertGreaterEqual(m.parameters['throwing_speed'], 20)
         # Enforce if parameters are within bounds after estimate_params()
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (40, 40)))
-
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        self.assertLessEqual(m.parameters['thrower_height'], 4)
+        self.assertGreaterEqual(m.parameters['thrower_height'], 0)
+        self.assertEqual(m.parameters['throwing_speed'], 40)
 
         # Demonstrates further limitations of Parameter Estiamtion
         m.parameters['thrower_height'] = 1.5
@@ -41,7 +51,10 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(data, keys, bounds=((0, 4), (20, 41.99)))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
+        self.assertLessEqual(m.parameters['thrower_height'], 4)
+        self.assertGreaterEqual(m.parameters['thrower_height'], 0)
+        self.assertLessEqual(m.parameters['throwing_speed'], 41.99)
+        self.assertGreaterEqual(m.parameters['throwing_speed'], 20)
         # Now with limits that do include the true values
         # only returning the upper bounds? Why after this defined behavior?
         # m.parameters['throwing_speed'] = 15
@@ -51,7 +64,19 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
         for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2, "Limits of the Bounds do not include the true values")
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        
+        m.parameters['thrower_height'] = 10
+        m.parameters['throwing_speed'] = -10
+
+        m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
+        for key in keys:
+            self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
+        # These values are still within the bounds, they are just not close to the original value
+        self.assertLessEqual(m.parameters['thrower_height'], 4)
+        self.assertGreaterEqual(m.parameters['thrower_height'], 0)
+        self.assertLessEqual(m.parameters['throwing_speed'], 42)
+        self.assertGreaterEqual(m.parameters['throwing_speed'], 20)
         
 
     def test_estimate_params(self):
@@ -794,7 +819,8 @@ class TestEstimateParams(unittest.TestCase):
 
         m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
 
-        xd = m.calc_error(times=[time1, time2], inputs=inputs, outputs=outputs)
+        with self.assertRaises(TypeError):
+            m.estimate_params(times={timesSet}, inputs={inputs}, outputs=set(outputs))      
 
         # Another test case that would be fixed with future changes to Containers
         # with self.assertRaises(ValueError):
