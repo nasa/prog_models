@@ -38,7 +38,17 @@ Prognostics of engineering systems or systems of systems is the prediction of fu
 The [NASA Prognostics Python Packages (ProgPy)](https://nasa.github.io/progpy/)[@2022_nasa_progpy] are a set of open-sourced python packages supporting research and development of prognostics and health management for engineering systems, as described in [@goebel2017prognostics]. ProgPy builds upon the architecture of the Matlab Prognostics Libraries [@2016_nasa_prog_model_library; @2016_nasa_prog_algs_library; @2016_nasa_prog_metrics_library], Generic Software Architecture for Prognostics [@teubert2017generic], and Prognostics As-A-Service [@watkins2019prognostics]. ProgPy implements architectures and common functionalities of prognostics, supporting both researchers and practitioners.
 
 # Statement of need
-Prognostics and Health Management (PHM) is a fast-growing field. Successful PHM application can reduce operational costs and prevent failure, making systems safer. There has been limited application of prognostics in practice. This is partially because prognostics is a multi-faceted and complex problem, including data availability, sensor design and placement, and, of interest to us, software. Often, software is written for an ad-hoc single prognostic application and cannot be transferred to others. Thus, there is a need for a foundational set of efficient tools to enable new PHM technologies. 
+Prognostics and Health Management (PHM) is a fast-growing field. Successful PHM application can reduce operational costs and prevent failure, making systems safer. There has been limited application of prognostics in practice. This is partially because prognostics is a multi-faceted and complex problem, including data availability, sensor design and placement, and, of interest to us, software. 
+
+Often, software is written for an ad-hoc single prognostic application and cannot be transferred to others, or is limited in scope. A few related softwares are described here. Simantha is a discrete manufacturing system simulation package that simulates degradation, but it is limted to a Discrete-Time Markov Chain and doesn't include prognostic capabilities [@Simantha]. Lifelines is a survival analysis tool that can be used for reliability analysis to establish fixed-interval maintenance schedules, a different problem than that solved by ProgPy [@davidson_pilon_cameron_2022_7329096].
+
+Lifelines is a python package for survival analysis. Survival analysis is typically an actuary tool, but it can also be used to model the distribution lifespan of machines. This is a reliability tool that helps with the establishment of fixed-interval maintenance schedules, a different problem than the online state estimation and prognostics of ProgPy
+
+ 
+
+
+
+Thus, there is a need for a foundational set of efficient tools to enable new PHM technologies. 
 
 ProgPy provides a set of support packages for individuals researching and developing prognostic technologies. ProgPy consists of three packages: prog_models, prog_algs, and prog_server. prog_models provides tools aiding the development, evaluation, simulation, and tuning of prognostic models, whether physics-based or data-driven. prog_models also supports downloading select relevant datasets [@Dataset_RWBattery] [@Dataset_CMAPPS]. prog_algs supports uncertainty representation, state estimation, prognostics, the evaluation and visualization of prognostic results, and the creation of new prognostic algorithms. prog_server is a Service-Oriented Architecture for prognostics and state estimation. prog_server is also distributed with a python client, prog_client. 
 
