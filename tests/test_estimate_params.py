@@ -623,7 +623,7 @@ class TestEstimateParams(unittest.TestCase):
         m1.parameters['thrower_height'] = 1.5
         m1.parameters['throwing_speed'] = 25
         
-        # Increasing total amount of iterations, having different methods would matter proportionally.
+        # Decreasing total amount of iterations, having different methods would matter proportionally.
         m.estimate_params(data, keys, bounds=bound, method='Powell', options={'maxiter': 50, 'disp': False})
         m1.estimate_params(data, keys, bounds=bound, method='CG', options={'maxiter': 50, 'disp': False})
 
@@ -828,7 +828,7 @@ class TestEstimateParams(unittest.TestCase):
 
 
     # @unittest.skip
-    def test_big_example(self):
+    def test_calc_error(self):
         # Note, lowering timesteps or increasing simulate threshold may cause this model to not run (takes too long)
         m = BatteryElectroChemEOD()
 
@@ -850,31 +850,47 @@ class TestEstimateParams(unittest.TestCase):
                 i = 3
             return m.InputContainer({'i': i})
     
-        simulated_results = m.simulate_to(1200, future_loading, **options)
+        simulated_results = m.simulate_to(2000, future_loading, **options)
 
-        value = m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
+        # Running calc_error before setting incorrect parameters
+        m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
 
-        # Creating errors
-        m.parameters['qMax'] = 12000
+        # Initalizing parameters to very erreneous values       
+        m.parameters['qMax'] = 4000
         keys = ['qMax']
 
-        error = m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
+        # Before running estimate_params
+        with self.assertRaises(ValueError):
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
 
         m.estimate_params([(simulated_results.times, simulated_results.inputs, simulated_results.outputs)], keys, dt=0.5)
 
-        value1 = m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
-        
-        # After estimating parameters, value1 needs to at least be less than error
-        self.assertLessEqual(value1, error)
+        # After running estimate_params. Note that this would not change the outcome of the result
+        with self.assertRaises(ValueError):
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)    
 
+        # Running through various dt values that could work
+        for i in np.arange(0, 1, 0.1):
+            with self.assertRaises(ValueError):
+                m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
+
+        for i in range(2, 10):
+            with self.assertRaises(ValueError):
+                m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
+ 
+        # Creating duplicate model
         m1 = BatteryElectroChemEOD()
 
+        orig_params = m1.parameters.copy()
+
+        # Much bigger parameter initialization
         m.parameters['kp'] = m1.parameters['kp'] = 10000
-        # m.parameters['vMax'] = m1.parameters['vMax'] = 3000
-        m.parameters['kn'] = m1.parameters['kn'] = 1000 #Does not error out even though value is unbelivably off
+        m.parameters['kn'] = m1.parameters['kn'] = 1000 
         m.parameters['qpMax'] = m1.parameters['qpMax'] = 4500
         m.parameters['qMax'] = m1.parameters['qMax'] = 9000
-        keys = ['kp', 'kn', 'qpMax', 'qMax']
+        keys = ['kp', 'kn', 'qpMax','qMax']
+
+        change_params = m1.parameters.copy()
 
         simulated_results = m.simulate_to(2000, future_loading, **options)
         m1_sim_results = m1.simulate_to(2000, future_loading, **options)
@@ -882,33 +898,96 @@ class TestEstimateParams(unittest.TestCase):
         data = [(simulated_results.times, simulated_results.inputs, simulated_results.outputs)]
         data_m1 = [(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs)]
 
+
         # Check out the warnings that are occuring here...
         # They are being spammed almost. Increasing save_frequency increases spam
+
+        # Calling estimate_params does not change any of the parameters here because we are always accounting for exceptions...
+
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')
 
-        self.assertNotAlmostEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), 
-                                  m1.calc_error(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs, dt = 1))
+        updated_params = m1.parameters.copy()
 
-        m.estimate_params(data, keys, method='Powell', options={'maxiter': 1e-9, 'disp': False})
-        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
-
-        self.assertNotAlmostEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), 
-                                  m1.calc_error(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs, dt = 1))
+        # Checking to make sure estimate_params actually changed values away from the original and to something else
+        self.assertEqual(change_params, updated_params)
+        self.assertNotEqual(orig_params, updated_params)
         
-        m.estimate_params(data, keys, method='Powell', options={'maxiter': 2, 'disp': False})
-        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
-
-        self.assertNotAlmostEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), 
-                                  m1.calc_error(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs, dt = 1))
-
+        with self.assertRaises(ValueError):
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
         
-        m.estimate_params(data, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
-        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 1e-9, 'disp': False})
+        with self.assertRaises(ValueError):
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
 
-        # self.assertEqual(m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), float('nan'))
+        # Checks to see if stability_tolerance throws error if model goes unstable after threshold
+        with self.assertWarns(UserWarning) as cm:
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
+                     dt = 1, stability_tol=0.7)
+        self.assertEqual(
+            'Model unstable- NaN reached in simulation (t=1800.0)',
+            str(cm.warning)
+        )
 
-        # self.assertEqual(m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1), float('nan'))
+        # Checks to see if stability_tolerance throws error if model goes unstable after threshold
+        with self.assertWarns(UserWarning) as cm:
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
+                     dt = 1, stability_tol=0.7)
+        self.assertEqual(
+            'Model unstable- NaN reached in simulation (t=1800.0)',
+            str(cm.warning)
+        )
+
+        # with self.assertWarns(UserWarning) as cm:
+        #     m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
+        #              dt = 1, stability_tol=70)
+        # self.assertEqual(
+        #     'configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
+        #     str(cm.warning)
+        # )
+        # Rerunning params estimate would not change the results
+        m.estimate_params(data, keys, method='Powell')
+        m1.estimate_params(data_m1, keys, method='CG')
+
+        with self.assertRaises(ValueError):
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+        
+        with self.assertRaises(ValueError):
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+
+        # Resetting parameters
+        m.parameters['kp'] = m1.parameters['kp'] = 10000
+        m.parameters['kn'] = m1.parameters['kn'] = 1000 
+        m.parameters['qpMax'] = m1.parameters['qpMax'] = 4500
+        m.parameters['qMax'] = m1.parameters['qMax'] = 4000
+        m.estimate_params(data, keys, method='Powell', options={'maxiter': 250, 'disp': False})
+        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 250, 'disp': False})
+        simulated_results = m.simulate_to(2000, future_loading, **options)
+        m1_sim_results = m1.simulate_to(2000, future_loading, **options)
+
+        data = [(simulated_results.times, simulated_results.inputs, simulated_results.outputs)]
+        data_m1 = [(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs)]
+
+        converge1 = m1.parameters.copy()
+
+        with self.assertRaises(ValueError):
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+        
+        with self.assertRaises(ValueError):
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+
+        m.estimate_params(data, keys, method='Powell', options={'maxiter': 10000, 'disp': False})
+        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 10000, 'disp': False})
+
+        converge2 = m1.parameters.copy()
+
+        self.assertEqual(converge1, converge2)
+
+        with self.assertRaises(ValueError):
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+        
+        with self.assertRaises(ValueError):
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+
 
 def run_tests():
     unittest.main()

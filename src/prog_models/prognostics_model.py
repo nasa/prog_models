@@ -1145,7 +1145,7 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], stability_tol = 0.95, **kwargs) -> float:
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1163,7 +1163,7 @@ class PrognosticsModel(ABC):
                 before the model goes unstable in order to produce a valid estimate of mean squared error. 
 
                 If the model goes unstable before stability_tol is met, NaN is returned. 
-                If the model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+                Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
         Returns:
             double: Total error
@@ -1186,8 +1186,8 @@ class PrognosticsModel(ABC):
         if not isinstance(outputs[0], self.OutputContainer):
             outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
-        # Creates a value that would correctly have everything set
-        # Throwing an error or use default after the warning.
+        # Checks satbility_tol is within bounds
+        # Throwing a default after the warning.
         if stability_tol >= 1 or stability_tol < 0:
             warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
             stability_tol = 0.95
