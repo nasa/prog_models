@@ -380,6 +380,50 @@ class UAVGen(PrognosticsModel):
         # Simulate to threshold at DMD time step
         super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs)
 
+
+    def linear_model(self, phi, theta, psi, p, q, r, T):
+        """ The linear model ignores gyroscopic effect and wind rate of change"""
+        m         = self.mass['total']
+        Ixx       = self.mass['Ixx']
+        Iyy       = self.mass['Iyy']
+        Izz       = self.mass['Izz']
+        l         = self.geom['arm_length']
+        sin_phi   = np.sin(phi)
+        cos_phi   = np.cos(phi)
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        tan_theta = np.tan(theta)
+        sin_psi   = np.sin(psi)
+        cos_psi   = np.cos(psi)
+
+        A = np.array([[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], 
+                      [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 
+                      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], 
+                      [0, 0, 0, q*cos_phi*tan_theta - r*sin_phi*tan_theta, q*(tan_theta**2 + 1)*sin_phi + r*(tan_theta**2 + 1)*cos_phi, 0, 0, 0, 0, 1, sin_phi*tan_theta, cos_phi*tan_theta], 
+                      [0, 0, 0, -q*sin_phi - r*cos_phi, 0, 0, 0, 0, 0, 0, cos_phi, -sin_phi], 
+                      [0, 0, 0, q*cos_phi/cos_theta - r*sin_phi/cos_theta, q*sin_phi*sin_theta/cos_theta**2 + r*sin_theta*cos_phi/cos_theta**2, 0, 0, 0, 0, 0, sin_phi/cos_theta, cos_phi/cos_theta], 
+                      [0, 0, 0, T*(-sin_phi*sin_theta*cos_psi + sin_psi*cos_phi)/m, T*cos_phi*cos_psi*cos_theta/m, T*(sin_phi*cos_psi - sin_psi*sin_theta*cos_phi)/m, 0, 0, 0, 0, 0, 0], 
+                      [0, 0, 0, T*(-sin_phi*sin_psi*sin_theta - cos_phi*cos_psi)/m, T*sin_psi*cos_phi*cos_theta/m, T*(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0, 0, 0, 0], 
+                      [0, 0, 0, -T*sin_phi*cos_theta/m, -T*sin_theta*cos_phi/m, 0, 0, 0, 0, 0, 0, 0], 
+                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, r*(Iyy - Izz)/Ixx, q*(Iyy - Izz)/Ixx], 
+                      [0, 0, 0, 0, 0, 0, 0, 0, 0, r*(-Ixx + Izz)/Iyy, 0, p*(-Ixx + Izz)/Iyy], 
+                      [0, 0, 0, 0, 0, 0, 0, 0, 0, q*(Ixx - Iyy)/Izz, p*(Ixx - Iyy)/Izz, 0]])
+
+        B = np.array([ [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0], 
+                       [(-sin_phi*cos_psi + sin_psi*sin_theta*cos_phi)/m, 0, 0, 0], 
+                       [cos_phi*cos_theta/m, 0, 0, 0], 
+                       [0, l/Ixx, 0, 0], 
+                       [0, 0, l/Iyy, 0], 
+                       [0, 0, 0, 1.0/Izz]])
+
+        return A, B
+
     # TODO: fix visualzation; currently requires ref_traj internally 
     # def visualize_traj(self, pred):
     #     """
