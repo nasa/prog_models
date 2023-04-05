@@ -1158,6 +1158,8 @@ class PrognosticsModel(ABC):
                 * MSE (Mean Squared Error)
                 * RMSE (Root Mean Squared Error)
                 * MAX_E (Maximum Error)
+                * MAE (Mean Absolute Error)
+                * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
             dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
 
@@ -1176,6 +1178,10 @@ class PrognosticsModel(ABC):
             return calc_error.MAX_E(self, times, inputs, outputs, **kwargs)
         if method.lower() == 'rmse':
             return calc_error.RMSE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'mae':
+            return calc_error.MAE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'mape':
+            return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
 
         # If we get here, method is not supported
         raise ProgModelInputException(f"Error method '{method}' not supported")
