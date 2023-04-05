@@ -52,7 +52,7 @@ def run_example():
     # This is done by setting the "error_method" argument. 
     # e.g., m.estimate_params([(times, inputs, outputs)], keys, dt=0.01, error_method='MAX_E')
     # Default is Mean Squared Error (MSE)
-    # See calc_error method for list of options. 
+    # See calc_error method for list of options.
 
 if __name__=='__main__':
     run_example()
