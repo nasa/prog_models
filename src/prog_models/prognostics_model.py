@@ -1156,6 +1156,8 @@ class PrognosticsModel(ABC):
         Keyword Args:
             method (str, optional): Error method to use. Supported methods include:
                 * MSE (Mean Squared Error)
+                * RMSE (Root Mean Squared Error)
+                * MAX_E (Maximum Error)
             x0 (dict, optional): Initial state
             dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
 
@@ -1167,10 +1169,16 @@ class PrognosticsModel(ABC):
         """
         method = kwargs.get('method', 'MSE')
 
+        # Call appropriate error calculation method
         if method.lower() == 'mse':
             return calc_error.MSE(self, times, inputs, outputs, **kwargs)
-        else:
-            raise ProgModelInputException(f"Error method '{method}' not supported")
+        if method.lower() == 'max_e':
+            return calc_error.MAX_E(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'rmse':
+            return calc_error.RMSE(self, times, inputs, outputs, **kwargs)
+
+        # If we get here, method is not supported
+        raise ProgModelInputException(f"Error method '{method}' not supported")
     
     def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
