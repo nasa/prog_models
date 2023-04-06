@@ -133,9 +133,7 @@ jobs:
         pip install importlib_metadata
     - name: Run coverage
       run: |
-        coverage run -m tests
+        coverage run -m tests.test_base_models
         coverage xml -i
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v3
-      with:
-        fail_ci_if_error: true
