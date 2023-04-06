@@ -130,7 +130,7 @@ jobs:
         pip install notebook
         pip install testbook
         pip install requests
-        pip install pytest
+        pip install importlib_metadata
     - name: Run coverage
       run: |
         coverage run -m tests
