@@ -130,6 +130,7 @@ jobs:
         pip install notebook
         pip install testbook
         pip install requests
+        pip install pytest
     - name: Run coverage
       run: |
         coverage run -m tests
