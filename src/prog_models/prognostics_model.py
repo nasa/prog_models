@@ -17,7 +17,7 @@ from prog_models.utils import ProgressBar
 from prog_models.utils import calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
-from prog_models.utils.serialization import *
+from prog_models.utils.serialization import CustomEncoder, custom_decoder
 from prog_models.utils.size import getsizeof
 
 
@@ -66,11 +66,11 @@ class PrognosticsModel(ABC):
             Limits on the state variables format {'state_name': (lower_limit, upper_limit)}
         param_callbacks : dict[str, list[function]], optional
             Callbacks for derived parameters
-        inputs: list[str]
+        inputs: list[str], optional
             Identifiers for each :term:`input`
         states: list[str]
             Identifiers for each :term:`state`
-        outputs: list[str]
+        outputs: list[str], optional
             Identifiers for each :term:`output`
         performance_metric_keys: list[str], optional
             Identifiers for each performance metric
@@ -103,7 +103,9 @@ class PrognosticsModel(ABC):
     # events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
 
-    SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
+    SimulationResults = namedtuple(
+        'SimulationResults', 
+        ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
         # Default params for any model
@@ -120,7 +122,7 @@ class PrognosticsModel(ABC):
 
         PrognosticsModel.__setstate__(self, params)
 
-    def __eq__(self, other : "PrognosticsModel") -> bool:
+    def __eq__(self, other: "PrognosticsModel") -> bool:
         """
         Check if two models are equal
         """
@@ -132,7 +134,7 @@ class PrognosticsModel(ABC):
     def __getstate__(self) -> dict:
         return self.parameters.data
 
-    def __setstate__(self, params : dict) -> None:
+    def __setstate__(self, params: dict) -> None:
         # This method is called when depickling and in construction. It builds the model from the parameters
         
         if not hasattr(self, 'inputs'):
@@ -164,7 +166,8 @@ class PrognosticsModel(ABC):
         self.n_performance = len(self.performance_metric_keys)
 
         # Setup Containers
-        # These containers should be used instead of dictionaries for models that use the internal matrix state
+        # These containers should be used instead of dictionaries for models 
+        # that use the internal matrix state
 
         states = self.states
 
@@ -189,7 +192,7 @@ class PrognosticsModel(ABC):
 
         self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
 
-    def initialize(self, u = None, z = None):
+    def initialize(self, u=None, z=None):
         """
         Calculate initial state given inputs and outputs. If not defined for a model, it will return parameters['x0']
 
@@ -247,7 +250,7 @@ class PrognosticsModel(ABC):
         z.matrix += np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape)
         return z
 
-    def apply_process_noise(self, x, dt : int = 1):
+    def apply_process_noise(self, x, dt: float = 1):
         """
         Apply process noise to the state
 
@@ -318,7 +321,7 @@ class PrognosticsModel(ABC):
         """
         raise ProgModelException('dx not defined - please use next_state()')
 
-    def next_state(self, x, u, dt : float):
+    def next_state(self, x, u, dt: float):
         """
         State transition equation: Calculate next state
 
@@ -410,7 +413,7 @@ class PrognosticsModel(ABC):
                 x[key] = np.minimum(x[key], limit[1])
         return x
 
-    def __next_state(self, x, u, dt : float):
+    def __next_state(self, x, u, dt: float):
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
 
@@ -718,7 +721,7 @@ class PrognosticsModel(ABC):
             t = result.times[-1]
         return time_of_event
 
-    def simulate_to(self, time : float, future_loading_eqn : Callable = lambda t,x=None: {}, first_output = None, **kwargs) -> namedtuple:
+    def simulate_to(self, time : float, future_loading_eqn: Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -780,7 +783,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn: Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -1145,7 +1148,7 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
+    def calc_error(self, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1186,7 +1189,7 @@ class PrognosticsModel(ABC):
         # If we get here, method is not supported
         raise ProgModelInputException(f"Error method '{method}' not supported")
     
-    def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
+    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
