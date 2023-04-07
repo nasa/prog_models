@@ -137,13 +137,17 @@ jobs:
         coverage run -a -m tests.test_battery
         coverage run -a -m tests.test_centrifugal_pump
         coverage run -a -m tests.test_composite
+        coverage run -a -m tests.test_datasets
         coverage run -a -m tests.test_dict_like_matrix_wrapper
         coverage run -a -m tests.test_direct
+        coverage run -a -m tests.test_examples
         coverage run -a -m tests.test_linear_model
         coverage run -a -m tests.test_pneumatic_valve
         coverage run -a -m tests.test_powertrain
         coverage run -a -m tests.test_serialization
         coverage run -a -m tests.test_sim_result
+        coverage run -a -m tests.test_surrogates.py
+        coverage run -a -m tests.test_tutorial.py
         coverage xml -i
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v3
