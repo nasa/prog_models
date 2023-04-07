@@ -80,6 +80,14 @@ class TestEnsemble(unittest.TestCase):
         # m would give 0.7, m2 would give 0.1
         self.assertEqual(es['x1 == 10'], 0.4)
 
+        # performance metrics
+        pm = em.performance_metrics(x1)
+        self.assertEqual(pm['pm1'], 4)
+
+        # Time of event 
+        toe = em.time_of_event(x0, lambda t, x=None: u, dt=1e-3)
+        self.assertAlmostEqual(toe['x1 == 10'], 4.8895)
+
         # threshold met should be false
         self.assertFalse(em.threshold_met(x1)['x1 == 10'])
 
