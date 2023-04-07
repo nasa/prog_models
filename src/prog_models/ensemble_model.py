@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from collections.abc import Iterable
 import numpy as np
 
 from . import PrognosticsModel
@@ -19,7 +20,7 @@ class EnsembleModel(PrognosticsModel):
     See example :download:`examples.ensemble <../../../../prog_models/examples/ensemble.py>`
 
     Args:
-        models (list): List of models that form the ensemble
+        models (list[PrognosticsModel]): List of at least 2 models that form the ensemble
 
     Keyword Arguments:
         aggregation_method (function): Function that aggregates the outputs of the models in the ensemble. Default is np.mean
@@ -30,6 +31,14 @@ class EnsembleModel(PrognosticsModel):
     }
 
     def __init__(self, models, **kwargs):
+        if not isinstance(models, Iterable):
+            raise TypeError(f'EnsembleModel must be initialized with a list of models, got {type(models)}')
+        if isinstance(models, Iterable) and len(models) < 2:
+            raise ValueError('EnsembleModel requires at least two models')
+        for m in models:
+            if not isinstance(m, PrognosticsModel):
+                raise TypeError(f'EnsembleModel requires all models to be PrognosticsModel instances, was {type(m)}')
+
         inputs = set()
         states = set()
         outputs = set()
@@ -47,7 +56,7 @@ class EnsembleModel(PrognosticsModel):
         super().__init__(**kwargs)
         self.parameters['models'] = models
 
-    def initialize(self, u, z=None):
+    def initialize(self, u=None, z=None):
         xs = [m.initialize(m.InputContainer(u), m.OutputContainer(z) if z is not None else None) for m in self.parameters['models']]
         x0 = {}
         for x in xs:
