@@ -55,7 +55,7 @@ class OneInputOneOutputNoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1]])
     C = np.array([[1]])
-    F = np.empty((0,1))
+    F = np.empty((0, 1))
 
     default_parameters = {
         'process_noise': 0,
@@ -66,14 +66,33 @@ class OneInputOneOutputNoEventLM(LinearModel):
 
 
 class OneInputOneOutputOneEventLM(OneInputOneOutputNoEventLM):
-    """
-    Simple model that increases state by u1 every step. Event occurs when state == 10
-    """
     events = ['x1 == 10']
 
     F = np.array([[-0.1]])
+    G = np.array([[1]])
 
 
+class OneInputOneOutputOneEventAltLM(LinearModel):
+    """
+    Simple model that increases state by u1 every step. Event occurs when state == 10
+    """
+    inputs = ['u2']
+    states = ['x2']
+    outputs = ['z2']
+    events = ['x2 == 5']
+
+    A = np.array([[0]])
+    B = np.array([[1]])
+    C = np.array([[1]])
+    F = np.array([[-0.2]])
+    G = np.array([[1]])
+
+    default_parameters = {
+        'process_noise': 0,
+        'x0': {
+            'x2': 0
+        }
+    }
 class OneInputOneOutputNoEventLMPM(OneInputOneOutputNoEventLM):
     """
     Same as OneInputOneOutputNoEventLM, but with performance metrics defined as a function. Has a single performance metric that is always the state, plus 1

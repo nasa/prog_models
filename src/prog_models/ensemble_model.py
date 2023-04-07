@@ -33,7 +33,7 @@ class EnsembleModel(PrognosticsModel):
     def __init__(self, models, **kwargs):
         if not isinstance(models, Iterable):
             raise TypeError(f'EnsembleModel must be initialized with a list of models, got {type(models)}')
-        if isinstance(models, Iterable) and len(models) < 2:
+        if len(models) < 2:
             raise ValueError('EnsembleModel requires at least two models')
         for m in models:
             if not isinstance(m, PrognosticsModel):
@@ -57,7 +57,11 @@ class EnsembleModel(PrognosticsModel):
         self.parameters['models'] = models
 
     def initialize(self, u=None, z=None):
-        xs = [m.initialize(m.InputContainer(u), m.OutputContainer(z) if z is not None else None) for m in self.parameters['models']]
+        xs = [
+            m.initialize(
+                m.InputContainer(u) if u is not None else None, 
+                m.OutputContainer(z) if z is not None else None
+            ) for m in self.parameters['models']]
         x0 = {}
         for x in xs:
             for key in x.keys():
