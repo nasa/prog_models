@@ -65,6 +65,15 @@ class OneInputOneOutputNoEventLM(LinearModel):
     }
 
 
+class OneInputOneOutputOneEventLM(OneInputOneOutputNoEventLM):
+    """
+    Simple model that increases state by u1 every step. Event occurs when state == 10
+    """
+    events = ['x1 == 10']
+
+    F = np.array([[-0.1]])
+
+
 class OneInputOneOutputNoEventLMPM(OneInputOneOutputNoEventLM):
     """
     Same as OneInputOneOutputNoEventLM, but with performance metrics defined as a function. Has a single performance metric that is always the state, plus 1
