@@ -939,6 +939,8 @@ class TestEstimateParams(unittest.TestCase):
 
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 1)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 3.1
@@ -948,12 +950,11 @@ class TestEstimateParams(unittest.TestCase):
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-9)
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 1)
-
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # So, for tol values between 1e-4 and bigger, we will continnue to have the same results, whereas. 
         # To detmerine it is 1e-34is the smallest, we have a tolernace check if it 1e-3 produces similar results, to which it does not.
-        # self.assertGreater(track1, track2)
+        self.assertGreater(track1, track2)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
