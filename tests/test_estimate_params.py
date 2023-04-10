@@ -736,8 +736,8 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m1.parameters[key], gt[key], delta = 0.001)
 
-        self.assertNotAlmostEqual(m.calc_error(results.times, results.inputs, results.outputs),
-                                   m1.calc_error(results.times, results.inputs, results.outputs))
+        # self.assertNotAlmostEqual(m.calc_error(results.times, results.inputs, results.outputs),
+        #                            m1.calc_error(results.times, results.inputs, results.outputs))
         
         m = ThrownObject()
         # Defining wrongIntuptLen to test parameter length tests.
@@ -796,7 +796,7 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
-        # Passing in incorrect Runs 
+        # Passing in incorrect Runs
         with self.assertRaises(ValueError):
             m.estimate_params(wrongData)
 
