@@ -396,32 +396,35 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=np.array(True))
         
-        # with self.assertRaises(TypeError):
+        # True and False values are converted to their integer counterparts. So this does not fail.
         m.estimate_params(data, keys, bound=np.array([(False, True), (False, True), (False, True)]))
 
         # Having npArr defined with one list and two tuples
         m.estimate_params(data, keys, bounds=np.array([[1, 2], (2, 3), (4,5)]))
 
+        # Correct number of bounds with np.array as their inner wrapper
         m.estimate_params(data, keys, bounds=[np.array([1, 2]), np.array([2, 3]), np.array([4, 5])])
 
+        # Four bounds passed with three keys where inner wrapper is np.arrays
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[np.array([1, 2]), np.array([2, 3]), np.array([4, 5]), np.array([-1, 20])])
         
+        # Two bounds passed with three keys where inner wrapper is np.arrays
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[np.array([1, 2]), np.array([2, 3])])
 
+        # Passing in strings gets converted automatically, even inside an np.array
         m.estimate_params(data, keys, bounds=[np.array(['4', '9']), np.array(['2', '3']), np.array(['4', '5'])])
-        for key in keys:
-            self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
         
+        # Passing in strings and integers into bounds
         m.estimate_params(data, keys, bounds=[np.array(['4', '9']), np.array([2, 3]), np.array([4, 5])])
 
+        # Passing in strings, integers, and floating values in bounds.
         m.estimate_params(data, keys, bounds=[np.array(['4', '9']), np.array([2, 3]), np.array([4.123, 5.346])])
 
         # Errors not due incorrect typing but due to upper bound being less than lower bound error
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=np.array([(True, False), (False, True), (False, True)]))
-
 
         # Testing overloaded bounds equals standard foramt
         m.parameters['thrower_height'] = 1.5
@@ -429,37 +432,40 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(data, keys, bounds=(((([-3, 4]))), (1, 400), (-20, 30)))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-        check = m.calc_error(results.times, results.inputs, results.outputs)    
+        value1 = m.calc_error(results.times, results.inputs, results.outputs)
 
+        # Testing different formats of inner wrapper types works.
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=([-3, 12], (1, 400), np.array([-20, 30])))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-        check2 = m.calc_error(results.times, results.inputs, results.outputs)
-        self.assertAlmostEqual(check, check2)
+        value2 = m.calc_error(results.times, results.inputs, results.outputs)
+        self.assertAlmostEqual(value1, value2)
 
-        # Testing passing in strings. Warning should appear
         # Testing passing in strings with standard bounds
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -8
-        m.estimate_params(data, keys, bounds=(('-3', '12'), ('1', '20'), ('-5', '30')))
+        m.estimate_params(data, keys, bounds=(('-3', '12'), ('1', '42'), ('-12', '30')))
         for key in keys:
-            self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         check = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Testing with np.array
-        m.estimate_params(data, keys, bounds=np.array([('-3', '12'), ('1', '20'), ('-5', '30')]))
+        m.estimate_params(data, keys, bounds=np.array([('-3', '12'), ('1', '42'), ('-12', '30')]))
         for key in keys:
-            self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         check2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        self.assertAlmostEqual(check, check2)
-        m.estimate_params(data, keys, bounds=(('-3.12', '12'), ('1', '20'), ('-5', '30')))
+        # Checking if passing in different inner wrapper types for bounds deviates between calls.
+        self.assertEqual(check, check2)
+
+        m.estimate_params(data, keys, bounds=(('-3.12', '12'), ('1', '42.125381'), ('-12', '30')))
         check3 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # Checking to make sure original equals the previous ones
+        # Checking if passing in different inner wrapper types for bounds deviates between calls,
+        # but this time we are passing in floating values into our bounds
         self.assertEqual(check, check3)
 
         # Passing in an integer for a singular test
@@ -544,11 +550,12 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=bound)
 
+        # Checking same as prev test
         keys = ['thrower_height', 'throwing_speed', '1']
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=bound)
         
-        # Keys within a tuple
+        # Keys within a tuple should not error
         keys = ('thrower_height', 'throwing_speed', 'g')
         m.estimate_params(data, keys, bounds=bound)
 
