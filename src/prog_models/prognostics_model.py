@@ -1165,6 +1165,14 @@ class PrognosticsModel(ABC):
                 * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
             dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+            stability_tol (double, optional): Configurable parameter.
+                Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
+                In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
+                stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
+                before the model goes unstable in order to produce a valid estimate of mean squared error. 
+
+                If the model goes unstable before stability_tol is met, NaN is returned. 
+                Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
         Returns:
             float: error
