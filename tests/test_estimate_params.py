@@ -521,6 +521,15 @@ class TestEstimateParams(unittest.TestCase):
         # Testing bounds equality with strings in np.array
         m.estimate_params(data, keys, bounds=[np.array(['9', '9']), np.array(['2', '3']), np.array(['4', '5'])])
 
+        # Resetting parameters
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.parameters['g'] = -8
+        times = np.array([0.0, 0.5, 1.0])
+        inputs = np.array([{}, {}, {}])
+        outputs = np.array([{'x': 1.83}, {'x': 21.83}, {'x': 38.78612068965517}])
+        m.estimate_params(times = times, inputs = inputs, outputs = outputs)
+
 
 # Testing features where keys are not parameters in the model
     def test_keys(self):
@@ -776,6 +785,29 @@ class TestEstimateParams(unittest.TestCase):
         # Another test case that would be fixed with future changes to Containers
         # with self.assertRaises(ValueError):
         #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
+
+        time1 = [0, 1, 2, 4, 5, 6, 7, 8, 9]
+        time2 = [0, 1, 2, 3]
+
+        inputs = [[{}]*9, [{}]*4]
+        outputs = [[{'x': 1.83},
+            {'x': 36.95},
+            {'x': 62.36},
+            {'x': 77.81},
+            {'x': 83.45},
+            {'x': 79.28},
+            {'x': 65.3},
+            {'x': 41.51},
+            {'x': 7.91},], 
+            np.array([
+                {'x': 1.83},
+                {'x': 36.95},
+                {'x': 62.36},
+                {'x': 77.81},
+            ])]
+
+        m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
+
 
 
     def test_incorrect_lens(self):
