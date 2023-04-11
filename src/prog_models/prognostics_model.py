@@ -1157,10 +1157,10 @@ class PrognosticsModel(ABC):
 
         Keyword Args:
             x0 (dict, optional): Initial state.
-            dt (double, optional): Maximum time step.
+            dt (float, optional): Maximum time step.
 
         Returns:
-            double: Total error
+            float: Total error
         """
         if isinstance(times[0], Iterable):
             # Calculate error for each
