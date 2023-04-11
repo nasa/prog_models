@@ -1,10 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections.abc import Iterable
+from collections.abc import Sequence
 import numpy as np
 
-from . import PrognosticsModel
+from prog_models import PrognosticsModel
 
 
 class EnsembleModel(PrognosticsModel):
@@ -31,13 +31,13 @@ class EnsembleModel(PrognosticsModel):
     }
 
     def __init__(self, models, **kwargs):
-        if not isinstance(models, Iterable):
+        if not isinstance(models, Sequence):
             raise TypeError(f'EnsembleModel must be initialized with a list of models, got {type(models)}')
         if len(models) < 2:
             raise ValueError('EnsembleModel requires at least two models')
-        for m in models:
+        for i, m in enumerate(models):
             if not isinstance(m, PrognosticsModel):
-                raise TypeError(f'EnsembleModel requires all models to be PrognosticsModel instances, was {type(m)}')
+                raise TypeError(f'EnsembleModel requires all models to be PrognosticsModel instances. models[{i}] was {type(m)}')
 
         inputs = set()
         states = set()

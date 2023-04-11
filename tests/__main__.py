@@ -15,8 +15,8 @@ from tests.test_data_model import main as lstm_main
 from tests.test_direct import main as direct_main
 from tests.test_linear_model import main as linear_main
 from tests.test_composite import main as composite_main
-from .test_serialization import main as serialization_main
-from .test_ensemble import main as ensemble_main
+from tests.test_serialization import main as serialization_main
+from tests.test_ensemble import main as ensemble_main
 
 from io import StringIO
 import matplotlib.pyplot as plt
