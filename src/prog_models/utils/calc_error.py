@@ -49,7 +49,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
-    # Checks satbility_tol is within bounds
+    # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
         warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
@@ -157,7 +157,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     if not isinstance(outputs[0], self.OutputContainer):
         outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
-    # Checks satbility_tol is within bounds
+    # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
         warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
@@ -233,7 +233,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
-    # Checks satbility_tol is within bounds
+    # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
         warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
@@ -309,7 +309,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
-    # Checks satbility_tol is within bounds
+    # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
         warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
