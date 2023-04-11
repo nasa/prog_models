@@ -5,10 +5,10 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-from .. import prognostics_model
+from prog_models.prognostics_model import PrognosticsModel
 
 
-class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
+class CentrifugalPumpBase(PrognosticsModel):
     """
     Prognostics :term:`model` for a Centrifugal Pump as described in [0]_.
 

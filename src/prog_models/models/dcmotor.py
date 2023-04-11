@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from prog_models import PrognosticsModel
+from prog_models.prognostics_model import PrognosticsModel
 
 RAD_TO_DEG = 180/np.pi
 PI2 = 2 * np.pi

@@ -6,7 +6,7 @@ import numpy as np
 from scipy.optimize import fsolve
 import warnings
 
-from .. import PrognosticsModel
+from prog_models.prognostics_model import PrognosticsModel
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol

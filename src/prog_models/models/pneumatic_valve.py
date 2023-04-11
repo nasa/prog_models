@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-from .. import prognostics_model
+from prog_models.prognostics_model import PrognosticsModel
 
 
 def calc_x(x: float, forces: float, Ls: float, new_x: float) -> float:
@@ -26,7 +26,7 @@ def calc_v(x: float, v: float, dv: float, forces: float, Ls: float, new_x: float
     return v + dv
 
 
-class PneumaticValveBase(prognostics_model.PrognosticsModel):
+class PneumaticValveBase(PrognosticsModel):
     """
     Prognostics :term:`model` for a Pneumatic Valve model as described in the following paper:
     `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`

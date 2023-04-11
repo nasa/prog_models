@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from prog_models import PrognosticsModel, LinearModel
+from prog_models.prognostics_model import PrognosticsModel
+from prog_models.linear_model import LinearModel
 
 def calc_lumped_param(params):
     return {

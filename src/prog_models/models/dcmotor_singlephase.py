@@ -4,7 +4,7 @@
 import math
 import numpy as np
 
-from prog_models import PrognosticsModel
+from prog_models.prognostics_model import PrognosticsModel
 
 # Derived Paramaters
 def update_L1(params):
