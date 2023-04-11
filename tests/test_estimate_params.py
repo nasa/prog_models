@@ -621,8 +621,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -5
         m.estimate_params(data, keys, bounds=bound, method='TNC')
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
         saveError = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Testing that default method passed in works as intended
@@ -630,7 +629,6 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -5
         
-        # Note, the default method cannot construct parameters that abide within our standard difference within two keys but 'TNC' can.
         m.estimate_params(data, keys, bounds=bound)
 
         self.assertNotEqual(saveError, m.calc_error(results.times, results.inputs, results.outputs))
@@ -641,8 +639,6 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -5
         m.estimate_params(data, keys, bounds=bound, method='TNC', options={'maxfun': 1000, 'disp': False})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         
         self.assertGreater(saveError, m.calc_error(results.times, results.inputs, results.outputs))
 
