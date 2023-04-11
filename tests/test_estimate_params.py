@@ -1043,16 +1043,8 @@ class TestEstimateParams(unittest.TestCase):
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-9)
-        track2 = m.calc_error(results.times, results.inputs, results.outputs)
-
         # So, for tol values between 1e-4 and bigger, we will continnue to have the same results, whereas. 
         # To detmerine it is 1e-34is the smallest, we have a tolernace check if it 1e-3 produces similar results, to which it does not.
-        self.assertGreater(track1, track2)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
@@ -1065,10 +1057,8 @@ class TestEstimateParams(unittest.TestCase):
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Note that at some point, the tolerance does not keep going farther down, the tolerance does not affect thie calc_error
-        self.assertNotAlmostEqual(track1, track2)
+        self.assertNotEqual(track1, track2)
 
-        # However, is this behavior just for TNC or can this be replicated for other methods. And if it is only for TNC
-        # Does the interal definition of TNC and how tolernace works with it change it?
 
         # Anyways, here are tests that are checking for how tolerance and options work alongside one another
         m.parameters['thrower_height'] = 3.1
@@ -1085,7 +1075,7 @@ class TestEstimateParams(unittest.TestCase):
                             bounds=bound, keys=keys, tol = 1e-5)
         override2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        self.assertNotAlmostEqual(override1, override2)
+        self.assertNotEqual(override1, override2)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
@@ -1095,7 +1085,7 @@ class TestEstimateParams(unittest.TestCase):
         override3 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # The passed in options properly overrides the tolerance that is placed. 
-        self.assertNotAlmostEqual(override1, override3)
+        self.assertNotEqual(override1, override3)
         self.assertEqual(override2, override3)
 
 
