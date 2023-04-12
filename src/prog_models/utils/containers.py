@@ -54,7 +54,8 @@ class DictLikeMatrixWrapper():
         """
         sets a row at the key given
         """
-        self.data.loc[key] = np.atleast_1d(value)  # using the key to find the Series location
+        self.data.loc[key] = np.atleast_1d(value)  # using the key to find the DataFrame location
+        self.matrix = self.data.to_numpy()
 
 
     def __delitem__(self, key: str) -> None:
@@ -62,6 +63,8 @@ class DictLikeMatrixWrapper():
         removes row associated with key
         """
         self.data = self.data.drop(index=[key])
+        self.matrix = self.data.to_numpy()
+        self._keys = self.data.index.to_list()
 
     def __add__(self, other: "DictLikeMatrixWrapper") -> "DictLikeMatrixWrapper":
         """
@@ -159,6 +162,8 @@ class DictLikeMatrixWrapper():
                 # the key
                 temp_df = DictLikeMatrixWrapper([key], {key: other.data.loc[key, 0]})
                 self.data = pd.concat([self.data, temp_df.data])
+        self._keys = self.data.index.to_list()
+        self.matrix = self.data.to_numpy()
 
     def __contains__(self, key: str) -> bool:
         """
