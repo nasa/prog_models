@@ -1248,7 +1248,14 @@ class PrognosticsModel(ABC):
             raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by definition, so passing in arguments as Sets may have undefined behavior.")
 
         # if parameters not in parent wrapper sequence, then place them into one.
+        if isinstance(times, np.ndarray):
+            times = times.tolist()
+        if isinstance(inputs, np.ndarray):
+            inputs = inputs.tolist()
+        if isinstance(outputs, np.ndarray):
+            outputs = outputs.tolist()
         if not runs and times and inputs and outputs:
+            # for i, (times, inputs, outputs) in runs:
             if not isinstance(times[0], (Sequence, np.ndarray)):
                 times = [times]
             if not isinstance(inputs[0], (Sequence, np.ndarray)):
