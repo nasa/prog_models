@@ -96,7 +96,10 @@ class DictLikeMatrixWrapper():
         """
         returns hash value sum for keys and matrix
         """
-        return hash(self.data)
+        sum_hash = 0
+        for x in pd.util.hash_pandas_object(self.data):
+            sum_hash = sum_hash + x
+        return sum_hash
 
     def __str__(self) -> str:
         """
@@ -109,7 +112,7 @@ class DictLikeMatrixWrapper():
         gets the list of values associated with the key given
         """
         if key in self.data.index:
-            return self.data.loc[key]
+            return self.data.loc[key, 0]
         return default
 
     def copy(self) -> "DictLikeMatrixWrapper":
@@ -118,7 +121,7 @@ class DictLikeMatrixWrapper():
         """
         return DictLikeMatrixWrapper(self._keys, self.matrix.copy())
         keys = self.data.index.to_list()
-        matrix = self.data.to_dict().copy()
+        matrix = self.data.to_numpy().copy()
         return DictLikeMatrixWrapper(keys, matrix)
 
     def keys(self) -> list:
