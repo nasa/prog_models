@@ -18,7 +18,7 @@ class DictLikeMatrixWrapper():
     """
 
     def __init__(self, keys: list, data: Union[dict, np.array, pd.Series]):
-        """
+        """ 
         Initializes the container
         """
         if not isinstance(keys, list):
