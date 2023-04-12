@@ -12,16 +12,17 @@ from .. import PrognosticsModel
 R = 8.3144621  # universal gas constant, J/K/mol
 F = 96487      # Faraday's constant, C/mol
 R_F = R / F    # Optimization - R / F
-mC = 37.04 # kg/m2/(K-s^2)
+mC = 37.04     # kg/m2/(K-s^2)
 tau = 100
 
-def update_qmax(params : dict) -> dict:
+
+def update_qmax(params: dict) -> dict:
     # note qMax = qn+qp
     return {
         'qMax': params['qMobile']/(params['xnMax']-params['xnMin'])
     }
 
-def update_vols(params : dict) -> dict:
+def update_vols(params: dict) -> dict:
     # Volumes (total volume is 2*P.Vol), assume volume at each electrode is the
     # same and the surface/bulk split is the same for both electrodes
     return {
@@ -30,31 +31,31 @@ def update_vols(params : dict) -> dict:
     }
 
 # set up charges (Li ions)
-def update_qpmin(params : dict) -> dict:
+def update_qpmin(params: dict) -> dict:
     # min charge at pos electrode
     return {
         'qpMin': params['qMax']*params['xpMin'] 
     }
 
-def update_qpmax(params : dict) -> dict:
+def update_qpmax(params: dict) -> dict:
     # max charge at pos electrode
     return {
         'qpMax': params['qMax']*params['xpMax'] 
     }
 
-def update_qnmin(params : dict) -> dict:
+def update_qnmin(params: dict) -> dict:
     # min charge at negative electrode
     return {
         'qnMin': params['qMax']*params['xnMin'] 
     }
 
-def update_qnmax(params : dict) -> dict:
+def update_qnmax(params: dict) -> dict:
     # max charge at negative electrode
     return {
         'qnMax': params['qMax']*params['xnMax'] 
     }
 
-def update_qpSBmin(params : dict) -> dict:
+def update_qpSBmin(params: dict) -> dict:
     # min charge at surface and bulk pos electrode
     return {
         'qpSMin': params['qMax']*params['xpMin']*params['VolSFraction'],
@@ -66,14 +67,14 @@ def update_qpSBmin(params : dict) -> dict:
         }
     }
 
-def update_qpSBmax(params : dict) -> dict:
+def update_qpSBmax(params: dict) -> dict:
     # max charge at surface and pos electrode
     return {
         'qpSMax': params['qMax']*params['xpMax']*params['VolSFraction'],
         'qpBMax': params['qMax']*params['xpMax']*(1.0-params['VolSFraction'])
     }
 
-def update_qnSBmin(params : dict) -> dict:
+def update_qnSBmin(params: dict) -> dict:
     # min charge at surface and bulk pos electrode
     return {
         'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
@@ -81,7 +82,7 @@ def update_qnSBmin(params : dict) -> dict:
 
     }
 
-def update_qnSBmax(params : dict) -> dict:
+def update_qnSBmax(params: dict) -> dict:
     # max charge at surface and pos electrode
     return {
         'qnSMax': params['qMax']*params['xnMax']*params['VolSFraction'],
@@ -150,7 +151,7 @@ def update_v0(params: dict) -> dict:
         'v0': Vep - Ven - params['x0']['Vo'] - params['x0']['Vsn'] - params['x0']['Vsp']
     }
 
-def update_qSBmax(params : dict) -> dict:
+def update_qSBmax(params: dict) -> dict:
     # max charge at surface, bulk (pos and neg)
     return {
         'qSMax': params['qMax']*params['VolSFraction'],
@@ -327,7 +328,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def dx(self, x : dict, u : dict):
+    def dx(self, x: dict, u: dict):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -442,7 +443,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         
         return {'max_i': fsolve(f, [3])}
         
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
         # since voltage decreases non-linearally. 
         # However, as voltage approaches VEOD, the charge-based approach no 
@@ -502,7 +503,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'EOD': min(charge_EOD, voltage_EOD)
         }
 
-    def output(self, x : dict):
+    def output(self, x: dict):
         params = self.parameters
         An = params['An']
         # Negative Surface
@@ -555,7 +556,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             np.atleast_1d(Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp'])
         ]))
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
@@ -600,11 +601,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
         qMaxThreshold : float
             Threshold for qMax (for threshold_met and event_state), after which the InsufficientCapacity event has occurred. Note: Battery manufacturers specify a threshold of 70-80% of qMax
         wq : float
-            Wear rate for qMax, Ro, and D respectively
+            Wear rate for qMax
         wr : float
-            Wear rate for qMax, Ro, and D respectively
+            Wear rate for Ro
         wd : float
-            Wear rate for qMax, Ro, and D respectively
+            Wear rate for D
         x0 : dict[str, float]
             Initial :term:`state`
     

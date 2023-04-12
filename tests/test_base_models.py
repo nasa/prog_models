@@ -13,6 +13,7 @@ sys.path.append(join(dirname(__file__), ".."))
 
 from prog_models import *
 from prog_models.models import *
+from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
 
 
 class MockModel():
@@ -153,6 +154,71 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
+    def test_size(self):
+        m = MockProgModel()
+        size = sys.getsizeof(m)
+        self.assertLess(size, 7500)
+
+        # Adding a parameter
+        m.parameters['test'] = 8675309
+        size2 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size, size2)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        # Note- have to use an uncommon number for this to work
+        # This is because of python's memory allocation
+        diff = size2 - size
+        sum_of_parts = sys.getsizeof('test') + sys.getsizeof(8675309)
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
+
+        # Adding other attributes
+        m._test_value = 123456789
+        size3 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size2, size3)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        diff = size3 - size2
+        sum_of_parts = sys.getsizeof('_test_value') + sys.getsizeof(123456789)
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
+
+        # Add list into parameters
+        m.parameters['test_list'] = [79534, 84392, 93333, -243934, 23233]
+        size4 = sys.getsizeof(m)
+
+        # Check that size increases
+        self.assertLess(size3, size4)
+
+        # Size difference should be slightly more than the size of key & value
+        # The difference is overhead for the dict
+        diff = size4 - size3
+        sum_of_parts = sys.getsizeof('test_list') + sys.getsizeof([79534, 84392, 93333, -243934, 23233])
+        self.assertLess(sum_of_parts, diff)
+
+        # Note that adding as a parameter is expected to be similar
+        # This is because it uses the same logic in the callback
+
+        # Adding something already seen
+        m.parameters['recursive'] = m
+        size5 = sys.getsizeof(m)
+
+        # Check that size increases (for key)
+        self.assertLess(size4, size5)
+
+        # Size difference should be slightly more than the size of key
+        # size of value is skipped because it is already seen
+        # The difference is overhead for the dict
+        diff = size5 - size4
+        sum_of_parts = sys.getsizeof('recursive')
+        self.assertLess(sum_of_parts, diff)
+        self.assertLess(diff-sum_of_parts, 100)
 
     def test_templates(self):
         import prog_model_template
@@ -256,29 +322,20 @@ class TestModels(unittest.TestCase):
         except ProgModelTypeError:
             pass
 
-        try: 
-            m = empty_states()
-            self.fail("Should not have worked, empty 'states'")
-        except ProgModelTypeError:
-            pass
+        m = empty_states()
+        self.assertEqual(len(m.states), 0)
 
         m = missing_inputs()
         self.assertEqual(len(m.inputs), 0)
 
-        try: 
-            m = missing_outputs()
-            self.fail("Should not have worked, missing 'outputs'")
-        except ProgModelTypeError:
-            pass
+        m = missing_outputs()
+        self.assertEqual(len(m.outputs), 0)
 
         m = missing_initiialize()
         # Should work- initialize is now optional
 
-        try: 
-            m = missing_output()
-            self.fail("Should not have worked, missing 'output' method")
-        except TypeError:
-            pass
+        m = missing_output()
+        # Should work- output is now optional
 
     def __noise_test(self, noise_key, dist_key, keys):
         m = MockProgModel(**{noise_key: 0.0})
@@ -334,12 +391,41 @@ class TestModels(unittest.TestCase):
         m = MockProgModel(**{noise_key: 0, dist_key: 'gaussian'})
         m = MockProgModel(**{noise_key: 0, dist_key: 'normal'})
         m = MockProgModel(**{noise_key: 0, dist_key: 'triangular'})
+
+    def test_isdiscrete_iscontinuous(self):
+        m = ThrownObject()
+        self.assertTrue(m.is_discrete)
+        self.assertFalse(m.is_continuous)
+
+        m = BatteryElectroChemEOD()
+        self.assertTrue(m.is_continuous)
+        self.assertFalse(m.is_discrete)
         
     def test_process_noise(self):
         self.__noise_test('process_noise', 'process_noise_dist', MockProgModel.states)
 
+        m = MockProgModel()
+
+        # All states except for the last one
+        noise = {key: 1 for key in list(m.states)[:-1]}
+        m.parameters['process_noise'] = noise
+        for key in list(m.states)[:-1]:
+            self.assertEqual(m.parameters['process_noise'][key], 1)
+        # That key should be 0 (default)
+        self.assertEqual(m.parameters['process_noise'][list(m.states)[-1]], 0)
+
     def test_measurement_noise(self):
         self.__noise_test('measurement_noise', 'measurement_noise_dist', MockProgModel.outputs)
+
+        m = MockProgModel()
+
+        # All outputs except for the last one
+        noise = {key: 1 for key in list(m.outputs)[:-1]}
+        m.parameters['measurement_noise'] = noise
+        for key in list(m.outputs)[:-1]:
+            self.assertEqual(m.parameters['measurement_noise'][key], 1)
+        # That key should be 0 (default)
+        self.assertEqual(m.parameters['measurement_noise'][list(m.outputs)[-1]], 0)
 
     def test_prog_model(self):
         m = MockProgModel() # Should work- sets default
@@ -398,236 +484,6 @@ class TestModels(unittest.TestCase):
         self.assertDictEqual(m.threshold_met({}), {})
         self.assertDictEqual(m.event_state({}), {})
 
-    def test_model_gen(self):
-        keys = {
-            'states': ['a', 'b', 'c', 't'],
-            'inputs': ['i1', 'i2'],
-            'outputs': ['o1'],
-            'events': ['e1']
-        }
-
-        def initialize(u, z):
-            return {'a': 1, 'b': 3, 'c': -3.2, 't': 0}
-
-        def next_state(x, u, dt):
-            x['a']+= u['i1']*dt
-            x['c']-= u['i2']
-            x['t']+= dt
-            return x
-
-        def dx(x, u):
-            return {'a': u['i1'], 'b': 0, 'c': u['i2'], 't':1}
-
-        def output(x):
-            return {'o1': x['a'] + x['b'] + x['c']}
-
-        def event_state(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0)}
-
-        def threshold_met(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0) < 1e-6}
-
-        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn = next_state, event_state_eqn = event_state, threshold_eqn = threshold_met)
-        x0 = m.initialize({}, {})
-        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        self.assertAlmostEqual(x['a'], 1.1, 6)
-        self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], 3)
-        z = m.output(x)
-        self.assertAlmostEqual(z['o1'], -1.2, 5)
-        e = m.event_state({'t': 0})
-        t = m.threshold_met({'t': 0})
-        self.assertAlmostEqual(e['e1'], 1.0, 5)
-        self.assertFalse(t['e1'])
-        e = m.event_state({'t': 5})
-        self.assertAlmostEqual(e['e1'], 0.0, 5)
-        t = m.threshold_met({'t': 5.1})
-        self.assertTrue(t['e1'])
-        t = m.threshold_met({'t': 10})
-        self.assertTrue(t['e1'])
-
-        # Without event_state or threshold
-        keys = {
-            'states': ['a', 'b', 'c'],
-            'inputs': ['i1', 'i2'],
-            'outputs': ['o1']
-        }
-        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn=next_state)
-        x0 = m.initialize({}, {})
-        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        self.assertAlmostEqual(x['a'], 1.1, 6)
-        self.assertAlmostEqual(x['c'], -5.3, 6)
-        self.assertEqual(x['b'], 3)
-        z = m.output(x)
-        self.assertAlmostEqual(z['o1'], -1.2, 5)
-        e = m.event_state({'t': 5})
-        self.assertDictEqual(e, {})
-        t = m.threshold_met({'t': 5.1})
-        self.assertDictEqual(t, {})
-
-        # Deriv Model
-        m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
-        x0 = m.initialize({}, {})
-        dx = m.dx(x0, {'i1': 1, 'i2': 2.1})
-        self.assertAlmostEqual(dx['a'], 1, 6)
-        self.assertAlmostEqual(dx['b'], 0, 6)
-        self.assertAlmostEqual(dx['c'], 2.1, 6)
-        x = m.next_state(x0, {'i1': 1, 'i2': 2.1}, 0.1)
-        self.assertAlmostEqual(x['a'], 1.1, 6)
-        self.assertAlmostEqual(x['c'], -2.99, 6)
-        self.assertEqual(x['b'], 3)
-
-    def test_broken_model_gen(self):
-        keys = {
-            'states': ['a', 'b', 'c', 't'],
-            'inputs': ['i1', 'i2'],
-            'outputs': ['o1'],
-            'events': ['e1']
-        }
-
-        def initialize(u, z):
-            return {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
-
-        def next_state(x, u, dt):
-            x['a']+= u['i1']*dt
-            x['c']-= u['i2']
-            x['t']+= dt
-            return x
-
-        def output(x):
-            return {'o1': x['a'] + x['b'] + x['c']}
-
-        def event_state(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0)}
-
-        def threshold_met(x):
-            t = x['t']
-            return {'e1': max(1-t/5.0,0) < 1e-6}
-
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, 7, output, next_state_eqn=next_state)
-            self.fail("Should have failed- non-callable initialize eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, next_state_eqn=[])
-            self.fail("Should have failed- non-callable next_state eqn")
-        except ProgModelTypeError:
-            pass
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output)
-            self.fail("Should have failed- missing next_state and dx eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- non-callable output eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- missing inputs keys")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- missing states keys")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, {}, next_state_eqn = next_state)
-            self.fail("Should have failed- missing outputs keys")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            extra_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1'],
-                'abc': 'def'
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(extra_keys, initialize, output, next_state_eqn = next_state)
-        except ProgModelTypeError:
-            self.fail("Should not have failed- extra keys")
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, output, event_state_eqn=-3, next_state_eqn = next_state)
-            self.fail("Should have failed- not callable event_state eqn")
-        except ProgModelTypeError:
-            pass
-
-        try:
-            incomplete_keys = {
-                'inputs': ['a'],
-                'states': ['a', 'b', 'c'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            m = prognostics_model.PrognosticsModel.generate_model(incomplete_keys, initialize, output, event_state_eqn=event_state, threshold_eqn=-3, next_state_eqn = next_state)
-            self.fail("Should have failed- not callable threshold eqn")
-        except ProgModelTypeError:
-            pass
-
-        # Non-iterable state
-        try:
-            keys = {
-                'states': 10, # should be a list
-                'inputs': ['i1', 'i2'],
-                'outputs': ['o1'],
-                'events': ['e1']
-            }
-            def dx(t, x, u):
-                return {'a': u['i1'], 'b': 0, 'c': u['i2']}
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
-            self.fail("Should have failed- non iterable states")
-        except TypeError:
-            pass
-
-        try:
-            keys = {
-                'states': ['a', 'b', 'c'], 
-                'inputs': ['i1', 'i2'],
-                'outputs': -2,# should be a list
-                'events': ['e1']
-            }
-            def dx(t, x, u):
-                return {'a': u['i1'], 'b': 0, 'c': u['i2']}
-            m = prognostics_model.PrognosticsModel.generate_model(keys, initialize, output, dx_eqn=dx)
-            self.fail("Should have failed- non iterable outputs")
-        except ProgModelTypeError:
-            pass
-
     def test_pickle(self):
         m = MockProgModel(p1 = 1.3)
         pickle.dump(m, open('model_test.pkl', 'wb'))
@@ -671,12 +527,29 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
         self.assertAlmostEqual(times[-1], 20.0, 5)
 
+        # No thresholds and no horizon
+        with self.assertRaises(ProgModelInputException):
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=[])
+
+        # No events and no horizon
+        m_noevents = OneInputNoOutputNoEventLM()
+        with self.assertRaises(ProgModelInputException):
+            (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+
         # Custom thresholds met eqn- both keys
         def thresh_met(thresholds):
             return all(thresholds.values())
         config = {'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0, 'thresholds_met_eqn': thresh_met}
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
+
+        # With no events and no horizon, but a threshold met eqn
+        # Should still run
+        def thresh_met(thresholds):
+            return True
+        linear_load = lambda t, x=None: m_noevents.InputContainer({'u1': 1})
+        (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
+        self.assertListEqual(times, [0, 0.5]) # Only one step
 
         try:
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
@@ -794,7 +667,85 @@ class TestModels(unittest.TestCase):
         for (oi, z) in zip(o, outputs): 
             # Lack of noise will make output as expected
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
-    
+
+    def test_estimate_params(self):
+        m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
+
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        keys = ['thrower_height', 'throwing_speed', 'g']
+        m.estimate_params(data, keys)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Now with limits that dont include the true values
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
+        for key in keys:
+            self.assertNotEqual(m.parameters[key], gt[key])
+
+        # Now with limits that do include the true values
+        m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Try incomplete list:
+        with self.assertRaises(ValueError):
+            # Missing bound
+            m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
+        with self.assertRaises(ValueError):
+            # Extra bound
+            m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, 0), (-20, 10)))
+
+        # Dictionary bounds
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Dictionary bounds - missing
+        # Will fill with (-inf, inf)
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Dictionary bounds - extra
+        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # Bounds - wrong type
+        with self.assertRaises(ValueError):
+            # bounds isn't tuple or dict
+            m.estimate_params(data, keys, bounds=0)
+        with self.assertRaises(ValueError):
+            # bounds isn't tuple or dict
+            m.estimate_params(data, keys, bounds='a')
+        with self.assertRaises(ValueError):
+            # Item isn't a tuple
+            m.estimate_params(data, keys, bounds={'g': 7})
+        with self.assertRaises(ValueError):
+            # Tuple isn't of size 2
+            m.estimate_params(data, keys, bounds={'g': (7,)})
+
+        # With inputs, outputs, and times
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[results.outputs], keys=keys)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+
+        # No keys
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(data)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+            
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
         def load(t, x=None):
@@ -1026,13 +977,13 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return m.InputContainer({'i1': 1, 'i2': 2.1})
 
-        # inside bounds
+        # inside bounds using simulate_to
         x0['t'] = 0
         (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
-        # now using the fcn
+        # now using the apply_limits function
         x0['t'] = 0
         x = m.apply_limits(x0)
         self.assertAlmostEqual(x['t'], 0, 9)
@@ -1075,6 +1026,11 @@ class TestModels(unittest.TestCase):
         x = m.apply_limits(x0)
         self.assertAlmostEqual(x['t'], 100, 9)
 
+        # Vectorized inputs - high and low
+        x0 = m.StateContainer(np.array([[1]*3, [5]*3, [-3.2]*3,[50, -150, 125]]))
+        x = m.apply_limits(x0)
+        self.assertListEqual(list(x['t']), [50, -100, 100])
+
         # when state doesn't exist
         try:
             x0['n'] = 0
@@ -1115,272 +1071,6 @@ class TestModels(unittest.TestCase):
             self.fail()
         except Exception:
             pass
-
-    def test_linear_model(self):
-        m = LinearThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
-        # len() = events states inputs outputs
-        #         1      2      0      1
-
-        # Matrix overwrite type checking (Can't set attributes for B, D, G; not overwritten)
-        # when matrix is not of type NumPy ndarray or standard list
-        # @A
-        with self.assertRaises(TypeError):
-            m.A = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.A = None # None
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.A = 0 # int
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.A = 3.14 # float
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.A = {} # dict
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.A = () # tuple
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.A = set() # set
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.A = True # boolean
-            m.matrixCheck()
-        # @C
-        with self.assertRaises(TypeError):
-            m.C = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.C = None # None
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.C = 0 # int
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.C = 3.14 # float
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.C = {} # dict
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.C = () # tuple
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.C = set() # set
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.C = True # boolean
-            m.matrixCheck()
-        # @E
-        with self.assertRaises(TypeError):
-            m.E = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.E = None # None
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.E = 0 # int
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.E = 3.14 # float
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.E = {} # dict
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.E = () # tuple
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.E = set() # set
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.E = True # boolean
-            m.matrixCheck()
-        # @F
-        with self.assertRaises(TypeError):
-            m.F = "[[0, 1], [0, 0]]" # string
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.F = 0 # int
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.F = 3.14 # float
-            m.matrixCheck()
-        with self.assertRaises(TypeError):
-            m.F = {} # dict
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.F = () # tuple
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.F = set() # set
-            m.matrixCheck() 
-        with self.assertRaises(TypeError):
-            m.F = True # boolean
-            m.matrixCheck()
-        
-        # Matrix Dimension Checking
-        # when matrix is not proper dimensional (1-D array = C, D, G; 2-D array = A,B,E; None = F;)
-        # @A 2x2
-        with self.assertRaises(AttributeError):
-            m.A = np.array([[0, 1]]) # 1-D array
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.A = np.array([[0, 1], [0, 0], [1, 0]]) # 3-D array
-            m.matrixCheck()
-        # @B 2x0
-        with self.assertRaises(AttributeError):
-            m.B = np.array([[]]) # 1-D array
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.B = np.array([[], [], []]) # 3-D array
-            m.matrixCheck()
-        # @C 1x2
-        with self.assertRaises(AttributeError):
-            m.C = np.array([[]]) # 0-D array
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.C = np.array([[0, 0], [1, 1]]) # 2-D array
-            m.matrixCheck()
-        # @D 1x1
-        with self.assertRaises(AttributeError):
-            m.D = np.array([]) # 0-D array
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.D = np.array([[0], [1]]) # 2-D array
-            m.matrixCheck()
-        # E 2x1
-        with self.assertRaises(AttributeError):
-            m.E = np.array([[0]]) # 1-D array
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.E = np.array([[0], [1], [2]]) # 3-D array
-            m.matrixCheck()
-        
-        # when matrix is improperly shaped
-        # @A 2x2
-        with self.assertRaises(AttributeError):
-            m.A = np.array([[0, 1, 2, 3], [0, 0, 1, 2]]) # extra column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.A = np.array([[0], [0]]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.A = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.A = np.array([[0, 1]]) # less row
-            m.matrixCheck()
-        # @B 2x0
-        with self.assertRaises(AttributeError):
-            m.B = np.array([[0, 1 ,2]]) # extra column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.B = np.array([[0]]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.B = np.array([[0, 1], [1, 1], [2, 2]]) # extra row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.B = np.array([[0, 1]]) # less row
-            m.matrixCheck()
-        # @C 1x2
-        with self.assertRaises(AttributeError):
-            m.C = np.array([[1, 0, 2]]) # extra column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.C = np.array([[1]]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.C = np.array([[0, 0], [1, 1], [2, 2]]) # extra row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.C = np.array([[]]) # less row
-            m.matrixCheck()
-        # @D 1x1
-        with self.assertRaises(AttributeError):
-            m.D = np.array([[1, 2]]) # extra column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.D = np.array([[]]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.D = np.array([[0], [1]]) # extra row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.D = np.array([[]]) # less row
-            m.matrixCheck()
-        # @E 2x1
-        with self.assertRaises(TypeError):
-            m.E = np.array([0,0], [-9.81, -1]) # extra column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.E = np.array([[], []]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.E = np.array([[0, 1], [0, 0], [2, 2]]) # extra row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.E = np.array([[0, 1]]) # less row
-            m.matrixCheck()
-        # @G 1x1
-        with self.assertRaises(AttributeError):
-            m.G = np.array([0, 1]) # extra column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError):
-            m.G = np.array([[]]) # less column values per row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.G = np.array([[0], [1]]) # extra row
-            m.matrixCheck()
-        with self.assertRaises(AttributeError): 
-            m.G = np.array([[]]) # less row
-            m.matrixCheck()
-
-    def test_F_property_not_none(self):
-        class ThrownObject(LinearThrownObject):
-            F = np.array([[1, 0]]) # Will override method
-
-            default_parameters = {
-                'thrower_height': 1.83,  # m
-                'throwing_speed': 40,  # m/s
-                'g': -9.81  # Acceleration due to gravity in m/s^2
-            }
-
-        m = ThrownObject()
-        m.simulate_to_threshold(lambda t, x = None: m.InputContainer({}))
-        m.matrixCheck()
-        self.assertIsInstance(m.F, np.ndarray)
-        self.assertTrue(np.array_equal(m.F, np.array([[1, 0]])))
-
-    def test_init_matrix_as_list(self):
-        class ThrownObject(LinearThrownObject):
-            A = [[0, 1], [0, 0]]
-            E = [[0], [-9.81]]
-            C = [[1, 0]]
-
-        m = ThrownObject()
-        m.matrixCheck()
-        self.assertIsInstance(m.A, np.ndarray)
-        self.assertTrue(np.array_equal(m.A, np.array([[0, 1], [0, 0]])))
-        self.assertIsInstance(m.E, np.ndarray)
-        self.assertTrue(np.array_equal(m.E, np.array([[0], [-9.81]])))
-        self.assertIsInstance(m.C, np.ndarray)
-        self.assertTrue(np.array_equal(m.C, np.array([[1, 0]])))
-
-    def test_event_state_function(self):
-        class ThrownObject(LinearThrownObject):
-            F = None # Will override method
-            
-            def threshold_met(self, x):
-                return {
-                    'falling': x['v'] < 0,
-                    'impact': x['x'] <= 0
-                }
-        # test coverage needs testing of event_state not overridden
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)
@@ -1446,6 +1136,215 @@ class TestModels(unittest.TestCase):
         # Test high drag simulated results different from no drag
         self.assertNotEqual(simulated_results_hi.times, simulated_results_nd.times)
         self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
+
+    def test_composite_broken(self):
+        m1 = OneInputOneOutputNoEventLM()
+
+        # Insufficient number of models
+        with self.assertRaises(ValueError):
+            CompositeModel([])
+        with self.assertRaises(ValueError):
+            CompositeModel([m1])
+        
+        # Wrong type
+        with self.assertRaises(ValueError):
+            CompositeModel([m1, m1, 'abc'])
+
+        # Incorrect named format
+        with self.assertRaises(ValueError):
+            # Too many elements
+            CompositeModel([('a', m1, 'Something else'), ('b', m1)])
+        with self.assertRaises(ValueError):
+            # Not a string
+            CompositeModel([(m1, m1)])
+        with self.assertRaises(ValueError):
+            # Not a model
+            CompositeModel([('a', 'b')])
+        with self.assertRaises(ValueError):
+            # Too few elements
+            CompositeModel([(m1, )])
+
+        # Incorrect connections
+        with self.assertRaises(ValueError):
+            # without model name
+            CompositeModel([m1, m1], connections=[('z1', 'u1')])
+        with self.assertRaises(ValueError):
+            # broken in
+            CompositeModel([m1, m1], connections=[('z1', 'OneInputOneOutputNoEventLM.u1')])
+        with self.assertRaises(ValueError):
+            # broken out
+            CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'u1')])
+        with self.assertRaises(ValueError):
+            # Switched
+            CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.u1', 'OneInputOneOutputNoEventLM_2.z1')])
+        with self.assertRaises(ValueError):
+            # Improper format - too long
+            CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM.u1', 'Something else')])
+        with self.assertRaises(ValueError):
+            # Improper format - not a string
+            CompositeModel([m1, m1], connections=[(m1, m1)])
+        with self.assertRaises(ValueError):
+            # Improper format - too short
+            CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', )])
+        with self.assertRaises(ValueError):
+            # Improper format - not a tuple
+            CompositeModel([m1, m1], connections=['m1'])
+
+        # Incorrect outputs
+        with self.assertRaises(ValueError):
+            # without model name
+            CompositeModel([m1, m1], outputs=['z1'])
+        with self.assertRaises(ValueError):
+            # extra
+            CompositeModel([m1, m1], outputs=['OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1', 'z1'])
+
+    def test_composite(self):
+        m1 = OneInputOneOutputNoEventLM()
+        m2 = OneInputNoOutputOneEventLM()
+        m1_withpm = OneInputOneOutputNoEventLMPM()
+
+        # Test with no connections
+        m_composite = CompositeModel([m1, m1])
+        self.assertSetEqual(m_composite.states, {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1', 'OneInputOneOutputNoEventLM_2.u1'})
+        self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
+        self.assertSetEqual(m_composite.events, set())
+        self.assertSetEqual(m_composite.performance_metric_keys, set(), "Shouldn't have any performance metrics")
+
+        x0 = m_composite.initialize()
+        self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
+        self.assertEqual(x0['OneInputOneOutputNoEventLM.x1'], 0)
+        # Only provide non-zero input for the first model
+        u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1, 'OneInputOneOutputNoEventLM_2.u1': 0})
+        x = m_composite.next_state(x0, u, 1)
+        self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 0)
+        self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
+        z = m_composite.output(x)
+        self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 0)
+        self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
+        pm = m_composite.performance_metrics(x)
+        self.assertSetEqual(set(pm.keys()), set())
+
+        # With Performance Metrics
+        # Everything else should behave the same, so we're only testing the performance metrics
+        m_composite = CompositeModel([m1_withpm, m1_withpm])
+        self.assertSetEqual(m_composite.performance_metric_keys, {'OneInputOneOutputNoEventLMPM_2.x1+1', 'OneInputOneOutputNoEventLMPM.x1+1'})
+
+        x0 = m_composite.initialize()
+        u = m_composite.InputContainer({'OneInputOneOutputNoEventLMPM.u1': 1, 'OneInputOneOutputNoEventLMPM_2.u1': 0})
+        x = m_composite.next_state(x0, u, 1)
+        pm = m_composite.performance_metrics(x)
+        self.assertSetEqual(set(pm.keys()), {'OneInputOneOutputNoEventLMPM_2.x1+1', 'OneInputOneOutputNoEventLMPM.x1+1'})
+        self.assertEqual(pm['OneInputOneOutputNoEventLMPM_2.x1+1'], 1)
+        self.assertEqual(pm['OneInputOneOutputNoEventLMPM.x1+1'], 2)
+
+        # Test with connections - output, no event
+        m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.u1')])
+        # Additional state to store output
+        self.assertSetEqual(m_composite.states, {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
+        # One less input - since it's internally connected
+        self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1',})
+        self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
+        self.assertSetEqual(m_composite.events, set())
+
+        x0 = m_composite.initialize()
+        self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
+        self.assertEqual(x0['OneInputOneOutputNoEventLM.x1'], 0)
+        self.assertEqual(x0['OneInputOneOutputNoEventLM.z1'], 0)
+        # Only provide non-zero input for first model
+        u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
+        x = m_composite.next_state(x0, u, 1)
+        self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
+        z = m_composite.output(x)
+        self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
+        self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
+
+        # Propogate again
+        x = m_composite.next_state(x, u, 1)
+        self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
+        self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
+
+        # Test with connections - state, no event
+        m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')])
+        # No additional state to store output, since state is used for the connection
+        self.assertSetEqual(m_composite.states, {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        # One less input - since it's internally connected
+        self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1',})
+        self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
+        self.assertSetEqual(m_composite.events, set())
+        
+        x0 = m_composite.initialize()
+        self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
+        self.assertEqual(x0['OneInputOneOutputNoEventLM.x1'], 0)
+        # Only provide non-zero input for model 1
+        u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
+        x = m_composite.next_state(x0, u, 1)
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
+        z = m_composite.output(x)
+        self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
+        self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
+
+        # Propogate again
+        x = m_composite.next_state(x, u, 1)
+        self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
+        self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
+
+        # Test with connections - two events
+        m_composite = CompositeModel([m2, m2], connections=[('OneInputNoOutputOneEventLM.x1', 'OneInputNoOutputOneEventLM_2.u1')])
+        self.assertSetEqual(m_composite.states, {'OneInputNoOutputOneEventLM_2.x1', 'OneInputNoOutputOneEventLM.x1'})
+        # One less input - since it's internally connected
+        self.assertSetEqual(m_composite.inputs, {'OneInputNoOutputOneEventLM.u1',})
+        self.assertSetEqual(m_composite.outputs, set())
+        self.assertSetEqual(m_composite.events, {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
+
+        x0 = m_composite.initialize()
+        u = m_composite.InputContainer({'OneInputNoOutputOneEventLM.u1': 1})
+        x = m_composite.next_state(x0, u, 1) # 1, 1
+        x = m_composite.next_state(x, u, 1) # 2, 3
+        x = m_composite.next_state(x, u, 1) # 3, 6
+        tm = m_composite.threshold_met(x)
+        self.assertSetEqual(set(tm.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
+        self.assertFalse(tm['OneInputNoOutputOneEventLM.x1 == 10'])
+        self.assertFalse(tm['OneInputNoOutputOneEventLM_2.x1 == 10'])
+
+        x = m_composite.next_state(x, u, 1) # 4, 10
+        es = m_composite.event_state(x)
+        self.assertSetEqual(set(es.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
+        self.assertEqual(es['OneInputNoOutputOneEventLM.x1 == 10'], 0.6)
+        self.assertEqual(es['OneInputNoOutputOneEventLM_2.x1 == 10'], 0.0)
+        tm = m_composite.threshold_met(x)
+        self.assertSetEqual(set(tm.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
+        self.assertFalse(tm['OneInputNoOutputOneEventLM.x1 == 10'])
+        self.assertTrue(tm['OneInputNoOutputOneEventLM_2.x1 == 10'])
+
+        # Test with outputs specified
+        m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')], outputs=['OneInputOneOutputNoEventLM_2.z1'])
+        self.assertSetEqual(m_composite.states, {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1',})
+        # One less output
+        self.assertSetEqual(set(m_composite.outputs), {'OneInputOneOutputNoEventLM_2.z1', })
+        self.assertSetEqual(m_composite.events, set())
+        x0 = m_composite.initialize()
+        z = m_composite.output(x0)
+        self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', })
+
+        # With Names
+        m_composite = CompositeModel([('m1', m1), ('m2', m2)], connections=[('m1.x1', 'm2.u1')])
+        self.assertSetEqual(m_composite.states, {'m2.x1', 'm1.x1'})
+        self.assertSetEqual(m_composite.inputs, {'m1.u1',})
+        self.assertSetEqual(m_composite.outputs, {'m1.z1', })
+        self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
 
 # This allows the module to be executed directly
 def run_tests():

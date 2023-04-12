@@ -39,6 +39,7 @@ class LSTMStateTransitionModel(DataModel):
 
     See Also:
         LSTMStateTransitionModel.from_data
+        LSTMStateTransitionModel.from_model
         examples.lstm_model
     """
 
@@ -255,8 +256,8 @@ class LSTMStateTransitionModel(DataModel):
                 else:
                     u = np.array([u_i.matrix[:,0] for u_i in u])
 
-                if len(u) > window:
-                    raise TypeError(f"Not enough data for window size {window}. Only {len(u)} elements present.")
+            if len(u) > 0 and len(u) <= window:
+                raise TypeError(f"Not enough data for window size {window}. Only {len(u)} elements present.")
 
             if isinstance(u, (list, np.ndarray)):
                 if len(u) == 0:

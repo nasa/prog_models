@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.append(join(dirname(__file__), ".."))  # Needed to access examples
-from examples import dataset, sim_battery_eol
+from examples import dataset, sim_battery_eol, ensemble
 
 from prog_models.datasets import nasa_cmapss, nasa_battery
 
@@ -79,6 +79,10 @@ class TestManual(unittest.TestCase):
     def test_sim_battery_eol_example(self):
         with patch('matplotlib.pyplot.show'):
             sim_battery_eol.run_example()
+
+    def test_ensemble_example(self):
+        with patch('matplotlib.pyplot.show'):
+            ensemble.run_example()
 
 # This allows the module to be executed directly
 def run_tests():

@@ -4,8 +4,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
-from . import PrognosticsModel
-
+from prog_models.prognostics_model import PrognosticsModel
 
 class LinearModel(PrognosticsModel, ABC):
     """
@@ -37,6 +36,9 @@ class LinearModel(PrognosticsModel, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.matrixCheck()
+
+        if self.F is None and type(self).event_state == LinearModel.event_state:
+            raise AttributeError('LinearModel must define F if event_state is not defined. Either override event_state or define F.')
 
     def matrixCheck(self) -> None:
         """
@@ -83,10 +85,6 @@ class LinearModel(PrognosticsModel, ABC):
         return np.zeros((self.n_states, self.n_inputs))
 
     @property
-    def E(self):
-        return np.zeros((self.n_states, 1))
-
-    @property
     @abstractmethod
     def C(self):
         pass
@@ -94,6 +92,10 @@ class LinearModel(PrognosticsModel, ABC):
     @property
     def D(self):
         return np.zeros((self.n_outputs, 1))
+
+    @property
+    def E(self):
+        return np.zeros((self.n_states, 1))
 
     @property
     @abstractmethod

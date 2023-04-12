@@ -1,12 +1,15 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
+import chaospy as cp
 from io import StringIO
 import sys
 import unittest
 import warnings
 
-from prog_models.models import *
+from prog_models.data_models import PCE
 from prog_models.exceptions import ProgModelInputException
+from prog_models.models import *
+from prog_models.models.test_models.linear_models import *
 
 
 class TestSurrogate(unittest.TestCase):
@@ -528,6 +531,57 @@ class TestSurrogate(unittest.TestCase):
         with self.assertWarns(Warning):
             surrogate.simulate_to_threshold(load_eqn, dt = 0.05)
 
+    def test_pce_no_input(self):
+        m = ThrownObject()
+        with self.assertRaises(ValueError):
+            pce = PCE.from_model(m, m.initialize(), {}, [])
+
+    def test_pce_no_state(self):
+        m = DCMotorSP()
+        with self.assertRaises(ValueError):
+            pce = PCE.from_model(m, m.initialize(), {}, [])
+
+    def _pce_tests(self, m):
+        x0 = m.initialize()
+        input_dists = {'u1': cp.Uniform(0.5, 2), 'u2': cp.Uniform(0.5, 2)}
+        # This is to handle cases where there are <2 inputs
+        input_dists = {key: input_dists[key] for key in m.inputs}
+        pce = PCE.from_model(m, x0, input_dists, times = [i*10 for i in range(5)], N = 250)
+        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1, 'u2': 0.75}))
+        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1, 'u2': 0.75}))
+        for event in m.events:
+            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=1)
+
+        input_dists = {'u1': cp.Normal(1, 0.5), 'u2': cp.Normal(0.75, 0.5)}
+        # This is to handle cases where there are <2 inputs
+        input_dists = {key: input_dists[key] for key in m.inputs}
+        pce = PCE.from_model(m, x0, input_dists, times = [i*10 for i in range(6)], N = 250)
+        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1, 'u2': 0.75}))
+        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1, 'u2': 0.75}))
+        for event in m.events:
+            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=1)
+
+        pce_result = pce.time_of_event(x0, lambda t, x=None: pce.InputContainer({'u1': 1.5, 'u2': 1}))
+        gt_result = m.time_of_event(x0, lambda t, x=None: m.InputContainer({'u1': 1.5, 'u2': 1}))
+        for event in m.events:
+            self.assertAlmostEqual(pce_result[event], gt_result[event], delta=1.25)
+    
+    def test_pce_oneinput_oneevent(self):
+        m = OneInputNoOutputOneEventLM()
+        self._pce_tests(m)
+
+    def test_pce_oneinput_twoevent(self):
+        m = OneInputNoOutputTwoEventLM()
+        self._pce_tests(m)
+
+    def test_pce_twoinput_oneevent(self):
+        m = TwoInputNoOutputOneEventLM()
+        self._pce_tests(m) 
+
+    def test_pce_twoinput_twoevent(self):
+        m = TwoInputNoOutputTwoEventLM()
+        self._pce_tests(m) 
+            
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()

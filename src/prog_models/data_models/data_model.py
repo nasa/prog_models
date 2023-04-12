@@ -24,11 +24,18 @@ class DataModel(PrognosticsModel, ABC):
         Create a Data Model from data. This class is overwritten by specific data-driven classes (e.g., :py:class:`LSTMStateTransitionModel`)
 
         Keyword Arguments:
-            times (list[list]): list of input data for use in data. Each element is the times for a single run of size (n_times)
-            inputs (list[np.array]): list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
-            states (list[np.array]): list of :term:`state` data for use in data. Each element is the states for a single run of size (n_times, n_states)
-            outputs (list[np.array]): list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
-            event_states (list[np.array]): list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
+            times (list[list]): 
+                list of input data for use in data. Each element is the times for a single run of size (n_times)
+            inputs (list[np.array]): 
+                list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
+            states (list[np.array]): 
+                list of :term:`state` data for use in data. Each element is the states for a single run of size (n_times, n_states)
+            outputs (list[np.array]): 
+                list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
+            event_states (list[np.array]): 
+                list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
+            time_of_event (np.array):
+                Array of time of event data for use in data. Each element is the time of event for a single run of size (n_samples, n_events)
             input_keys (list[str]): 
                 List of :term:`input` keys
             state_keys (list[str]): 
@@ -44,10 +51,8 @@ class DataModel(PrognosticsModel, ABC):
             DataModel: Trained PrognosticsModel
 
         Example:
-            |
-
-                >>> # Replace DataModel with specific classname below
-                >>> m = DataModel.from_data(data)
+            >>> # Replace DataModel with specific classname below
+            >>> m = DataModel.from_data(data)
         """
         pass
 

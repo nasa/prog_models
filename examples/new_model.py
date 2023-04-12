@@ -4,7 +4,7 @@
 """
 Example defining and using a new prognostics model.  
 
-In this example a simple model of an object thrown upward into the air is defined. That model is then used in simulation under different conditions and the results are displayed in different formats.
+In this example a simple state-transition model of an object thrown upward into the air is defined. That model is then used in simulation under different conditions and the results are displayed in different formats.
 """
 
 from prog_models import PrognosticsModel
@@ -12,7 +12,7 @@ from prog_models import PrognosticsModel
 
 class ThrownObject(PrognosticsModel):
     """
-    Model that similates an object thrown into the air without air resistance
+    Model that simulates an object thrown into the air without air resistance
     """
 
     inputs = [] # no inputs, no way to control
@@ -28,13 +28,13 @@ class ThrownObject(PrognosticsModel):
         'impact' # Event- object has impacted ground
     ]
 
-    # The Default parameters. Overwritten by passing parameters dictionary into constructor
+    # The Default parameters. Overwritten by passing parameters into constructor
     default_parameters = {
         'x0': {  # Initial State
             'x': 1.83,  # Height of thrower (m)
-            'v': 40  # Velocity at which the ball is thrown (m/s)
+            'v': 40  # Velocity at which the object is thrown (m/s)
         },
-        'g': -9.81,  # Acceleration due to gravity in m/s^2
+        'g': -9.81,  # Acceleration due to gravity (m/s^2)
         'process_noise': 0.0  # amount of noise in each step
     }
 
@@ -86,16 +86,16 @@ def run_example():
 
     # The first way to change the configuration is to pass in your desired config into construction of the model
     m = ThrownObject(g = grav_moon)
-    simulated_moon_results = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    simulated_moon_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
 
     grav_mars = -3.711
     # You can also update the parameters after it's constructed
     m.parameters['g'] = grav_mars
-    simulated_mars_results = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    simulated_mars_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
 
     grav_venus = -8.87
     m.parameters['g'] = grav_venus
-    simulated_venus_results = m.simulate_to_threshold(future_load, threshold_keys=[event], options={'dt':0.005, 'save_freq':1})
+    simulated_venus_results = m.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
 
     print('Time to hit the ground: ')
     print('\tvenus: {}s'.format(round(simulated_venus_results.times[-1],2)))
@@ -104,13 +104,13 @@ def run_example():
     print('\tmoon: {}s'.format(round(simulated_moon_results.times[-1],2)))
 
     # We can also simulate until any event is met by neglecting the threshold_keys argument
-    simulated_results = m.simulate_to_threshold(future_load, options={'dt':0.005, 'save_freq':1})
+    simulated_results = m.simulate_to_threshold(future_load, dt=0.005, save_freq=1)
     threshs_met = m.threshold_met(simulated_results.states[-1])
     for (key, met) in threshs_met.items():
         if met:
             event_occurred = key
     print('\nThis event that occurred first: ', event_occurred)
-    # It falls before it hits the gorund, obviously
+    # It falls before it hits the ground, obviously
 
     # Metrics can be analyzed from the simulation results. For example: monotonicity
     print('\nMonotonicity: ', simulated_results.event_states.monotonicity())

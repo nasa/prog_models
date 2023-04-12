@@ -8,9 +8,10 @@ from numbers import Number
 import types
 from typing import Callable
 
-from .noise_functions import measurement_noise_functions, process_noise_functions
-from .serialization import *
-from ..exceptions import ProgModelTypeError
+from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
+from prog_models.utils.serialization import *
+from prog_models.utils.size import getsizeof
+from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
@@ -43,8 +44,20 @@ class PrognosticsModelParameters(UserDict):
                 for callback in callbacks[key]:
                     changes = callback(self)
                     self.update(changes)
+    
+    def __sizeof__(self):
+        return getsizeof(self)
 
-    def __setitem__(self, key : str, value : float, _copy : bool = True) -> None:
+    def copy(self):
+        return self.__class__(self._m, self.data, self.callbacks, _copy=False)
+
+    def __copy__(self):
+        return self.__class__(self._m, self.data, self.callbacks, _copy=False)
+    
+    def __deepcopy__(self):
+        return self.__class__(self._m, self.data, self.callbacks, _copy=True)
+
+    def __setitem__(self, key : str, value : float, _copy : bool = False) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
@@ -73,7 +86,13 @@ class PrognosticsModelParameters(UserDict):
                 if isinstance(self['process_noise'], Number):
                     self['process_noise'] = self._m.StateContainer({key: self['process_noise'] for key in self._m.states})
                 elif isinstance(self['process_noise'], dict):
-                    self['process_noise'] = self._m.StateContainer(self['process_noise'])
+                    noise = self['process_noise']
+                    for key in self._m.states:
+                        # Set any missing keys to 0
+                        if key not in noise.keys():
+                            noise[key] = 0
+                            
+                    self['process_noise'] = self._m.StateContainer(noise)
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
@@ -103,7 +122,12 @@ class PrognosticsModelParameters(UserDict):
                 if isinstance(self['measurement_noise'], Number):
                     self['measurement_noise'] = self._m.OutputContainer({key: self['measurement_noise'] for key in self._m.outputs})
                 elif isinstance(self['measurement_noise'], dict):
-                    self['measurement_noise'] = self._m.OutputContainer(self['measurement_noise'])
+                    noise = self['measurement_noise']
+                    for key in self._m.outputs:
+                        # Set any missing keys to 0
+                        if key not in noise.keys():
+                            noise[key] = 0
+                    self['measurement_noise'] = self._m.OutputContainer(noise)
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:

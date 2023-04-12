@@ -10,6 +10,7 @@ from numbers import Number
 import numpy as np
 from typing import Callable, Iterable, List
 from warnings import warn
+import pandas as pd
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
@@ -109,7 +110,7 @@ class PrognosticsModel(ABC):
         params = PrognosticsModel.default_parameters.copy()
 
         # Add params specific to the model
-        params.update(self.__class__.default_parameters) 
+        params.update(self.__class__.default_parameters)
 
         # Add params specific passed via command line arguments
         try:
@@ -579,8 +580,8 @@ class PrognosticsModel(ABC):
             return {}
 
         return {key: 1.0-float(t_met) \
-            for (key, t_met) in self.threshold_met(x).items()} 
-    
+            for (key, t_met) in self.threshold_met(x).items()}
+
     def threshold_met(self, x) -> dict:
         """
         For each event threshold, calculate if it has been met
@@ -613,7 +614,7 @@ class PrognosticsModel(ABC):
             return {}
 
         return {key: event_state <= 0 \
-            for (key, event_state) in self.event_state(x).items()} 
+            for (key, event_state) in self.event_state(x).items()}
 
     @property
     def is_state_transition_model(self) -> bool:
@@ -777,7 +778,7 @@ class PrognosticsModel(ABC):
         kwargs.update(config) # Config should override kwargs
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
- 
+
     def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
@@ -863,7 +864,7 @@ class PrognosticsModel(ABC):
             future_loading_eqn = lambda t,x=None: self.InputContainer({})
         elif not (callable(future_loading_eqn)):
             raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
-        
+
         if isinstance(threshold_keys, str):
             # A single threshold key
             threshold_keys = [threshold_keys]
@@ -884,7 +885,7 @@ class PrognosticsModel(ABC):
             'progress': False
         }
         config.update(kwargs)
-        
+
         # Configuration validation
         if not isinstance(config['dt'], (Number, tuple, str)) and not callable(config['dt']):
             raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
@@ -920,7 +921,7 @@ class PrognosticsModel(ABC):
 
         if not isinstance(x, self.StateContainer):
             x = self.StateContainer(x)
-        
+
         # Optimization
         next_state = self.__next_state
         output = self.__output
@@ -938,7 +939,7 @@ class PrognosticsModel(ABC):
         if 'thresholds_met_eqn' in config:
             check_thresholds = config['thresholds_met_eqn']
             threshold_keys = []
-        elif threshold_keys is None: 
+        elif threshold_keys is None:
             # Note: Setting threshold_keys to be all events if it is None
             threshold_keys = self.events
         elif len(threshold_keys) == 0:
@@ -948,11 +949,11 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("Running simulate to threshold for a model with no events requires a horizon to be set. Otherwise simulation would never end.")
 
         # Initialization of save arrays
-        saved_times = []
-        saved_inputs = []
-        saved_states = []  
-        saved_outputs = []
-        saved_event_states = []
+        saved_times = pd.DataFrame(columns=['time'])
+        saved_inputs = pd.DataFrame()
+        saved_states = pd.DataFrame()
+        saved_outputs = pd.DataFrame()
+        saved_event_states = pd.DataFrame()
         horizon = t+config['horizon']
         if isinstance(config['save_freq'], tuple):
             # Tuple used to specify start and frequency
@@ -970,26 +971,36 @@ class PrognosticsModel(ABC):
         save_pt_index = 0
         save_pts = config['save_pts']
 
-        # confgure optional intermediate printing
+        # configure optional intermediate printing
         if config['print']:
             def update_all():
-                saved_times.append(t)
-                saved_inputs.append(u)
-                saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
-                saved_outputs.append(output(x))
-                saved_event_states.append(event_state(x))
+                saved_times.concat([t], ignore_index=True)
+                saved_inputs.concat([u], ignore_index=True)
+                saved_states.concat([deepcopy(x)], ignore_index=True) # Avoid optimization where x is not copied
+                saved_outputs.concat([output(x)], ignore_index=True)
+                saved_event_states.concat([event_state(x)], ignore_index=True)
+                # reindex DataFrames
+                saved_times.reindex()
+                saved_inputs.reindex()
+                saved_states.reindex()
+                saved_outputs.reindex()
+                saved_event_states.reindex()
                 print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
                     .format(
-                        saved_times[-1],
-                        saved_inputs[-1],
-                        saved_states[-1],
-                        saved_outputs[-1],
-                        saved_event_states[-1]))  
+                        saved_times.loc[-1],
+                        saved_inputs.loc[-1],
+                        saved_states.loc[-1],
+                        saved_outputs.loc[-1],
+                        saved_event_states.loc[-1]))
         else:
             def update_all():
-                saved_times.append(t)
-                saved_inputs.append(u)
-                saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
+                saved_times.concat([t], ignore_index=True)
+                saved_inputs.concat([u], ignore_index=True)
+                saved_states.concat([deepcopy(x)], ignore_index=True)  # Avoid optimization where x is not copied
+                # reindex DataFrames
+                saved_times.reindex()
+                saved_inputs.reindex()
+                saved_states.reindex()
 
         # configuring next_time function to define prediction time step, default is constant dt
         if callable(config['dt']):
@@ -997,7 +1008,7 @@ class PrognosticsModel(ABC):
             dt_mode = 'function'
         elif isinstance(config['dt'], tuple):
             dt_mode = config['dt'][0]
-            dt = config['dt'][1]                
+            dt = config['dt'][1]
         elif isinstance(config['dt'], str):
             dt_mode = config['dt']
             if dt_mode == 'constant':
@@ -1017,7 +1028,7 @@ class PrognosticsModel(ABC):
                 return min(dt, next_save-t, next_save_pt-t)
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
-        
+
         # Auto Container wrapping
         dt0 = next_time(t, x) - t
         if not isinstance(u, DictLikeMatrixWrapper):
@@ -1069,21 +1080,21 @@ class PrognosticsModel(ABC):
             StateContainer = self.StateContainer
             def next_state(x, u, dt):
                 dx1 = StateContainer(dx(x, u))
-                
+
                 x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
                 dx2 = dx(x2, u)
 
                 x3 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx2.items()})
                 dx3 = dx(x3, u)
-                
-                x4 = StateContainer({key: x[key] + dt*dx_i for key, dx_i in dx3.items()})   
+
+                x4 = StateContainer({key: x[key] + dt*dx_i for key, dx_i in dx3.items()})
                 dx4 = dx(x4, u)
 
                 x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
                 return apply_limits(apply_process_noise(x))
         elif config['integration_method'].lower() != 'euler':
             raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
-       
+
         while t < horizon:
             dt = next_time(t, x)
             t = t + dt/2
@@ -1118,25 +1129,25 @@ class PrognosticsModel(ABC):
             # Check thresholds
             if check_thresholds(threshold_met_eqn(x)):
                 break
-        
+
         # Save final state
         if saved_times[-1] != t:
             # This check prevents double recording when the last state was a savepoint
             update_all()
-        
+
         if not saved_outputs:
             # saved_outputs is empty, so it wasn't calculated in simulation - used cached result
-            saved_outputs = LazySimResult(self.__output, saved_times, saved_states) 
+            saved_outputs = LazySimResult(self.__output, saved_times, saved_states)
             saved_event_states = LazySimResult(self.event_state, saved_times, saved_states)
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
             saved_event_states = SimResult(saved_times, saved_event_states, _copy=False)
-        
+
         return self.SimulationResults(
-            saved_times, 
-            SimResult(saved_times, saved_inputs, _copy=False), 
-            SimResult(saved_times, saved_states, _copy=False), 
-            saved_outputs, 
+            saved_times,
+            SimResult(saved_times, saved_inputs, _copy=False),
+            SimResult(saved_times, saved_states, _copy=False),
+            saved_outputs,
             saved_event_states
         )
 
@@ -1171,7 +1182,7 @@ class PrognosticsModel(ABC):
 
         if not isinstance(inputs[0], self.InputContainer):
             inputs = [self.InputContainer(u_i) for u_i in inputs]
-        
+
         if not isinstance(outputs[0], self.OutputContainer):
             outputs = [self.OutputContainer(z_i) for z_i in outputs]
 
@@ -1195,7 +1206,7 @@ class PrognosticsModel(ABC):
                 counter += 1
 
         return err_total/counter
-    
+
     def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
@@ -1282,10 +1293,10 @@ class PrognosticsModel(ABC):
                 try:
                     err += self.calc_error(run[0], run[1], run[2], **kwargs)
                 except Exception:
-                    return 1e99 
+                    return 1e99
                     # If it doesn't work (i.e., throws an error), don't use it
             return err
-        
+
         params = np.array([self.parameters[key] for key in keys])
 
         res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'])
@@ -1294,7 +1305,7 @@ class PrognosticsModel(ABC):
 
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
-        self.parameters['process_noise'] = p_noise   
+        self.parameters['process_noise'] = p_noise
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
         """
@@ -1340,7 +1351,7 @@ class PrognosticsModel(ABC):
 
         # Configure
         config = { # Defaults
-            'save_freq': 1.0, 
+            'save_freq': 1.0,
             'state_keys': self.states.copy(),
             'input_keys': self.inputs.copy(),
             'output_keys': self.outputs.copy(),
@@ -1380,7 +1391,7 @@ class PrognosticsModel(ABC):
             config['input_keys'] = [config['input_keys']]
         if not all([x in self.inputs for x in config['input_keys']]):
             raise ProgModelInputException(f"Invalid 'input_keys' value ({config['input_keys']}), must be a subset of the model's inputs ({self.inputs}).")
-        
+
         if isinstance(config['state_keys'], str):
             config['state_keys'] = [config['state_keys']]
         if not all([x in self.states for x in config['state_keys']]):
@@ -1397,7 +1408,7 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
-    
+
     def to_json(self):
         """
         Serialize parameters as JSON objects 
@@ -1414,7 +1425,7 @@ class PrognosticsModel(ABC):
         This method only serializes the values of the prognostics model parameters (model.parameters)
         """
         return json.dumps(self.parameters.data, cls=CustomEncoder)
-    
+
     @classmethod
     def from_json(cls, data):
         """
@@ -1437,5 +1448,5 @@ class PrognosticsModel(ABC):
         This serialization only works for models that include all parameters necessary to generate the model in model.parameters. 
         """
         extract_parameters = json.loads(data, object_hook = custom_decoder)
- 
+
         return cls(**extract_parameters)
