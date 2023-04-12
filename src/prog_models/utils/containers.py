@@ -3,111 +3,177 @@
 
 import numpy as np
 from typing import Union
+import pandas as pd
 
-from ..exceptions import ProgModelTypeError
+from prog_models.exceptions import ProgModelTypeError
 
 
 class DictLikeMatrixWrapper():
     """
     A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessable. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
-    
-    Arguments
-    ---------
-    keys: list
-        The keys of the dictionary. e.g., model.states or model.inputs
-    data: dict or numpy array
-        The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
+
+    Arguments:
+        keys -- list: The keys of the dictionary. e.g., model.states or model.inputs
+        data -- dict or numpy array: The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
     """
-    def __init__(self, keys : list, data : Union[dict, np.array]):
+
+    def __init__(self, keys: list, data: Union[dict, np.array, pd.Series]):
+        """
+        Initializes the container
+        """
         if not isinstance(keys, list):
-            keys = list(keys)
-
-        self._keys = keys.copy()
+            keys = list(keys)  # creates list with keys
+        temp_keys = keys.copy()
         if isinstance(data, np.matrix):
-            self.matrix = np.array(data, dtype=np.float64)
-        elif isinstance(data, np.ndarray):
-            if data.ndim == 1:
-                data = data[np.newaxis].T
-            self.matrix = data
-        elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            self.matrix = np.array(
-                [
-                    [data[key]] if key in data else [None] for key in keys
-                ], dtype=np.float64)
+            self.data = pd.DataFrame(np.array(data, dtype=np.float64), temp_keys)
+        elif isinstance(data, np.ndarray):  # data is a multidimensional array, in column vector form
+            self.data = pd.DataFrame(data, temp_keys)
+        elif isinstance(data, (dict, DictLikeMatrixWrapper)):  # data is not in column vector form
+            self.data = pd.DataFrame(data, index=[0]).T
         else:
-            raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")     
-
+            raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
+        self.matrix = self.data.to_numpy()
+        self._keys = self.data.index.to_list()
     def __reduce__(self):
-        return (DictLikeMatrixWrapper, (self._keys, self.matrix))
+        """
+        reduce is overridden for pickles
+        """
+        keys = self.data.index.to_list()
+        matrix = self.data.to_numpy()
+        return (DictLikeMatrixWrapper, (keys, matrix))
+    def __getitem__(self, key: str) -> int:
+        """
+        get all values associated with a key, ex: all values of 'i'
+        """
+        row = self.data.loc[key].to_list()  # creates list from a row of the DataFrame data
+        if len(self.data.loc[key]) == 1:  # list contains 1 value, returns that value (non-vectorized)
+            return self.data.loc[key, 0]
+        return row  # returns entire row/list (vectorized case)
 
-    def __getitem__(self, key : str) -> int:
-        row = self.matrix[self._keys.index(key)]
-        if len(row) == 1:
-            return self.matrix[self._keys.index(key)][0]
-        return self.matrix[self._keys.index(key)]
+    def __setitem__(self, key: str, value: int) -> None:
+        """
+        sets a row at the key given
+        """
+        self.data.loc[key] = np.atleast_1d(value)  # using the key to find the Series location
 
-    def __setitem__(self, key : str, value : int) -> None:
-        self.matrix[self._keys.index(key)] = np.atleast_1d(value)
 
-    def __delitem__(self, key : str) -> None:
-        self.matrix = np.delete(self.matrix, self._keys.index(key), axis=0)
-        self._keys.remove(key)
+    def __delitem__(self, key: str) -> None:
+        """
+        removes row associated with key
+        """
+        self.data = self.data.drop(index=[key])
 
-    def __add__(self, other : "DictLikeMatrixWrapper") -> "DictLikeMatrixWrapper":
-        return DictLikeMatrixWrapper(self._keys, self.matrix + other.matrix)
+    def __add__(self, other: "DictLikeMatrixWrapper") -> "DictLikeMatrixWrapper":
+        """
+        add 'other' matrix to the existing matrix
+        """
+        df_summed = self.data.add(other.data)  # the values in self and other summed in new series
+        key_list = self.data.index.to_list()
+        return DictLikeMatrixWrapper(key_list, df_summed.to_numpy())
 
     def __iter__(self):
-        return iter(self._keys)
+        """
+        creates iterator object for the list of keys
+        """
+        return iter(self.data.index.to_list())
 
     def __len__(self) -> int:
-        return len(self._keys)
+        """
+        returns the length of key list
+        """
+        return len(self.data.index)
 
-    def __eq__(self, other : "DictLikeMatrixWrapper") -> bool:
-        if isinstance(other, dict):
-            return list(self.keys()) == list(other.keys()) and (self.matrix == np.array([[other[key]] for key in self._keys])).all()
-        return self.keys() == other.keys() and (self.matrix == other.matrix).all()
+    def __eq__(self, other: "DictLikeMatrixWrapper") -> bool:
+        """
+        Compares two DictLikeMatrixWrappers (i.e. *Containers) or a DictLikeMatrixWrapper and a dictionary
+        """
+        if isinstance(other, dict):  # checks that the list of keys for each matrix match
+            other_series = pd.Series(other)
+            return self.data.equals(other_series)
+        return self.data.equals(other.data)
 
     def __hash__(self):
-        return hash(self.keys) + hash(self.matrix)
-    
+        """
+        returns hash value sum for keys and matrix
+        """
+        return hash(self.data)
+
     def __str__(self) -> str:
+        """
+        Represents object as string
+        """
         return self.__repr__()
 
     def get(self, key, default=None):
-        if key in self._keys:
-            return self[key]
+        """
+        gets the list of values associated with the key given
+        """
+        if key in self.data.index:
+            return self.data.loc[key]
         return default
 
     def copy(self) -> "DictLikeMatrixWrapper":
+        """
+        creates copy of object
+        """
         return DictLikeMatrixWrapper(self._keys, self.matrix.copy())
+        keys = self.data.index.to_list()
+        matrix = self.data.to_dict().copy()
+        return DictLikeMatrixWrapper(keys, matrix)
 
     def keys(self) -> list:
-        return self._keys
+        """
+        returns list of keys for container
+        """
+        keys = self.data.index.to_list()
+        return keys
 
     def values(self) -> np.array:
-        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
-            return np.array([value[0] for value in self.matrix])
-        return self.matrix
+        """
+        returns array of matrix values
+        """
+        matrix = self.data.to_numpy()
+        return matrix
 
     def items(self) -> zip:
-        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
-            return zip(self._keys, np.array([value[0] for value in self.matrix]))
-        return zip(self._keys, self.matrix)
+        """
+        returns keys and values as a list of tuples (for iterating)
+        """
+        if len(self.data.index) > 0:  # first row of the matrix has one value (non-vectorized case)
+            np_array = np.array([value[1] for value in self.data.items()])
+            return zip(self.data.index.to_list(), np_array[0])
+        return zip(self.data.index.to_list(), self.data.to_list())
 
-    def update(self, other : "DictLikeMatrixWrapper") -> None:
-        for key in other.keys():
-            if key in self._keys:
+    def update(self, other: "DictLikeMatrixWrapper") -> None:
+        """
+        merges other DictLikeMatrixWrapper, updating values
+        """
+        for key in other.data.index.to_list():
+            if key in self.data.index.to_list():  # checks to see if the key exists
                 # Existing key
-                self[key] = other[key]
-            else:
-                # A new key!
-                self._keys.append(key)
-                self.matrix = np.vstack((self.matrix, np.array([other[key]])))
+                self.data.loc[key] = other.data.loc[key]
+            else:  # the key doesn't exist within
+                # the key
+                temp_df = DictLikeMatrixWrapper([key], {key: other.data.loc[key, 0]})
+                self.data = pd.concat([self.data, temp_df.data])
 
-    def __contains__(self, key : str) -> bool:
-        return key in self._keys
+    def __contains__(self, key: str) -> bool:
+        """
+        boolean showing whether the key exists
+
+        example
+        -------
+        >>> from prog_models.utils.containers import DictLikeMatrixWrapper
+        >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': 1, 'b': 2, 'c': 3})
+        >>> 'a' in dlmw  # True
+        """
+        key_list = self.data.index.to_list()
+        return key in key_list
 
     def __repr__(self) -> str:
-        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:
-            return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
-        return str(dict(zip(self._keys, self.matrix)))
+        """
+        represents object as string
+
+        returns: a string of dictionaries containing all the keys and associated matrix values
+        """
+        return str(self.data.to_dict()[0])
