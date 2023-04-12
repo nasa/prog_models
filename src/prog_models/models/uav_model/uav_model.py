@@ -378,16 +378,17 @@ class UAVGen(PrognosticsModel):
           kwargs['dt'] = self.parameters['dt']
 
         # Simulate to threshold at DMD time step
-        super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs)
+        sim_res = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs)
 
+        return sim_res
 
     def linear_model(self, phi, theta, psi, p, q, r, T):
         """ The linear model ignores gyroscopic effect and wind rate of change"""
-        m         = self.mass['total']
-        Ixx       = self.mass['Ixx']
-        Iyy       = self.mass['Iyy']
-        Izz       = self.mass['Izz']
-        l         = self.geom['arm_length']
+        m         = self.vehicle_model.mass['total']
+        Ixx       = self.vehicle_model.mass['Ixx']
+        Iyy       = self.vehicle_model.mass['Iyy']
+        Izz       = self.vehicle_model.mass['Izz']
+        l         = self.vehicle_model.geom['arm_length'] # Is this correct? 
         sin_phi   = np.sin(phi)
         cos_phi   = np.cos(phi)
         sin_theta = np.sin(theta)

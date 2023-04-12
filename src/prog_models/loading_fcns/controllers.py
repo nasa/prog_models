@@ -4,7 +4,8 @@ Controllers
 
 # IMPORTS
 # ========
-from utilities.imports_ import np
+# from utilities.imports_ import np
+import numpy as np
 
 
 # LQR general function
@@ -52,7 +53,7 @@ def lqr_fn(A, B, Q, R):
 
     # --------- Partition matrix of resulting eigenvectors ------------ #
     X = V_[:n, :n] # first half (row-wise)
-    Y = V_[n:, :n] # second half (row-wise)
+    Y = V_[n:, :n] # second half (row-wise) 
 
     # ----------- Estimate control gain ----------------- #
     K = np.dot( np.dot( np.dot(R_inv, B.T), Y ), np.linalg.inv(X) )
@@ -63,51 +64,50 @@ def lqr_fn(A, B, Q, R):
     return K, E
 
     
-# CONTROLLERS: FULL STATE VECTOR CONTROL  (i.e., no powertrain)
-# ==============================================================
-class LQR():
-    """ Linear Quadratic Regulator"""
-    def __init__(self, n_states, n_inputs, Q=None, R=None) -> None:
-        self.type = 'LQR'
-        if Q is None:       Q = np.eye(n_states)
-        if R is None:       R = np.eye(n_inputs)
+# # CONTROLLERS: FULL STATE VECTOR CONTROL  (i.e., no powertrain)
+# # ==============================================================
+# class LQR():
+#     """ Linear Quadratic Regulator"""
+#     def __init__(self, n_states, n_inputs, Q=None, R=None) -> None:
+#         self.type = 'LQR'
+#         if Q is None:       Q = np.eye(n_states)
+#         if R is None:       R = np.eye(n_inputs)
 
-        self.Q = Q
-        self.R = R
+#         self.Q = Q
+#         self.R = R
         
     
-    def compute_gain(self, A, B):
-        """ Compute controller gain given state of the system described by linear model A, B"""
-        self.K, self.E = lqr_fn(A, B, self.Q, self.R)
-        return self.K, self.E
+#     def compute_gain(self, A, B):
+#         """ Compute controller gain given state of the system described by linear model A, B"""
+#         self.K, self.E = lqr_fn(A, B, self.Q, self.R)
+#         return self.K, self.E
 
-    def compute_input(self, gain, state_error):
-        """ Compute system input given the controller gain 'gain' and the error w.r.t. the reference state 'error' """
-        return - np.dot(gain, state_error)
+#     def compute_input(self, gain, state_error):
+#         """ Compute system input given the controller gain 'gain' and the error w.r.t. the reference state 'error' """
+#         return - np.dot(gain, state_error)
     
-    def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
+#     def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
 
-        if state_vector_vals is None:
-            # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
-            n_schedule_grid = 360*2 + 1
-            index_scheduled_var = 5
-            state_vector_vals = np.zeros((self.n_states, n_schedule_grid))
-            state_vector_vals[index_scheduled_var, :] = np.linspace(-2.0*np.pi, 2.0*np.pi, n_schedule_grid)
+#         if state_vector_vals is None:
+#             # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
+#             n_schedule_grid = 360*2 + 1
+#             index_scheduled_var = 5
+#             state_vector_vals = np.zeros((self.n_states, n_schedule_grid))
+#             state_vector_vals[index_scheduled_var, :] = np.linspace(-2.0*np.pi, 2.0*np.pi, n_schedule_grid)
 
-        n, m = state_vector_vals.shape
-        assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
+#         n, m = state_vector_vals.shape
+#         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
+#         self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
         
-        for j in range(m):
-            phi, theta, psi = state_vector_vals[3:6, j]
-            p,       q,   r = state_vector_vals[-3:, j]
-            Aj,          Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
-            self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
+#         for j in range(m):
+#             phi, theta, psi = state_vector_vals[3:6, j]
+#             p,       q,   r = state_vector_vals[-3:, j]
+#             Aj,          Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
+#             self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
 
-        print('Control gain matrices complete.')
-        
+#         print('Control gain matrices complete.')
 
-
+##### KJ TEST:
 class LQR_I():
     """ Linear Quadratic Regulator with Integral Effect"""
 
@@ -115,7 +115,7 @@ class LQR_I():
 
         self.type      = 'LQR_I'                # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
-        self.n_states  = len(self.states)       # number of states
+        self.n_states  = len(self.states) - 1       # number of states
         self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)
         self.n_outputs = 3                      # number of outputs
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
@@ -134,7 +134,7 @@ class LQR_I():
         self.parameters.update(kwargs)                  # update control parameters according to user
 
         # Get scheduled variable index (only necessary if scheduled_var is changed, which is not happening at the moment)
-        self.parameters['index_scheduled_var'] = self.states.find(self.parameters['scheduled_var'])
+        self.parameters['index_scheduled_var'] = self.states.index(self.parameters['scheduled_var'])
 
         # Initialize other controller-related variables
         # ---------------------------------------------
@@ -168,10 +168,11 @@ class LQR_I():
         x_ref_k = []
         for state in self.states:
             x_ref_k.append(self.ref_traj[state][time_ind])
-        x_ref_k = np.asarray(x_ref_k)
+        x_ref_k = np.asarray(x_ref_k[:-1]) # get rid of time index in state vector
+        x_k = x_k.reshape(x_k.shape[0],)
 
-        error         = x_k - x_ref_k                            # Error between current and reference state
-        scheduled_var = x_k[self.parameters['scheduled_var']]    # get psi from current state vector (self.parameters = 'psi')
+        error         = x_k - x_ref_k    # Error between current and reference state
+        scheduled_var = x_k[self.parameters['index_scheduled_var']]    # get psi from current state vector (self.parameters = 'psi')
         k_idx         = np.argmin(np.abs(self.scheduled_states[self.parameters['index_scheduled_var'], :] - scheduled_var)) # find the psi value stored in the controller closest to the current psi --> extract index
         K             = self.control_gains[:, :, k_idx]     # extract gain corresponding to the current psi value
         u             = self.compute_input(K, error)                 # compute input u given the gain matrix K and the error between current and reference state
@@ -181,14 +182,14 @@ class LQR_I():
         """ Compute controller gain given state of the system described by linear model A, B"""
         self.Ai[:self.n_states, :self.n_states] = A
         self.Bi[:self.n_states,              :] = B
-        self.K, self.E = lqr_fn(self.Ai, self.Bi, self.Qi, self.Ri)
+        self.K, self.E = lqr_fn(self.Ai, self.Bi, self.parameters['Qi'], self.parameters['Ri'])
         return self.K, self.E
 
     def compute_input(self, gain, error):
         """ Compute system input given the controller gain 'gain' and the error w.r.t. the reference state 'error' """
         self.err_hist.append(np.dot(self.C, error))
         err_hist     = np.asarray(self.err_hist).T
-        err_integral = np.sum(err_hist[:, max([0, len(self.err_hist) - self.int_lag]):], axis=1) * self.dt
+        err_integral = np.sum(err_hist[:, max([0, len(self.err_hist) - self.parameters['int_lag']]):], axis=1) * self.dt
         return - np.dot(gain[:, :self.n_states], error) - np.dot(gain[:, self.n_states:], err_integral)
 
     def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
@@ -204,8 +205,9 @@ class LQR_I():
 
         n, m = state_vector_vals.shape
         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
-        
+        self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
+        self.scheduled_states = state_vector_vals # ASK MATTEO if this is right; originally 'states' was passed in here 
+
         for j in range(m):
             phi, theta, psi = state_vector_vals[3:6, j]
             p,       q,   r = state_vector_vals[-3:, j]
@@ -219,21 +221,21 @@ class LQR_I():
 
         
 
-# PD Controller (PID coming soon..) 
-# =================================
-class PDController():
-    def __init__(self, kp=1.0, kd=1.0) -> None:
-        self.kp = kp
-        self.kd = kd
+# # PD Controller (PID coming soon..) 
+# # =================================
+# class PDController():
+#     def __init__(self, kp=1.0, kd=1.0) -> None:
+#         self.kp = kp
+#         self.kd = kd
 
-    def __call__(self, x_des, x, xdot_des, xdot):
-        """
-        Compute PD Control action
-        :param x_des:       desired value
-        :param x:           current value
-        :param xdot_des:    desired first order derivative value
-        :param xdot:        curretn first order derivative value
-        """
-        return self.kp * (x_des - x) + self.kd * (xdot_des - xdot)
+#     def __call__(self, x_des, x, xdot_des, xdot):
+#         """
+#         Compute PD Control action
+#         :param x_des:       desired value
+#         :param x:           current value
+#         :param xdot_des:    desired first order derivative value
+#         :param xdot:        curretn first order derivative value
+#         """
+#         return self.kp * (x_des - x) + self.kd * (xdot_des - xdot)
 
 

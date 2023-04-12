@@ -26,7 +26,7 @@ def trajectory_gen_fcn(waypoints_info, vehicle, **params):
         'hovering_time': vehicle.parameters['hovering_time'],
         'takeoff_time': vehicle.parameters['takeoff_time'], 
         'landing_time': vehicle.parameters['landing_time'],
-        'waypoint_weights': 10.0, 
+        'waypoint_weights': 20.0, # 10? 
         'adjust_eta': None, 
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 

@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
 from prog_models.models.uav_model import UAVGen 
 from prog_models.loading_fcns.controller_test import ExampleController
+from prog_models.loading_fcns.controllers import LQR_I
 
 def run_example(): 
 
     # Define vehicle information:
     vehicle_params = {
-        'dt': 0.2,
+        'dt': 0.1,
         'vehicle_model': 'tarot18', # Define vehicle
     }
 
@@ -32,23 +33,32 @@ def run_example():
 
     # Define reference trajectory parameters, if desired
     ref_params = {
-        'nurbs_order': 4
+        'nurbs_order': 4,
+        # 'cruise_speed': 6.0,
+        # 'ascent_speed': 3.0,
+        # 'descent_speed': 3.0,
+        # 'landing_speed': 1.5
     }
 
     # Calculate reference trajectory 
     ref_traj = traj_gen(waypoints, vehicle, **ref_params)
 
     # Define controller
-    ctrl = ExampleController(ref_traj,vehicle)
+    ctrl = LQR_I(ref_traj,vehicle)
+    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
 
     # Set simulation options 
     options = {
-        'dt': 0.3, ### THIS IS CURRENTLY REQUIRED - this needs help, issue with consistency in dt 
-        'save_freq': vehicle_params['dt']
+        'dt': 0.1, ### THIS IS CURRENTLY REQUIRED - this needs help, issue with consistency in dt 
+        'save_freq': vehicle_params['dt'],
+        'horizon': 100
     }
 
     # Generate trajectory
     traj_results_1 = vehicle.simulate_to(100, ctrl, **options)
+    # traj_results = vehicle.simulate_to_threshold(ctrl, **options)
+
+    debug = 1
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
