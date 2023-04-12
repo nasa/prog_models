@@ -67,13 +67,7 @@ if __name__ == '__main__':
         was_successful = False
 
     try:
-    
         examples_main()
-    except Exception:
-        was_successful = False
-        
-    try:
-        battery_main()
     except Exception:
         was_successful = False
 

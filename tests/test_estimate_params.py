@@ -695,6 +695,9 @@ class TestEstimateParams(unittest.TestCase):
         self.assertAlmostEqual(saveError, m.calc_error(results.times, results.inputs, results.outputs), delta = 0.00001)
 
     def test_multiple_runs(self):
+        """
+        In this test, we are examining the behavior of estimate_params when there are multiple runs.
+        """
         m = ThrownObject()
 
         # The value of time1, time2, inputs, and outputs are arbitrary values
@@ -764,6 +767,7 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
+        # Incorrect lengths for times.
         with self.assertRaises(ValueError):
             m.estimate_params(times=[time1, [time2]], inputs=inputs, outputs=outputs)
         self.assertEqual(
@@ -780,11 +784,8 @@ class TestEstimateParams(unittest.TestCase):
         time2 = [0, 1, 2, 3]
 
         # Confirming estimate_params works when different runs are passed in as different data types.
+        # Passing in time1 as a np.array datatype.
         m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
-
-        # Another test case that would be fixed with future changes to Containers
-        # with self.assertRaises(ValueError):
-        #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
 
         time1 = [0, 1, 2, 4, 5, 6, 7, 8, 9]
         time2 = [0, 1, 2, 3]
@@ -806,8 +807,12 @@ class TestEstimateParams(unittest.TestCase):
                 {'x': 77.81},
             ])]
 
+        # Passing in an np.array structure as a runs for outputs.
         m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
 
+        # Test case that would be fixed with future changes to Containers
+        # with self.assertRaises(ValueError):
+        #     m.estimate_params(times=[incorrectTimesLen], inputs=[inputs], outputs=[outputs])
 
 
     def test_incorrect_lens(self):
@@ -882,6 +887,15 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
+        # Length error expected, 1, 9, 1.
+        with self.assertRaises(ValueError) as cm:
+            m.estimate_params(times=[[results.times]], inputs=[results.inputs], outputs=[[results.outputs]])
+        self.assertEqual(
+            'Times, inputs, and outputs must be same length for the run at index 0. Length of times: 1, Length of inputs: 9, Length of outputs: 1',
+            str(cm.exception)
+        )
+
+
         # Passing in incorrect Runs
         with self.assertRaises(ValueError):
             m.estimate_params(wrongData)
@@ -915,24 +929,21 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.estimate_params(times=set(results.times), inputs=results.inputs, outputs=[results.outputs])
 
-        # with self.assertRaises(TypeError):
-        #     m.estimate_params(times=[results.times], inputs=[set(results.inputs)], outputs=[results.outputs])
-
-        # # This fails because inputs and outputs are both dictionaries within a Set. Sometimes, an empty set within a Set.
-        # with self.assertRaises(TypeError):
-        #     m.estimate_params(times=[results.times], inputs=results.inputs, outputs=set(results.outputs))
-
         # Missing inputs.
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[results.times], outputs=[results.outputs])
+        self.assertEqual(
+            'Missing keyword arguments inputs',
+            str(cm.exception)
+        )
 
         #  'input' is not a parameter, so techincally not defining the parameter inputs.
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[results.times], input=[results.inputs], outputs=[results.outputs]) 
-
-        # Length error expected, 1, 9, 1.
-        with self.assertRaises(ValueError):
-            m.estimate_params(times=[[results.times]], inputs=[results.inputs], outputs=[[results.outputs]]) 
+        self.assertEqual(
+            'Missing keyword arguments inputs',
+            str(cm.exception)
+        )
 
         # Will work in future case, but not at the current moment
         # with self.assertRaises(ValueError)
