@@ -17,7 +17,7 @@ class DictLikeMatrixWrapper():
         data -- dict or numpy array: The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
     """
 
-    def __init__(self, keys: list, data: Union[dict, np.array, pd.Series]):
+    def __init__(self, keys: list, data: Union[dict, np.array, pd.DataFrame]):
         """
         Initializes the container
         """
@@ -34,6 +34,7 @@ class DictLikeMatrixWrapper():
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
         self.matrix = self.data.to_numpy()
         self._keys = self.data.index.to_list()
+
     def __reduce__(self):
         """
         reduce is overridden for pickles
@@ -41,6 +42,7 @@ class DictLikeMatrixWrapper():
         keys = self.data.index.to_list()
         matrix = self.data.to_numpy()
         return (DictLikeMatrixWrapper, (keys, matrix))
+
     def __getitem__(self, key: str) -> int:
         """
         get all values associated with a key, ex: all values of 'i'
@@ -55,7 +57,6 @@ class DictLikeMatrixWrapper():
         sets a row at the key given
         """
         self.data.loc[key] = np.atleast_1d(value)  # using the key to find the Series location
-
 
     def __delitem__(self, key: str) -> None:
         """
@@ -96,7 +97,11 @@ class DictLikeMatrixWrapper():
         """
         returns hash value sum for keys and matrix
         """
-        return hash(self.data)
+        sum_hash = 0
+        if len(self.data.index) > 0:
+            for x in pd.util.hash_pandas_object(self.data):
+                sum_hash = sum_hash + x
+        return sum_hash
 
     def __str__(self) -> str:
         """
@@ -109,16 +114,15 @@ class DictLikeMatrixWrapper():
         gets the list of values associated with the key given
         """
         if key in self.data.index:
-            return self.data.loc[key]
+            return self.data.loc[key, 0]
         return default
 
     def copy(self) -> "DictLikeMatrixWrapper":
         """
         creates copy of object
         """
-        return DictLikeMatrixWrapper(self._keys, self.matrix.copy())
         keys = self.data.index.to_list()
-        matrix = self.data.to_dict().copy()
+        matrix = self.data.to_numpy().copy()
         return DictLikeMatrixWrapper(keys, matrix)
 
     def keys(self) -> list:
