@@ -31,6 +31,16 @@ jobs:
         python -m pip install requests
     - name: Run tests
       run: python -m tests
+    - name: Upload
+      uses: actions/upload-artifact@v1
+      with:
+        name: output_calls
+        path: output_calls.txt
+    - name: Upload
+      uses: actions/upload-artifact@v1
+      with:
+        name: output_time
+        path: output_time.txt
   # test_prog_algs_released:
   #   timeout-minutes: 30
   #   runs-on: ubuntu-latest
