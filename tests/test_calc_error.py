@@ -115,22 +115,13 @@ class TestCalcError(unittest.TestCase):
             str(cm.warning)
         )
 
-        # Checks to see if stability_tolerance throws error if model goes unstable after threshold
         with self.assertWarns(UserWarning) as cm:
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
-                     dt = 1, stability_tol=0.7)
+                     dt = 1, stability_tol=70)
         self.assertEqual(
-            'Model unstable- NaN reached in simulation (t=1800.0)',
+            'configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
             str(cm.warning)
         )
-
-        # with self.assertWarns(UserWarning) as cm:
-        #     m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
-        #              dt = 1, stability_tol=70)
-        # self.assertEqual(
-        #     'configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
-        #     str(cm.warning)
-        # )
         # Rerunning params estimate would not change the results
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')

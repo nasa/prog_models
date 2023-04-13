@@ -135,12 +135,14 @@ jobs:
       run: |
         coverage run -m tests.test_base_models
         coverage run -a -m tests.test_battery
+        coverage run -a -m tests.test_calc_error
         coverage run -a -m tests.test_centrifugal_pump
         coverage run -a -m tests.test_composite
         coverage run -a -m tests.test_datasets
         coverage run -a -m tests.test_dict_like_matrix_wrapper
         coverage run -a -m tests.test_direct
         coverage run -a -m tests.test_ensemble
+        coverage run -a -m tests.test_estimate_params
         coverage run -a -m tests.test_linear_model
         coverage run -a -m tests.test_pneumatic_valve
         coverage run -a -m tests.test_powertrain
