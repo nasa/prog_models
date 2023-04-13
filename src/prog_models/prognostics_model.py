@@ -1197,7 +1197,7 @@ class PrognosticsModel(ABC):
 
         return err_total/counter
     
-    def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, **kwargs) -> None:
+    def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, tol = None, method = 'Nelder-Mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
@@ -1239,9 +1239,7 @@ class PrognosticsModel(ABC):
                 raise ValueError(f"Key '{key}' not in model parameters")
 
         config = {
-            'method': 'Nelder-Mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'tol': None,
             'options': None
         }
         config.update(kwargs)
@@ -1345,7 +1343,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'], tol=config['tol'])
+        res = minimize(optimization_fcn, params, method=method, bounds = config['bounds'], options=config['options'], tol=tol)
 
         if not res.success:
             warn(f"Parameter Estimation did not converge: {res.message}")

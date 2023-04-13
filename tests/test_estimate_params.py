@@ -31,7 +31,7 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-        # Checking to see if our estimated parameters are wihtin the bounds.
+        # Checking to see if our estimated parameters are within the bounds.
         self.assertLessEqual(m.parameters['thrower_height'], 4)
         self.assertGreaterEqual(m.parameters['thrower_height'], 0)
         self.assertLessEqual(m.parameters['throwing_speed'], 42)
@@ -62,20 +62,20 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-        # When our incorrecltly set parameters that are not within the bounds themselves
+        # When our incorrectly set parameters that are not within the bounds themselves
         m.parameters['thrower_height'] = 10
         m.parameters['throwing_speed'] = -10
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
         # These returned values are still within the bounds, they are just not close to the original value at all.
-        # This results in our estimate parameters to result in the upper extremas
+        # This results in our estimate parameters to result in the upper extremes
         self.assertEqual(m.parameters['thrower_height'], 4)
         self.assertEqual(m.parameters['throwing_speed'], 42)
 
         # Show casing results of having a local min/max
-        # Even though all our bounds accomodate for the original model params values,
-        # our estimate_parmams returns lower/upper bound values.
+        # Even though all our bounds accommodate for the original model params values,
+        # our estimate_params returns lower/upper bound values.
         m.parameters['thrower_height'] = 4
         m.parameters['throwing_speed'] = 24
         m.parameters['g'] = -20
@@ -225,7 +225,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=((30, 7), (40, 20), (0, -20)))
 
-        #Implememnt different variations of lists and tuples and see if they work as intended
+        # Implement different variations of lists and tuples and see if they work as intended
         # Try incomplete list:
         with self.assertRaises(ValueError):
             # Missing bound
@@ -274,7 +274,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=None)
         with self.assertRaises(ValueError):
-            # Tuple isn't of size 2, more specfically, tuple is size less than 2
+            # Tuple isn't of size 2, more specifically, tuple is size less than 2
             m.estimate_params(data, keys, bounds={'g': (7,)})
         with self.assertRaises(ValueError):
             # Tuple is a size greater than 2
@@ -349,11 +349,11 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=[[-1, 5], (20, 40), {-5, 15}])
 
-        # Lower Boung greater than Upper Bound
+        # Lower Bound greater than Upper Bound
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[[4, 0], [-20, 20], [0, 40]])
 
-        # Incorrect lenght given for bounds
+        # Incorrect length given for bounds
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[[-15, 15], [-20, 20, 32], [0, 4]])
     
@@ -426,7 +426,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=np.array([(True, False), (False, True), (False, True)]))
 
-        # Testing overloaded bounds equals standard foramt
+        # Testing overloaded bounds equals standard format
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=(((([-3, 4]))), (1, 400), (-20, 30)))
@@ -541,7 +541,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
 
-        # Setting kesy to incorrect values
+        # Setting keys to incorrect values
         keys = ['x', 'y', 'g']
         bound=((0, 8), (20, 42), (-20, -5))
         with self.assertRaises(ValueError):
@@ -723,7 +723,7 @@ class TestEstimateParams(unittest.TestCase):
             ]]
         
         # Checking too see if multiple runs can exist.
-        # time1 and time2 are explciity being passed in into a parent wrapper list.
+        # time1 and time2 are explicitly being passed in into a parent wrapper list.
         # See definitions of variables to understand format.
         m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
 
@@ -759,7 +759,7 @@ class TestEstimateParams(unittest.TestCase):
         incorrectTimesLen = [[0, 1, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4]]
 
         # Passing in the correct amount of runs, but one of the runs has a different length compared to other parameter's lengths
-        # This test is also valdiating if we can see which run has a wrong error.
+        # This test is also validating if we can see which run has a wrong error.
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=incorrectTimesLen, inputs=inputs, outputs=outputs)
         self.assertEqual(
@@ -817,11 +817,11 @@ class TestEstimateParams(unittest.TestCase):
 
     def test_incorrect_lens(self):
         """
-        Goal of this test is to compare the results of passing in incorrect lenghts into our estimate_params call.
+        Goal of this test is to compare the results of passing in incorrect lengths into our estimate_params call.
 
-        Furthermore, checks incorrect lenghts within multiple runs.
+        Furthermore, checks incorrect lengths within multiple runs.
         """
-        # Initalizing our model
+        # Create model
         m = ThrownObject(process_noise = 0, measurement_noise = 0)
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
@@ -831,7 +831,7 @@ class TestEstimateParams(unittest.TestCase):
         
         m = ThrownObject()
 
-        # Defining wrongIntuptLen to test parameter length tests.
+        # Defining wrongInputLen to test parameter length tests.
         wrongInputLen = [{}]*8
         wrongData = [(results.times, wrongInputLen, results.outputs)]
         
@@ -871,7 +871,7 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
-        # Both inputs and outputs with incorrect lenghts
+        # Both inputs and outputs with incorrect lengths
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[results.times], inputs=[wrongInputLen], outputs=[wrongOutputs])
         self.assertEqual(
@@ -908,7 +908,7 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-        # Differnet types of wrappers should not affect function
+        # Different types of wrappers should not affect function
         # Testing functionality works with having only a few parameters defined in wrapper sequences
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
@@ -917,7 +917,7 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         
-        # Same as last test, but inputs is has tuple wrapper sequence insteads.
+        # Same as last test, but inputs is has tuple wrapper sequence instead.
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
 
@@ -937,7 +937,7 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
-        #  'input' is not a parameter, so techincally not defining the parameter inputs.
+        #  'input' is not a parameter, so technically not defining the parameter inputs.
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[results.times], input=[results.inputs], outputs=[results.outputs]) 
         self.assertEqual(
@@ -950,7 +950,7 @@ class TestEstimateParams(unittest.TestCase):
             # m.estimate_params(times=[[times]], inputs=[[inputs]], outputs=[[outputs]])
 
 
-# Test that specifcally looks into adding tolerance into our keyword arguments.
+# Test that specifically looks into adding tolerance into our keyword arguments.
     def test_tolerance(self):
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
@@ -960,10 +960,10 @@ class TestEstimateParams(unittest.TestCase):
         # x0 violates bounds for 'TNC' method... Not behavior that we want to keep.
         bound = ((0, 4), (24, 42), (-20, -5))
 
-        # there seems to be a maximum tolernace before no changes occur
+        # there seems to be a maximum tolerance before no changes occur
         bound = ((0, 4), (24, 42), (-20, 10))
 
-        # works as intended for everthing
+        # works as intended for everything
         bound = ((-15, 15), (24, 42), (-20, 10))
 
         # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
@@ -997,7 +997,7 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                               bounds=bound, keys = keys , tol = "12")
 
-        # When tolerance is in a list, it rasies a ValueError.
+        # When tolerance is in a list, it raises a ValueError.
         # with self.assertRaises(TypeError):
         #     m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
         #                       bounds=bound, keys = keys , tol = [(1)])             
@@ -1068,7 +1068,7 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, method = 'TNC', tol = 1e-9)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # Defaut Values 
+        # Default Values 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
@@ -1087,20 +1087,20 @@ class TestEstimateParams(unittest.TestCase):
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # So, for tol values between 1e-4 and bigger, we will continnue to have the same results, whereas. 
-        # To detmerine it is 1e-34is the smallest, we have a tolernace check if it 1e-3 produces similar results, to which it does not.
+        # So, for tol values between 1e-4 and bigger, we will continue to have the same results, whereas. 
+        # To determine it is 1e-34is the smallest, we have a tolerance check if it 1e-3 produces similar results, to which it does not.
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
         
-        # Providing bounds here has some unwanted behavior. Provides worse preidictions... Just a result of having tolerance
+        # Providing bounds here has some unwanted behavior. Provides worse predictions... Just a result of having tolerance
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                           bounds=bound, keys=keys, method='TNC', options = {'maxiter': 250}, tol=1e-9)
         
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # Note that at some point, the tolerance does not keep going farther down, the tolerance does not affect thie calc_error
+        # Note that at some point, the tolerance does not keep going farther down, the tolerance does not affect the calc_error
         self.assertNotEqual(track1, track2)
 
 
@@ -1132,7 +1132,6 @@ class TestEstimateParams(unittest.TestCase):
         self.assertNotEqual(override1, override3)
         self.assertEqual(override2, override3)
 
-
 def run_tests():
     unittest.main()
     
@@ -1151,7 +1150,6 @@ if __name__ == '__main__':
     cProfile.run('main()', "output.dat")
 
     import pstats
-    from pstats import SortKey
 
     with open("output_time.txt", 'w') as f:
         p = pstats.Stats("output.dat", stream=f)
