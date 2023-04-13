@@ -25,13 +25,13 @@ class MovingAverage():
     >>>     future_load.add_load(load)
     >>> m.simulate_to_threshold(future_load)
     """
-    def __init__(self, InputContainer, window = 10):
+    def __init__(self, InputContainer: "InputContainer", window: int = 10):
         self.window = window
         self.InputContainer = InputContainer
         self.values = {}
         self.index = 0
 
-    def add_load(self, input):
+    def add_load(self, input: "InputContainer"):
         """
         Add a load to the moving average
 
@@ -76,6 +76,8 @@ class GuassianNoiseLoadWrapper():
     >>> future_load = GuassianNoiseLoadWrapper(future_load, STANDARD_DEV)
     >>> m.simulate_to_threshold(future_load)
     """
+
+    # BOOKMARK MIRYAM
     def __init__(self, fcn, std):
         self.fcn = fcn
         self.std = std

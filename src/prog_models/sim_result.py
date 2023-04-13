@@ -21,7 +21,7 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data']  # Optimization 
     
-    def __init__(self, times : list = None, data : list = None, _copy = True):
+    def __init__(self, times: list[str] = None, data: list["DictLikeMatrixWrapper"] = None, _copy: bool = True):
         if times is None or data is None:
             self.times = [] 
             self.data = []
@@ -32,7 +32,7 @@ class SimResult(UserList):
             else:
                 self.data = data
 
-    def __eq__(self, other : "SimResult") -> bool:
+    def __eq__(self, other: "SimResult") -> bool:
         """Compare 2 SimResults
 
         Args:
@@ -43,7 +43,7 @@ class SimResult(UserList):
         """
         return self.times == other.times and self.data == other.data
 
-    def index(self, other : dict, *args, **kwargs) -> int:
+    def index(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
 
@@ -55,7 +55,7 @@ class SimResult(UserList):
         """
         return self.data.index(other, *args, **kwargs)
 
-    def extend(self, other : "SimResult") -> None:
+    def extend(self, other: "SimResult") -> None:
         """
         Extend the SimResult with another SimResult or LazySimResult object
 
@@ -69,7 +69,7 @@ class SimResult(UserList):
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
 
-    def pop(self, index : int = -1) -> dict:
+    def pop(self, index: int = -1) -> dict:
         """Remove and return an element
 
         Args:
@@ -81,7 +81,7 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
 
-    def remove(self, d : dict = None, t : float = None) -> None:
+    def remove(self, d: dict = None, t: float = None) -> None:
         """Remove an element
 
         Args:
@@ -103,7 +103,7 @@ class SimResult(UserList):
         self.times = []
         self.data = []
 
-    def time(self, index : int) -> float:
+    def time(self, index: int) -> float:
         """Get time for data point at index `index`
 
         Args:
@@ -244,7 +244,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.__data = None
         self.states = []
 
-    def extend(self, other : "LazySimResult", _copy=True) -> None:
+    def extend(self, other: "LazySimResult", _copy=True) -> None:
         """
         Extend the LazySimResult with another LazySimResult object
         Raise ValueError if SimResult is passed
@@ -269,7 +269,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}.")
 
-    def pop(self, index : int = -1) -> dict:
+    def pop(self, index: int = -1) -> dict:
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
@@ -284,7 +284,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             return self.__data.pop(index)
         return self.fcn(x)
 
-    def remove(self, d : float = None, t : float = None, s = None) -> None:
+    def remove(self, d: float = None, t: float = None, s = None) -> None:
         """Remove an element
 
         Args:

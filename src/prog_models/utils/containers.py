@@ -7,7 +7,7 @@ from typing import Union
 from prog_models.exceptions import ProgModelTypeError
 
 
-class DictLikeMatrixWrapper():
+class DictLikeMatrixWrapper:
     """
     A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessable. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
     
@@ -17,7 +17,8 @@ class DictLikeMatrixWrapper():
     """
 
     def __init__(self, keys: list, data: Union[dict, np.array]):
-        """ Initializes the container
+        """
+        Initializes the container
         """
         if not isinstance(keys, list):
             keys = list(keys)   # creates list with keys

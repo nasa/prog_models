@@ -8,7 +8,7 @@ import itertools
 import json
 from numbers import Number
 import numpy as np
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, List, Union
 from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
@@ -192,7 +192,7 @@ class PrognosticsModel(ABC):
 
         self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
 
-    def initialize(self, u=None, z=None):
+    def initialize(self, u: dict[str, float] = None, z: dict[str, float] = None):
         """
         Calculate initial state given inputs and outputs. If not defined for a model, it will return parameters['x0']
 
@@ -221,7 +221,7 @@ class PrognosticsModel(ABC):
         """
         return self.StateContainer(self.parameters['x0'])
 
-    def apply_measurement_noise(self, z):
+    def apply_measurement_noise(self, z: "OutputContainer"):
         """
         Apply measurement noise to the measurement
 
@@ -250,7 +250,7 @@ class PrognosticsModel(ABC):
         z.matrix += np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape)
         return z
 
-    def apply_process_noise(self, x, dt: float = 1):
+    def apply_process_noise(self, x: dict[str, Union[float, np.array]], dt: float = 1):
         """
         Apply process noise to the state
 
@@ -283,7 +283,7 @@ class PrognosticsModel(ABC):
         x.matrix += dt*np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape)
         return x
 
-    def dx(self, x, u):
+    def dx(self, x: dict[str, Union[float, np.array]], u: "InputContainer"):
         """
         Calculate the first derivative of state `x` at a specific time `t`, given state and input
 
@@ -299,7 +299,7 @@ class PrognosticsModel(ABC):
         Returns
         -------
         dx : StateContainer
-            First derivitive of state, with keys defined by model.states \n
+            First derivative of state, with keys defined by model.states \n
             e.g., dx = m.StateContainer({'abc': 3.1, 'def': -2.003}) given states = ['abc', 'def']
 
         Example
@@ -321,7 +321,7 @@ class PrognosticsModel(ABC):
         """
         raise ProgModelException('dx not defined - please use next_state()')
 
-    def next_state(self, x, u, dt: float):
+    def next_state(self, x: dict[str, Union[float, np.array]], u: list[str], dt: float):
         """
         State transition equation: Calculate next state
 
@@ -388,7 +388,7 @@ class PrognosticsModel(ABC):
         """
         return type(self).dx == PrognosticsModel.dx
 
-    def apply_limits(self, x):
+    def apply_limits(self, x: dict[str, Union[float, np.array]]):
         """
         Apply state bound limits. Any state outside of limits will be set to the closest limit.
 
@@ -413,7 +413,7 @@ class PrognosticsModel(ABC):
                 x[key] = np.minimum(x[key], limit[1])
         return x
 
-    def __next_state(self, x, u, dt: float):
+    def __next_state(self, x: dict[str, Union[float, np.array]], u: list[str], dt: float):
         """
         State transition equation: Calls next_state(), calculating the next state, and then adds noise
 
@@ -458,7 +458,7 @@ class PrognosticsModel(ABC):
         # Apply Limits
         return self.apply_limits(next_state)
 
-    def performance_metrics(self, x) -> dict:
+    def performance_metrics(self, x: dict[str, Union[float, np.array]]) -> dict:
         """
         Calculate performance metrics where
 
@@ -486,15 +486,15 @@ class PrognosticsModel(ABC):
 
     observables = performance_metrics  # For backwards compatibility
 
-    def output(self, x):
+    def output(self, x: dict[str, Union[float, np.array]]):
         """
         Calculate :term:`output` given state
 
         Parameters
         ----------
-        x : StateContainer
+         : StateContainer
             state, with keys defined by model.states \n
-            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+            e.g.,  = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
 
         Returns
         -------
@@ -502,13 +502,13 @@ class PrognosticsModel(ABC):
             Outputs, with keys defined by model.outputs. \n
             e.g., z = m.OutputContainer({'t':12.4, 'v':3.3}) given outputs = ['t', 'v']
 
-        Example
+        Eample
         -------
         | m = PrognosticsModel() # Replace with specific model being simulated
         | u = m.InputContainer({'u1': 3.2})
         | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | z = m.output(x) # Returns m.OutputContainer({'z1': 2.2})
+        |  = m.initialize(u, z) # Initialize first state
+        | z = m.output() # Returns m.OutputContainer({'z1': 2.2})
         """
         if self.is_direct_model:
             warn('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
@@ -516,7 +516,7 @@ class PrognosticsModel(ABC):
             warn('This model does not support output estimation.')
         return self.OutputContainer({})
 
-    def __output(self, x):
+    def __output(self, x: dict[str, Union[float, np.array]]):
         """
         Calls output, which calculates next state forward one timestep, and then adds noise
 
@@ -547,7 +547,7 @@ class PrognosticsModel(ABC):
         # Add measurement noise
         return self.apply_measurement_noise(z)
 
-    def event_state(self, x) -> dict:
+    def event_state(self, x: dict[str, Union[float, np.array]]) -> dict:
         """
         Calculate event states (i.e., measures of progress towards event (0-1, where 0 means event has occurred))
 
@@ -586,7 +586,7 @@ class PrognosticsModel(ABC):
         return {key: 1.0-float(t_met) \
             for (key, t_met) in self.threshold_met(x).items()} 
     
-    def threshold_met(self, x) -> dict:
+    def threshold_met(self, x: dict[str, Union[float, np.array]]) -> dict:
         """
         For each event threshold, calculate if it has been met
 
@@ -641,7 +641,7 @@ class PrognosticsModel(ABC):
         """
         return type(self).time_of_event != PrognosticsModel.time_of_event
 
-    def state_at_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs):
+    def state_at_event(self, x: dict[str, Union[float, np.array]], future_loading_eqn = lambda t,x=None: {}, **kwargs):
         """
         Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state tranisition model, this returns the state at which threshold_met returns true for each event.
 
@@ -681,7 +681,7 @@ class PrognosticsModel(ABC):
             t = result.times[-1]
         return state_at_event
 
-    def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
+    def time_of_event(self, x: dict[str, Union[float, np.array]], future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
         Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
@@ -721,7 +721,7 @@ class PrognosticsModel(ABC):
             t = result.times[-1]
         return time_of_event
 
-    def simulate_to(self, time : float, future_loading_eqn: Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
+    def simulate_to(self, time: float, future_loading_eqn: Callable = lambda t, x=None: {}, first_output=None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -783,7 +783,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn: Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn: Callable = None, first_output: "OutputContainer" = None, threshold_keys: list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -1033,7 +1033,7 @@ class PrognosticsModel(ABC):
 
         if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around next_state
-            def next_state(x, u, dt):
+            def next_state(x: dict[str, Union[float, np.array]], u, dt):
                 # Calculate next state, and convert
                 x_new = self.next_state(x, u, dt)
                 x_new = self.StateContainer(x_new)
@@ -1299,7 +1299,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise   
 
-    def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
+    def generate_surrogate(self, load_functions: list[Callable], method: str = 'dmd', **kwargs):
         """
         Generate a surrogate model to approximate the higher-fidelity model 
 
@@ -1419,7 +1419,7 @@ class PrognosticsModel(ABC):
         return json.dumps(self.parameters.data, cls=CustomEncoder)
     
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data: json):
         """
         Create a new prognostics model from a previously generated model that was serialized as a JSON object
 
