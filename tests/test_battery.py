@@ -84,7 +84,6 @@ if __name__ == '__main__':
     cProfile.run('main()', "output.dat")
 
     import pstats
-    from pstats import SortKey
 
     with open("output_time.txt", 'w') as f:
         p = pstats.Stats("output.dat", stream=f)
