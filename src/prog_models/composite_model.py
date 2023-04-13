@@ -32,7 +32,8 @@ class CompositeModel(PrognosticsModel):
         outputs (list[str]):
             Model outputs in format "model_name.output_name". Must be subset of all outputs from models. If not provided, all outputs will be included. 
     """
-    def __init__(self, models, connections = [], **kwargs):
+
+    def __init__(self, models, connections=[], **kwargs):
         # General Input Validation
         if not isinstance(models, Iterable):
             raise ValueError('The models argument must be a list')
@@ -54,8 +55,9 @@ class CompositeModel(PrognosticsModel):
         # Handle models
         for m in models:
             if isinstance(m, Iterable):
-                if len(m) != 2: 
-                    raise ValueError('Each model tuple must be of the form (name: str, model). For example ("Batt1", BatteryElectroChem())')
+                if len(m) != 2:
+                    raise ValueError(
+                        'Each model tuple must be of the form (name: str, model). For example ("Batt1", BatteryElectroChem())')
                 if not isinstance(m[0], str):
                     raise ValueError('The first element of each model tuple must be a string')
                 if not isinstance(m[1], PrognosticsModel):
@@ -73,7 +75,8 @@ class CompositeModel(PrognosticsModel):
                 self.model_names.add(m[0])
                 kwargs['models'].append(m)
             else:
-                raise ValueError(f'Each model must be a PrognosticsModel or tuple (name: str, PrognosticsModel), was {type(m)}')
+                raise ValueError(
+                    f'Each model must be a PrognosticsModel or tuple (name: str, PrognosticsModel), was {type(m)}')
 
         for (name, m) in kwargs['models']:
             self.inputs |= set([name + DIVIDER + u for u in m.inputs])
@@ -81,7 +84,7 @@ class CompositeModel(PrognosticsModel):
             self.outputs |= set([name + DIVIDER + z for z in m.outputs])
             self.events |= set([name + DIVIDER + e for e in m.events])
             self.performance_metric_keys |= set([name + DIVIDER + p for p in m.performance_metric_keys])
-        
+
         # Handle outputs
         if 'outputs' in kwargs:
             if isinstance(kwargs['outputs'], str):
@@ -91,11 +94,11 @@ class CompositeModel(PrognosticsModel):
             if not set(kwargs['outputs']).issubset(self.outputs):
                 raise ValueError('The outputs of the composite model must be a subset of the outputs of the models')
             self.outputs = kwargs['outputs']
-        
+
         # Handle Connections
         kwargs['connections'] = []
-        self.__to_input_connections = {m_name : [] for m_name in self.model_names}
-        self.__to_state_connections = {m_name : [] for m_name in self.model_names}
+        self.__to_input_connections = {m_name: [] for m_name in self.model_names}
+        self.__to_state_connections = {m_name: [] for m_name in self.model_names}
 
         for connection in connections:
             # Input validation
@@ -107,13 +110,14 @@ class CompositeModel(PrognosticsModel):
             in_key, out_key = connection
             # Validation
             if out_key not in self.inputs:
-                raise ValueError(f'The output key, {out_key}, must be an input to one of the composite models. Options include {self.inputs}')
+                raise ValueError(
+                    f'The output key, {out_key}, must be an input to one of the composite models. Options include {self.inputs}')
 
             # Remove the out_key from inputs
             # These no longer are an input to the composite model
             # as they are now satisfied internally
             self.inputs.remove(out_key)
-                
+
             # Split the keys into parts (model, key_part)
             (in_model, in_key_part) = in_key.split('.')
             (out_model, out_key_part) = out_key.split('.')
@@ -125,7 +129,7 @@ class CompositeModel(PrognosticsModel):
                 raise ValueError('The input model must be one of the models in the composite model')
             if out_model not in self.model_names:
                 raise ValueError('The output model must be one of the models in the composite model')
-            
+
             # Add to connections
             if in_key in self.states:
                 self.__to_input_connections[out_model].append((in_key, out_key_part))
@@ -138,11 +142,11 @@ class CompositeModel(PrognosticsModel):
                 self.states.add(in_key)
             else:
                 raise ValueError('The input key must be an output or state of one of the composite models')
-        
+
         # Finish initialization
         super().__init__(**kwargs)
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u={}, z={}):
         if u is None:
             u = {}
         if z is None:
@@ -156,7 +160,7 @@ class CompositeModel(PrognosticsModel):
             x_i = m.initialize(u_i, z_i)
             for key, value in x_i.items():
                 x_0[name + '.' + key] = value
-        
+
             # Process connections
             # This initializes the states that are connected to outputs
             for (in_key_part, in_key) in self.__to_state_connections[name]:
@@ -165,7 +169,7 @@ class CompositeModel(PrognosticsModel):
                 else:  # Missing from z, so estimate using initial state
                     z_ii = m.output(x_i)
                     x_0[in_key] = z_ii.get(in_key_part, None)
-                
+
         return self.StateContainer(x_0)
 
     def next_state(self, x, u, dt):
@@ -177,17 +181,17 @@ class CompositeModel(PrognosticsModel):
             for (in_key, out_key_part) in self.__to_input_connections[name]:
                 u_i[out_key_part] = x[in_key]
             u_i = m.InputContainer(u_i)
-            
+
             # Prepare state
             x_i = m.StateContainer({key: x[name + '.' + key] for key in m.states})
 
-            # Propogate state
+            # Propagate state
             x_next_i = m.next_state(x_i, u_i, dt)
 
             # Save to super state
             for key, value in x_next_i.items():
                 x[name + '.' + key] = value
-            
+
             # Process connections
             # This updates the states that are connected to outputs
             if len(self.__to_state_connections[name]) > 0:

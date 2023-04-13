@@ -959,10 +959,8 @@ class TestModels(unittest.TestCase):
         
         with self.assertRaises(ProgModelException):
             m.simulate_to_threshold(load, integration_method='rk4')
-
         # With linear model
         m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
-
         result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
 
@@ -1080,6 +1078,7 @@ class TestModels(unittest.TestCase):
         # Define output redirection
         capturedOutput = io.StringIO()
         sys.stdout = capturedOutput
+
 
         # Test progress bar matching
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
@@ -1327,7 +1326,6 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(set(tm.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
         self.assertFalse(tm['OneInputNoOutputOneEventLM.x1 == 10'])
         self.assertTrue(tm['OneInputNoOutputOneEventLM_2.x1 == 10'])
-
         # Test with outputs specified
         m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')], outputs=['OneInputOneOutputNoEventLM_2.z1'])
         self.assertSetEqual(m_composite.states, {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
