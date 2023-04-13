@@ -6,7 +6,7 @@ import numpy as np
 import sys
 import unittest
 
-from prog_models.ensemble_model import EnsembleModel
+from prog_models import EnsembleModel
 from prog_models.models.test_models.linear_models import OneInputOneOutputOneEventLM, OneInputOneOutputOneEventAltLM
 
 
