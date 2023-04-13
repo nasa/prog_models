@@ -31,7 +31,7 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-        # Checking to see if our estimated parameters are wihtin the bounds.
+        # Checking to see if our estimated parameters are within the bounds.
         self.assertLessEqual(m.parameters['thrower_height'], 4)
         self.assertGreaterEqual(m.parameters['thrower_height'], 0)
         self.assertLessEqual(m.parameters['throwing_speed'], 42)
@@ -68,13 +68,13 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
         # These returned values are still within the bounds, they are just not close to the original value at all.
-        # This results in our estimate parameters to result in the upper extremas
+        # This results in our estimate parameters to result in the upper extremes
         self.assertEqual(m.parameters['thrower_height'], 4)
         self.assertEqual(m.parameters['throwing_speed'], 42)
 
         # Showcasing results of having a local min/max
         # Even though all our bounds include the original model params values,
-        # our estimate_parmams returns lower/upper bound values.
+        # our estimate_params returns lower/upper bound values.
         m.parameters['thrower_height'] = 4
         m.parameters['throwing_speed'] = 24
         m.parameters['g'] = -20
@@ -204,6 +204,8 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 1)
 
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         # Now with bounds that do include the true values
         m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
         for key in keys:
@@ -227,23 +229,30 @@ class TestEstimateParams(unittest.TestCase):
             # Extra bound
             m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, 0), (-20, 10)))
 
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         # Dictionary bounds
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         # Dictionary bounds - missing
         # Will fill with (-inf, inf)
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         # Dictionary bounds - extra
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         # Behavior, sets in default values and does not error with correct number of bounds.
         # User changes a value that exists and should not be changed
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'rho': (-100, 100)})
@@ -267,7 +276,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=None)
         with self.assertRaises(ValueError):
-            # Tuple isn't of size 2, more specfically, tuple is size less than 2
+            # Tuple isn't of size 2, more specifically, tuple is size less than 2
             m.estimate_params(data, keys, bounds={'g': (7,)})
         with self.assertRaises(ValueError):
             # Tuple is a size greater than 2
@@ -315,7 +324,6 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[(0, 4), (20, 42), (-4, 15), (-8, 8)])
 
-
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
 
@@ -342,7 +350,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.estimate_params(data, keys, bounds=[[-1, 5], (20, 40), {-5, 15}])
 
-        # Lower Boung greater than Upper Bound
+        # Lower Bound greater than Upper Bound
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=[[4, 0], [-20, 20], [0, 40]])
 
@@ -417,7 +425,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=np.array([(True, False), (False, True), (False, True)]))
 
-        # Testing overloaded bounds equals standard foramt
+        # Testing overloaded bounds equals standard format
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=(((([-3, 4]))), (1, 400), (-20, 30)))
@@ -744,7 +752,7 @@ class TestEstimateParams(unittest.TestCase):
         incorrectTimesLen = [[0, 1, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4]]
 
         # Passing in the correct amount of runs, but one of the runs has a different length compared to other parameter's lengths
-        # This test is also valdiating if we can see which run has a wrong error.
+        # This test is also validating if we can see which run has a wrong error.
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=incorrectTimesLen, inputs=inputs, outputs=outputs)
         self.assertEqual(
@@ -806,7 +814,7 @@ class TestEstimateParams(unittest.TestCase):
 
         Furthermore, checks incorrect lengths within multiple runs.
         """
-        # Initalizing our model
+        # Initializing our model
         m = ThrownObject(process_noise = 0, measurement_noise = 0)
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()

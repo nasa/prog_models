@@ -1223,7 +1223,7 @@ class PrognosticsModel(ABC):
 
         See: examples.param_est
         """
-        from scipy.optimize import minimize, show_options
+        from scipy.optimize import minimize
 
         if keys is None:
             # if no keys provided, use all
