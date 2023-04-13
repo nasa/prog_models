@@ -1244,7 +1244,7 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
 
         if isinstance(times, set) or isinstance(inputs, set) or isinstance(outputs, set):
-            raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by definition, so passing in arguments as Sets may have undefined behavior.")
+            raise TypeError(f"Times, inputs, and outputs cannot be a set. Sets are unordered by definition, so passing in arguments as sets may result in incorrect behavior.")
 
         # if parameters not in parent wrapper sequence, then place them into one.
         if isinstance(times, np.ndarray):
