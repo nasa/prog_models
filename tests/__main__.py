@@ -6,7 +6,6 @@ from tests.test_dict_like_matrix_wrapper import main as dict_like_matrix_wrapper
 from tests.test_examples import main as examples_main
 from tests.test_centrifugal_pump import main as centrifugal_pump_main
 from tests.test_pneumatic_valve import main as pneumatic_valve_main
-from tests.test_battery import main as battery_main
 from tests.test_tutorials import main as tutorials_main
 from tests.test_datasets import main as datasets_main
 from tests.test_powertrain import main as powertrain_main
