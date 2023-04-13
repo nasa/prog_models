@@ -1197,7 +1197,7 @@ class PrognosticsModel(ABC):
         # If we get here, method is not supported
         raise ProgModelInputException(f"Error method '{method}' not supported")
     
-    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
+    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', tol = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
@@ -1242,7 +1242,7 @@ class PrognosticsModel(ABC):
 
         config = {
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': None
+            'options': None,
             'error_method': 'MSE'
         }
         config.update(kwargs)

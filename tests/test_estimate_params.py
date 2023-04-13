@@ -7,7 +7,6 @@ import unittest
 from prog_models import *
 from prog_models.models import *
 
-
 class TestEstimateParams(unittest.TestCase):
     def test_estimate_params_works(self):
         m = ThrownObject()
