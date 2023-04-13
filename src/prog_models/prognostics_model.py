@@ -1235,8 +1235,6 @@ class PrognosticsModel(ABC):
             raise ValueError(f"Can not pass in keys as a Set. Sets are unordered by construction, so bounds may be out of order.")
         
         for key in keys:
-            # if isinstance(key, Sequence):
-            #     raise ValueError(f"Key '{key}' cannot be a Sequence")
             if key not in self.parameters:
                 raise ValueError(f"Key '{key}' not in model parameters")
 

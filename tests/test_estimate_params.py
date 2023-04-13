@@ -7,6 +7,7 @@ import unittest
 from prog_models import *
 from prog_models.models import *
 
+
 class TestEstimateParams(unittest.TestCase):
     def test_estimate_params_works(self):
         m = ThrownObject()
@@ -1135,7 +1136,6 @@ def run_tests():
     unittest.main()
     
 def main():
-
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting EstimateParams Feature")
