@@ -122,13 +122,21 @@ class LQR_I():
         self.n_inputs  = len(self.inputs)       # number of inputs
         self.err_hist  = []                     # error history (integral)
         self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
+        self.ss_input  = vehicle.vehicle_model.steadystate_input
+        self.vehicle_max_thrust = vehicle.vehicle_model.dynamics['max_thrust']
 
         # Default control parameters
         # --------------------------------
+        # self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
+        #                        Q=np.eye(self.n_states), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
+        #                        R=np.eye(self.n_inputs), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
+        #                        qi=np.ones((self.n_outputs,)),   # integral error penalty: how much the error history is contributing to the overall error
+        #                        scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
+        #                        index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
         self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
-                               Q=np.eye(self.n_states), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
-                               R=np.eye(self.n_inputs), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
-                               qi=np.ones((self.n_outputs,)),   # integral error penalty: how much the error history is contributing to the overall error
+                               Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
+                               R=np.diag([500, 4000, 4000, 4000]), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
+                               qi=np.array([100, 100, 1000]),   # integral error penalty: how much the error history is contributing to the overall error
                                scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
                                index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
         self.parameters.update(kwargs)                  # update control parameters according to user
@@ -176,6 +184,8 @@ class LQR_I():
         k_idx         = np.argmin(np.abs(self.scheduled_states[self.parameters['index_scheduled_var'], :] - scheduled_var)) # find the psi value stored in the controller closest to the current psi --> extract index
         K             = self.control_gains[:, :, k_idx]     # extract gain corresponding to the current psi value
         u             = self.compute_input(K, error)                 # compute input u given the gain matrix K and the error between current and reference state
+        u[0]         += self.ss_input
+        u[0]  = min(max([0, u[0]]), self.vehicle_max_thrust)
         return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]}
 
     def compute_gain(self, A, B):

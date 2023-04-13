@@ -18,6 +18,8 @@ def run_example():
     vehicle_params = {
         'dt': 0.1,
         'vehicle_model': 'tarot18', # Define vehicle
+        'process_noise': 0,
+        'measurement_noise': 0
     }
 
     # Initialize vehicle 
@@ -55,7 +57,7 @@ def run_example():
     }
 
     # Generate trajectory
-    traj_results_1 = vehicle.simulate_to(100, ctrl, **options)
+    traj_results_1 = vehicle.simulate_to(300, ctrl, **options)
     # traj_results = vehicle.simulate_to_threshold(ctrl, **options)
 
     debug = 1
