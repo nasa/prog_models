@@ -976,7 +976,7 @@ class PrognosticsModel(ABC):
         save_pts = config['save_pts']
 
         # confgure optional intermediate printing
-        if config['print']: # BOOMARK FOR MIRYAM
+        if config['print']:
             def update_all():
                 saved_times.append(t)
                 saved_inputs.append(u)
