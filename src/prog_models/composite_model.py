@@ -3,7 +3,7 @@
 
 from collections.abc import Iterable
 
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 DIVIDER = '.'
 
