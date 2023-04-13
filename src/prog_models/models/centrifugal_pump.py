@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 
 class CentrifugalPumpBase(PrognosticsModel):
