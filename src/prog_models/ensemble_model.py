@@ -4,7 +4,7 @@
 from collections.abc import Sequence
 import numpy as np
 
-from prog_models.prognostics_model import PrognosticsModel
+from prog_models import PrognosticsModel
 
 
 class EnsembleModel(PrognosticsModel):
