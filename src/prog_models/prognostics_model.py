@@ -757,10 +757,10 @@ class PrognosticsModel(ABC):
         Example
         -------
         >>> def future_load_eqn(t):
-        >>>    if t< 5.0: # Load is 3.0 for first 5 seconds
-        >>>        return 3.0
-        >>>    else:
-        >>>        return 5.0
+        >>>     if t< 5.0: # Load is 3.0 for first 5 seconds
+        >>>         return 3.0
+        >>>     else:
+        >>>         return 5.0
         >>> first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
         >>> m = PrognosticsModel() # Replace with specific model being simulated
         >>> (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
@@ -974,6 +974,7 @@ class PrognosticsModel(ABC):
         if config['print']:
             def update_all():
                 saved_times.append(t)
+                print('u, saved_input: ', u)
                 saved_inputs.append(u)
                 saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
                 saved_outputs.append(output(x))

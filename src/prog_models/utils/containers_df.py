@@ -23,19 +23,27 @@ class DictLikeMatrixWrapper():
         """
         if not isinstance(keys, list):
             keys = list(keys)  # creates list with keys
-        temp_keys = keys.copy()
+        self._keys = keys.copy()
         if isinstance(data, np.matrix):
-            self.data = pd.DataFrame(np.array(data, dtype=np.float64), temp_keys)
+            self.data = pd.DataFrame(np.array(data, dtype=np.float64), self._keys)
+            self.matrix = self.data.to_numpy(dtype=np.float64)
         elif isinstance(data, np.ndarray):  # data is a multidimensional array, in column vector form
-            if data.ndim == 1:
-                data = data[np.newaxis].T
-            self.data = pd.DataFrame(data, temp_keys)
+            self.data = pd.DataFrame(data, self._keys)
+            self.matrix = self.data.to_numpy()
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):  # data is not in column vector form
-            self.data = pd.DataFrame(data, index=[0]).T
+            self._keys = list(data.keys())
+            for key in keys:
+                if key not in data:
+                    self._keys.append(key)
+            arr_num = list(data.values())[0]
+            if isinstance(arr_num, int):
+                self.data = pd.DataFrame(data, columns=self._keys, index=[0]).astype(object).replace(np.nan, None)
+            else:
+                self.data = pd.DataFrame(data, columns=self._keys).astype(object).replace(np.nan, None)
+            self.matrix = self.data.T.to_numpy(dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
-        self.matrix = self.data.to_numpy()
-        self._keys = self.data.index.to_list()
+
     def __reduce__(self):
         """
         reduce is overridden for pickles
@@ -43,6 +51,7 @@ class DictLikeMatrixWrapper():
         keys = self.data.index.to_list()
         matrix = self.data.to_numpy()
         return (DictLikeMatrixWrapper, (keys, matrix))
+
     def __getitem__(self, key: str) -> int:
         """
         get all values associated with a key, ex: all values of 'i'
@@ -58,7 +67,6 @@ class DictLikeMatrixWrapper():
         """
         self.data.loc[key] = np.atleast_1d(value)  # using the key to find the DataFrame location
         self.matrix = self.data.to_numpy()
-
 
     def __delitem__(self, key: str) -> None:
         """
@@ -175,9 +183,10 @@ class DictLikeMatrixWrapper():
         -------
         >>> from prog_models.utils.containers import DictLikeMatrixWrapper
         >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': 1, 'b': 2, 'c': 3})
-        >>> 'a' in dlmw  # True
+        >>> 'a' in dlmw
+        True
         """
-        key_list = self.data.index.to_list()
+        key_list = self.data.keys()
         return key in key_list
 
     def __repr__(self) -> str:
@@ -186,4 +195,8 @@ class DictLikeMatrixWrapper():
 
         returns: a string of dictionaries containing all the keys and associated matrix values
         """
-        return str(self.data.to_dict()[0])
+        if len(self.matrix) > 0 and len(
+                self.matrix[0]) == 1:  # the matrix has rows and the first row/list has one value in it
+            return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
+        return str(dict(zip(self._keys, self.matrix)))
+        #return str(self.data.to_dict()[0])

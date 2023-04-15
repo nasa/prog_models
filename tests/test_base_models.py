@@ -112,22 +112,25 @@ class MockModelWithDerived(MockProgModel):
 
 
 class TestModels(unittest.TestCase):
+    """
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = io.StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__
+        sys.stdout = sys.__stdout__"""
 
     def test_non_container(self):
         class MockProgModelStateDict(MockProgModel):
             def next_state(self, x, u, dt):
-                return {
+                ns_ret = {
                     'a': x['a'] + u['i1']*dt,
                     'b': x['b'],
                     'c': x['c'] - u['i2'],
                     't': x['t'] + dt
                 }
+                #print('next state: ', ns_ret)
+                return ns_ret
         
         m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
         def load(t, x=None):
@@ -152,6 +155,12 @@ class TestModels(unittest.TestCase):
 
         # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        print('times: ', times)
+        print('inputs: ', inputs)
+        print('states: ', states)
+        print('outputs: ', outputs)
+        print('event_states: ', event_states)
+        print('times[-1]: ', times[-1], ' 5.0, 5: ', 5.0, 5)
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
     def test_size(self):
