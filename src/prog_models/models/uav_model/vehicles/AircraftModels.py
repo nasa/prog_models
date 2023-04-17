@@ -19,7 +19,7 @@ def build_model(**kwargs):
 
     params = dict(model='djis1000',
                   init_state_vector=None, dt=None,
-                  payload=0.0, Q=None, R=None, qi=None, i_lag=None,
+                  payload=0.0, # Q=None, R=None, qi=None, i_lag=None,
                   steadystate_input=None)
     params.update(kwargs)
     
@@ -76,7 +76,7 @@ class Rotorcraft():
                  air_density=1.225,
                  **kwargs):
         self.model = model
-        self.controller = None
+        # self.controller = None
         self.gravity = gravity
         self.state = None
         self.state_names = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'xdot', 'ydot', 'zdot', 'p', 'q', 'r']

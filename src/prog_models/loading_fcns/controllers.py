@@ -66,48 +66,47 @@ def lqr_fn(A, B, Q, R):
     
 # # CONTROLLERS: FULL STATE VECTOR CONTROL  (i.e., no powertrain)
 # # ==============================================================
-# class LQR():
-#     """ Linear Quadratic Regulator"""
-#     def __init__(self, n_states, n_inputs, Q=None, R=None) -> None:
-#         self.type = 'LQR'
-#         if Q is None:       Q = np.eye(n_states)
-#         if R is None:       R = np.eye(n_inputs)
+class LQR():
+    """ Linear Quadratic Regulator"""
+    def __init__(self, n_states, n_inputs, Q=None, R=None) -> None:
+        self.type = 'LQR'
+        if Q is None:       Q = np.eye(n_states)
+        if R is None:       R = np.eye(n_inputs)
 
-#         self.Q = Q
-#         self.R = R
+        self.Q = Q
+        self.R = R
         
     
-#     def compute_gain(self, A, B):
-#         """ Compute controller gain given state of the system described by linear model A, B"""
-#         self.K, self.E = lqr_fn(A, B, self.Q, self.R)
-#         return self.K, self.E
+    def compute_gain(self, A, B):
+        """ Compute controller gain given state of the system described by linear model A, B"""
+        self.K, self.E = lqr_fn(A, B, self.Q, self.R)
+        return self.K, self.E
 
-#     def compute_input(self, gain, state_error):
-#         """ Compute system input given the controller gain 'gain' and the error w.r.t. the reference state 'error' """
-#         return - np.dot(gain, state_error)
+    def compute_input(self, gain, state_error):
+        """ Compute system input given the controller gain 'gain' and the error w.r.t. the reference state 'error' """
+        return - np.dot(gain, state_error)
     
-#     def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
+    def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
 
-#         if state_vector_vals is None:
-#             # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
-#             n_schedule_grid = 360*2 + 1
-#             index_scheduled_var = 5
-#             state_vector_vals = np.zeros((self.n_states, n_schedule_grid))
-#             state_vector_vals[index_scheduled_var, :] = np.linspace(-2.0*np.pi, 2.0*np.pi, n_schedule_grid)
+        if state_vector_vals is None:
+            # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
+            n_schedule_grid = 360*2 + 1
+            index_scheduled_var = 5
+            state_vector_vals = np.zeros((self.n_states, n_schedule_grid))
+            state_vector_vals[index_scheduled_var, :] = np.linspace(-2.0*np.pi, 2.0*np.pi, n_schedule_grid)
 
-#         n, m = state_vector_vals.shape
-#         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-#         self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
+        n, m = state_vector_vals.shape
+        assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
+        self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
         
-#         for j in range(m):
-#             phi, theta, psi = state_vector_vals[3:6, j]
-#             p,       q,   r = state_vector_vals[-3:, j]
-#             Aj,          Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
-#             self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
+        for j in range(m):
+            phi, theta, psi = state_vector_vals[3:6, j]
+            p,       q,   r = state_vector_vals[-3:, j]
+            Aj,          Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
+            self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
 
-#         print('Control gain matrices complete.')
+        print('Control gain matrices complete.')
 
-##### KJ TEST:
 class LQR_I():
     """ Linear Quadratic Regulator with Integral Effect"""
 
@@ -233,19 +232,19 @@ class LQR_I():
 
 # # PD Controller (PID coming soon..) 
 # # =================================
-# class PDController():
-#     def __init__(self, kp=1.0, kd=1.0) -> None:
-#         self.kp = kp
-#         self.kd = kd
+class PDController():
+    def __init__(self, kp=1.0, kd=1.0) -> None:
+        self.kp = kp
+        self.kd = kd
 
-#     def __call__(self, x_des, x, xdot_des, xdot):
-#         """
-#         Compute PD Control action
-#         :param x_des:       desired value
-#         :param x:           current value
-#         :param xdot_des:    desired first order derivative value
-#         :param xdot:        curretn first order derivative value
-#         """
-#         return self.kp * (x_des - x) + self.kd * (xdot_des - xdot)
+    def __call__(self, x_des, x, xdot_des, xdot):
+        """
+        Compute PD Control action
+        :param x_des:       desired value
+        :param x:           current value
+        :param xdot_des:    desired first order derivative value
+        :param xdot:        curretn first order derivative value
+        """
+        return self.kp * (x_des - x) + self.kd * (xdot_des - xdot)
 
 
