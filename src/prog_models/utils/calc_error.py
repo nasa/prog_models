@@ -52,7 +52,8 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "
+             f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     counter = 0 
@@ -72,8 +73,8 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")                
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                 
                 else: 
                     warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
@@ -160,7 +161,8 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+             f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
@@ -236,7 +238,8 @@ def MAE(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+             f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
@@ -256,8 +259,8 @@ def MAE(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")       
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
@@ -312,7 +315,8 @@ def MAPE(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+             f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
@@ -332,8 +336,8 @@ def MAPE(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
@@ -367,7 +371,8 @@ def DTW(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+             f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
@@ -406,7 +411,8 @@ def DTW(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                   
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
