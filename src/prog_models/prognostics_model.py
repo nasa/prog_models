@@ -975,7 +975,7 @@ class PrognosticsModel(ABC):
         save_pt_index = 0
         save_pts = config['save_pts']
 
-        # confgure optional intermediate printing
+        # configure optional intermediate printing
         if config['print']:
             def update_all():
                 saved_times.append(t)

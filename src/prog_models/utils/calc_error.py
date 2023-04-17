@@ -19,7 +19,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     Keyword Args:
         x0 (StateContainer): Current State of the model
         dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
-        stability_tol (double, optional): Configurable parameter.
+        stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
@@ -102,7 +102,7 @@ def RMSE(m, times, inputs, outputs, **kwargs):
     Keyword Args:
         x0 (StateContainer): Current State of the model
         dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
-        stability_tol (double, optional): Configurable parameter.
+        stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
@@ -121,14 +121,15 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
     """Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
-        times (list[float]): Array of times for each sample.
-        inputs (list[dict]): Array of input dictionaries where input[x] corresponds to time[x].
-        outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
+        m (PrognosticsModel): Model to use for comparison
+        times (list[float]): array of times for each sample
+        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
+        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
 
     Keyword Args:
         x0 (dict, optional): Initial state.
-        dt (double, optional): Maximum time step.
-        stability_tol (double, optional): Configurable parameter.
+        dt (float, optional): Maximum time step.
+        stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
@@ -138,7 +139,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
     Returns:
-        double: Total error
+        float: Total error
     """
     if isinstance(times[0], Iterable):
         # Calculate error for each
@@ -205,7 +206,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
     Keyword Args:
         x0 (StateContainer): Current State of the model
         dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
-        stability_tol (double, optional): Configurable parameter.
+        stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
@@ -282,7 +283,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
     Keyword Args:
         x0 (StateContainer): Current State of the model
         dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
-        stability_tol (double, optional): Configurable parameter.
+        stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
@@ -349,6 +350,27 @@ def MAPE(m, times, inputs, outputs, **kwargs):
 def DTW(m, times, inputs, outputs, **kwargs):
     """
     Dynamic Time Warping Algorithm 
+
+    Args:
+        m (PrognosticsModel): Model to use for comparison
+        times (list[float]): array of times for each sample
+        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
+        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+
+    Keyword Args:
+        x0 (StateContainer): Current State of the model
+        dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+        stability_tol (float, optional): Configurable parameter.
+            Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
+            In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
+            stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
+            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+
+            If the model goes unstable before stability_tol is met, NaN is returned. 
+            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+
+    Returns:
+        float: RMSE between model and data
     """
     if isinstance(times[0], Iterable):
         # Calculate error for each
@@ -364,7 +386,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
@@ -381,23 +403,22 @@ def DTW(m, times, inputs, outputs, **kwargs):
     z_obs = m.output(x)  # Initialize
     cutoffThreshold = math.floor(stability_tol * len(times))
 
+    # Helper function to calculate the DTW given two time series (in this case z and z_obs)
     def helperDTW(s, t):
-        n, m = len(s), len(t)
-        dtw_matrix = np.zeros((n+1, m+1))
-        for i in range(n+1):
-            for j in range(m+1):
-                dtw_matrix[i, j] = np.inf
-        dtw_matrix[0, 0] = 0
+        matrix = np.zeros((len(s)+1, len(t)+1))
+        for i in range(len(s)+1):
+            for j in range(len(t)+1):
+                matrix[i, j] = np.inf
+        matrix[0, 0] = 0
         
-        for i in range(1, n+1):
-            for j in range(1, m+1):
-                cost = abs(s[i-1] - t[j-1])
-                # take last min from a square box
-                last_min = np.min([dtw_matrix[i-1, j],
-                                dtw_matrix[i, j-1], 
-                                dtw_matrix[i-1, j-1]])
-                dtw_matrix[i, j] = cost + last_min
-        return dtw_matrix[n, m]
+        for i in range(1, len(s)+1):
+            for j in range(1, len(t)+1):
+                cost = abs(s[i-1][0] - t[j-1][0])
+                last_min = np.min([matrix[i-1, j],
+                                matrix[i, j-1],
+                                matrix[i-1, j-1]])
+                matrix[i, j] = cost + last_min
+        return matrix[len(s), len(t)]
 
     # for t, u, z in zip(times, inputs, outputs):
     for t, u, z in zip(times, inputs, outputs):
@@ -417,10 +438,9 @@ def DTW(m, times, inputs, outputs, **kwargs):
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
             if len(z.matrix) != len(z_obs.matrix):
-                err_total += helperDTW(z.matrix, z_obs.matrix)
+                err_total += np.square(helperDTW(z.matrix, z_obs.matrix))
             else:
                 err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
             counter += 1
 
     return err_total/counter
-
