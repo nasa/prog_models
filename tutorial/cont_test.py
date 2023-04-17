@@ -23,4 +23,4 @@ print(con_array.matrix)"""
 
 dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': np.array([1,2,3]), 'b': np.array([1,2,3]), 'c': np.array([1,2,3])})
 print(dlmw.data.keys())
-print('a' in dlmw)  # True
+print(dlmw.matrix)  # True

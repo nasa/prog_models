@@ -371,7 +371,7 @@ class TestModels(unittest.TestCase):
         try:
             noise = []
             m = MockProgModel(**{noise_key: noise})
-            self.fail("Should have raised exception - inproper format")
+            self.fail("Should have raised exception - improper format")
         except Exception:
             pass            
 
