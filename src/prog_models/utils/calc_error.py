@@ -116,7 +116,7 @@ def RMSE(m, times, inputs, outputs, **kwargs):
     return np.sqrt(MSE(m, times, inputs, outputs, **kwargs))
 
 
-def MSE(self, times, inputs, outputs, **kwargs) -> float:
+def MSE(m, times, inputs, outputs, **kwargs) -> float:
     """Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
@@ -141,21 +141,21 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     """
     if isinstance(times[0], Iterable):
         # Calculate error for each
-        error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
+        error = [m.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
         return sum(error)/len(error)
 
-    x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+    x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
-    if not isinstance(x, self.StateContainer):
-        x = [self.StateContainer(x_i) for x_i in x]
+    if not isinstance(x, m.StateContainer):
+        x = [m.StateContainer(x_i) for x_i in x]
 
-    if not isinstance(inputs[0], self.InputContainer):
-        inputs = [self.InputContainer(u_i) for u_i in inputs]
-    
-    if not isinstance(outputs[0], self.OutputContainer):
-        outputs = [self.OutputContainer(z_i) for z_i in outputs]
+    if not isinstance(inputs[0], m.InputContainer):
+        inputs = [m.InputContainer(u_i) for u_i in inputs]
+
+    if not isinstance(outputs[0], m.OutputContainer):
+        outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
@@ -166,17 +166,17 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
-    z_obs = self.output(x)
+    z_obs = m.output(x)
     cutoffThreshold = math.floor(stability_tol * len(times))
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
             t_new = min(t_last + dt, t)
-            x = self.next_state(x, u, t_new-t_last)
+            x = m.next_state(x, u, t_new-t_last)
             t_last = t_new
             if t >= t_last:
                 # Only recalculate if required
-                z_obs = self.output(x)
+                z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
@@ -340,3 +340,82 @@ def MAPE(m, times, inputs, outputs, **kwargs):
             err_total += np.sum(np.abs(z.matrix - z_obs.matrix)/z.matrix)
             counter += 1
     return err_total/counter
+
+
+def DTW(m, times, inputs, outputs, **kwargs):
+    """
+    Dynamic Time Warping Algorithm 
+    """
+    if isinstance(times[0], Iterable):
+        # Calculate error for each
+        error = [DTW(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
+        return sum(error)/len(error)
+
+    x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
+    dt = kwargs.get('dt', 1e99)
+    stability_tol = kwargs.get('stability_tol', 0.95)
+
+    if not isinstance(x, m.StateContainer):
+        x = [m.StateContainer(x_i) for x_i in x]
+
+    if not isinstance(inputs[0], m.InputContainer):
+        inputs = [m.InputContainer(u_i) for u_i in inputs]
+    
+    if not isinstance(outputs[0], m.OutputContainer):
+        outputs = [m.OutputContainer(z_i) for z_i in outputs]
+
+    # Checks stability_tol is within bounds
+    # Throwing a default after the warning.
+    if stability_tol >= 1 or stability_tol < 0:
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        stability_tol = 0.95
+
+    counter = 0  # Needed to account for skipped (i.e., none) values
+    t_last = times[0]
+    err_total = 0
+    z_obs = m.output(x)  # Initialize
+    cutoffThreshold = math.floor(stability_tol * len(times))
+
+    def helperDTW(s, t):
+        n, m = len(s), len(t)
+        dtw_matrix = np.zeros((n+1, m+1))
+        for i in range(n+1):
+            for j in range(m+1):
+                dtw_matrix[i, j] = np.inf
+        dtw_matrix[0, 0] = 0
+        
+        for i in range(1, n+1):
+            for j in range(1, m+1):
+                cost = abs(s[i-1] - t[j-1])
+                # take last min from a square box
+                last_min = np.min([dtw_matrix[i-1, j],
+                                dtw_matrix[i, j-1], 
+                                dtw_matrix[i-1, j-1]])
+                dtw_matrix[i, j] = cost + last_min
+        return dtw_matrix[n, m]
+
+    # for t, u, z in zip(times, inputs, outputs):
+    for t, u, z in zip(times, inputs, outputs):
+        while t_last < t:
+            t_new = min(t_last + dt, t)
+            x = m.next_state(x, u, t_new-t_last)
+            t_last = t_new
+            if t >= t_last:
+                # Only recalculate if required
+                z_obs = m.output(x)
+        if not (None in z_obs.matrix or None in z.matrix):
+            if any (np.isnan(z_obs.matrix)):
+                if counter < cutoffThreshold:
+                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
+                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                else:
+                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    break
+            if len(z.matrix) != len(z_obs.matrix):
+                err_total += helperDTW(z.matrix, z_obs.matrix)
+            else:
+                err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
+            counter += 1
+
+    return err_total/counter
+
