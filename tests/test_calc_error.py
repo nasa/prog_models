@@ -115,13 +115,14 @@ class TestCalcError(unittest.TestCase):
             str(cm.warning)
         )
 
-        # with self.assertWarns(UserWarning) as cm:
-        #     m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
-        #              dt = 1, stability_tol=70)
-        # self.assertEqual(
-        #     'configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
-        #     str(cm.warning)
-        # )
+        with self.assertRaises(ValueError) as cm:
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
+                     dt = 1, stability_tol=70)
+        self.assertEqual(
+            'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. '
+            'Cutoff threshold is 10, or roughly 95.0% of the data',
+            str(cm.exception)
+        )
         # Rerunning params estimate would not change the results
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')
@@ -167,11 +168,11 @@ class TestCalcError(unittest.TestCase):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
 
     # def test_MSE(self):
-    #     m = ThrownObject()
-    #     m2 = ThrownObject()
-    #     results = m.simulate_to_threshold(save_freq=0.5)
-    #     data = [(results.times, results.inputs, results.outputs)]
-    #     gt = m.parameters.copy()
+        # m = ThrownObject()
+        # m2 = ThrownObject()
+        # results = m.simulate_to_threshold(save_freq=0.5)
+        # data = [(results.times, results.inputs, results.outputs)]
+        # gt = m.parameters.copy()
 
     #     self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs),
     #                         m2.calc_error(results.times, results.inputs, results.outputs))
@@ -181,7 +182,12 @@ class TestCalcError(unittest.TestCase):
     #     self.assertEqual(m.calc_error(results.times, results.inputs, results.outputs),
     #                         m2.calc_error(results.times, results.inputs, results.outputs))
     def test_RMSE(self):
-        return
+        m = ThrownObject()
+        m2 = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
+
 
     def test_MAX_E(self):
         return

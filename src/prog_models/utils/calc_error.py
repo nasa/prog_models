@@ -180,8 +180,8 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
@@ -406,8 +406,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
