@@ -18,46 +18,37 @@ class DictLikeMatrixWrapper():
     """
 
     def __init__(self, keys: list, data: Union[dict, np.array]):
-        """ Initializes the container
         """
-        # print('data: ', data)
+        Initializes the container
+        """
         if not isinstance(keys, list):
             keys = list(keys)  # creates list with keys
         self._keys = keys.copy()
-        #print('keys: ', self._keys)
         if isinstance(data, np.matrix):
             self.data = pd.DataFrame(np.array(data, dtype=np.float64), self._keys)
             self.matrix = self.data.to_numpy(dtype=np.float64)
             bool_test = np.array(data, dtype=np.float64)
-            # print('np.matrix matrix: ', self.matrix)
         elif isinstance(data, np.ndarray):
             if data.ndim == 1:
                 data = data[np.newaxis].T
                 self.data = pd.DataFrame(data, self._keys)
             else:
                 self.data = pd.DataFrame(data, self._keys).T
-            self.matrix = self.data.T.to_numpy()
-            # print('np.ndarray matrix: ', self.matrix, np.array_equal(self.matrix, bool_test))
+            self.matrix = data  # self.data.T.to_numpy()
+            # print('np.ndarray matrix: ', np.array_equal(self.matrix, bool_test))
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
             self.matrix = np.array(
                 [
                     [data[key]] if key in data else [None] for key in keys
                 ], dtype=np.float64)
-            if len(data) == 0:
-                self.matrix = []
-                self.data = pd.DataFrame()
-            else:
-                self._keys = list(data.keys())
-                for key in keys:
-                    if key not in data:
-                        self._keys.append(key)
-                arr_num = list(data.values())[0]
-                if not isinstance(arr_num, Union[int, float]):
+            if len(data) != 0:
+                if not isinstance(list(data.values())[0], Union[int, float]):
                     self.data = pd.DataFrame(data, columns=self._keys).astype(object).replace(np.nan, None)
-                    test_matrix = np.array(self.data.T.to_dict('tight')['data'], dtype=np.float64)
-                    print(test_matrix)
-                if isinstance(arr_num, Union[int, float]):
-                    self.data = pd.DataFrame(data, columns=self._keys, index=[0]).astype(object).replace(np.nan, None)
+                else:   # THIS IS THE PROBLEM, THIS ELSE!!!
+                    # Miryam BOOKMARK
+                    print(pd.DataFrame(data, columns=self._keys, index=[0]).astype(object).replace(np.nan, None))
+                    # self.data = pd.DataFrame(data, columns=self._keys, index=[0]).astype(object).replace(np.nan, None)
+            self.data = pd.DataFrame()
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 

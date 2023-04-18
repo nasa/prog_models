@@ -16,11 +16,18 @@ con_matrix = DictLikeMatrixWrapper(key_list, np_matrix)
 
 con_array = DictLikeMatrixWrapper(key_list, np_arr)
 
-#print(np.array_equal(con_array.matrix, con_matrix.matrix, equal_nan=False))
+# print(np.array_equal(con_array.matrix, con_matrix.matrix, equal_nan=False))
 """print(con_dict.matrix)
 print(con_matrix.matrix)
 print(con_array.matrix)"""
-
-dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': np.array([1,2,3]), 'b': np.array([1,2,3]), 'c': np.array([1,2,3])})
-print(dlmw.data.keys())
+x_arr = np.array([[[1, 2, 3]], [[1, 3, 1]], [[4, 6, 2]]], dtype=np.float64)
+dict_data = {'a': np.array([1, 2, 3]), 'b': np.array([1, 2, 3]), 'c': np.array([1, 2, 3])}
+dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], dict_data)
+print(dlmw.data)
 print(dlmw.matrix)  # True
+
+output = {'OneInputOneOutputNoEventLMPM.u1': 1, 'OneInputOneOutputNoEventLMPM_2.u1': 0}
+out_keys = ['OneInputOneOutputNoEventLMPM.u1', 'OneInputOneOutputNoEventLMPM_2.u1']
+
+print(pd.DataFrame(output, columns=out_keys, index=[0]).astype(object).replace(np.nan, None))
+

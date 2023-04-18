@@ -1095,6 +1095,8 @@ class TestModels(unittest.TestCase):
         percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
         for i in range(len(capture_split)):
             actual = '%s |%s| %s%% %s' % ("Progress", "█" * percentage_vals[i] + '-' * (100 - percentage_vals[i]), str(percentage_vals[i])+".0","")
+            print('capture_split[i].strip()', capture_split[i].strip())
+            print('actual.strip()', actual.strip())
             self.assertEqual(capture_split[i].strip(), actual.strip())
         
     def test_containers(self):
