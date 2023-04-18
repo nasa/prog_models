@@ -1,10 +1,15 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+"""
+This file contains functions for calculating error given a model and some data (times, inputs, outputs). This is used by the PrognosticsModel.calc_error() method.
+"""
+
 from collections.abc import Iterable
 from warnings import warn
 import math
 import numpy as np
+
 
 def MAX_E(m, times, inputs, outputs, **kwargs):
     """
@@ -71,6 +76,11 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
@@ -181,6 +191,11 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any (np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
@@ -258,6 +273,11 @@ def MAE(m, times, inputs, outputs, **kwargs):
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
@@ -335,6 +355,11 @@ def MAPE(m, times, inputs, outputs, **kwargs):
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "

@@ -17,38 +17,12 @@ from tests.test_linear_model import main as linear_main
 from tests.test_composite import main as composite_main
 from tests.test_serialization import main as serialization_main
 from tests.test_estimate_params import main as estimate_params_main
-
-from io import StringIO
-import matplotlib.pyplot as plt
-import sys
-from timeit import timeit
-from unittest.mock import patch
-
-from examples import sim as sim_example
-
-def _test_ex():
-    # Run example
-    sim_example.run_example()
+from tests.test_ensemble import main as ensemble_main
 
 if __name__ == '__main__':
     was_successful = True
 
-    try:
-        # set stdout (so it wont print)
-        sys.stdout = StringIO()
-        
-        with patch('matplotlib.pyplot.show'):
-            runtime = timeit(_test_ex, number=10)
-            plt.close('all')
-
-        # Reset stdout 
-        sys.stdout = sys.__stdout__
-        print(f"\nExample Runtime: {runtime}")
-    except Exception as e:
-        print("\Benchmarking Failed: ", e)
-        was_successful = False
-
-    print("\n\nTesting individual exectution of test files")
+    print("\n\nTesting individual execution of test files")
 
     # Run tests individually to test them and make sure they can be executed individually
     try:
@@ -128,6 +102,11 @@ if __name__ == '__main__':
 
     try:
         estimate_params_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        ensemble_main()
     except Exception:
         was_successful = False
 

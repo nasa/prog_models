@@ -29,10 +29,11 @@ class DictLikeMatrixWrapper():
                 data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            self.matrix = np.array(
-                [
-                    [data[key]] if key in data else [None] for key in keys
-                ], dtype=np.float64)
+          # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
+          self.matrix = np.array(
+             [
+                  np.ravel([data[key]]) if key in data else [None] for key in keys
+              ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
@@ -163,8 +164,8 @@ class DictLikeMatrixWrapper():
 
         example
         -------
-        >>> from prog_models.models import DictLikeMatrixWrapper
-        >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], [[1], [2], [3]])
+        >>> from prog_models.utils.containers import DictLikeMatrixWrapper
+        >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': 1, 'b': 2, 'c': 3})
         >>> 'a' in dlmw  # True
         """
         return key in self._keys
