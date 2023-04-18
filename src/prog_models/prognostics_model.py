@@ -1163,6 +1163,7 @@ class PrognosticsModel(ABC):
                 * MAX_E (Maximum Error)
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
+                * DTW (Dynamic Time Warping)
             x0 (dict, optional): Initial state
             dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
             stability_tol (double, optional): Configurable parameter.
@@ -1193,6 +1194,8 @@ class PrognosticsModel(ABC):
             return calc_error.MAE(self, times, inputs, outputs, **kwargs)
         if method.lower() == 'mape':
             return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'dtw':
+            return calc_error.DTW(self, times, inputs, outputs, **kwargs)
 
         # If we get here, method is not supported
         raise ProgModelInputException(f"Error method '{method}' not supported")
@@ -1274,7 +1277,6 @@ class PrognosticsModel(ABC):
             if len(missing_args) > 0:
                 # Concat into string
                 missing_args_str = ', '.join(missing_args)
-                # missing_args_str = missing_args_str[:-2] # Remove last comma and space
                 raise ValueError(f"Missing keyword arguments {missing_args_str}")
             
             # Check lengths of args
@@ -1356,7 +1358,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise
 
-        return res   
+        return res
 
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):

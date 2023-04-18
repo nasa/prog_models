@@ -410,14 +410,13 @@ def DTW(m, times, inputs, outputs, **kwargs):
             for j in range(len(t)+1):
                 matrix[i, j] = np.inf
         matrix[0, 0] = 0
-        
         for i in range(1, len(s)+1):
             for j in range(1, len(t)+1):
-                cost = abs(s[i-1][0] - t[j-1][0])
-                last_min = np.min([matrix[i-1, j],
+                dist = abs(s[i-1][0] - t[j-1][0])
+                result = np.min([matrix[i-1, j],
                                 matrix[i, j-1],
                                 matrix[i-1, j-1]])
-                matrix[i, j] = cost + last_min
+                matrix[i, j] = dist + result
         return matrix[len(s), len(t)]
 
     # for t, u, z in zip(times, inputs, outputs):

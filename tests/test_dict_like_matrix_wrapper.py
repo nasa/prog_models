@@ -101,10 +101,23 @@ def run_tests():
     unittest.main()
     
 def main():
+    import cProfile, pstats
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Containers")
+    print("\n\nTesting Base Models")
+    profiler = cProfile.Profile()
+
+    profiler.enable()
     result = runner.run(l.loadTestsFromTestCase(TestDictLikeMatrixWrapper)).wasSuccessful()
+    profiler.disable()
+
+    with open("output_time.txt", 'w') as f:
+        p = pstats.Stats(profiler, stream=f)
+        p.sort_stats("time").print_stats()
+
+    with open("output_calls.txt", 'w') as f:
+        p = pstats.Stats(profiler, stream=f)
+        p.sort_stats("calls").print_stats()
 
     if not result:
         raise Exception("Failed test")

@@ -205,31 +205,83 @@ class TestCalcError(unittest.TestCase):
 
     def test_MAPE(self):
         return
+    
+    def test_DTW(self):
+        m = LinearThrownObject()
+        m2 = LinearThrownObject()
+        results = m.simulate_to_threshold(save_freq = 0.5)
+        results.outputs.pop(2)
+        results.outputs.pop(-4)
+        data = [(results.times, results.inputs, results.outputs)]
+        gt = m.parameters.copy()
+
+        # Does not work readily with a LinearThrown Object
+        hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw')
+
+        print(hold)
+
+        # m = BatteryElectroChemEOD()
+        # m2 = BatteryElectroChemEOD()
+        # options = {
+        #     'save_freq': 200, # Frequency at which results are saved
+        #     'dt': 1, # Time step
+        # }
+
+        # def future_loading(t, x=None):
+        #     if (t < 600):
+        #         i = 2
+        #     elif (t < 900):
+        #         i = 1
+        #     elif (t < 1800):
+        #         i = 4
+        #     elif (t < 3000):
+        #         i = 2
+        #     else:
+        #         i = 3
+        #     return m.InputContainer({'i': i})
+    
+        # results = m.simulate_to(2000, future_loading, **options)
+        # # results.outputs.pop(2)
+        # # results.outputs.pop(-4)
+        # data = [(results.times, results.inputs, results.outputs)]
+        # gt = m.parameters.copy()
+
+        # # Does not work readily with a LinearThrown Object
+        # hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw')
+
+        # print(hold)
+
+        """
+        Should I include different error metrics within calc_error? Such as different parameter lengths should not be allowed?
+
+        Does this go against the whole idea of using DTW in the first place? Not exactly...
+        """
 
 def run_tests():
     unittest.main()
     
+
 def main():
+    import cProfile, pstats
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting EstimateParams Feature")
+    print("\n\nTesting Base Models")
+    profiler = cProfile.Profile()
+
+    profiler.enable()
     result = runner.run(l.loadTestsFromTestCase(TestCalcError)).wasSuccessful()
+    profiler.disable()
+
+    with open("output_time.txt", 'w') as f:
+        p = pstats.Stats(profiler, stream=f)
+        p.sort_stats("time").print_stats()
+
+    with open("output_calls.txt", 'w') as f:
+        p = pstats.Stats(profiler, stream=f)
+        p.sort_stats("calls").print_stats()
 
     if not result:
         raise Exception("Failed test")
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('main()', "output.dat")
-
-    import pstats
-
-    with open("output_time.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("time").print_stats()
-
-    with open("output_calls.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("calls").print_stats()
-
-    # main()
+    main()
