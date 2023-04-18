@@ -29,10 +29,18 @@ class DictLikeMatrixWrapper():
                 data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            self.matrix = np.array(
-                [
-                    [data[key]] if key in data else [None] for key in keys
-                ], dtype=np.float64)
+            if not data or isinstance(list(data.values())[0], Union[int, float]):
+                # matrix structure if data is an empty dict or dict with a single value each
+                self.matrix = np.array(
+                    [
+                        [data[key]] if key in data else [None] for key in keys
+                    ], dtype=np.float64)
+            else:
+                # matrix structure - when data is a dict with arrays as values
+                self.matrix = np.array(
+                    [
+                        data[key] for key in keys if key in data
+                    ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
