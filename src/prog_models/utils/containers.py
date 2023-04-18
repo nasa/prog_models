@@ -29,7 +29,7 @@ class DictLikeMatrixWrapper():
                 data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            if not data or isinstance(list(data.values())[0], Union[int, float]):
+            if not data or not isinstance(list(data.values())[0], np.ndarray):
                 # matrix structure - data is an empty dict or dict with a single value each
                 self.matrix = np.array(
                     [
