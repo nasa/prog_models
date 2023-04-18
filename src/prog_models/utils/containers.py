@@ -27,28 +27,26 @@ class DictLikeMatrixWrapper():
         if isinstance(data, np.matrix):
             self.data = pd.DataFrame(np.array(data, dtype=np.float64), self._keys)
             self.matrix = self.data.to_numpy(dtype=np.float64)
-            bool_test = np.array(data, dtype=np.float64)
+            # bool_test = np.array(data, dtype=np.float64)
         elif isinstance(data, np.ndarray):
             if data.ndim == 1:
                 data = data[np.newaxis].T
                 self.data = pd.DataFrame(data, self._keys)
             else:
                 self.data = pd.DataFrame(data, self._keys).T
-            self.matrix = data  # self.data.T.to_numpy()
+            self.matrix = data
             # print('np.ndarray matrix: ', np.array_equal(self.matrix, bool_test))
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
+            # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
             self.matrix = np.array(
                 [
-                    [data[key]] if key in data else [None] for key in keys
+                    np.ravel([data[key]]) if key in data else [None] for key in keys
                 ], dtype=np.float64)
-            if len(data) != 0:
-                if not isinstance(list(data.values())[0], Union[int, float]):
-                    self.data = pd.DataFrame(data, columns=self._keys).astype(object).replace(np.nan, None)
-                else:   # THIS IS THE PROBLEM, THIS ELSE!!!
-                    # Miryam BOOKMARK
-                    print(pd.DataFrame(data, columns=self._keys, index=[0]).astype(object).replace(np.nan, None))
-                    # self.data = pd.DataFrame(data, columns=self._keys, index=[0]).astype(object).replace(np.nan, None)
-            self.data = pd.DataFrame()
+            print()
+            index_rg = list(range(0, len(list(data.values())[0])))
+            self.data = pd.DataFrame(data, columns=self._keys, index=index_rg).astype(object).replace(np.nan, None)
+            # self.matrix = self.data.T.to_numpy(dtype=np.float64)
+            # print('dict matrix: ', np.array_equal(self.matrix, bool_test))
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
