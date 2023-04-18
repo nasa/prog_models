@@ -29,9 +29,10 @@ class DictLikeMatrixWrapper():
                 data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
+            # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
             self.matrix = np.array(
                 [
-                    [data[key]] if key in data else [None] for key in keys
+                    np.ravel([data[key]]) if key in data else [None] for key in keys
                 ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
