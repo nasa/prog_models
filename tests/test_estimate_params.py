@@ -85,19 +85,7 @@ class TestEstimateParams(unittest.TestCase):
 
         m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, -8)))
 
-        self.assertEqual(m.parameters['thrower_height'], 4)
-        self.assertEqual(m.parameters['throwing_speed'], 42)
-        self.assertEqual(m.parameters['g'], -20)
-
-        # However, this is a feature that occurs with bounds internally and is not an aspect of our original code.
-        m.parameters['thrower_height'] = 4
-        m.parameters['throwing_speed'] = 24
-        m.parameters['g'] = -20
-        m.estimate_params(data, keys)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Furthermore, notice that these changes are regardless if the lower/upper bounds equals our initially set parameters
+        # Note that with small changes to our bounds, our estimated values will change drastically.
         m.parameters['thrower_height'] = 4
         m.parameters['throwing_speed'] = 24
         m.parameters['g'] = -20
@@ -112,6 +100,14 @@ class TestEstimateParams(unittest.TestCase):
         self.assertNotEqual(m.parameters['throwing_speed'], 42)
         self.assertLess(m.parameters['throwing_speed'], 42)
         self.assertGreaterEqual(m.parameters['throwing_speed'], 20)
+
+        # Testing convergence with the same initial parameters but no given bounds were provided        
+        m.parameters['thrower_height'] = 4
+        m.parameters['throwing_speed'] = 24
+        m.parameters['g'] = -20
+        m.estimate_params(data, keys)
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
 
     def test_estimate_params(self):
@@ -200,7 +196,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        # Not the most accurate way of seeing when these values are not accurate.
+        # Checking each key and seeing if it does not almost equal the original parameters
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 1)
 
@@ -246,15 +242,14 @@ class TestEstimateParams(unittest.TestCase):
         
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
-        # Dictionary bounds - extra
+        # Dictionary bounds - extra & garbage key
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
-        # Behavior, sets in default values and does not error with correct number of bounds.
-        # User changes a value that exists and should not be changed
+        # Dictionary bounds - extra & not garbage key
         m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'rho': (-100, 100)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
@@ -312,6 +307,8 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params()
 
         # Testing with Arrays
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         m.estimate_params(data, keys, bounds=[(0, 4), (20, 42), (-20, 15)])
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
@@ -326,17 +323,24 @@ class TestEstimateParams(unittest.TestCase):
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
-
         # Regardless of type of wrapper type around bounds, it should work
         m.estimate_params(data, keys, bounds=[[0, 4], [20, 42], [-12, 15]])
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.estimate_params(data, keys, bounds=[(0, 4), (20, 42), (-20, 15)])
+        for key in keys:
+            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         # Testing tuple here.
         m.estimate_params(data, keys, bounds=[[0, 4], (20, 42), [-12, 15]])
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
+
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         # Bounds wrapped by np.array
         m.estimate_params(data, keys, bounds=np.array([[0,4], [20, 42], [-12, 15]]))
         for key in keys:
@@ -451,6 +455,10 @@ class TestEstimateParams(unittest.TestCase):
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         check = m.calc_error(results.times, results.inputs, results.outputs)
 
+
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.parameters['g'] = -8
         # Testing with np.array
         m.estimate_params(data, keys, bounds=np.array([('-3', '12'), ('1', '42'), ('-12', '30')]))
         for key in keys:
@@ -460,6 +468,9 @@ class TestEstimateParams(unittest.TestCase):
         # Checking if passing in different inner wrapper types for bounds deviates between calls.
         self.assertEqual(check, check2)
 
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        m.parameters['g'] = -8
         m.estimate_params(data, keys, bounds=(('-3.12', '12'), ('1', '42.125381'), ('-12', '30')))
         check3 = m.calc_error(results.times, results.inputs, results.outputs)
 
@@ -475,7 +486,7 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('-3'), ('1', '20'), ('-5', '30')))
         
-        # Upper bound greater than lower bound
+        # Upper bound greater than lower bound and they are string values.
         with self.assertRaises(ValueError):
             m.estimate_params(data, keys, bounds=(('9', '12'), ('30', '20'), ('-5', '30')))
         
@@ -614,25 +625,24 @@ class TestEstimateParams(unittest.TestCase):
         data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
-        # Now lets reset some parameters
+        # Now lets reset some parameters with a method call
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
+        m.parameters['g'] = -5
         keys = ['thrower_height', 'throwing_speed', 'g']
         bound=((0, 8), (20, 42), (-20, -5))
-
-        # Note that not every one of the keys would comply with this system
-        m.parameters['g'] = -5
         m.estimate_params(data, keys, bounds=bound, method='TNC')
 
+        # Saving the calc_error value from our first call
         saveError = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Testing that default method passed in works as intended
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -5
-        
         m.estimate_params(data, keys, bounds=bound)
 
+        # Checking to make sure that passing in a different method results in a different error value.
         self.assertNotEqual(saveError, m.calc_error(results.times, results.inputs, results.outputs))
 
         # Passing 'TNC' method along with 'maxfun 1000' as our options
@@ -822,8 +832,6 @@ class TestEstimateParams(unittest.TestCase):
         # Defined Keys and Bounds for estimate_params
         keys = ['thrower_height', 'throwing_speed']
         
-        m = ThrownObject()
-
         # Defining wrongInputLen to test parameter length tests.
         wrongInputLen = [{}]*8
         wrongData = [(results.times, wrongInputLen, results.outputs)]
@@ -930,7 +938,7 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
-        #  'input' is not a keyword argument, so technically not defining the inputs.
+        # 'input' is not a keyword argument, so technically not defining the inputs.
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[results.times], input=[results.inputs], outputs=[results.outputs]) 
         self.assertEqual(

@@ -13,7 +13,7 @@ from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
-from prog_models.utils import ProgressBar
+from prog_models.utils import ProgressBar, calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
 from prog_models.utils.serialization import CustomEncoder, custom_decoder
@@ -1151,56 +1151,52 @@ class PrognosticsModel(ABC):
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
-            times (list[float]): Array of times for each sample.
-            inputs (list[dict]): Array of input dictionaries where input[x] corresponds to time[x].
-            outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
-
+            times (list[float]): array of times for each sample
+            inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
+            outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        
         Keyword Args:
-            x0 (dict, optional): Initial state.
-            dt (float, optional): Maximum time step.
+            method (str, optional): Error method to use. Supported methods include:
+                * MSE (Mean Squared Error)
+                * RMSE (Root Mean Squared Error)
+                * MAX_E (Maximum Error)
+                * MAE (Mean Absolute Error)
+                * MAPE (Mean Absolute Percentage Error)
+            x0 (dict, optional): Initial state
+            dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+            stability_tol (double, optional): Configurable parameter.
+                Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
+                In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
+                stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
+                before the model goes unstable in order to produce a valid estimate of mean squared error. 
+
+                If the model goes unstable before stability_tol is met, NaN is returned. 
+                Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
         Returns:
-            float: Total error
+            float: error
+
+        See Also:
+            :func:`calc_error.MSE`
         """
-        if isinstance(times[0], Iterable):
-            # Calculate error for each
-            error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-            return sum(error)/len(error)
+        method = kwargs.get('method', 'MSE')
 
-        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-        dt = kwargs.get('dt', 1e99)
+        # Call appropriate error calculation method
+        if method.lower() == 'mse':
+            return calc_error.MSE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'max_e':
+            return calc_error.MAX_E(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'rmse':
+            return calc_error.RMSE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'mae':
+            return calc_error.MAE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'mape':
+            return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
 
-        if not isinstance(x, self.StateContainer):
-            x = [self.StateContainer(x_i) for x_i in x]
-
-        if not isinstance(inputs[0], self.InputContainer):
-            inputs = [self.InputContainer(u_i) for u_i in inputs]
-        
-        if not isinstance(outputs[0], self.OutputContainer):
-            outputs = [self.OutputContainer(z_i) for z_i in outputs]
-
-        counter = 0  # Needed to account for skipped (i.e., none) values
-        t_last = times[0]
-        err_total = 0
-        z_obs = self.output(x)
-        for t, u, z in zip(times, inputs, outputs):
-            while t_last < t:
-                t_new = min(t_last + dt, t)
-                x = self.next_state(x, u, t_new-t_last)
-                t_last = t_new
-                if t >= t_last:
-                    # Only recalculate if required
-                    z_obs = self.output(x)
-            if not (None in z_obs.matrix or None in z.matrix):
-                if any(np.isnan(z_obs.matrix)):
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
-                    break
-                err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
-                counter += 1
-
-        return err_total/counter
+        # If we get here, method is not supported
+        raise ProgModelInputException(f"Error method '{method}' not supported")
     
-    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, **kwargs) -> None:
+    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
@@ -1237,7 +1233,7 @@ class PrognosticsModel(ABC):
                 raise ValueError(f"Key '{key}' not in model parameters")
 
         config = {
-            'method': 'nelder-mead',
+            'error_method': 'MSE',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
             'options': {'xatol': 1e-8}
         }
@@ -1254,7 +1250,6 @@ class PrognosticsModel(ABC):
         if isinstance(outputs, np.ndarray):
             outputs = outputs.tolist()
         if not runs and times and inputs and outputs:
-            # for i, (times, inputs, outputs) in runs:
             if not isinstance(times[0], (Sequence, np.ndarray)):
                 times = [times]
             if not isinstance(inputs[0], (Sequence, np.ndarray)):
@@ -1272,7 +1267,6 @@ class PrognosticsModel(ABC):
             if len(missing_args) > 0:
                 # Concat into string
                 missing_args_str = ', '.join(missing_args)
-                # missing_args_str = missing_args_str[:-2] # Remove last comma and space
                 raise ValueError(f"Missing keyword arguments {missing_args_str}")
             
             # Check lengths of args
@@ -1339,7 +1333,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'])
+        res = minimize(optimization_fcn, params, method=method, bounds = config['bounds'], options=config['options'])
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
 
