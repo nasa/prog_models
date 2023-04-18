@@ -30,7 +30,7 @@ class DictLikeMatrixWrapper():
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
             if not data or isinstance(list(data.values())[0], Union[int, float]):
-                # matrix structure if data is an empty dict or dict with a single value each
+                # matrix structure - data is an empty dict or dict with a single value each
                 self.matrix = np.array(
                     [
                         [data[key]] if key in data else [None] for key in keys
