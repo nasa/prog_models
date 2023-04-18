@@ -21,7 +21,7 @@ from tests.test_ensemble import main as ensemble_main
 if __name__ == '__main__':
     was_successful = True
 
-    print("\n\nTesting individual exectution of test files")
+    print("\n\nTesting individual execution of test files")
 
     # Run tests individually to test them and make sure they can be executed individually
     try:
