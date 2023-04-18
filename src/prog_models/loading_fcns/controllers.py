@@ -97,8 +97,9 @@ class LQR():
 
         n, m = state_vector_vals.shape
         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
-        
+        self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
+        self.scheduled_states = state_vector_vals
+
         for j in range(m):
             phi, theta, psi = state_vector_vals[3:6, j]
             p,       q,   r = state_vector_vals[-3:, j]

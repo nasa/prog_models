@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
 from prog_models.models.uav_model import UAVGen 
-from prog_models.loading_fcns.controllers import LQR_I
+from prog_models.loading_fcns.controllers import LQR_I, LQR
 
 def run_example(): 
 
@@ -46,6 +46,7 @@ def run_example():
 
     # Define controller
     ctrl = LQR_I(ref_traj,vehicle)
+    # ctrl = LQR(ref_traj, vehicle)
     ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
 
     # Set simulation options 
