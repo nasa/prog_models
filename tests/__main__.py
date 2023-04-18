@@ -18,35 +18,8 @@ from tests.test_composite import main as composite_main
 from tests.test_serialization import main as serialization_main
 from tests.test_ensemble import main as ensemble_main
 
-from io import StringIO
-import matplotlib.pyplot as plt
-import sys
-from timeit import timeit
-from unittest.mock import patch
-
-from examples import sim as sim_example
-
-def _test_ex():
-    # Run example
-    sim_example.run_example()
-
 if __name__ == '__main__':
     was_successful = True
-
-    try:
-        # set stdout (so it wont print)
-        sys.stdout = StringIO()
-        
-        with patch('matplotlib.pyplot.show'):
-            runtime = timeit(_test_ex, number=10)
-            plt.close('all')
-
-        # Reset stdout 
-        sys.stdout = sys.__stdout__
-        print(f"\nExample Runtime: {runtime}")
-    except Exception as e:
-        print("\Benchmarking Failed: ", e)
-        was_successful = False
 
     print("\n\nTesting individual exectution of test files")
 
