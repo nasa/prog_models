@@ -115,7 +115,7 @@ class LQR_I():
 
         self.type      = 'LQR_I'                # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
-        self.n_states  = len(self.states) - 1       # number of states
+        self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
         self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)
         self.n_outputs = 3                      # number of outputs
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
@@ -127,12 +127,6 @@ class LQR_I():
 
         # Default control parameters
         # --------------------------------
-        # self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
-        #                        Q=np.eye(self.n_states), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
-        #                        R=np.eye(self.n_inputs), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
-        #                        qi=np.ones((self.n_outputs,)),   # integral error penalty: how much the error history is contributing to the overall error
-        #                        scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
-        #                        index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
         self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
                                Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
                                R=np.diag([500, 4000, 4000, 4000]), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
@@ -161,10 +155,7 @@ class LQR_I():
 
     
     def __call__(self, t, x=None):
-        #  
-        #   future_loading_fnc = LQR_I(x_ref)
-        #   u = future_loading_fnc(t, x)
-        #   vehicle.simulate_to(future_loading_fnc, ...)
+
         if x is None:
             x_k = np.zeros((self.n_states, 1))
         else:
@@ -204,8 +195,6 @@ class LQR_I():
 
     def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
         
-        # controller.build_scheduled_control(vehicle.linear_model, input_vector=thrust_at_hover=mass_total*gravity)
-
         if state_vector_vals is None:
             # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
             n_schedule_grid = 360*2 + 1
@@ -216,7 +205,7 @@ class LQR_I():
         n, m = state_vector_vals.shape
         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
         self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
-        self.scheduled_states = state_vector_vals # ASK MATTEO if this is right; originally 'states' was passed in here 
+        self.scheduled_states = state_vector_vals 
 
         for j in range(m):
             phi, theta, psi = state_vector_vals[3:6, j]
@@ -225,6 +214,14 @@ class LQR_I():
             self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
 
         print('Control gain matrices complete.')
+
+    def reset_controller(self):
+
+        # Reset Error history (from integral action, if exist)
+        # ===================================================
+        if hasattr(self, 'err_hist'):
+            self.err_hist = []    
+        print("Controller reset complete")
 
 
 

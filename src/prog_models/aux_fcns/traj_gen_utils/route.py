@@ -67,8 +67,7 @@ def build(lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, v
     )
     params.update(parameters)
 
-    route = Route(# name=name, 
-                  departure_time=departure_time, 
+    route = Route(departure_time=departure_time, 
                   cruise_speed=params['cruise_speed'], 
                   ascent_speed=params['ascent_speed'], 
                   descent_speed=params['descent_speed'], 
@@ -213,16 +212,17 @@ class Route():
         if eta is not None: # if ETA is provided, assign to self.eta and that's it.
             if hasattr(eta, "__len__") is False or len(eta)!=len(self.lat):
                 raise ProgModelInputException("ETA must be vector array with same length as lat, lon and alt.")
-            # # Assign departure timestamp
-            # departure_timestamp = self.departure_time.timestamp() # Deleting departure_timestamp since it's not used.
+                
             eta_unix = np.zeros_like(eta, dtype=np.float64)
             for i, eta_i in enumerate(eta):
                 eta_unix[i] = dt.datetime.timestamp(eta_i) 
             # Check if speeds required for ETAs are above max speeds            
-            if vehicle_max_speed is None:       cruise_speed_val = 15.0 # Default for vehicle max horizontal speed 
-            vehicle_max_speed_vert = (2/3)*vehicle_max_speed # Define vehicle max vertial speed 
+            if self.cruise_speed is None:       cruise_speed_val = 6.0
+            else:                               cruise_speed_val = self.cruise_speed
+            if self.ascent_speed is None:       vert_speed_val = 3.0
+            else:                               vert_speed_val = self.ascent_speed
             # Get the new relative ETA given expected ETAs and distance between waypoints
-            relative_eta_new = check_and_adjust_eta_feasibility(self.lat, self.lon, self.alt, eta_unix-eta_unix[0], vehicle_max_speed, vehicle_max_speed_vert, distance_method='greatcircle')
+            relative_eta_new = check_and_adjust_eta_feasibility(self.lat, self.lon, self.alt, eta_unix-eta_unix[0], cruise_speed_val, vert_speed_val, distance_method='greatcircle')
             self.eta = np.asarray([dt.datetime.fromtimestamp(relative_eta_new[i] + eta_unix[0]) for i in range(len(eta))])
 
         else:   # if ETA is not provided, compute it from desired cruise speed and other speeds
