@@ -155,12 +155,12 @@ class TestModels(unittest.TestCase):
 
         # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-        print('times: ', times)
+        """print('times: ', times)
         print('inputs: ', inputs)
         print('states: ', states)
         print('outputs: ', outputs)
         print('event_states: ', event_states)
-        print('times[-1]: ', times[-1], ' 5.0, 5: ', 5.0, 5)
+        print('times[-1]: ', times[-1], ' 5.0, 5: ', 5.0, 5)"""
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
     def test_size(self):
@@ -1096,8 +1096,6 @@ class TestModels(unittest.TestCase):
         percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
         for i in range(len(capture_split)):
             actual = '%s |%s| %s%% %s' % ("Progress", "█" * percentage_vals[i] + '-' * (100 - percentage_vals[i]), str(percentage_vals[i])+".0","")
-            print('capture_split[i].strip()', capture_split[i].strip())
-            print('actual.strip()', actual.strip())
             self.assertEqual(capture_split[i].strip(), actual.strip())
         
     def test_containers(self):

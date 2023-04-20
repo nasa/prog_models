@@ -1,11 +1,12 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from numpy import array
 import numpy as np
-from typing import Union
 import pandas as pd
 
 from prog_models.exceptions import ProgModelTypeError
+from typing import Union
 
 
 class DictLikeMatrixWrapper():
@@ -25,7 +26,7 @@ class DictLikeMatrixWrapper():
             keys = list(keys)  # creates list with keys
         self._keys = keys.copy()
         if isinstance(data, np.matrix):
-            self.data = pd.DataFrame(np.array(data, dtype=np.float64), self._keys)
+            self.data = pd.DataFrame(np.array(data, dtype=np.float64), self._keys, dtype=np.float64)
             self.matrix = self.data.to_numpy(dtype=np.float64)
         elif isinstance(data, np.ndarray):
             if data.ndim == 1:
@@ -34,23 +35,14 @@ class DictLikeMatrixWrapper():
             self.data = pd.DataFrame(data, self._keys).T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
-            self.matrix = np.array(
-                [
-                    np.array(np.ravel([data[key]]), dtype=np.float64) if key in data else [None] for key in keys
-                ])
-            if data:
-                if len(self.matrix[0]) > 1:
-                    self.data = pd.DataFrame(data)
-                    print(data)
-                    print(self.data)
-                #else:
-                    #self.data = pd.DataFrame(data, columns=self._keys, index=[0])
+            if data and not isinstance(list(data.values())[0], np.ndarray):  # len(self.matrix[0]) == 1:
+                if isinstance(data, DictLikeMatrixWrapper):
+                    data = dict(data.copy())
+                self.data = pd.DataFrame(data, columns=self._keys, index=[0], dtype=np.float64).astype(object).replace(
+                    np.nan, None)
             else:
-                self.data = pd.DataFrame({})
-            #print(data)
-            #print(self.data)
-
+                self.data = pd.DataFrame(data, columns=self._keys)
+            self.matrix = self.data.to_numpy(dtype=np.float64).T if len(data) > 0 else np.array([])
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
@@ -60,14 +52,25 @@ class DictLikeMatrixWrapper():
         """
         return (DictLikeMatrixWrapper, (self._keys, self.matrix))
 
+    def getMatrix(self) -> np.ndarray:
+        """
+        creates a numpy array corresponding to the pd.DataFrame data
+
+        Returns: np.ndarray
+        """
+        matrix = self.data.to_numpy().T
+        return matrix
+
     def __getitem__(self, key: str) -> int:
         """
         get all values associated with a key, ex: all values of 'i'
         """
+        # row = self.data.loc[:, key].to_list()  # creates list from a row of the DataFrame data
         row = self.matrix[self._keys.index(key)]  # creates list from a row of matrix
         if len(row) == 1:  # list contains 1 value, returns that value (non-vectorized)
             return row[0]
-        return row  # returns entire row/list (vectorized case)
+        else:
+            return row  # returns entire row/list (vectorized case)
 
     def __setitem__(self, key: str, value: int) -> None:
         """
