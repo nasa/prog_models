@@ -3,7 +3,7 @@
 
 import numpy as np
 from typing import Union
-
+from numpy import array
 from prog_models.exceptions import ProgModelTypeError
 
 
