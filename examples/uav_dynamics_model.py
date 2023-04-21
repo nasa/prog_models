@@ -57,8 +57,7 @@ def run_example():
     }
 
     # Generate trajectory
-    traj_results_1 = vehicle.simulate_to(300, ctrl, **options)
-    # traj_results = vehicle.simulate_to_threshold(ctrl, **options)
+    traj_results = vehicle.simulate_to(300, ctrl, **options)
 
     debug = 1
 

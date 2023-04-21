@@ -68,18 +68,66 @@ def lqr_fn(A, B, Q, R):
 # # ==============================================================
 class LQR():
     """ Linear Quadratic Regulator"""
-    def __init__(self, n_states, n_inputs, Q=None, R=None) -> None:
-        self.type = 'LQR'
-        if Q is None:       Q = np.eye(n_states)
-        if R is None:       R = np.eye(n_inputs)
+    # def __init__(self, n_states, n_inputs, Q=None, R=None) -> None:
+    def __init__(self, x_ref, vehicle, **kwargs):
 
-        self.Q = Q
-        self.R = R
-        
+        self.type      = 'LQR'                # type of controller
+        self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
+        self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
+        self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)
+        self.n_outputs = 3                      # number of outputs
+        self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
+        self.n_inputs  = len(self.inputs)       # number of inputs
+        self.err_hist  = []                     # error history (integral)
+        self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
+        self.ss_input  = vehicle.vehicle_model.steadystate_input
+        self.vehicle_max_thrust = vehicle.vehicle_model.dynamics['max_thrust']
+
+        # Default control parameters
+        # --------------------------------
+        self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
+                               Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
+                               R=np.diag([500, 4000, 4000, 4000]), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
+                               # qi=np.array([100, 100, 1000]),   # integral error penalty: how much the error history is contributing to the overall error
+                               scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
+                               index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
+        self.parameters.update(kwargs)                  # update control parameters according to user
+
+        # Get scheduled variable index (only necessary if scheduled_var is changed, which is not happening at the moment)
+        self.parameters['index_scheduled_var'] = self.states.index(self.parameters['scheduled_var'])
+
+        # Initialize other controller-related variables
+        # ---------------------------------------------
+        self.dt        = vehicle.parameters['dt']
     
+    def __call__(self, t, x=None):
+
+        if x is None:
+            x_k = np.zeros((self.n_states, 1))
+        else:
+            x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
+        
+        # Identify reference state (desired state) at t
+        t_k = np.round(t + self.dt/2.0, 1)  # current time step
+        time_ind = np.argmin(np.abs(t_k - self.ref_traj['t'].tolist())) # get index of time value in ref_traj closest to t_k
+        x_ref_k = []
+        for state in self.states:
+            x_ref_k.append(self.ref_traj[state][time_ind])
+        x_ref_k = np.asarray(x_ref_k[:-1]) # get rid of time index in state vector
+        x_k = x_k.reshape(x_k.shape[0],)
+
+        error         = x_k - x_ref_k    # Error between current and reference state
+        scheduled_var = x_k[self.parameters['index_scheduled_var']]    # get psi from current state vector (self.parameters = 'psi')
+        k_idx         = np.argmin(np.abs(self.scheduled_states[self.parameters['index_scheduled_var'], :] - scheduled_var)) # find the psi value stored in the controller closest to the current psi --> extract index
+        K             = self.control_gains[:, :, k_idx]     # extract gain corresponding to the current psi value
+        u             = self.compute_input(K, error)                 # compute input u given the gain matrix K and the error between current and reference state
+        u[0]         += self.ss_input
+        u[0]  = min(max([0, u[0]]), self.vehicle_max_thrust)
+        return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]}
+
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
-        self.K, self.E = lqr_fn(A, B, self.Q, self.R)
+        self.K, self.E = lqr_fn(A, B, self.parameters['Q'], self.parameters['R'])
         return self.K, self.E
 
     def compute_input(self, gain, state_error):
@@ -97,7 +145,12 @@ class LQR():
 
         n, m = state_vector_vals.shape
         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
+        if self.type == 'LQR':
+            self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
+        elif self.type == 'LQR_I':
+            self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
+        else: 
+            raise ProgModelInputException("Controller {} is not supported. Supported controllers: {}".format(self.type, ['LQR', 'LQR_I']))
         self.scheduled_states = state_vector_vals
 
         for j in range(m):
