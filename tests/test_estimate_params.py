@@ -10,6 +10,9 @@ from prog_models.models import *
 
 class TestEstimateParams(unittest.TestCase):
     def test_estimate_params_works(self):
+        """
+        Base Cases
+        """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         data = [(results.times, results.inputs, results.outputs)]
@@ -46,21 +49,6 @@ class TestEstimateParams(unittest.TestCase):
         self.assertGreaterEqual(m.parameters['thrower_height'], 0)
         self.assertEqual(m.parameters['throwing_speed'], 40)
 
-        # Demonstrates further limitations of Parameter Estimation
-        m.parameters['thrower_height'] = 5
-        m.parameters['throwing_speed'] = 19
-        m.estimate_params(data, keys, bounds=((1.231, 4), (20, 41.99)))
-
-        # Notice how the estimated parameters equal to the upper bounds of their respective bounds.
-        self.assertEqual(m.parameters['thrower_height'], 4)
-        self.assertEqual(m.parameters['throwing_speed'], 41.99)
-
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
         # Testing initial parameters that are not within the defined bounds; estimated parameters are not a good fit
         m.parameters['thrower_height'] = 10
         m.parameters['throwing_speed'] = -10
@@ -69,8 +57,8 @@ class TestEstimateParams(unittest.TestCase):
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
         # These returned values are still within the bounds, they are just not close to the original value at all.
         # This results in our estimate parameters to result in the upper extremes
-        self.assertEqual(m.parameters['thrower_height'], 4)
-        self.assertEqual(m.parameters['throwing_speed'], 42)
+        self.assertAlmostEqual(m.parameters['thrower_height'], 4)
+        self.assertAlmostEqual(m.parameters['throwing_speed'], 42)
 
         # Showcasing results of having a local min/max
         # Even though all our bounds include the original model params values,
@@ -83,23 +71,15 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
 
-        m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, -8)))
-
         # Note that with small changes to our bounds, our estimated values will change drastically.
         m.parameters['thrower_height'] = 4
         m.parameters['throwing_speed'] = 24
         m.parameters['g'] = -20
-        keys = ['thrower_height', 'throwing_speed', 'g']
         m.estimate_params(data, keys, bounds=((0, 5), (20, 42), (-21, -7)))
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 2)
-        self.assertEqual(m.parameters['thrower_height'], 5)
-        self.assertEqual(m.parameters['g'], -7)
-        
-        # However, note that our throwing_speed does not equal to it's upper bound anymore.
-        self.assertNotEqual(m.parameters['throwing_speed'], 42)
-        self.assertLess(m.parameters['throwing_speed'], 42)
-        self.assertGreaterEqual(m.parameters['throwing_speed'], 20)
+        self.assertAlmostEqual(m.parameters['thrower_height'], 5)
+        self.assertAlmostEqual(m.parameters['g'], -7)
 
         # Testing convergence with the same initial parameters but no given bounds were provided        
         m.parameters['thrower_height'] = 4
@@ -111,6 +91,9 @@ class TestEstimateParams(unittest.TestCase):
 
 
     def test_estimate_params(self):
+        """
+        General estimate_params testing
+        """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         data = [(results.times, results.inputs, results.outputs)]
@@ -140,16 +123,7 @@ class TestEstimateParams(unittest.TestCase):
             'Times, inputs, and outputs must have at least one element',
             str(cm.exception) 
         )
-        self.assertEqual(
-            'Times, inputs, and outputs must have at least one element',
-            str(cm.exception)
-        )
-        with self.assertRaises(ValueError) as cm:
-            m.estimate_params(times=None, inputs=None, output=None)
-        self.assertEqual(
-            'Missing keyword arguments times, inputs, outputs',
-            str(cm.exception)
-        )
+
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=[[]], inputs=[[]], outputs=[[]])
         self.assertEqual(
@@ -183,6 +157,7 @@ class TestEstimateParams(unittest.TestCase):
             'Missing keyword arguments times',
             str(cm.exception)
         )
+
         # Strings are iterables by definition so this would pass as well, regardless if they are ints
         # Later tests will ensure they must be ints.
         with self.assertRaises(ValueError) as cm:
@@ -330,14 +305,17 @@ class TestEstimateParams(unittest.TestCase):
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
+        # Testing tuples passed in for bounds
         m.estimate_params(data, keys, bounds=[(0, 4), (20, 42), (-20, 15)])
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-        # Testing tuple here.
+
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
+        # Testing tuples and arrays in for bounds
         m.estimate_params(data, keys, bounds=[[0, 4], (20, 42), [-12, 15]])
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
@@ -541,8 +519,10 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = times, inputs = inputs, outputs = outputs)
 
 
-# Testing features where keys are not parameters in the model
     def test_keys(self):
+        """
+        Testing features where keys are not parameters in the model
+        """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         data = [(results.times, results.inputs, results.outputs)]

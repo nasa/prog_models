@@ -1207,7 +1207,6 @@ class PrognosticsModel(ABC):
                 # Concat into string
                 missing_args_str = ', '.join(missing_args)
                 raise ValueError(f"Missing keyword arguments {missing_args_str}")
-            
             # Check lengths of args
             if len(times) != len(inputs) or len(inputs) != len(outputs):
                 raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
@@ -1225,12 +1224,10 @@ class PrognosticsModel(ABC):
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
             if len(config['bounds']) != len(keys):
-                error = f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})"
-                raise ValueError(error)
+                raise ValueError(f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})")
         for bound in config['bounds']:
             if (isinstance(bound, set)):
-                error = f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order."
-                raise TypeError(error)
+                raise TypeError(f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
             if (not isinstance(bound, Iterable)) or (len(bound) != 2):
                 raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
@@ -1245,8 +1242,7 @@ class PrognosticsModel(ABC):
         for i, (times, inputs, outputs) in enumerate(runs):
             has_changed = False
             if len(times) != len(inputs) or len(inputs) != len(outputs):
-                error = f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}"
-                raise ValueError(error)
+                raise ValueError(f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if len(times) == 0:
                 raise ValueError(f"Times, inputs, and outputs for Run {i} must have at least one element")
             if not isinstance(inputs[0], self.InputContainer):
