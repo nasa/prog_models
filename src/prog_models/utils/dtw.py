@@ -1,4 +1,6 @@
 import numpy as np
+from dtaidistance import *
+
 
 def helperDTW(s, t):
     matrix = np.zeros((len(s)+1, len(t)+1))
@@ -45,3 +47,16 @@ second = holder
 result = helperDTW(first, second)
 
 print(result)
+
+
+
+a = [1, 2, 3]
+b = [2, 2, 2, 3, 4]
+
+        
+dtw_i = 0
+
+for dim in range(1, max(len(a), len(b)) + 1):
+    dtw_i += dtw.distance(a[:dim], b[:dim])
+
+print(dtw_i)

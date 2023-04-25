@@ -2,6 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from collections.abc import Iterable
+from fastdtw import *
 from warnings import warn
 import math
 import numpy as np
@@ -52,7 +53,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "
+        warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
@@ -60,7 +61,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     t_last = times[0]
     err_max = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -72,7 +73,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                 
                 else: 
@@ -162,7 +163,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+        warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "  
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
@@ -170,7 +171,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
     t_last = times[0]
     err_total = 0
     z_obs = m.output(x)
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -182,7 +183,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
@@ -190,7 +191,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
                     break
             err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
             counter += 1
-
+    
     return err_total/counter
 
 def MAE(m, times, inputs, outputs, **kwargs):
@@ -239,7 +240,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+        warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "  
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
@@ -247,7 +248,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
     t_last = times[0]
     err_total = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -259,7 +260,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")       
                 else:
@@ -316,7 +317,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+        warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "  
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
@@ -324,7 +325,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
     t_last = times[0]
     err_total = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -336,7 +337,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
@@ -349,7 +350,11 @@ def MAPE(m, times, inputs, outputs, **kwargs):
 
 def DTW(m, times, inputs, outputs, **kwargs):
     """
-    Dynamic Time Warping Algorithm 
+    Independent Dynamic Time Warping Algorithm 
+
+    ** WRITE DESCRIPTION BASED AROUND DIFFERENCE BETWEEN INDEPENDENT VS DEPENDENT DTW 
+
+    -> https://dtaidistance.readthedocs.io/en/latest/usage/dtw.html#multi-dimensionsal-dtw **
 
     Args:
         m (PrognosticsModel): Model to use for comparison
@@ -370,7 +375,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
     Returns:
-        float: RMSE between model and data
+        float: DTW between model and data
     """
     if isinstance(times[0], Iterable):
         # Calculate error for each
@@ -393,53 +398,63 @@ def DTW(m, times, inputs, outputs, **kwargs):
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
+        warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "  
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
-    err_total = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
+    simulated = []
 
-    # Helper function to calculate the DTW given two time series (in this case z and z_obs)
-    def helperDTW(s, t):
-        matrix = np.zeros((len(s)+1, len(t)+1))
-        for i in range(len(s)+1):
-            for j in range(len(t)+1):
-                matrix[i, j] = np.inf
-        matrix[0, 0] = 0
-        for i in range(1, len(s)+1):
-            for j in range(1, len(t)+1):
-                dist = abs(s[i-1][0] - t[j-1][0])
-                result = np.min([matrix[i-1, j],
-                                matrix[i, j-1],
-                                matrix[i-1, j-1]])
-                matrix[i, j] = dist + result
-        return matrix[len(s), len(t)]
-
-    # for t, u, z in zip(times, inputs, outputs):
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
             t_new = min(t_last + dt, t)
             x = m.next_state(x, u, t_new-t_last)
             t_last = t_new
             if t >= t_last:
-                # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
-            if any (np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+            if any(np.isnan(z_obs.matrix)):
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
-                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                   
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    # Worth checking if this is needed for the scope of our algorithm.
+
+                    # When model goes unstable after cutoffThreshold, we want to match the last stable observed value with the 
+                        # equivalent user-provided output by truncating our user-provided series to match the length of our observed series.
+                    # outputs = list(outputs)
+                    # outputs = outputs[:counter]
+                    percent = counter / len(outputs)
+                    index = math.floor(percent * len(outputs))
+                    outputs = list(outputs)[:index]
                     break
-            if len(z.matrix) != len(z_obs.matrix):
-                err_total += np.square(helperDTW(z.matrix, z_obs.matrix))
-            else:
-                err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
+            simulated.append(z_obs)
             counter += 1
 
-    return err_total/counter
+    from scipy.spatial.distance import euclidean
+
+    transform = []
+    for index in simulated:
+        inner_list = []
+        for key in index.keys():
+            inner_list.append(index.get(key))
+        transform.append(inner_list)
+
+    simulated = transform
+
+    transform = []
+    for index in outputs:
+        inner_list = []
+        for key in index.keys():
+            inner_list.append(index.get(key))
+        transform.append(inner_list)
+
+    observed = transform
+
+    distance, path = fastdtw(simulated, observed, dist=euclidean)
+
+    return distance

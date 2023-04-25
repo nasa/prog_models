@@ -128,7 +128,7 @@ class TestCalcError(unittest.TestCase):
                      dt = 1, stability_tol=70)
         self.assertEqual(
             'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. '
-            'Cutoff threshold is 10, or roughly 95.0% of the data',
+            'Cutoff threshold is 1900.0, or roughly 95.0% of the data',
             str(cm.exception)
         )
         # Rerunning params estimate would not change the results
@@ -208,48 +208,33 @@ class TestCalcError(unittest.TestCase):
     
     def test_DTW(self):
         m = LinearThrownObject()
-        m2 = LinearThrownObject()
         results = m.simulate_to_threshold(save_freq = 0.5)
-        results.outputs.pop(2)
-        results.outputs.pop(-4)
-        data = [(results.times, results.inputs, results.outputs)]
-        gt = m.parameters.copy()
 
         # Does not work readily with a LinearThrown Object
         hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw')
 
-        print(hold)
-
-        # m = BatteryElectroChemEOD()
-        # m2 = BatteryElectroChemEOD()
-        # options = {
-        #     'save_freq': 200, # Frequency at which results are saved
-        #     'dt': 1, # Time step
-        # }
-
-        # def future_loading(t, x=None):
-        #     if (t < 600):
-        #         i = 2
-        #     elif (t < 900):
-        #         i = 1
-        #     elif (t < 1800):
-        #         i = 4
-        #     elif (t < 3000):
-        #         i = 2
-        #     else:
-        #         i = 3
-        #     return m.InputContainer({'i': i})
+        m = BatteryElectroChemEOD()
+        options = {
+            'save_freq': 200, # Frequency at which results are saved
+            'dt': 1, # Time step
+        }
+        def future_loading(t, x=None):
+            if (t < 600):
+                i = 2
+            elif (t < 900):
+                i = 1
+            elif (t < 1800):
+                i = 4
+            elif (t < 3000):
+                i = 2
+            else:
+                i = 3
+            return m.InputContainer({'i': i})
     
-        # results = m.simulate_to(2000, future_loading, **options)
-        # # results.outputs.pop(2)
-        # # results.outputs.pop(-4)
-        # data = [(results.times, results.inputs, results.outputs)]
-        # gt = m.parameters.copy()
+        results = m.simulate_to(2000, future_loading, **options)
 
-        # # Does not work readily with a LinearThrown Object
-        # hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw')
-
-        # print(hold)
+        # Does not work readily with a LinearThrown Object
+        hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw', dt=1)
 
         """
         Should I include different error metrics within calc_error? Such as different parameter lengths should not be allowed?

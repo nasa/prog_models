@@ -888,7 +888,6 @@ class TestEstimateParams(unittest.TestCase):
             str(cm.exception)
         )
 
-
         # Passing in incorrect Runs
         with self.assertRaises(ValueError):
             m.estimate_params(wrongData)
