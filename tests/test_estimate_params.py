@@ -90,12 +90,14 @@ class TestEstimateParams(unittest.TestCase):
             'Times, inputs, and outputs must have at least one element',
             str(cm.exception)
         )
+
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=None, inputs=None, output=None)
         self.assertEqual(
             'Missing keyword arguments times, inputs, outputs',
             str(cm.exception)
         )
+
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times='', inputs='', outputs='')
         self.assertEqual(
@@ -124,12 +126,14 @@ class TestEstimateParams(unittest.TestCase):
             'Missing keyword arguments inputs, outputs',
             str(cm.exception)
         )
+        
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=None)
         self.assertEqual(
             'Missing keyword arguments outputs',
             str(cm.exception)
         )
+
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=None, inputs=[None], outputs=[])
         self.assertEqual(
@@ -381,14 +385,14 @@ class TestEstimateParams(unittest.TestCase):
         # Passing in strings and integers into bounds
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=[np.array(['4', '9']), np.array([2, 3]), np.array([4, 5])])
 
-        # Passing in strings, integers, and floating values in bounds.
+        # Passing in strings, integers, and floating values in bounds
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=[np.array(['4', '9']), np.array([2, 3]), np.array([4.123, 5.346])])
 
         # Error due to upper bound being less than lower bound
         with self.assertRaises(ValueError):
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=np.array([(True, False), (False, True), (False, True)]))
 
-        # Testing overloaded bounds equals standard format
+        # Testing bounds where one bound has additional wrappers
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=(((([-3, 4]))), (1, 400), (-20, 30)))
@@ -396,7 +400,7 @@ class TestEstimateParams(unittest.TestCase):
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
         value1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # Testing different formats of inner wrapper types works.
+        # Testing different formats of inner wrapper types works
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=([-3, 12], (1, 400), np.array([-20, 30])))
@@ -651,7 +655,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
 
-        # Passing in arbitrary options should not error that follow our format.
+        # Passing in arbitrary options should not affect estimate_params
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=bound, options= {'1':3, 'disp':1})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
@@ -685,6 +689,7 @@ class TestEstimateParams(unittest.TestCase):
                 {'x': 62.36},
                 {'x': 77.81},
             ]]
+        
         
         # Checking to see if multiple runs can exist.
         # time1 and time2 are explicitly being passed in into a parent wrapper list.
@@ -722,8 +727,8 @@ class TestEstimateParams(unittest.TestCase):
 
         incorrectTimesLen = [[0, 1, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4]]
 
-        # Passing in the correct amount of runs, but one of the runs has a different length compared to other parameter's lengths
-        # This test is also validating if we can see which run has a wrong error.
+        # Passing in correct amount of runs, however at run 1, Times has an incorrect length of 5 whereas inputs and outputs have a length of 4
+        # Test is also validating if run 1 raises the exception
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=incorrectTimesLen, inputs=inputs, outputs=outputs)
         self.assertEqual(
