@@ -135,7 +135,7 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, params: dict) -> None:
-        # This method is called when depickling and in construction. It builds the model from the parameters
+        # This method is called when de-pickling and in construction. It builds the model from the parameters
         
         if not hasattr(self, 'inputs'):
             self.inputs = []
@@ -299,7 +299,7 @@ class PrognosticsModel(ABC):
         Returns
         -------
         dx : StateContainer
-            First derivitive of state, with keys defined by model.states \n
+            First derivative of state, with keys defined by model.states \n
             e.g., dx = m.StateContainer({'abc': 3.1, 'def': -2.003}) given states = ['abc', 'def']
 
         Example
@@ -578,7 +578,7 @@ class PrognosticsModel(ABC):
     @property
     def is_state_transition_model(self) -> bool:
         """
-        If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propogate state forward.
+        If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propagate state forward.
 
         Returns:
             bool: if the model is a state transition model
@@ -598,7 +598,7 @@ class PrognosticsModel(ABC):
 
     def state_at_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs):
         """
-        Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state tranisition model, this returns the state at which threshold_met returns true for each event.
+        Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state transition model, this returns the state at which threshold_met returns true for each event.
 
         Args:
             x (StateContainer):
@@ -609,7 +609,7 @@ class PrognosticsModel(ABC):
 
         Returns:
             state_at_event (dict[str, StateContainer]):
-                state at each events occurance, with keys defined by model.events \n
+                state at each events occurrence, with keys defined by model.events \n
                 e.g., state_at_event = {'impact': {'x1': 10, 'x2': 11}, 'falling': {'x1': 15, 'x2': 20}} given events = ['impact', 'falling'] and states = ['x1', 'x2']
 
         Note:
@@ -929,7 +929,7 @@ class PrognosticsModel(ABC):
         save_pt_index = 0
         save_pts = config['save_pts']
 
-        # confgure optional intermediate printing
+        # configure optional intermediate printing
         if config['print']:
             def update_all():
                 saved_times.append(t)
@@ -1107,7 +1107,7 @@ class PrognosticsModel(ABC):
                 stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
                 before the model goes unstable in order to produce a valid estimate of mean squared error. 
 
-                If the model goes unstable before stability_tol is met, NaN is returned. 
+                If the model goes unstable before stability_tol is met, a ValueError is raised.
                 Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
         Returns:
@@ -1115,6 +1115,10 @@ class PrognosticsModel(ABC):
 
         See Also:
             :func:`calc_error.MSE`
+            :func:`calc_error.RMSE`
+            :func:`calc_error.MAX_E`
+            :func:`calc_error.MAPE`
+            :func:`calc_error.MAE`
         """
         method = kwargs.get('method', 'MSE')
 
@@ -1149,7 +1153,7 @@ class PrognosticsModel(ABC):
                 Optimization method- see scipy.optimize.minimize for options
             error_method (str, optional):
                 Method to use in calculating error. See calc_error for options
-            bounds (tuple or dict): 
+            bounds (tuple or dict, optional): 
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
             options (dict, optional):
                 Options passed to optimizer. see scipy.optimize.minimize for options
@@ -1161,7 +1165,7 @@ class PrognosticsModel(ABC):
         from scipy.optimize import minimize
 
         if keys is None:
-            # if no keys provided, use all
+            # if no keys provided, use all keys that are Numbers
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
         
         if isinstance(keys, set):
