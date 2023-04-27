@@ -223,7 +223,7 @@ class TestEstimateParams(unittest.TestCase):
             # Item isn't a tuple
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'g': 7})
 
-        # Passing in bounds as a set such that each value is a tuple works however.
+        # Passing in bounds as a dictionary with tuples
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds= {'g': (7, 14)})
 
         with self.assertRaises(ValueError):
