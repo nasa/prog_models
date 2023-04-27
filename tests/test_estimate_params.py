@@ -154,7 +154,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        # Checking each key and seeing if it does not almost equal the original parameters
+        # Checking each key to see if they are not equal to the original parameters
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 1)
 
