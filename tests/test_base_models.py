@@ -7,6 +7,7 @@ from os.path import dirname, join
 import pickle
 import sys
 import unittest
+import pandas as pd
 
 # This ensures that the directory containing ProgModelTemplate is in the python search directory
 sys.path.append(join(dirname(__file__), ".."))
@@ -1102,6 +1103,7 @@ class TestModels(unittest.TestCase):
         m = ThrownObject()
         c1 = m.StateContainer({'x': 1.7, 'v': 40})
         c2 = m.StateContainer(np.array([[1.7], [40]]))
+        self.assertTrue(c1.data.equals(c2.data))
         self.assertEqual(c1, c2)
         self.assertListEqual(list(c1.keys()), m.states)
 
