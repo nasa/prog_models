@@ -1,10 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from numpy import array
-import numpy as np
+from numpy import float64, matrix, ndarray, array, newaxis, nan, delete, atleast_1d, vstack
 import pandas as pd
-
 from prog_models.exceptions import ProgModelTypeError
 from typing import Union
 
@@ -18,31 +16,31 @@ class DictLikeMatrixWrapper():
         data -- dict or numpy array: The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
     """
 
-    def __init__(self, keys: list, data: Union[dict, np.array]):
+    def __init__(self, keys: list, data: Union[dict, array]):
         """
         Initializes the container
         """
         if not isinstance(keys, list):
             keys = list(keys)  # creates list with keys
         self._keys = keys.copy()
-        if isinstance(data, np.matrix):
-            self.data = pd.DataFrame(np.array(data, dtype=np.float64), self._keys, dtype=np.float64)
-            self.matrix = self.data.to_numpy(dtype=np.float64)
-        elif isinstance(data, np.ndarray):
+        if isinstance(data, matrix):
+            self.data = pd.DataFrame(array(data, dtype=float64), self._keys, dtype=float64)
+            self.matrix = self.data.to_numpy(dtype=float64)
+        elif isinstance(data, ndarray):
             if data.ndim == 1:
-                data = data[np.newaxis].T
+                data = data[newaxis].T
                 self.data = pd.DataFrame(data, self._keys)
             self.data = pd.DataFrame(data, self._keys).T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            if data and not isinstance(list(data.values())[0], np.ndarray):  # len(self.matrix[0]) == 1:
+            if data and not isinstance(list(data.values())[0], ndarray):  # len(self.matrix[0]) == 1:
                 if isinstance(data, DictLikeMatrixWrapper):
                     data = dict(data.copy())
-                self.data = pd.DataFrame(data, columns=self._keys, index=[0], dtype=np.float64).astype(object).replace(
-                    np.nan, None)
+                self.data = pd.DataFrame(data, columns=self._keys, index=[0], dtype=float64).astype(object).replace(
+                    nan, None)
             else:
                 self.data = pd.DataFrame(data, columns=self._keys)
-            self.matrix = self.data.to_numpy(dtype=np.float64).T if len(data) > 0 else np.array([])
+            self.matrix = self.data.to_numpy(dtype=float64).T if len(data) > 0 else array([])
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
@@ -50,16 +48,16 @@ class DictLikeMatrixWrapper():
         """
         reduce is overridden for pickles
         """
-        return (DictLikeMatrixWrapper, (self._keys, self.matrix))
+        return DictLikeMatrixWrapper, (self._keys, self.matrix)
 
-    def getMatrix(self) -> np.ndarray:
+    def getmatrix(self) -> ndarray:
         """
         creates a numpy array corresponding to the pd.DataFrame data
 
         Returns: np.ndarray
         """
-        matrix = self.data.to_numpy().T
-        return matrix
+        matrix_np = self.data.to_numpy().T
+        return matrix_np
 
     def __getitem__(self, key: str) -> int:
         """
@@ -77,13 +75,13 @@ class DictLikeMatrixWrapper():
         sets a row at the key given
         """
         index = self._keys.index(key)  # the int value index for the key given
-        self.matrix[index] = np.atleast_1d(value)
+        self.matrix[index] = atleast_1d(value)
 
     def __delitem__(self, key: str) -> None:
         """
         removes row associated with key
         """
-        self.matrix = np.delete(self.matrix, self._keys.index(key), axis=0)
+        self.matrix = delete(self.matrix, self._keys.index(key), axis=0)
         self._keys.remove(key)
 
     def __add__(self, other: "DictLikeMatrixWrapper") -> "DictLikeMatrixWrapper":
@@ -111,7 +109,7 @@ class DictLikeMatrixWrapper():
         if isinstance(other, dict):  # checks that the list of keys for each matrix match
             list_key_check = (list(self.keys()) == list(
                 other.keys()))  # checks that the list of keys for each matrix are equal
-            matrix_check = (self.matrix == np.array(
+            matrix_check = (self.matrix == array(
                 [[other[key]] for key in self._keys])).all()  # checks to see that each row matches
             return list_key_check and matrix_check
         list_key_check = self.keys() == other.keys()
@@ -150,13 +148,13 @@ class DictLikeMatrixWrapper():
         """
         return self._keys
 
-    def values(self) -> np.array:
+    def values(self) -> array:
         """
         returns array of matrix values
         """
         if len(self.matrix) > 0 and len(
                 self.matrix[0]) == 1:  # if the first row of the matrix has one value (i.e., non-vectorized)
-            return np.array([value[0] for value in self.matrix])  # the value from the first row
+            return array([value[0] for value in self.matrix])  # the value from the first row
         return self.matrix  # the matrix (vectorized case)
 
     def items(self) -> zip:
@@ -165,7 +163,7 @@ class DictLikeMatrixWrapper():
         """
         if len(self.matrix) > 0 and len(
                 self.matrix[0]) == 1:  # first row of the matrix has one value (non-vectorized case)
-            return zip(self._keys, np.array([value[0] for value in self.matrix]))
+            return zip(self._keys, array([value[0] for value in self.matrix]))
         return zip(self._keys, self.matrix)
 
     def update(self, other: "DictLikeMatrixWrapper") -> None:
@@ -179,7 +177,7 @@ class DictLikeMatrixWrapper():
             else:  # else it isn't it is appended to self._keys list
                 # A new key!
                 self._keys.append(key)
-                self.matrix = np.vstack((self.matrix, np.array([other[key]])))
+                self.matrix = vstack((self.matrix, array([other[key]])))
 
     def __contains__(self, key: str) -> bool:
         """
