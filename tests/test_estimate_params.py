@@ -795,7 +795,7 @@ class TestEstimateParams(unittest.TestCase):
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
 
-        # Defined Keys and Bounds for estimate_params
+        # Define Keys for estimate_params
         keys = ['thrower_height', 'throwing_speed']
         
         # Defining wrongInputLen to test parameter length tests.
