@@ -44,6 +44,11 @@ if __name__ == '__main__':
         examples_main()
     except Exception:
         was_successful = False
+    
+    try:
+        battery_main()
+    except Exception:
+        was_successful = False
 
     try:
         centrifugal_pump_main()
