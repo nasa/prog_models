@@ -126,7 +126,7 @@ class TestEstimateParams(unittest.TestCase):
             'Missing keyword arguments inputs, outputs',
             str(cm.exception)
         )
-        
+
         with self.assertRaises(ValueError) as cm:
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=None)
         self.assertEqual(
@@ -211,6 +211,7 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'rho': (-100, 100)})
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
+        self.assertEqual(m.parameters['rho'], gt['rho'])
 
         # Bounds - wrong type
         with self.assertRaises(ValueError):
@@ -331,6 +332,8 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=[[-15], [-20, 20], [0, 4]])
 
         # Testing with np arrays
+        m.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = 25
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=np.array([(0, 4), (-1000, 42), (-900, 0)]))
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
@@ -501,6 +504,7 @@ class TestEstimateParams(unittest.TestCase):
         times = np.array([0.0, 0.5, 1.0])
         inputs = np.array([{}, {}, {}])
         outputs = np.array([{'x': 1.83}, {'x': 21.83}, {'x': 38.78612068965517}])
+        # Testing estimate_params properly handles when results are passed in as np.arrays
         m.estimate_params(times = times, inputs = inputs, outputs = outputs)
 
 
@@ -756,10 +760,8 @@ class TestEstimateParams(unittest.TestCase):
         # Passing in time1 as a np.array datatype.
         m.estimate_params(times=[time1, time2], inputs=inputs, outputs=outputs)
 
+        # Changing keyword arguments
         time1 = [0, 1, 2, 4, 5, 6, 7, 8, 9]
-        time2 = [0, 1, 2, 3]
-
-        inputs = [[{}]*9, [{}]*4]
         outputs = [[{'x': 1.83},
             {'x': 36.95},
             {'x': 62.36},
@@ -861,14 +863,6 @@ class TestEstimateParams(unittest.TestCase):
         # Passing in incorrect Runs
         with self.assertRaises(ValueError):
             m.estimate_params(times= results.times, inputs= results.inputs, outputs=wrongOutputs)
-
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-
-        # Testing functionality works without having a parent wrapper
-        m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
         # Different types of wrappers should not affect function
         # Testing functionality works with having only a few wrapper sequences
