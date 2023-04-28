@@ -154,7 +154,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        # Checking each key and seeing if it does not almost equal the original parameters
+        # Checking each key to see if they are not equal to the original parameters
         for key in keys:
             self.assertNotAlmostEqual(m.parameters[key], gt[key], 1)
 
@@ -224,7 +224,7 @@ class TestEstimateParams(unittest.TestCase):
             # Item isn't a tuple
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'g': 7})
 
-        # Passing in bounds as a set such that each value is a tuple works however.
+        # Passing in bounds as a dictionary with tuples
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds= {'g': (7, 14)})
 
         with self.assertRaises(ValueError):
@@ -797,7 +797,7 @@ class TestEstimateParams(unittest.TestCase):
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
 
-        # Defined Keys and Bounds for estimate_params
+        # Define Keys for estimate_params
         keys = ['thrower_height', 'throwing_speed']
         
         # Defining wrongInputLen to test parameter length tests.
