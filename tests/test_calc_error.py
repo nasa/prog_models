@@ -58,6 +58,9 @@ class TestCalcError(unittest.TestCase):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)    
 
         # Running through various dt values that could work
+        # Expecting an error in cutoff threshold.
+
+        # By changing the 
         for i in np.arange(0, 1, 0.1):
             with self.assertRaises(ValueError):
                 m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
@@ -100,8 +103,12 @@ class TestCalcError(unittest.TestCase):
         self.assertEqual(change_params, updated_params)
         self.assertNotEqual(orig_params, updated_params)
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as cm:
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+        self.assertEqual(
+            'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. Cutoff threshold is 10, or roughly 95.0% of the data',
+            str(cm.exception)
+        )
         
         with self.assertRaises(ValueError):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
@@ -114,6 +121,7 @@ class TestCalcError(unittest.TestCase):
             'Model unstable- NaN reached in simulation (t=1800.0)',
             str(cm.warning)
         )
+
 
         # with self.assertWarns(UserWarning) as cm:
         #     m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 

@@ -72,9 +72,8 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")                
-                else: 
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")    
+                else:
                     warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
             err_max = max(err_max, np.max(
@@ -180,8 +179,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
@@ -256,8 +254,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
@@ -332,8 +329,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")  
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
