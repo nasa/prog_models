@@ -168,7 +168,6 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
         raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
 
-    # When does this even occur
     if not isinstance(x, self.StateContainer):
         x = self.StateContainer(x)
 
