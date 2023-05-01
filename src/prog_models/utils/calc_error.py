@@ -140,7 +140,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
         double: Total error
     """
     if len(times) != len(inputs) or len(inputs) != len(outputs):
-        raise ValueError(f"Times, inputs, and outputs must all be the same length. Current Lenghts are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+        raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if isinstance(times[0], Iterable):
         # Calculate error for each
@@ -154,22 +154,24 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
     if not isinstance(stability_tol, Number):
-        raise TypeError(f"Keyword arguement 'stability_tol' must be either a int, float, or double.")
+        raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
     if stability_tol >= 1 or stability_tol < 0:
         warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
     # Type and Value checking dt to make sure it has correctly passed in values.
     if not isinstance(dt, Number):
-        raise TypeError(f"Keyword arguement 'dt' must be either a int, float, or double.")
+        raise TypeError(f"Keyword argument 'dt' must be either a int, float, or double.")
     if dt <= 0:
         raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
     
     if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], self.StateContainer):
         raise TypeError(f"Keyword argument 'x0' must be initialized to a StateContainer. You passed in x0 as {type(x).__name__}. Please refer to our documentation to review what is a StateContainer.")
     
-    if not isinstance(x, self.StateContainer):
-            x = [self.StateContainer(x_i) for x_i in x]
+
+    # When does this even occur
+    # if not isinstance(x[0], self.StateContainer):
+    #     x = [self.StateContainer(x_i) for x_i in x]
 
     if not isinstance(inputs[0], self.InputContainer):
         inputs = [self.InputContainer(u_i) for u_i in inputs]

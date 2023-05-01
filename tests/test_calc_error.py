@@ -15,7 +15,6 @@ class TestCalcError(unittest.TestCase):
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
 
-    # @unittest.skip
     def test_calc_error(self):
         # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
         m = BatteryElectroChemEOD()
@@ -47,7 +46,7 @@ class TestCalcError(unittest.TestCase):
         m.parameters['qMax'] = 8000
         keys = ['qMax']
 
-        # Before running estimate_paramss
+        # Before running estimate_params
         with self.assertRaises(ValueError):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
 
@@ -57,7 +56,6 @@ class TestCalcError(unittest.TestCase):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)    
 
 
-        # By changing the 
         for i in np.arange(0.1, 1, 0.1):
             with self.assertRaises(ValueError):
                 m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
@@ -85,7 +83,6 @@ class TestCalcError(unittest.TestCase):
         # They are being spammed almost. Increasing save_frequency increases spam
 
         # Calling estimate_params does not change any of the parameters here because we are always accounting for exceptions...
-
         m.estimate_params(times = simulated_results.times, inputs = simulated_results.inputs, outputs = simulated_results.outputs, keys = keys, method='Powell')
         m1.estimate_params(times = m1_sim_results.times, inputs = m1_sim_results.inputs, outputs = m1_sim_results.outputs, keys = keys, method='CG')
         
@@ -154,7 +151,6 @@ class TestCalcError(unittest.TestCase):
         m = ThrownObject()
         m2 = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
-        data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
         # Arbitrary Test to ensure that both models are behaving the same way
@@ -201,7 +197,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, dt = {1})
         self.assertEqual(
-            'Keyword arguement \'dt\' must be either a int, float, or double.',
+            'Keyword argument \'dt\' must be either a int, float, or double.',
             str(cm.exception)
         )
 
@@ -223,10 +219,9 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, stability_tol = {1})
         self.assertEqual(
-            "Keyword arguement 'stability_tol' must be either a int, float, or double.",
+            "Keyword argument 'stability_tol' must be either a int, float, or double.",
             str(cm.exception)
         )
-
 
 
     def test_multiple(self):
@@ -244,7 +239,7 @@ class TestCalcError(unittest.TestCase):
             {'x': 79.28},
             {'x': 65.3},
             {'x': 41.51},
-            {'x': 7.91},], 
+            {'x': 7.91},],
             [
                 {'x': 1.83},
                 {'x': 36.95},
@@ -259,7 +254,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current Lenghts are: times = 1, inputs = 2, outputs = 2",
+            "Times, inputs, and outputs must all be the same length. Current lengths are: times = 1, inputs = 2, outputs = 2",
             str(cm.exception)
         )
 
@@ -268,15 +263,9 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current Lenghts are: times = 8, inputs = 9, outputs = 9",
+            "Times, inputs, and outputs must all be the same length. Current lengths are: times = 8, inputs = 9, outputs = 9",
             str(cm.exception)
         )
-
-        return
-        
-
-        # m.estimate_params(data, keys, method='Powell', options={'maxiter': 10000, 'disp': False})
-        # m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 10000, 'disp': False})
 
         
     def test_RMSE(self):
