@@ -11,7 +11,7 @@ import math
 import numpy as np
 
 
-def MAX_E(m, times, inputs, outputs, **kwargs):
+def MAX_E(m, times, inputs, outputs, **kwargs) -> float:
     """
     Calculate the Maximum Error between model behavior and some collected data.
 
@@ -99,7 +99,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     return err_max
 
 
-def RMSE(m, times, inputs, outputs, **kwargs):
+def RMSE(m, times, inputs, outputs, **kwargs) -> float:
     """
     Calculate the Root Mean Squared Error between model behavior and some collected data.
 
@@ -208,7 +208,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
 
     return err_total/counter
 
-def MAE(m, times, inputs, outputs, **kwargs):
+def MAE(m, times, inputs, outputs, **kwargs) -> float:
     """
     Calculate the Mean Absolute Error between model behavior and some collected data.
 
@@ -290,7 +290,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
             counter += 1
     return err_total/counter
 
-def MAPE(m, times, inputs, outputs, **kwargs):
+def MAPE(m, times, inputs, outputs, **kwargs) -> float:
     """
     Calculate the Mean Absolute Percentage Error between model behavior and some collected data.
 
@@ -357,7 +357,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
         if not (None in z_obs.matrix or None in z.matrix):
             # The none check above is used to cover the case where the model
             # is not able to produce an output for a given input yet
-            # For example, in LSTM models, the first few inputs will not 
+            # For example, in LSTM models, the first few inputs will not
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
