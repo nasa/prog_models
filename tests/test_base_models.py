@@ -972,7 +972,6 @@ class TestModels(unittest.TestCase):
         # With linear model
         m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
         result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
-        print(result)
         self.assertAlmostEqual(result.times[-1], 8.3)
 
     # when range specified when state doesnt exist or entered incorrectly

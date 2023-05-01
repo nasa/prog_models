@@ -50,21 +50,11 @@ class DictLikeMatrixWrapper():
         """
         return DictLikeMatrixWrapper, (self._keys, self.matrix)
 
-    def getmatrix(self) -> ndarray:
-        """
-        creates a numpy array corresponding to the pd.DataFrame data
-
-        Returns: ndarray
-        """
-        matrix_np = self.data.to_numpy().T
-        return matrix_np
-
     def __getitem__(self, key: str) -> int:
         """
         get all values associated with a key, ex: all values of 'i'
         """
-        # row = self.data.loc[:, key].to_list()  # creates list from a row of the DataFrame data
-        row = self.matrix[self._keys.index(key)]  # creates list from a row of matrix
+        row = self.data.loc[:, key].to_list()  # creates list from a column of pandas DF
         if len(row) == 1:  # list contains 1 value, returns that value (non-vectorized)
             return row[0]
         else:
@@ -81,14 +71,17 @@ class DictLikeMatrixWrapper():
         """
         removes row associated with key
         """
-        self.matrix = delete(self.matrix, self._keys.index(key), axis=0)
+        # self.matrix = delete(self.matrix, self._keys.index(key), axis=0)
         self._keys.remove(key)
+        self.data = self.data.drop(columns=[key], axis=1)
+        self.matrix = self.data.T.to_numpy()
 
     def __add__(self, other: "DictLikeMatrixWrapper") -> "DictLikeMatrixWrapper":
         """
         add another matrix to the existing matrix
         """
-        return DictLikeMatrixWrapper(self._keys, self.matrix + other.matrix)
+        rowadded = self.data.add(other.data).T.to_numpy()
+        return DictLikeMatrixWrapper(self._keys, rowadded)
 
     def __iter__(self):
         """
@@ -111,18 +104,21 @@ class DictLikeMatrixWrapper():
                 other.keys()))  # checks that the list of keys for each matrix are equal
             matrix_check = (self.matrix == array(
                 [[other[key]] for key in self._keys])).all()  # checks to see that each row matches
-            return list_key_check and matrix_check
+            # check if DF is the same or if both are empty
+            df_check = self.data.equals(other.data) or (self.data.empty and other.data.empty)
+            return list_key_check and matrix_check and df_check
         list_key_check = self.keys() == other.keys()
         matrix_check = (self.matrix == other.matrix).all()
-        return list_key_check and matrix_check
+        # check if DF is the same or if both are empty
+        df_check = self.data.equals(other.data) or (self.data.empty and other.data.empty)
+        return list_key_check and matrix_check and df_check
 
     def __hash__(self):
         """
         returns hash value sum for keys and matrix
         """
         sum_hash = 0
-        for x in pd.util.hash_pandas_object(self.data):
-            sum_hash = sum_hash + x
+        sum_hash = (sum_hash + x for x in pd.util.hash_pandas_object(self.data))
         return sum_hash
 
     def __str__(self) -> str:
@@ -156,17 +152,18 @@ class DictLikeMatrixWrapper():
         """
         returns array of matrix values
         """
-        if len(self.matrix) > 0 and len(
-                self.matrix[0]) == 1:  # if the first row of the matrix has one value (i.e., non-vectorized)
-            return array([value[0] for value in self.matrix])  # the value from the first row
-        return self.matrix  # the matrix (vectorized case)
+        matrix_df = self.data.T.to_numpy()
+        if len(matrix_df) > 0 and len(
+                matrix_df[0]) == 1:  # if the first row of the matrix has one value (i.e., non-vectorized)
+            return array([value[0] for value in matrix_df])  # the value from the first row
+        return matrix_df  # the matrix (vectorized case)
 
     def items(self) -> zip:
         """
         returns keys and values as a list of tuples (for iterating)
         """
         matrix_df = self.data.T.to_numpy()
-        if len(self.matrix) > 0 and len(matrix_df[0]) == 1:  # first row of the matrix has one value (non-vectorized case)
+        if len(matrix_df) > 0 and len(matrix_df[0]) == 1:  # first row of the matrix has one value (non-vectorized case)
             return zip(self.data.keys(), array([value[0] for value in matrix_df]))
         return zip(self.data.keys(), matrix_df)
 
@@ -205,8 +202,6 @@ class DictLikeMatrixWrapper():
 
         returns: a string of dictionaries containing all the keys and associated matrix values
         """
-        if len(self.matrix) > 0 and len(
-                self.matrix[0]) == 1:  # the matrix has rows and the first row/list has one value in it
-            return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
-        return str(dict(zip(self._keys, self.matrix)))
-        # return str(self.data.to_dict()[0])
+        if len(self.data.columns) > 0:
+            return str(self.data.to_dict('records')[0])
+        return str(self.data.to_dict())
