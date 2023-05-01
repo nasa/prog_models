@@ -125,7 +125,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
         outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer, optional): Initial state.
+        x0 (StateContainer, dict, optional): Initial state.
         dt (double, optional): Maximum time step.
         stability_tol (double, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -165,13 +165,12 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     if dt <= 0:
         raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
     
-    if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], self.StateContainer):
-        raise TypeError(f"Keyword argument 'x0' must be initialized to a StateContainer. You passed in x0 as {type(x).__name__}. Please refer to our documentation to review what is a StateContainer.")
-    
+    if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
+        raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
 
     # When does this even occur
-    # if not isinstance(x[0], self.StateContainer):
-    #     x = [self.StateContainer(x_i) for x_i in x]
+    if not isinstance(x, self.StateContainer):
+        x = self.StateContainer(x)
 
     if not isinstance(inputs[0], self.InputContainer):
         inputs = [self.InputContainer(u_i) for u_i in inputs]

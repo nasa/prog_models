@@ -204,7 +204,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, x0 = 1)
         self.assertEqual(
-            "Keyword argument 'x0' must be initialized to a StateContainer. You passed in x0 as int. Please refer to our documentation to review what is a StateContainer.",
+            "Keyword argument 'x0' must be initialized to a StateContainer, not a int.",
             str(cm.exception)
         )
 
