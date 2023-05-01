@@ -2,11 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from collections.abc import Iterable
+from numbers import Number
 from warnings import warn
 import math
 import numpy as np
 
-def MAX_E(m, times, inputs, outputs, **kwargs):
+def MAX_E(m, times, inputs, outputs, **kwargs) -> float:
     """
     Calculate the Maximum Error between model behavior and some collected data.
 
@@ -87,7 +88,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     return err_max
 
 
-def RMSE(m, times, inputs, outputs, **kwargs):
+def RMSE(m, times, inputs, outputs, **kwargs) -> float:
     """
     Calculate the Root Mean Squared Error between model behavior and some collected data.
 
@@ -124,7 +125,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
         outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (dict, optional): Initial state.
+        x0 (StateContainer, optional): Initial state.
         dt (double, optional): Maximum time step.
         stability_tol (double, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -138,29 +139,43 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     Returns:
         double: Total error
     """
+    if len(times) != len(inputs) or len(inputs) != len(outputs):
+        raise ValueError(f"Times, inputs, and outputs must all be the same length. Current Lenghts are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+
     if isinstance(times[0], Iterable):
         # Calculate error for each
         error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
         return sum(error)/len(error)
 
     x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
+    # Checks stability_tol is within bounds
+    # Throwing a default after the warning.
+    if not isinstance(stability_tol, Number):
+        raise TypeError(f"Keyword arguement 'stability_tol' must be either a int, float, or double.")
+    if stability_tol >= 1 or stability_tol < 0:
+        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+        stability_tol = 0.95
+
+    # Type and Value checking dt to make sure it has correctly passed in values.
+    if not isinstance(dt, Number):
+        raise TypeError(f"Keyword arguement 'dt' must be either a int, float, or double.")
+    if dt <= 0:
+        raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
+    
+    if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], self.StateContainer):
+        raise TypeError(f"Keyword argument 'x0' must be initialized to a StateContainer. You passed in x0 as {type(x).__name__}. Please refer to our documentation to review what is a StateContainer.")
+    
     if not isinstance(x, self.StateContainer):
-        x = [self.StateContainer(x_i) for x_i in x]
+            x = [self.StateContainer(x_i) for x_i in x]
 
     if not isinstance(inputs[0], self.InputContainer):
         inputs = [self.InputContainer(u_i) for u_i in inputs]
     
     if not isinstance(outputs[0], self.OutputContainer):
         outputs = [self.OutputContainer(z_i) for z_i in outputs]
-
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
