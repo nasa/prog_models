@@ -42,7 +42,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
         return max(error)
 
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 1)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
@@ -157,7 +157,7 @@ def MSE(m, times, inputs, outputs, **kwargs) -> float:
         return sum(error)/len(error)
 
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 1)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
@@ -239,7 +239,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
         return sum(error)/len(error)
 
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 1)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
@@ -321,7 +321,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
         return sum(error)/len(error)
 
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 1)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):

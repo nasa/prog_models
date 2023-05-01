@@ -1101,7 +1101,7 @@ class PrognosticsModel(ABC):
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
-            dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+            dt (float, optional): Minimum time step in simulation. Defaults to 1.
             stability_tol (double, optional): Configurable parameter.
                 Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
                 In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
