@@ -14,7 +14,7 @@ class TestCalcError(unittest.TestCase):
 
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
-    @unittest.skip
+    # @unittest.skip
     def test_calc_error(self):
         # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
         m = BatteryElectroChemEOD()
@@ -276,7 +276,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error()
         self.assertEqual(
-            "PrognosticsModel.calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
+            "calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
             str(cm.exception)
         )
 
@@ -304,12 +304,25 @@ class TestCalcError(unittest.TestCase):
             str(cm.exception)
         )
 
+        with self.assertRaises(TypeError) as cm:
+            m.calc_error({1, 2, 3}, ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
+        self.assertEqual(
+            "Types passed in must be from the following list: np.ndarray, set, list, SimResult, or LazySimResult. Current types are: times = set, inputs = tuple, and outputs = tuple",
+            str(cm.exception)
+        )
+
         try:
             m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
         except:
-            self.fail("Test should have passed")
-        
-        
+            self.fail("Testing data around tuples rather than lists has failed.")
+
+        try:
+            m.calc_error([[[[[1]]]]], [[[[[{'1':1}]]]]], [[[[[{'1':1}]]]]])
+        except:
+            self.fail("Test where we add many wrappers around values has failed.")
+
+
+            
         # m.calc_error(np.array(results.times), np.array(results.inputs), np.array(results.outputs))
 
         # try:

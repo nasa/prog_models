@@ -8,7 +8,7 @@ from prog_models.sim_result import SimResult, LazySimResult
 import math
 import numpy as np
 
-acceptable_types = {int, float, tuple, np.ndarray, set, list, SimResult, LazySimResult}
+acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
 
 def MAX_E(m, times, inputs, outputs, **kwargs) -> float:
     """
