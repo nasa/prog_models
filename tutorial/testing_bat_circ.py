@@ -67,10 +67,10 @@ import pickle
 pickle.dump(batt.parameters, open('/Users/mstrautk/Desktop/prog_models/tutorial/battery123.cfg', 'wb'))
 batt.parameters = pickle.load(open('/Users/mstrautk/Desktop/prog_models/tutorial/battery123.cfg', 'rb'))
 
-print('inputs: ', batt.inputs)
+"""print('inputs: ', batt.inputs)
 print('outputs: ', batt.outputs)
 print('event(s): ', batt.events)
-print('states: ', batt.states)
+print('states: ', batt.states)"""
 
 
 def future_loading(t, x=None):
