@@ -4,8 +4,11 @@
 from collections.abc import Iterable
 from numbers import Number
 from warnings import warn
+from prog_models.sim_result import SimResult, LazySimResult
 import math
 import numpy as np
+
+acceptable_types = {int, float, tuple, np.ndarray, set, list, SimResult, LazySimResult}
 
 def MAX_E(m, times, inputs, outputs, **kwargs) -> float:
     """
@@ -120,9 +123,9 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     """Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
-        times (list[float]): Array of times for each sample.
-        inputs (list[dict]): Array of input dictionaries where input[x] corresponds to time[x].
-        outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
         x0 (StateContainer, dict, optional): Initial state.
@@ -139,14 +142,23 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     Returns:
         double: Total error
     """
+
+
+    types = {type(times), type(inputs), type(inputs)}
+    if not all(t in acceptable_types for t in types):
+        raise TypeError(f"Types passed in must be from the following list: np.ndarray, set, list, SimResult, or LazySimResult. \
+                        Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
     if len(times) != len(inputs) or len(inputs) != len(outputs):
         raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
+    # Strings are also considered Iterable as well...
+    if isinstance(times[0], str):
+        raise TypeError("times cannot be made of values that are strings")
     if isinstance(times[0], Iterable):
         # Calculate error for each
         error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
         return sum(error)/len(error)
-
+    
     x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
