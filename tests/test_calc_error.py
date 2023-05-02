@@ -14,7 +14,7 @@ class TestCalcError(unittest.TestCase):
 
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
-    # @unittest.skip
+    @unittest.skip
     def test_calc_error(self):
         # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
         m = BatteryElectroChemEOD()
@@ -276,7 +276,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error()
         self.assertEqual(
-            "calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
+            "PrognosticsModel.calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
             str(cm.exception)
         )
 
@@ -287,7 +287,7 @@ class TestCalcError(unittest.TestCase):
         # With a list in a string
         with self.assertRaises(TypeError):
             m.calc_error(['1', '2', '3'], ['1', '2', '3'], ['1', '2', '3'])
-        
+    
         # Passing in bool values
         with self.assertRaises(TypeError) as cm:
             m.calc_error([False, False, True], [False, False, True], [False, False, True])

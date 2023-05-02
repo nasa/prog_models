@@ -1,10 +1,10 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from prog_models.sim_result import SimResult, LazySimResult
 from collections.abc import Iterable
 from numbers import Number
 from warnings import warn
-from prog_models.sim_result import SimResult, LazySimResult
 import math
 import numpy as np
 
@@ -142,12 +142,10 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     Returns:
         double: Total error
     """
-
-
     types = {type(times), type(inputs), type(inputs)}
     if not all(t in acceptable_types for t in types):
         raise TypeError(f"Types passed in must be from the following list: np.ndarray, set, list, SimResult, or LazySimResult. \
-                        Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
+Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
     if len(times) != len(inputs) or len(inputs) != len(outputs):
         raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
