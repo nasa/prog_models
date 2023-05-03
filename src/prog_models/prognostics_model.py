@@ -1196,7 +1196,8 @@ class PrognosticsModel(ABC):
             raise TypeError("Times values cannot be strings")
         if isinstance(times[0], Iterable):
             # Calculate error for each
-            error = [calc_error.MSE(elem[1][0], elem[1][1], elem[1][2], _runs = elem[0], **kwargs) for elem in list(enumerate([times, inputs, outputs]))]
+            error = [calc_error.MSE(self, t, i, o, _runs=run, **kwargs) for run, (t, i , o) in enumerate(zip(times, inputs, outputs))]
+            # error = [calc_error.MSE(elem[1][0], elem[1][1], elem[1][2], _runs = elem[0], **kwargs) for elem in list(enumerate([times, inputs, outputs]))]
             return sum(error)/len(error)
         
         x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))

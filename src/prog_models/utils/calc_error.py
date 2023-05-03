@@ -143,12 +143,13 @@ def MSE(self, times, inputs, outputs, _runs = None, **kwargs) -> float:
     Returns:
         double: Total error
     """
+    types = {type(times), type(inputs), type(outputs)}
+    if not all(t in acceptable_types for t in types):
+        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
 
     if len(times) != len(inputs) or len(inputs) != len(outputs):
         if _runs is not None:
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current legnths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
-        else:
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)

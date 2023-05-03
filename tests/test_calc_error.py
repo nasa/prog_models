@@ -14,7 +14,7 @@ class TestCalcError(unittest.TestCase):
 
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
-    @unittest.skip
+    # @unittest.skip
     def test_calc_error(self):
         # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
         m = BatteryElectroChemEOD()
@@ -264,7 +264,16 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current lengths are: times = 8, inputs = 9, outputs = 9",
+            "Times, inputs, and outputs must all be the same length. At run 0, current lengths are times = 8, inputs = 9, outputs = 9",
+            str(cm.exception)
+        )
+
+        incorrectTimes = [[0, 1, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2]]
+
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(incorrectTimes, inputs, outputs)
+        self.assertEqual(
+            "Times, inputs, and outputs must all be the same length. At run 1, current lengths are times = 3, inputs = 4, outputs = 4",
             str(cm.exception)
         )
 
@@ -276,7 +285,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error()
         self.assertEqual(
-            "calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
+            "PrognosticsModel.calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
             str(cm.exception)
         )
 
@@ -311,18 +320,41 @@ class TestCalcError(unittest.TestCase):
             str(cm.exception)
         )
 
-        try:
-            m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
-        except:
-            self.fail("Testing data around tuples rather than lists has failed.")
+        # Cannot add additional wrappers around inputs and outputs since they need to be dictionaries.
+        with self.assertRaises(ProgModelTypeError) as cm:
+            m.calc_error([1], [[{}]], [[{'1':1}]])
+        self.assertEqual(
+            "Data must be a dictionary or numpy array, not <class 'list'>",
+            str(cm.exception)
+        )
+        
+        # with self.assertRaises(ProgModelTypeError) as cm:
+        hold = m.calc_error([[1]], [[{}]], [[{'1':1}]])
 
-        try:
-            m.calc_error([[[[[1]]]]], [[[[[{'1':1}]]]]], [[[[[{'1':1}]]]]])
-        except:
-            self.fail("Test where we add many wrappers around values has failed.")
+        hold2 = m.calc_error([[[1]]], [[{}]], [[{'1':1}]])
+
+        hold3 = m.calc_error([[[[1]]]], [[{}]], [[{'1':1}]])
+
+        self.assertEqual(hold, hold2)
+        self.assertEqual(hold2, hold3)
+
+        with self.assertRaises(ProgModelTypeError) as cm:
+            m.calc_error([[1]], [[[{}]]], [[[{'1':1}]]])
+        self.assertEqual(
+            "Data must be a dictionary or numpy array, not <class 'list'>",
+            str(cm.exception)
+        )
+
+        # Expecting this to pass
+        m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
+
+
+        # try:
+        #     m.calc_error([[[[[1]]]]], [[[[{}]]]], [[[[{'1':1}]]]])
+        # except:
+        #     self.fail("Test where we add many wrappers around values has failed.")
         
 
-            
         # m.calc_error(np.array(results.times), np.array(results.inputs), np.array(results.outputs))
 
         # try:
