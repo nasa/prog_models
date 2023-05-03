@@ -142,16 +142,16 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     Returns:
         double: Total error
     """
-    types = {type(times), type(inputs), type(inputs)}
+    types = {type(times), type(inputs), type(outputs)}
     if not all(t in acceptable_types for t in types):
-        raise TypeError(f"Types passed in must be from the following list: np.ndarray, set, list, SimResult, or LazySimResult. \
+        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. \
 Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
     if len(times) != len(inputs) or len(inputs) != len(outputs):
         raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     # Strings are also considered Iterable as well...
     if isinstance(times[0], str):
-        raise TypeError("times cannot be made of values that are strings")
+        raise TypeError("Times values cannot be strings")
     if isinstance(times[0], Iterable):
         # Calculate error for each
         error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]

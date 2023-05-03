@@ -320,7 +320,7 @@ class TestCalcError(unittest.TestCase):
             m.calc_error([[[[[1]]]]], [[[[[{'1':1}]]]]], [[[[[{'1':1}]]]]])
         except:
             self.fail("Test where we add many wrappers around values has failed.")
-
+        
 
             
         # m.calc_error(np.array(results.times), np.array(results.inputs), np.array(results.outputs))
