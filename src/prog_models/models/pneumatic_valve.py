@@ -5,26 +5,28 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-from .. import prognostics_model
+from prog_models import PrognosticsModel
 
-def calc_x(x : float, forces : float, Ls : float, new_x : float) -> float:
-    lower_wall = (x==0 and forces<0) or (new_x<0)
-    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+
+def calc_x(x: float, forces: float, Ls: float, new_x: float) -> float:
+    lower_wall = (x == 0 and forces < 0) or (new_x < 0)
+    upper_wall = (x == Ls and forces > 0) or (new_x > Ls)
     if lower_wall:
         return 0
     if upper_wall:
         return Ls
     return new_x
 
-def calc_v(x : float, v : float, dv : float, forces : float, Ls : float, new_x : float) -> float:
-    lower_wall = (x==0 and forces<0) or (new_x<0)
-    upper_wall = (x==Ls and forces>0) or (new_x>Ls)
+
+def calc_v(x: float, v: float, dv: float, forces: float, Ls: float, new_x: float) -> float:
+    lower_wall = (x == 0 and forces < 0) or (new_x < 0)
+    upper_wall = (x == Ls and forces > 0) or (new_x > Ls)
     if lower_wall or upper_wall:
         return 0
     return v + dv
 
 
-class PneumaticValveBase(prognostics_model.PrognosticsModel):
+class PneumaticValveBase(PrognosticsModel):
     """
     Prognostics :term:`model` for a Pneumatic Valve model as described in the following paper:
     `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
@@ -38,9 +40,9 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
 
     :term:`Inputs/Loading<input>`: (4)
         | pL: Fluid pressure at the left side of the plug (Pa)
-        | pR: Fluid pressure at the right side of the plug (Pa) 
-        | uBot: input pressure at the bottom pneumatic port (Pa) 
-        | uTop: input pressure at the botton pneumatic port (Pa) 
+        | pR: Fluid pressure at the right side of the plug (Pa)
+        | uBot: input pressure at the bottom pneumatic port (Pa)
+        | uTop: input pressure at the botton pneumatic port (Pa)
 
     :term:`States<state>`: (10)
         | Aeb: Area of the leak at the bottom pneumatic port
@@ -66,16 +68,20 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
     ------------
         process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
-          state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
+          Can be number (e.g., .2) applied to every state, a dictionary of 
+          values for each state (e.g., {'x1': 0.2, 'x2': 0.3}), 
+          or a function (x) -> x
         process_noise_dist : Optional, str
-          distribution for :term:`process noise` (e.g., normal, uniform, triangular)
+          distribution for :term:`process noise` 
+          e.g., normal, uniform, triangular
         measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
-          Can be number (e.g., .2) applied to every output, a dictionary of values for each
-          output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
+          Can be number (e.g., .2) applied to every output, a dictionary of 
+          values for each output (e.g., {'z1': 0.2, 'z2': 0.3}), 
+          or a function (z) -> z
         measurement_noise_dist : Optional, str
-          distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+           distribution for :term:`measurement noise` 
+           e.g., normal, uniform, triangular
         g : float
             Acceleration due to gravity (m/s^2)
         pAtm : float
@@ -122,7 +128,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             Min limit for state k
         rMax : float
             Max limit for state r
-        x0 : Dict[str, float] 
+        x0 : Dict[str, float]
             Initial state
         wb: float
             Wear parameter for bottom leak
@@ -227,14 +233,15 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         'r': (0, np.inf)
     }
 
-    def initialize(self, u : dict, z = None):
+    def initialize(self, u: dict, z=None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
         return self.StateContainer(x0)
 
-    def gas_flow(self, pIn : float, pOut : float, C : float, A : float) -> float:
+    def gas_flow(self, pIn: float, pOut: float, C: float, A: float) -> float:
         # Step 1: If array- run for each element
-        # Note: this is so complicated because it is run multiple times with mixtures of scalars and arrays
+        # Note: this is so complicated because it is run multiple times
+        # with mixtures of scalars and arrays
         inputs = np.array([pIn, pOut, C, A])
         if np.any([not np.isscalar(i) for i in inputs]):
             # Handle case where one or more is array
@@ -253,24 +260,24 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         R = self.parameters['gas_R']
         threshold = ((k+1)/2)**(k/(k-1))
 
-        if pIn/pOut>=threshold:
+        if pIn/pOut >= threshold:
             return C*A*pIn*np.sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
-        if pIn>=pOut:
+        if pIn >= pOut:
             if pIn == 0:
                 pIn = 1e-99
             return C*A*pIn*np.sqrt(2/Z/R/T*k/(k-1)*abs((pOut/pIn)**(2/k)-(pOut/pIn)**((k+1)/k)))
-        if pOut/pIn>=threshold:
+        if pOut/pIn >= threshold:
             return -C*A*pOut*np.sqrt(k/Z/R/T*(2/(k+1))**((k+1)/(k-1)))
         # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
         return -C*A*pOut*np.sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
-    def next_state(self, x : dict, u : dict, dt : float):
-        params = self.parameters # optimization
-        pInTop = params['pSupply'] if u['uTop'] else params['pAtm'] 
+    def next_state(self, x: dict, u: dict, dt: float):
+        params = self.parameters  # optimization
+        pInTop = params['pSupply'] if u['uTop'] else params['pAtm']
         springForce = x['k']*(params['offsetX']+x['x'])
         friction = x['v']*x['r']
         fluidForce = (u['pL']-u['pR'])*params['Av']
-        pInBot = params['pSupply'] if u['uBot'] else params['pAtm'] 
+        pInBot = params['pSupply'] if u['uBot'] else params['pAtm']
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
         plugWeight = params['m']*params['g']
@@ -278,20 +285,20 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
         rdot = params['wr']*abs(x['v']*friction)
         Aidot = params['wi']*abs(x['v']*friction)
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
-        mBotDotn = self.gas_flow(pInBot,pressureBot,params['Cb'],params['Ab'])
+        mBotDotn = self.gas_flow(pInBot, pressureBot, params['Cb'], params['Ab'])
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
-        leakBotToAtm = self.gas_flow(pressureBot,params['pAtm'],1,x['Aeb'])
+        leakBotToAtm = self.gas_flow(pressureBot, params['pAtm'], 1, x['Aeb'])
         gasForceTop = pressureTop*params['Ap']
         gasForceBot = pressureBot*params['Ap']
-        leakTopToAtm = self.gas_flow(pressureTop,params['pAtm'],1,x['Aet'])
-        leakTopToBot = self.gas_flow(pressureTop,pressureBot,1,x['Ai'])
+        leakTopToAtm = self.gas_flow(pressureTop, params['pAtm'], 1, x['Aet'])
+        leakTopToBot = self.gas_flow(pressureTop, pressureBot, 1, x['Ai'])
         mBotdot = mBotDotn + leakTopToBot - leakBotToAtm
-        mTopDotn = self.gas_flow(pInTop,pressureTop,params['Ct'],params['At'])
-        pistonForces = -fluidForce - plugWeight - friction - springForce + gasForceBot - gasForceTop
+        mTopDotn = self.gas_flow(pInTop, pressureTop, params['Ct'], params['At'])
+        pistonForces = gasForceBot - fluidForce - plugWeight - friction - springForce - gasForceTop
         mTopdot = mTopDotn - leakTopToBot - leakTopToAtm
-        vdot = pistonForces/params['m']
+        vdot = pistonForces / params['m']
 
-        new_x = x['x']+x['v']*dt
+        new_x = x['x'] + x['v'] * dt
 
         if np.isscalar(pistonForces):
             vel = calc_v(x['x'], x['v'], vdot*dt, pistonForces, params['Ls'], new_x)
@@ -316,14 +323,14 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             np.atleast_1d(dp)                                # pL - pR
         ]))
     
-    def output(self, x : dict):
+    def output(self, x: dict):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
         maxFlow = params['Cv']*params['Av']*np.sqrt(2/params['rhoL']*abs(x['pDiff'])) * np.sign(x['pDiff'])
         volumeBot = params['Vbot0'] + params['Ap']*x['x']
         volumeTop = params['Vtop0'] + params['Ap']*(params['Ls']-x['x'])
-        trueFlow = maxFlow * np.maximum(0,x['x'])/params['Ls']
+        trueFlow = maxFlow * np.maximum(0, x['x'])/params['Ls']
         pressureTop = x['mTop']*params['R']*params['gas_temp']/params['gas_mass']/volumeTop
         pressureBot = x['mBot']*params['R']*params['gas_temp']/params['gas_mass']/volumeBot
 
@@ -331,12 +338,12 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             np.atleast_1d(trueFlow),             # Q
             np.atleast_1d(indicatorBotm),        # indicatorBotm
             np.atleast_1d(indicatorTopm),        # indicatorTopm
-            np.atleast_1d(1e-6 *pressureBot),    # pBot
-            np.atleast_1d(1e-6 *pressureTop),    # pTop
+            np.atleast_1d(1e-6 * pressureBot),   # pBot
+            np.atleast_1d(1e-6 * pressureTop),   # pTop
             np.atleast_1d(x['x'])                # x
         ]))
 
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": (params['AbMax'] - x['Aeb'])/(params['AbMax'] - params['x0']['Aeb']), 
@@ -346,7 +353,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             "Friction Failure": (params['rMax'] - x['r'])/(params['rMax'] - params['x0']['r'])
         }
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": x['Aeb'] > params['AbMax'], 
@@ -355,6 +362,7 @@ class PneumaticValveBase(prognostics_model.PrognosticsModel):
             "Spring Failure": x['k'] < params['kMin'],
             "Friction Failure": x['r'] > params['rMax']
         }
+
 
 def OverwrittenWarning(params):
     """
@@ -409,7 +417,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         'wt': [OverwrittenWarning]
     }
 
-    def next_state(self, x : dict, u : dict, dt : float) -> dict:
+    def next_state(self, x: dict, u: dict, dt: float) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wb'] = x['wb']
@@ -419,7 +427,9 @@ class PneumaticValveWithWear(PneumaticValveBase):
             self.parameters['wt'] = x['wt']
         next_x = PneumaticValveBase.next_state(self, x, u, dt)
 
-        # Append this way because the keys in the structure but the values are missing - this is due to the behavior of subclassed models calling their parent functions.
+        # Append this way because the keys in the structure but the values are
+        # missing - this is due to the behavior of subclassed models calling
+        # their parent functions.
         next_x.matrix = np.vstack((next_x.matrix, np.array([
             np.atleast_1d(x['wb']),
             np.atleast_1d(x['wi']),
@@ -428,5 +438,6 @@ class PneumaticValveWithWear(PneumaticValveBase):
             np.atleast_1d(x['wt'])
         ])))
         return next_x
+
 
 PneumaticValve = PneumaticValveWithWear

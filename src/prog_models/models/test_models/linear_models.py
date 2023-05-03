@@ -5,7 +5,6 @@ import numpy as np
 
 from prog_models import LinearModel
 
-
 class FNoneNoEventStateLM(LinearModel):
     """
     Simple model that increases state by u1 every step. 
@@ -24,7 +23,6 @@ class FNoneNoEventStateLM(LinearModel):
             'x1': 0
         }
     }
-
 
 class OneInputNoOutputNoEventLM(LinearModel):
     """
@@ -57,7 +55,7 @@ class OneInputOneOutputNoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1]])
     C = np.array([[1]])
-    F = np.empty((0,1))
+    F = np.empty((0, 1))
 
     default_parameters = {
         'process_noise': 0,
@@ -65,6 +63,53 @@ class OneInputOneOutputNoEventLM(LinearModel):
             'x1': 0
         }
     }
+
+
+class OneInputOneOutputOneEventLM(OneInputOneOutputNoEventLM):
+    events = ['x1 == 10']
+    performance_metric_keys = ['pm1']
+
+    F = np.array([[-0.1]])
+    G = np.array([[1]])
+
+    def performance_metrics(self, x) -> dict:
+        return {'pm1': x['x1'] + 1}
+
+class OneInputOneOutputOneEventAltLM(LinearModel):
+    """
+    Simple model that increases state by u1 every step. Event occurs when state == 10
+    """
+    inputs = ['u2']
+    states = ['x2']
+    outputs = ['z2']
+    performance_metric_keys = ['pm2']
+    events = ['x2 == 5']
+
+    A = np.array([[0]])
+    B = np.array([[1]])
+    C = np.array([[1]])
+    F = np.array([[-0.2]])
+    G = np.array([[1]])
+
+    default_parameters = {
+        'process_noise': 0,
+        'x0': {
+            'x2': 0
+        }
+    }
+
+    def performance_metrics(self, x) -> dict:
+        return {'pm2': x['x2'] + 1}
+
+
+class OneInputOneOutputNoEventLMPM(OneInputOneOutputNoEventLM):
+    """
+    Same as OneInputOneOutputNoEventLM, but with performance metrics defined as a function. Has a single performance metric that is always the state, plus 1
+    """
+    performance_metric_keys = ['x1+1']
+
+    def performance_metrics(self, x) -> dict:
+        return {'x1+1': x['x1']+1}
 
 
 class OneInputNoOutputOneEventLM(OneInputNoOutputNoEventLM):
@@ -88,6 +133,7 @@ class OneInputNoOutputTwoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1], [-0.2]])
     G = np.array([[1], [1]])
 
@@ -110,6 +156,7 @@ class TwoInputNoOutputOneEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1]])
     G = np.array([[1]])
 
@@ -132,6 +179,7 @@ class TwoInputNoOutputTwoEventLM(LinearModel):
     A = np.array([[0]])
     B = np.array([[1, 0.5]])
     C = np.empty((0,1))
+    D = np.empty((0,1))
     F = np.array([[-0.1], [-0.2]])
     G = np.array([[1], [1]])
 

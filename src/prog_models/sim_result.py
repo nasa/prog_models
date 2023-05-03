@@ -6,8 +6,8 @@ from matplotlib.pyplot import figure
 import numpy as np
 from typing import Callable, Dict, List
 
-from .utils.containers import DictLikeMatrixWrapper
-from .visualize import plot_timeseries
+from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.visualize import plot_timeseries
 
 
 class SimResult(UserList):
@@ -81,7 +81,7 @@ class SimResult(UserList):
         self.times.pop(index)
         return self.data.pop(index)
 
-    def remove(self, d : float = None, t : float = None) -> None:
+    def remove(self, d : dict = None, t : float = None) -> None:
         """Remove an element
 
         Args:

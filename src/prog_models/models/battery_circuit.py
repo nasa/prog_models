@@ -4,7 +4,7 @@
 from math import inf
 import numpy as np
 
-from .. import PrognosticsModel
+from prog_models import PrognosticsModel
 
 
 class BatteryCircuit(PrognosticsModel):
@@ -45,7 +45,7 @@ class BatteryCircuit(PrognosticsModel):
         V0 : float
           Nominal Battery Voltage
         Rp : float
-          Battery Parasitic Resistance 
+          Battery Parasitic Resistance
         qMax : float
           Maximum Charge
         CMax : float
@@ -54,13 +54,13 @@ class BatteryCircuit(PrognosticsModel):
           End of Discharge Voltage Threshold
         Cb0 : float 
           Battery Capacity Parameter
-        Cbp0 : float 
+        Cbp0 : float
           Battery Capacity Parameter
-        Cbp1 : float 
+        Cbp1 : float
           Battery Capacity Parameter
-        Cbp2 : float 
+        Cbp2 : float
           Battery Capacity Parameter
-        Cbp3 : float 
+        Cbp3 : float
           Battery Capacity Parameter
         Rs : float
           R-C Pair Parameter
@@ -137,7 +137,7 @@ class BatteryCircuit(PrognosticsModel):
         'qb': (0, inf)
     }
 
-    def dx(self, x : dict, u : dict):
+    def dx(self, x: dict, u: dict):
         # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
         parameters = self.parameters
         Rs = parameters['Rs']
@@ -165,7 +165,7 @@ class BatteryCircuit(PrognosticsModel):
             np.atleast_1d(ics)     # qcs
         ]))
     
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -181,7 +181,7 @@ class BatteryCircuit(PrognosticsModel):
             'EOD': np.minimum(charge_EOD, voltage_EOD)
         }
 
-    def output(self, x : dict):
+    def output(self, x: dict):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -193,7 +193,7 @@ class BatteryCircuit(PrognosticsModel):
             np.atleast_1d(x['tb']),            # t
             np.atleast_1d(Vb - Vcp - Vcs)]))   # v
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

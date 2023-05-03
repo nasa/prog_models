@@ -5,10 +5,10 @@ from copy import deepcopy
 import numpy as np
 import warnings
 
-from .. import prognostics_model
+from prog_models import PrognosticsModel
 
 
-class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
+class CentrifugalPumpBase(PrognosticsModel):
     """
     Prognostics :term:`model` for a Centrifugal Pump as described in [0]_.
 
@@ -69,12 +69,12 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             impeller blade area
         b : float
         n : float
-            Pole Phases 
+            Pole Phases
         p : float
             Pole Pairs
         I : float
             impeller/shaft/motor lumped inertia
-        r : float 
+        r : float
             lumped friction parameter (minus bearing friction)
         R1 : float
         R2 : float
@@ -196,14 +196,14 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
         'rRadial': (0, np.inf)
     }
 
-    def initialize(self, u : dict, z = None):
+    def initialize(self, u: dict, z=None):
         x0 = self.parameters['x0']
         x0['QLeak'] = \
             self.parameters['cLeak']*self.parameters['ALeak']*\
                 np.sqrt(abs(u['psuc']-u['pdisch'])) * np.sign(u['psuc']-u['pdisch'])
         return self.StateContainer(x0)
 
-    def next_state(self, x : dict, u : dict, dt : float):
+    def next_state(self, x: dict, u: dict, dt: float):
         params = self.parameters
         Todot = 1/params['mcOil'] * (params['HOil1']*(x['Tt']-x['To']) + params['HOil2']*(x['Tr']-x['To'])\
             + params['HOil3']*(u['Tamb']-x['To']))
@@ -244,8 +244,8 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             np.atleast_1d(QLeak)
         ]))
 
-    def output(self, x : dict):
-        Qout = np.maximum(0,x['Q']-x['QLeak'])
+    def output(self, x: dict):
+        Qout = np.maximum(0, x['Q']-x['QLeak'])
 
         return self.OutputContainer({
             'w':    x['w'],
@@ -255,7 +255,7 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'To':   x['To']
         })
 
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
         return {
             'ImpellerWearFailure': (x['A'] - self.parameters['lim']['A'])/(self.parameters['x0']['A'] - self.parameters['lim']['A']),
             'ThrustBearingOverheat': (self.parameters['lim']['Tt'] - x['Tt'])/(self.parameters['lim']['Tt']- self.parameters['x0']['Tt']),
@@ -263,13 +263,14 @@ class CentrifugalPumpBase(prognostics_model.PrognosticsModel):
             'PumpOilOverheat': (self.parameters['lim']['To'] - x['To'])/(self.parameters['lim']['To'] - self.parameters['x0']['To'])
         }
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         return {
             'ImpellerWearFailure': x['A'] <= self.parameters['lim']['A'],
             'ThrustBearingOverheat': x['Tt'] >= self.parameters['lim']['Tt'],
             'RadialBearingOverheat': x['Tr'] >= self.parameters['lim']['Tr'],
             'PumpOilOverheat': x['To'] >= self.parameters['lim']['To']
         }
+
 
 def OverwrittenWarning(params):
     """
@@ -285,7 +286,7 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
 
     This class implements a Centrifugal Pump model as described in [1]_.
 
-    :term:`Events<event>`: (4) 
+    :term:`Events<event>`: (4)
         See CentrifugalPumpBase
 
     :term:`Inputs/Loading<input>`: (5)
@@ -317,8 +318,8 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     events = CentrifugalPumpBase.events
 
     default_parameters = deepcopy(CentrifugalPumpBase.default_parameters)
-    default_parameters['x0'].update(
-        {'wA': 0.0,
+    default_parameters['x0'].update({
+        'wA': 0.0,
         'wThrust': 0,
         'wRadial': 0})
 
@@ -327,10 +328,9 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     param_callbacks = {
         'wA': [OverwrittenWarning],
         'wRadial': [OverwrittenWarning],
-        'wThrust': [OverwrittenWarning]
-    }
+        'wThrust': [OverwrittenWarning]}
 
-    def next_state(self, x : dict, u : dict, dt : float) -> dict:
+    def next_state(self, x: dict, u: dict, dt: float) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wA'] = x['wA']
@@ -344,5 +344,6 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
             np.atleast_1d(x['wThrust'])
         ])))
         return next_x
+
 
 CentrifugalPump = CentrifugalPumpWithWear
