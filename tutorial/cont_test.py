@@ -33,13 +33,12 @@ result = LazySimResult(f, time, state)
 """column_val = list(zip(*[['state']*len(state[0]), state[0].keys()]))
 index = pd.MultiIndex.from_tuples(column_val)
 frame = pd.DataFrame(data=state, columns=index)"""
-# {'fcn_'+k: v for k, v in result.data.items()}
-"""dict_data = list()
-for dict_item in result.data:
-    for key, value in dict_item.items():
-        dict_data.append({'fcn_'+key: value})
-print(dict_data)"""
-print(result.frame)
+
+time = list(range(10))  # list of int, 0 to 9
+state = [{'a': i * 2.5, 'b': i * 5} for i in range(10)]
+result2 = SimResult(time, state)
+test = result2.to_numpy()
+print('resut2: ', result2.monotonicity(), result2)
 
 
 """result = []  # list for dataframes of monotonicity values
