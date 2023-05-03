@@ -1180,7 +1180,45 @@ class PrognosticsModel(ABC):
         See Also:
             :func:`calc_error.MSE`
         """
+
         method = kwargs.get('method', 'MSE')
+
+        acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
+
+        types = {type(times), type(inputs), type(outputs)}
+        if not all(t in acceptable_types for t in types):
+            raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
+        if len(times) != len(inputs) or len(inputs) != len(outputs):
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+
+        # Strings are also considered Iterable as well...
+        if isinstance(times[0], str):
+            raise TypeError("Times values cannot be strings")
+        if isinstance(times[0], Iterable):
+            # Calculate error for each
+            error = [calc_error.MSE(elem[1][0], elem[1][1], elem[1][2], _runs = elem[0], **kwargs) for elem in list(enumerate([times, inputs, outputs]))]
+            return sum(error)/len(error)
+        
+        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+        dt = kwargs.get('dt', 10)
+        stability_tol = kwargs.get('stability_tol', 0.95)
+
+        # Checks stability_tol is within bounds
+        # Throwing a default after the warning.
+        if not isinstance(stability_tol, Number):
+            raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
+        if stability_tol >= 1 or stability_tol < 0:
+            warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+            stability_tol = 0.95
+
+        # Type and Value checking dt to make sure it has correctly passed in values.
+        if not isinstance(dt, Number):
+            raise TypeError(f"Keyword argument 'dt' must be either a int, float, or double.")
+        if dt <= 0:
+            raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
+        
+        if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
+            raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
 
         # Call appropriate error calculation method
         if method.lower() == 'mse':
@@ -1196,7 +1234,7 @@ class PrognosticsModel(ABC):
 
         # If we get here, method is not supported
         raise ProgModelInputException(f"Error method '{method}' not supported")
-    
+        
     def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', tol = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 

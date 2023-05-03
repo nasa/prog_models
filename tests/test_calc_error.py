@@ -276,7 +276,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error()
         self.assertEqual(
-            "PrognosticsModel.calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
+            "calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
             str(cm.exception)
         )
 
@@ -307,7 +307,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error({1, 2, 3}, ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
         self.assertEqual(
-            "Types passed in must be from the following list: np.ndarray, set, list, SimResult, or LazySimResult. Current types are: times = set, inputs = tuple, and outputs = tuple",
+            "Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = set, inputs = tuple, and outputs = tuple",
             str(cm.exception)
         )
 

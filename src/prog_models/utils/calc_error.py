@@ -119,7 +119,7 @@ def RMSE(m, times, inputs, outputs, **kwargs) -> float:
     return np.sqrt(MSE(m, times, inputs, outputs, **kwargs))
 
 
-def MSE(self, times, inputs, outputs, **kwargs) -> float:
+def MSE(self, times, inputs, outputs, _runs = None, **kwargs) -> float:
     """Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
@@ -130,6 +130,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     Keyword Args:
         x0 (StateContainer, dict, optional): Initial state.
         dt (double, optional): Maximum time step.
+        runs (int, untouched
         stability_tol (double, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
@@ -142,41 +143,16 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     Returns:
         double: Total error
     """
-    types = {type(times), type(inputs), type(outputs)}
-    if not all(t in acceptable_types for t in types):
-        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. \
-Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
-    if len(times) != len(inputs) or len(inputs) != len(outputs):
-        raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
-    # Strings are also considered Iterable as well...
-    if isinstance(times[0], str):
-        raise TypeError("Times values cannot be strings")
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-    
+    if len(times) != len(inputs) or len(inputs) != len(outputs):
+        if _runs is not None:
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current legnths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+        else:
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+
     x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
-
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if not isinstance(stability_tol, Number):
-        raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
-    if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
-
-    # Type and Value checking dt to make sure it has correctly passed in values.
-    if not isinstance(dt, Number):
-        raise TypeError(f"Keyword argument 'dt' must be either a int, float, or double.")
-    if dt <= 0:
-        raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
-    
-    if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
-        raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
 
     if not isinstance(x, self.StateContainer):
         x = self.StateContainer(x)
