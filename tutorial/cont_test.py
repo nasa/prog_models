@@ -1,7 +1,10 @@
+from typing import Union
+
 from numpy import float64
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models.composite_model import CompositeModel
+from prog_models.sim_result import SimResult, LazySimResult
 
 import pandas as pd
 import numpy as np
@@ -20,9 +23,14 @@ print(df.data)
 df.data = df.data.drop(index=0)
 print(df.data)"""
 
-state = [{'a': i * 25, 'b': i * 50} for i in range(10)]
-state2 = [{'a': 0, 'b': 0}, {'a': 25, 'b': 50}, {'a': 50, 'b': 100}, {'a': 75, 'b': 150},
-                                        {'a': 100, 'b': 200}, {'a': 125, 'b': 250}, {'a': 150, 'b': 300},
-                                        {'a': 175, 'b': 350}, {'a': 200, 'b': 400}, {'a': 225, 'b': 450}]
-print(state2,'\n', state)
+time = list(range(5))
+state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
+frame = pd.DataFrame(state)
+frame.insert(0, "time", time)
+result = SimResult(time, state)
+list(result)
+print(list(result), '\n', state)
+print(time, '\n', result.times[0])
+print(frame.equals(result.frame))
 
+# print(temp_df.loc[isinstance(temp_df.isin(d_dict).iat[0], Union[int, float])])

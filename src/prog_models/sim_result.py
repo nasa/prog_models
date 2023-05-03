@@ -36,9 +36,12 @@ class SimResult(UserList):
             else:
                 self.data = data
             # creating multi row pd.DataFrame from data list of dict
-            self.frame = pd.concat([
-                pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
-            ], ignore_index=True, axis=0)
+            if len(self.data) > 0:
+                self.frame = pd.concat([
+                    pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
+                ], ignore_index=True, axis=0)
+            else:
+                self.frame = pd.DataFrame(self.data)
             self.frame.insert(0, "time", self.times)
             self.frame.reindex()
 
@@ -58,7 +61,7 @@ class SimResult(UserList):
 
     def index(self, other: dict, *args, **kwargs) -> int:
         """
-        Get the index of the first sample where other occurs
+        Get the index of the first location where other occurs
 
         Args:
             other (dict)
@@ -80,7 +83,6 @@ class SimResult(UserList):
             self.times.extend(other.times)
             self.data.extend(other.data)
             self.frame = pd.concat([self.frame, other.frame], ignore_index=True, axis=0)
-            self.frame.reindex()
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
 
@@ -95,9 +97,13 @@ class SimResult(UserList):
         """
         # self.frame = self.frame.drop(index=index)
         self.times.pop(index)
+        temp_df = self.frame.T
+        temp_df.pop(index)
+        self.frame = temp_df.T
+        self.frame = self.frame.reset_index(drop=True)
         return self.data.pop(index)
 
-    def remove(self, d: float = None, t: float = None) -> None:
+    def remove(self, d: Union[float, dict] = None, t: float = None) -> None:
         """Remove an element
 
         Args:
@@ -108,16 +114,25 @@ class SimResult(UserList):
             raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
 
         if (t is not None):
-            self.data.pop(self.times.index(t))
-            self.times.remove(t)
+            # removes the index of the timestamp meant for removal
+            num = self.frame[self.frame['time'] == t].index[0]
+            if num == self.times.index(t):
+                self.pop(self.times.index(t))
         else:
-            self.times.pop(self.data.index(d))
-            self.data.remove(d)
+            temp_df = self.frame.drop(['time'], axis=1)
+            # finds index of dict meant to be removed
+            if isinstance(d, dict) and len(d) > 0:
+                d_dict = {key: [val] for key, val in d.items()}
+                num = temp_df[temp_df.isin(d_dict).iloc[:, 0] == True].index[0]
+                self.pop(num)
+            else:
+                raise ValueError
 
     def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
         self.data = []
+        self.frame = pd.DataFrame()
 
     def time(self, index: int) -> float:
         """Get time for data point at index `index`
@@ -128,15 +143,13 @@ class SimResult(UserList):
         Returns:
             float: Time for which the data point at index `index` corresponds
         """
-        return self.times[index]
+        return self.frame['time'].to_list
 
     def to_numpy(self, keys=None) -> np.ndarray:
         """
         Convert from simresult to numpy array
-
         Args:
             keys: Subset of keys to return as part of numpy array (by default, all)
-
         Returns:
             np.ndarray: numpy array representing simresult
         """

@@ -31,7 +31,7 @@ class TestSimResult(unittest.TestCase):
         self.assertListEqual(list(result), state)
         self.assertListEqual(result.times, time)
         for i in range(5):
-            self.assertEqual(result.time(i), time[i])
+            self.assertEqual(result.times[i], time[i])
             self.assertEqual(result[i], state[i])
         self.assertTrue(frame.equals(result.frame))
         try:
@@ -40,14 +40,14 @@ class TestSimResult(unittest.TestCase):
         except IndexError:
             pass
         try:
-            tmp = result.time(5)
+            tmp = result.times[5]
             self.fail("Should be out of range error")
         except IndexError:
             pass
 
     def test_pickle(self):
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
         pickle.dump(result, open('model_test.pkl', 'wb'))
@@ -81,41 +81,34 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(ValueError, result.extend, 1.5)
 
     def test_extended_by_lazy(self):
-        NUM_ELEMENTS = 5
-        time = list(range(NUM_ELEMENTS))
-        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(NUM_ELEMENTS)]
+        # Variables
+        time = list(range(5))  # list of int, 0 to 4
+        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
         result = SimResult(time, state)  # Creating one SimResult object
 
         def f(x):
             return {k: v * 2 for k, v in x.items()}
 
-        NUM_ELEMENTS = 10
-        time = list(range(NUM_ELEMENTS))
-        state = [{'a': i * 5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
-        result2 = LazySimResult(f, time, state)  # Creating one LazySimResult object
-
-        self.assertEqual(result.times, [0, 1, 2, 3, 4])
-        self.assertEqual(result2.times, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data,
-                         [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5},
-                          {'a': 10.0, 'b': 10.0}])  # Assert data is correct before extending
-        self.assertEqual(result2.data, [{'a': 0, 'b': 0}, {'a': 10, 'b': 10}, {'a': 20, 'b': 20}, {'a': 30, 'b': 30},
-                                        {'a': 40, 'b': 40}, {'a': 50, 'b': 50}, {'a': 60, 'b': 60}, {'a': 70, 'b': 70},
-                                        {'a': 80, 'b': 80}, {'a': 90, 'b': 90}])
+        time2 = list(range(10))  # list of int, 0 to 9
+        state2 = [{'a': i * 5, 'b': i * 5} for i in range(10)]
+        data2 = [{'a': i * 10, 'b': i * 10} for i in range(10)]
+        result2 = LazySimResult(f, time2, state2)  # Creating one LazySimResult object
+        # confirming the data in result and result2 are correct
+        self.assertEqual(result.times, time)
+        self.assertEqual(result2.times, time2)
+        self.assertEqual(result.data, state)  # Assert data is correct before extending
+        self.assertEqual(result2.data, data2)
         result.extend(result2)  # Extend result with result2
-        self.assertEqual(result.times, [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(result.data,
-                         [{'a': 0.0, 'b': 0.0}, {'a': 2.5, 'b': 2.5}, {'a': 5.0, 'b': 5.0}, {'a': 7.5, 'b': 7.5},
-                          {'a': 10.0, 'b': 10.0}, {'a': 0, 'b': 0}, {'a': 10, 'b': 10}, {'a': 20, 'b': 20},
-                          {'a': 30, 'b': 30}, {'a': 40, 'b': 40}, {'a': 50, 'b': 50}, {'a': 60, 'b': 60},
-                          {'a': 70, 'b': 70}, {'a': 80, 'b': 80}, {'a': 90, 'b': 90}])
+        # check data when result is extended with result2
+        self.assertEqual(result.times, time + time2)
+        self.assertEqual(result.data, state + data2)
 
     def test_pickle_lazy(self):
         def f(x):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
         lazy_result = LazySimResult(f, time, state)  # Ordinary LazySimResult with f, time, state
         sim_result = SimResult(time, state)  # Ordinary SimResult with time,state
@@ -129,7 +122,7 @@ class TestSimResult(unittest.TestCase):
 
     def test_index(self):
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
 
@@ -172,22 +165,22 @@ class TestSimResult(unittest.TestCase):
         self.assertRaises(TypeError, result.pop, 1.5)
 
     def test_to_numpy(self):
-        NUM_ELEMENTS = 10
-        time = list(range(NUM_ELEMENTS))
-        state = [{'a': i * 2.5, 'b': i * 5} for i in range(NUM_ELEMENTS)]
+        # Variables
+        time = list(range(10))  # list of int, 0 to 9
+        state = [{'a': i * 2.5, 'b': i * 5} for i in range(10)]
         result = SimResult(time, state)
         np_result = result.to_numpy()
         self.assertIsInstance(np_result, np.ndarray)
-        self.assertEqual(np_result.shape, (NUM_ELEMENTS, 2))
+        self.assertEqual(np_result.shape, (10, 2))
         self.assertEqual(np_result.dtype, np.dtype('float64'))
-        self.assertTrue(np.all(np_result == np.array([[i * 2.5, i * 5] for i in range(NUM_ELEMENTS)])))
+        self.assertTrue(np.all(np_result == np.array([[i * 2.5, i * 5] for i in range(10)])))
 
         # Subset of keys
         result = result.to_numpy(['b'])
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, (NUM_ELEMENTS, 1))
+        self.assertEqual(result.shape, (10, 1))
         self.assertEqual(result.dtype, np.dtype('float64'))
-        self.assertTrue(np.all(result == np.array([[i * 5] for i in range(NUM_ELEMENTS)])))
+        self.assertTrue(np.all(result == np.array([[i * 5] for i in range(10)])))
 
         # Now test when empty
         result = SimResult([], [])
@@ -201,13 +194,13 @@ class TestSimResult(unittest.TestCase):
         result = SimResult(time, state)
         result = result.to_numpy()
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, (NUM_ELEMENTS, 2))
+        self.assertEqual(result.shape, (10, 2))
         self.assertEqual(result.dtype, np.dtype('float64'))
-        self.assertTrue(np.all(result == np.array([[i * 2.5, i * 5] for i in range(NUM_ELEMENTS)])))
+        self.assertTrue(np.all(result == np.array([[i * 2.5, i * 5] for i in range(10)])))
 
     def test_remove(self):
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
 
@@ -248,7 +241,7 @@ class TestSimResult(unittest.TestCase):
 
     def test_clear(self):
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
         self.assertEqual(result.times, time)
@@ -262,7 +255,7 @@ class TestSimResult(unittest.TestCase):
     def test_time(self):
         # Variables
         # Creating two result objects
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
         self.assertEqual(result.time(0), result.times[0])
@@ -391,7 +384,7 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         state2 = [{'a': i * 5.0, 'b': i * 10} for i in range(5)]
         result = LazySimResult(f, time, state)
@@ -410,7 +403,7 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = LazySimResult(f, time, state)
         time2 = list(range(10))  # list of int, 0 to 9
@@ -421,7 +414,6 @@ class TestSimResult(unittest.TestCase):
         def f2(x):
             return {k: v * 5 for k, v in x.items()}
 
-
         result2 = LazySimResult(f2, time2, state2)
         self.assertEqual(result.times, time)  # Assert data is correct before extending
         self.assertEqual(result.data, data)
@@ -431,9 +423,9 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result2.states, state2)
 
         result.extend(result2)
-        self.assertEqual(result.times, time+time2)  # Assert data is correct after extending
-        self.assertEqual(result.data, data+data2)
-        self.assertEqual(result.states, state+state2)
+        self.assertEqual(result.times, time + time2)  # Assert data is correct after extending
+        self.assertEqual(result.data, data + data2)
+        self.assertEqual(result.states, state + state2)
 
     def test_lazy_extend_cache(self):
         def f(x):
@@ -474,7 +466,7 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, - to 4
+        time = list(range(5))  # list of int, - to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = LazySimResult(f, time, state)
         sim_result = SimResult(time, state)
@@ -491,7 +483,7 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = LazySimResult(f, time, state)
 
@@ -499,9 +491,9 @@ class TestSimResult(unittest.TestCase):
         time.remove(1)  # remove value '1' to check time values after pop
         self.assertEqual(result.times, time)
         data = [{'a': i * 5.0, 'b': i * 10} for i in range(5)]
-        data.remove({'a': 5.0, 'b': 10})    # removes index 1 value from data list
+        data.remove({'a': 5.0, 'b': 10})  # removes index 1 value from data list
         self.assertEqual(result.data, data)
-        state.remove({'a': 2.5, 'b': 5})    # removes index 1 value from state list
+        state.remove({'a': 2.5, 'b': 5})  # removes index 1 value from state list
         self.assertEqual(result.states, state)
 
         result.pop()  # Test default index -1 (last element)
@@ -638,7 +630,7 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = LazySimResult(f, time, state)
         self.assertRaises(NotImplementedError, result.append)
@@ -651,7 +643,7 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 2 for k, v in x.items()}
 
         # Variables
-        time = list(range(5))   # list of int, 0 to 4
+        time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         data = [{'a': i * 5.0, 'b': i * 10} for i in range(5)]
         result = LazySimResult(f, time, state)
