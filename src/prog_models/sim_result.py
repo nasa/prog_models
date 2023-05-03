@@ -95,10 +95,13 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        # self.frame = self.frame.drop(index=index)
+        if index == -1:
+            index_df = len(self.frame.index)-1
+        else:
+            index_df = index
         self.times.pop(index)
         temp_df = self.frame.T
-        temp_df.pop(index)
+        temp_df.pop(index_df)
         self.frame = temp_df.T
         self.frame = self.frame.reset_index(drop=True)
         return self.data.pop(index)
@@ -134,7 +137,7 @@ class SimResult(UserList):
         self.data = []
         self.frame = pd.DataFrame()
 
-    def time(self, index: int) -> float:
+    def get_time(self, index: int) -> float:
         """Get time for data point at index `index`
 
         Args:
@@ -143,7 +146,8 @@ class SimResult(UserList):
         Returns:
             float: Time for which the data point at index `index` corresponds
         """
-        return self.frame['time'].to_list
+        #return self.frame['time'].iat[index]
+        return self.times[index]
 
     def to_numpy(self, keys=None) -> np.ndarray:
         """
@@ -249,12 +253,37 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if times is None or states is None:
             self.times = []
             self.states = []
+            self.frame = pd.DataFrame()
         else:
             self.times = times.copy()
             if _copy:
                 self.states = deepcopy(states)
+
             else:
                 self.states = states
+            if len(self.states) > 0:    # BOOKMARK
+                # creating fcn(x) DataFrame
+                dict_data = []
+                for dict_item in self.data:
+                    temp_dict = {}
+                    for key, value in dict_item.items():
+                        temp_dict['fcn_'+key] = value
+                    dict_data.append(temp_dict)
+                # DataFrame
+                temp_df = pd.concat([
+                    pd.DataFrame(dict(dftemp), index=[0]) for dftemp in dict_data
+                ], ignore_index=True, axis=0)
+                # state DataFrame
+                self.frame = pd.concat([
+                    pd.DataFrame(dict(dframe), index=[0]) for dframe in self.states
+                ], ignore_index=True, axis=0)
+                # combining states and fcn(x) into one DataFrame
+                self.frame = pd.concat([self.frame, temp_df], axis=1)
+                # inserting time column
+                self.frame.insert(0, "time", self.times)
+                self.frame.reindex()
+            else:
+                self.frame = pd.DataFrame(self.states)
 
     def __reduce__(self):
         return (self.__class__.__base__, (self.times, self.data))
@@ -273,6 +302,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.times = []
         self.__data = None
         self.states = []
+        self.frame = pd.DataFrame()
 
     def extend(self, other: "LazySimResult", _copy=True) -> None:
         """
@@ -309,7 +339,18 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         Returns:
             dict: Element Removed
         """
+        print('pop()')
         self.times.pop(index)
+        # to pop from self.frame
+        if index == -1:
+            index_df = len(self.frame.index) - 1
+        else:
+            index_df = index
+        self.times.pop(index)
+        temp_df = self.frame.T
+        temp_df.pop(index_df)
+        self.frame = temp_df.T
+        self.frame = self.frame.reset_index(drop=True)
         x = self.states.pop(index)
         if self.__data is not None:
             return self.__data.pop(index)

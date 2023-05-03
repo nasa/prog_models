@@ -23,14 +23,34 @@ print(df.data)
 df.data = df.data.drop(index=0)
 print(df.data)"""
 
+# Variables
+def f(x):
+    return {k: v * 2 for k, v in x.items()}
+
 time = list(range(5))
 state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
-frame = pd.DataFrame(state)
-frame.insert(0, "time", time)
-result = SimResult(time, state)
-list(result)
-print(list(result), '\n', state)
-print(time, '\n', result.times[0])
-print(frame.equals(result.frame))
+result = LazySimResult(f, time, state)
+"""column_val = list(zip(*[['state']*len(state[0]), state[0].keys()]))
+index = pd.MultiIndex.from_tuples(column_val)
+frame = pd.DataFrame(data=state, columns=index)"""
+# {'fcn_'+k: v for k, v in result.data.items()}
+"""dict_data = list()
+for dict_item in result.data:
+    for key, value in dict_item.items():
+        dict_data.append({'fcn_'+key: value})
+print(dict_data)"""
+print(result.frame)
 
-# print(temp_df.loc[isinstance(temp_df.isin(d_dict).iat[0], Union[int, float])])
+
+"""result = []  # list for dataframes of monotonicity values
+for label in result.frame.columns:  # iterates through each column label
+    mono_sum = 0
+    for i in list(len(result.frame.index)):  # iterates through for calculating monotonocity
+        # print(test_df[label].iloc[i+1], ' - ', test_df[label].iloc[i])
+        mono_sum += np.sign(result.frame[label].iloc[i + 1] - result.frame[label].iloc[i])
+    result.append(pd.DataFrame({label: abs(mono_sum / (len(result.frame.index) - 1))},
+                               index=['monotonicity']))  # adds each dataframe to a list
+temp_pd = pd.concat(result, axis=1)
+print(temp_pd.drop(columns=['time']))"""
+
+
