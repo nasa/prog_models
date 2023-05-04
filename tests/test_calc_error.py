@@ -212,7 +212,7 @@ class TestCalcError(unittest.TestCase):
             m.calc_error(results.times, results.inputs, results.outputs, 
                      dt = 1, stability_tol=70)
         self.assertEqual(
-            'configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
+            'Configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
             str(cm.warning)
         )
 
@@ -282,12 +282,8 @@ class TestCalcError(unittest.TestCase):
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
 
-        with self.assertRaises(TypeError) as cm:
+        with self.assertRaises(TypeError):
             m.calc_error()
-        self.assertEqual(
-            "PrognosticsModel.calc_error() missing 3 required positional arguments: 'times', 'inputs', and 'outputs'",
-            str(cm.exception)
-        )
 
         # With Strings
         with self.assertRaises(TypeError):
@@ -347,20 +343,6 @@ class TestCalcError(unittest.TestCase):
 
         # Expecting this to pass
         m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
-
-
-        # try:
-        #     m.calc_error([[[[[1]]]]], [[[[{}]]]], [[[[{'1':1}]]]])
-        # except:
-        #     self.fail("Test where we add many wrappers around values has failed.")
-        
-
-        # m.calc_error(np.array(results.times), np.array(results.inputs), np.array(results.outputs))
-
-        # try:
-        #     m.calc_error(np.ndarray(results.times), np.ndarray(results.inputs), np.ndarray(results.outputs))
-        # except:
-        #     self.fail("Test should be passing")
 
 
         

@@ -1164,7 +1164,7 @@ class PrognosticsModel(ABC):
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
-            dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+            dt (float, optional): Maximum time step in simulation. Defaults to 1e99.
             stability_tol (double, optional): Configurable parameter.
                 Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
                 In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
@@ -1180,9 +1180,22 @@ class PrognosticsModel(ABC):
         See Also:
             :func:`calc_error.MSE`
         """
-
         method = kwargs.get('method', 'MSE')
 
+        method_map = {
+            'mse': calc_error.MSE,
+            'max_e': calc_error.MAX_E,
+            'rmse': calc_error.RMSE,
+            'mae': calc_error.MAE,
+            'mape': calc_error.MAPE
+        }
+
+        try:
+            method = method_map[method.lower()]
+        except KeyError:
+            # If we get here, method is not supported
+            raise ProgModelInputException(f"Error method '{method}' not supported")
+        
         acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
 
         types = {type(times), type(inputs), type(outputs)}
@@ -1196,8 +1209,7 @@ class PrognosticsModel(ABC):
             raise TypeError("Times values cannot be strings")
         if isinstance(times[0], Iterable):
             # Calculate error for each
-            error = [calc_error.MSE(self, t, i, o, _runs=run, **kwargs) for run, (t, i , o) in enumerate(zip(times, inputs, outputs))]
-            # error = [calc_error.MSE(elem[1][0], elem[1][1], elem[1][2], _runs = elem[0], **kwargs) for elem in list(enumerate([times, inputs, outputs]))]
+            error = [method(self, t, i, o, _runs=run, **kwargs) for run, (t, i, o) in enumerate(zip(times, inputs, outputs))]
             return sum(error)/len(error)
         
         x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
@@ -1209,7 +1221,7 @@ class PrognosticsModel(ABC):
         if not isinstance(stability_tol, Number):
             raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
         if stability_tol >= 1 or stability_tol < 0:
-            warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+            warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
             stability_tol = 0.95
 
         # Type and Value checking dt to make sure it has correctly passed in values.
@@ -1220,22 +1232,10 @@ class PrognosticsModel(ABC):
         
         if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
             raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
-
-        # Call appropriate error calculation method
-        if method.lower() == 'mse':
-            return calc_error.MSE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'max_e':
-            return calc_error.MAX_E(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'rmse':
-            return calc_error.RMSE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'mae':
-            return calc_error.MAE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'mape':
-            return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
-
-        # If we get here, method is not supported
-        raise ProgModelInputException(f"Error method '{method}' not supported")
         
+        return method(self, times, inputs, outputs, **kwargs)
+
+
     def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', tol = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
@@ -1395,7 +1395,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise
 
-        return res   
+        return res
 
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
