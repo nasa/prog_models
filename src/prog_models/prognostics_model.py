@@ -15,6 +15,7 @@ from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, 
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar
 from prog_models.utils import calc_error
+from prog_models.utils import containers
 from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
@@ -172,21 +173,21 @@ class PrognosticsModel(ABC):
 
         states = self.states
 
-        class StateContainer(DictLikeMatrixWrapper):
+        class StateContainer(containers.StateContainer):
             def __init__(self, data):
                 super().__init__(states, data)
         self.StateContainer = StateContainer
 
         inputs = self.inputs
 
-        class InputContainer(DictLikeMatrixWrapper):
+        class InputContainer(containers.InputContainer):
             def __init__(self, data):
                 super().__init__(inputs, data)
         self.InputContainer = InputContainer
 
         outputs = self.outputs
 
-        class OutputContainer(DictLikeMatrixWrapper):
+        class OutputContainer(containers.OutputContainer):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
@@ -980,13 +981,13 @@ class PrognosticsModel(ABC):
         
         # Auto Container wrapping
         dt0 = next_time(t, x) - t
-        if not isinstance(u, DictLikeMatrixWrapper):
+        if not isinstance(u, InputContainer):
             # Wrapper around the future loading equation
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
-        if not isinstance(self.output(x), DictLikeMatrixWrapper):
+        if not isinstance(self.output(x), OutputContainer):
             # Wrapper around the output equation
             def output(x):
                 # Calculate output, convert to outputcontainer
@@ -1135,7 +1136,7 @@ class PrognosticsModel(ABC):
         raise ProgModelInputException(f"Error method '{method}' not supported")
     
     def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times: List[float] = None, inputs: List[InputContainer] = None,
-                        outputs: List[OutputContainer] = None, method = 'nelder-mead', **kwargs) -> None:
+                        outputs: List[OutputContainer] = None, method: str = 'nelder-mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
