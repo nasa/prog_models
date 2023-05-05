@@ -54,8 +54,8 @@ class SimResult(UserList):
         Returns:
             bool: If the two SimResults are equal
         """
-        time_check = np.array_equal(self.times, other.times)
-        data_check = np.array_equal(self.data, other.data)
+        time_check = self.times == other.times
+        data_check = (self.data == other.data)
         frame_check = self.frame.equals(other.frame)
         return time_check and data_check and frame_check
 

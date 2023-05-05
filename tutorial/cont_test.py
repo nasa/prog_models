@@ -39,7 +39,9 @@ state = [{'a': i * 2.5, 'b': i * 5} for i in range(10)]
 result2 = SimResult(time, state)
 test = result2.to_numpy()
 print('resut2: ', result2.monotonicity(), result2)
-
+inputs_plus = [{'i1': 1, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}]
+inputs = [{'i1': 1, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}, {'i1': 1.0, 'i2': 2.1}]
+print(np.array_equal(inputs, inputs_plus))
 
 """result = []  # list for dataframes of monotonicity values
 for label in result.frame.columns:  # iterates through each column label
