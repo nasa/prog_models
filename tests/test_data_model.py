@@ -140,23 +140,22 @@ class TestDataModel(unittest.TestCase):
                 self.assertIsInstance(m2, LSTMStateTransitionModel)
                 self.assertIsInstance(m2, DataModel)
                 self.assertListEqual(m2.outputs, ['x'])
-
-            # Deepcopy test
-            m3 = deepcopy(m2)
         except:
             warnings.warn("Pickling not supported for LSTMStateTransitionModel on this system")
             pass
 
+        # Deepcopy test
+        m3 = deepcopy(m2)
         # More tests in examples.lstm_model
 
     def test_dmd_simple(self):
         self._test_simple_case(DMDModel, max_error=25)
 
         # Inferring dt
-        self._test_simple_case(DMDModel, max_error=8, WITH_DT=False)
+        self._test_simple_case(DMDModel, max_error=8, WITH_DT = False)
 
         # Without velocity, DMD doesn't perform well
-        m = self._test_simple_case(DMDModel, WITH_STATES=False, max_error=100)
+        m = self._test_simple_case(DMDModel, WITH_STATES = False, max_error=100)
 
         # Test pickling model m
         pickled_m = pickle.dumps(m)
@@ -179,19 +178,18 @@ class TestDataModel(unittest.TestCase):
         m3 = LSTMStateTransitionModel.from_model(
             m,
             [future_loading for _ in range(5)],
-            dt=[TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
-            window=2,
-            epochs=20)
+            dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
+            window=2, 
+            epochs=20)  
 
         # Should get keys from original model
         self.assertSetEqual(set(m3.inputs), set(['dt', 'x_t-1']))
         self.assertSetEqual(set(m3.outputs), set(m.outputs))
 
-        # Step 3: Use model to simulate_to time of threshold
+         # Step 3: Use model to simulate_to time of threshold
         t_counter = 0
         x_counter = m.initialize()
-
-        def future_loading2(t, x=None):
+        def future_loading2(t, x = None):
             # Future Loading is a bit complicated here 
             # Loading for the resulting model includes the data inputs, 
             # and the output from the last timestep

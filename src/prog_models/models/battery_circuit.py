@@ -4,7 +4,7 @@
 from math import inf
 import numpy as np
 
-from prog_models import PrognosticsModel
+from .. import PrognosticsModel
 
 
 class BatteryCircuit(PrognosticsModel):

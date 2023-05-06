@@ -65,7 +65,11 @@ class TestSerialization(unittest.TestCase):
         new_model = DMDModel.from_json(save_json_dict)
 
         # Check serialization
-        self.assertEqual(surrogate_orig.parameters, new_model.parameters)
+        for key in surrogate_orig.parameters.keys():
+            if key != 'dmd_matrix':
+                self.assertEqual(surrogate_orig.parameters[key], new_model.parameters[key]) 
+            else: 
+                self.assertEqual((surrogate_orig.parameters['dmd_matrix']==new_model.parameters['dmd_matrix']).all(), True)
         
         # Check deserialization
         options_sim = {

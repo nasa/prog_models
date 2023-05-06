@@ -14,11 +14,9 @@ from warnings import warn
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar
-from prog_models.utils import calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper
-from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
-from prog_models.utils.serialization import CustomEncoder, custom_decoder
+from prog_models.utils.serialization import *
 from prog_models.utils.size import getsizeof
 
 
@@ -67,11 +65,11 @@ class PrognosticsModel(ABC):
             Limits on the state variables format {'state_name': (lower_limit, upper_limit)}
         param_callbacks : dict[str, list[function]], optional
             Callbacks for derived parameters
-        inputs: list[str], optional
+        inputs: list[str]
             Identifiers for each :term:`input`
         states: list[str]
             Identifiers for each :term:`state`
-        outputs: list[str], optional
+        outputs: list[str]
             Identifiers for each :term:`output`
         performance_metric_keys: list[str], optional
             Identifiers for each performance metric
@@ -104,9 +102,7 @@ class PrognosticsModel(ABC):
     # events = []       # Identifiers for each event
     param_callbacks = {}  # Callbacks for derived parameters
 
-    SimulationResults = namedtuple(
-        'SimulationResults', 
-        ['times', 'inputs', 'states', 'outputs', 'event_states'])
+    SimulationResults = namedtuple('SimulationResults', ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
         # Default params for any model
@@ -123,7 +119,7 @@ class PrognosticsModel(ABC):
 
         PrognosticsModel.__setstate__(self, params)
 
-    def __eq__(self, other: "PrognosticsModel") -> bool:
+    def __eq__(self, other : "PrognosticsModel") -> bool:
         """
         Check if two models are equal
         """
@@ -135,9 +131,9 @@ class PrognosticsModel(ABC):
     def __getstate__(self) -> dict:
         return self.parameters.data
 
-    def __setstate__(self, params: dict) -> None:
+    def __setstate__(self, params : dict) -> None:
         # This method is called when depickling and in construction. It builds the model from the parameters
-        
+
         if not hasattr(self, 'inputs'):
             self.inputs = []
         self.n_inputs = len(self.inputs)
@@ -167,9 +163,7 @@ class PrognosticsModel(ABC):
         self.n_performance = len(self.performance_metric_keys)
 
         # Setup Containers
-        # These containers should be used instead of dictionaries for models 
-        # that use the internal matrix state
-
+        # These containers should be used instead of dictionaries for models that use the internal matrix state
         states = self.states
 
         class StateContainer(DictLikeMatrixWrapper):
@@ -193,7 +187,7 @@ class PrognosticsModel(ABC):
 
         self.parameters = PrognosticsModelParameters(self, params, self.param_callbacks)
 
-    def initialize(self, u=None, z=None):
+    def initialize(self, u = None, z = None):
         """
         Calculate initial state given inputs and outputs. If not defined for a model, it will return parameters['x0']
 
@@ -251,7 +245,7 @@ class PrognosticsModel(ABC):
         z.matrix += np.random.normal(0, self.parameters['measurement_noise'].matrix, size=z.matrix.shape)
         return z
 
-    def apply_process_noise(self, x, dt: float = 1):
+    def apply_process_noise(self, x, dt : int = 1):
         """
         Apply process noise to the state
 
@@ -322,7 +316,7 @@ class PrognosticsModel(ABC):
         """
         raise ProgModelException('dx not defined - please use next_state()')
 
-    def next_state(self, x, u, dt: float):
+    def next_state(self, x, u, dt : float):
         """
         State transition equation: Calculate next state
 
@@ -413,6 +407,51 @@ class PrognosticsModel(ABC):
                 warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
                 x[key] = np.minimum(x[key], limit[1])
         return x
+
+    def __next_state(self, x, u, dt : float):
+        """
+        State transition equation: Calls next_state(), calculating the next state, and then adds noise
+
+        Parameters
+        ----------
+        x : StateContainer
+            state, with keys defined by model.states \n
+            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+        u : InputContainer
+            Inputs, with keys defined by model.inputs \n
+            e.g., u = m.InputContainer({'i':3.2}) given inputs = ['i']
+        dt : float
+            Timestep size in seconds (≥ 0) \n
+            e.g., dt = 0.1
+
+        Returns
+        -------
+        x : StateContainer
+            Next state, with keys defined by model.states
+            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = m.InputContainer({'u1': 3.2})
+        | z = m.OutputContainer({'z1': 2.2})
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.__next_state(x, u, 0.1) # Returns state, with noise, at 3.1 seconds given input u
+
+        See Also
+        --------
+        next_state
+
+        Note
+        ----
+        A model should not overwrite '__next_state'
+        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
+        """
+        # Calculate next state and add process noise
+        next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
+
+        # Apply Limits
+        return self.apply_limits(next_state)
 
     def performance_metrics(self, x) -> dict:
         """
@@ -677,7 +716,7 @@ class PrognosticsModel(ABC):
             t = result.times[-1]
         return time_of_event
 
-    def simulate_to(self, time : float, future_loading_eqn: Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
+    def simulate_to(self, time : float, future_loading_eqn : Callable = lambda t,x=None: {}, first_output = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -739,7 +778,7 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn: Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn : Callable = None, first_output = None, threshold_keys : list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
@@ -883,6 +922,7 @@ class PrognosticsModel(ABC):
             x = self.StateContainer(x)
         
         # Optimization
+        next_state = self.__next_state
         output = self.__output
         threshold_met_eqn = self.threshold_met
         event_state = self.event_state
@@ -987,6 +1027,19 @@ class PrognosticsModel(ABC):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
+        if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
+            # Wrapper around next_state
+            def next_state(x, u, dt):
+                # Calculate next state, and convert
+                x_new = self.next_state(x, u, dt)
+                x_new = self.StateContainer(x_new)
+
+                # Calculate next state and add process noise
+                next_state = self.apply_process_noise(x_new, dt)
+
+                # Apply Limits
+                return self.apply_limits(next_state)
+
         if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
             def output(x):
@@ -1015,16 +1068,21 @@ class PrognosticsModel(ABC):
             apply_limits = self.apply_limits
             apply_process_noise = self.apply_process_noise
             StateContainer = self.StateContainer
-            if not isinstance(self.dx(x.copy(), u), DictLikeMatrixWrapper):
-                next_state = rk4_next_state
-            else:
-                next_state = rk4_next_state_wrapper
-        elif config['integration_method'].lower() == 'euler':
-            if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
-                next_state = euler_next_state_wrapper
-            else:
-                next_state = euler_next_state
-        else:
+            def next_state(x, u, dt):
+                dx1 = StateContainer(dx(x, u))
+                
+                x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
+                dx2 = dx(x2, u)
+
+                x3 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx2.items()})
+                dx3 = dx(x3, u)
+                
+                x4 = StateContainer({key: x[key] + dt*dx_i for key, dx_i in dx3.items()})   
+                dx4 = dx(x4, u)
+
+                x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
+                return apply_limits(apply_process_noise(x))
+        elif config['integration_method'].lower() != 'euler':
             raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
         while t < horizon:
@@ -1034,7 +1092,7 @@ class PrognosticsModel(ABC):
             # This is sometimes referred to as 'leapfrog integration'
             u = load_eqn(t, x)
             t = t + dt/2
-            x = next_state(self, x, u, dt)
+            x = next_state(x, u, dt)
 
             # Save if at appropriate time
             if (t >= next_save):
@@ -1086,7 +1144,7 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
+    def calc_error(self, times : List[float], inputs : List[dict], outputs : List[dict], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1095,47 +1153,51 @@ class PrognosticsModel(ABC):
             outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
         
         Keyword Args:
-            method (str, optional): Error method to use. Supported methods include:
-                * MSE (Mean Squared Error)
-                * RMSE (Root Mean Squared Error)
-                * MAX_E (Maximum Error)
-                * MAE (Mean Absolute Error)
-                * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
-            dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
-            stability_tol (double, optional): Configurable parameter.
-                Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
-                In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
-                stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-                before the model goes unstable in order to produce a valid estimate of mean squared error. 
-
-                If the model goes unstable before stability_tol is met, NaN is returned. 
-                Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            dt (double, optional): time step
 
         Returns:
-            float: error
-
-        See Also:
-            :func:`calc_error.MSE`
+            double: Total error
         """
-        method = kwargs.get('method', 'MSE')
+        if isinstance(times[0], Iterable):
+            # Calculate error for each
+            error = [self.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
+            return sum(error)/len(error)
 
-        # Call appropriate error calculation method
-        if method.lower() == 'mse':
-            return calc_error.MSE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'max_e':
-            return calc_error.MAX_E(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'rmse':
-            return calc_error.RMSE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'mae':
-            return calc_error.MAE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'mape':
-            return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
+        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+        dt = kwargs.get('dt', 1e99)
 
-        # If we get here, method is not supported
-        raise ProgModelInputException(f"Error method '{method}' not supported")
+        if not isinstance(x, self.StateContainer):
+            x = [self.StateContainer(x_i) for x_i in x]
+
+        if not isinstance(inputs[0], self.InputContainer):
+            inputs = [self.InputContainer(u_i) for u_i in inputs]
+        
+        if not isinstance(outputs[0], self.OutputContainer):
+            outputs = [self.OutputContainer(z_i) for z_i in outputs]
+
+        counter = 0  # Needed to account for skipped (i.e., none) values
+        t_last = times[0]
+        err_total = 0
+        z_obs = self.output(x)  # Initialize
+        for t, u, z in zip(times, inputs, outputs):
+            while t_last < t:
+                t_new = min(t_last + dt, t)
+                x = self.next_state(x, u, t_new-t_last)
+                t_last = t_new
+                if t >= t_last:
+                    # Only recalculate if required
+                    z_obs = self.output(x)
+            if not (None in z_obs.matrix or None in z.matrix):
+                if any(np.isnan(z_obs.matrix)):
+                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    break
+                err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
+                counter += 1
+
+        return err_total/counter
     
-    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
+    def estimate_params(self, runs : List[tuple] = None, keys : List[str] = None, times = None, inputs = None, outputs = None, **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
@@ -1149,8 +1211,6 @@ class PrognosticsModel(ABC):
                 Array of output containers where output[x] corresponds to time[x]
             method (str, optional): 
                 Optimization method- see scipy.optimize.minimize for options
-            error_method (str, optional):
-                Method to use in calculating error. See calc_error for options
             bounds (tuple or dict): 
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
             options (dict): 
@@ -1167,9 +1227,9 @@ class PrognosticsModel(ABC):
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
 
         config = {
+            'method': 'nelder-mead',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
             'options': {'xatol': 1e-8},
-            'error_method': 'MSE'
         }
         config.update(kwargs)
 
@@ -1221,7 +1281,7 @@ class PrognosticsModel(ABC):
             err = 0
             for run in runs:
                 try:
-                    err += self.calc_error(run[0], run[1], run[2], method = config['error_method'], **kwargs)
+                    err += self.calc_error(run[0], run[1], run[2], **kwargs)
                 except Exception:
                     return 1e99 
                     # If it doesn't work (i.e., throws an error), don't use it
@@ -1229,7 +1289,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=method, bounds = config['bounds'], options=config['options'])
+        res = minimize(optimization_fcn, params, method=config['method'], bounds = config['bounds'], options=config['options'])
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
 
