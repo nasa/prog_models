@@ -23,6 +23,7 @@ class DictLikeMatrixWrapper():
         if not isinstance(keys, list):
             keys = list(keys)  # creates list with keys
         self._keys = keys.copy()
+
         if isinstance(data, matrix):
             self.data = pd.DataFrame(array(data, dtype=float64), self._keys, dtype=float64)
             self.matrix = self.data.to_numpy(dtype=float64)

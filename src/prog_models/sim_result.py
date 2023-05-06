@@ -216,6 +216,21 @@ class SimResult(UserList):
             result[key] = abs(mono_sum / (len(l) - 1))
         return result
 
+    def monotonicity_df(self) -> pd.DataFrame:
+        """
+        Returns:
+            pd.DataFrame: values from monotonicity in a DataFrame
+        """
+        # creating multi row pd.DataFrame from data list of dict
+        mono_dict = self.monotonicity()
+        if len(mono_dict) > 0:
+            mono_df = pd.DataFrame(mono_dict, index=[0])
+        else:
+            mono_df = pd.DataFrame()
+        return mono_df
+
+
+
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
 
@@ -247,7 +262,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             self.times = []
             self.states = []
             self.frame = pd.DataFrame()
-            self.frame_states = pd.DataFrame()
         else:
             self.times = times.copy()
             if _copy:
@@ -374,17 +388,20 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
 
     def get_frame_data(self) -> pd.DataFrame:
         """
-        place fcn data (elements of list) into a pd.DataFrame format.
+        place fcn data (list[dict]) into a pd.DataFrame format.
 
         Returns:
             pd.DataFrame: frame
         """
-        # creating fcn(x) DataFrame
-        # fcn data DataFrame
-        frame = pd.concat([
-            pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
-        ], ignore_index=True, axis=0)
-        # inserting time column
-        frame.insert(0, "time", self.times)
-        frame.reindex()
-        return frame
+        if len(self.data) == 0:
+            return pd.DataFrame()
+        else:
+            # creating fcn(x) DataFrame
+            # fcn data DataFrame
+            frame = pd.concat([
+                pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
+            ], ignore_index=True, axis=0)
+            # inserting time column
+            frame.insert(0, "time", self.times)
+            frame.reindex()
+            return frame

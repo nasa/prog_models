@@ -130,7 +130,6 @@ class TestModels(unittest.TestCase):
                     'c': x['c'] - u['i2'],
                     't': x['t'] + dt
                 }
-                #print('next state: ', ns_ret)
                 return ns_ret
         
         m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
@@ -140,7 +139,9 @@ class TestModels(unittest.TestCase):
         # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
+        self.assertAlmostEqual(outputs.frame['time'].iloc[-1], 5.0, 5)
         self.assertAlmostEqual(outputs[-1]['o1'], -13.2)
+        self.assertAlmostEqual(outputs.get_frame_data()['o1'].iloc[-1], -13.2)
         self.assertIsInstance(outputs[-1], m.OutputContainer)
 
         class MockProgModelStateNdarray(MockProgModel):
@@ -156,13 +157,12 @@ class TestModels(unittest.TestCase):
 
         # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-        """print('times: ', times)
-        print('inputs: ', inputs)
-        print('states: ', states)
-        print('outputs: ', outputs)
-        print('event_states: ', event_states)
-        print('times[-1]: ', times[-1], ' 5.0, 5: ', 5.0, 5)"""
+
         self.assertAlmostEqual(times[-1], 5.0, 5)
+        self.assertAlmostEqual(inputs.frame['time'].iloc[-1], 5.0, 5)
+        self.assertAlmostEqual(states.frame['time'].iloc[-1], 5.0, 5)
+        self.assertAlmostEqual(outputs.frame['time'].iloc[-1], 5.0, 5)
+        self.assertAlmostEqual(event_states.frame['time'].iloc[-1], 5.0, 5)
 
     def test_size(self):
         m = MockProgModel()
@@ -1103,17 +1103,21 @@ class TestModels(unittest.TestCase):
         c1 = m.StateContainer({'x': 1.7, 'v': 40})
         c2 = m.StateContainer(np.array([[1.7], [40]]))
         self.assertTrue(c1.data.equals(c2.data))
+        self.assertTrue(c2.data.equals(c1.data))
         self.assertEqual(c1, c2)
         self.assertListEqual(list(c1.keys()), m.states)
 
         input_c1 = m.InputContainer({})
         input_c2 = m.InputContainer(np.array([]))
         self.assertEqual(input_c1, input_c2)
+        # Issue with index in pd.DataFrame, check with empty
+        self.assertTrue(input_c1.data.empty and input_c2.data.empty)
         self.assertListEqual(list(input_c1.keys()), m.inputs)
 
         output_c1 = m.OutputContainer({'x': 1.7})
         output_c2 = m.OutputContainer(np.array([[1.7]]))
         self.assertEqual(output_c1, output_c2)
+        self.assertTrue(output_c1.data.equals(output_c2.data))
         self.assertListEqual(list(output_c1.keys()), m.outputs)
 
     def test_thrown_object_drag(self):
@@ -1136,16 +1140,21 @@ class TestModels(unittest.TestCase):
         # Test no drag simulated results different from default
         self.assertNotEqual(simulated_results_nd.times, simulated_results_df.times)
         self.assertNotEqual(simulated_results_nd.states, simulated_results_df.states)
+        self.assertFalse(simulated_results_nd.states.frame.equals(simulated_results_df.states.frame))
         self.assertGreater(simulated_results_nd.times[-1], simulated_results_df.times[-1])
+        self.assertGreater(simulated_results_nd.states.frame['time'].iloc[-1], simulated_results_df.states.frame['time'].iloc[-1])
 
         # Test high drag simulated results different from default
         self.assertNotEqual(simulated_results_hi.times, simulated_results_df.times)
         self.assertNotEqual(simulated_results_hi.states, simulated_results_df.states)
+        self.assertFalse(simulated_results_hi.states.frame.equals(simulated_results_df.states.frame))
         self.assertLess(simulated_results_hi.times[-1], simulated_results_df.times[-1])
+        self.assertLess(simulated_results_hi.states.frame['time'].iloc[-1], simulated_results_df.states.frame['time'].iloc[-1])
 
         # Test high drag simulated results different from no drag
         self.assertNotEqual(simulated_results_hi.times, simulated_results_nd.times)
         self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
+        self.assertFalse(simulated_results_hi.states.frame.equals(simulated_results_nd.states.frame))
 
     def test_composite_broken(self):
         m1 = OneInputOneOutputNoEventLM()
@@ -1265,22 +1274,37 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
         self.assertEqual(x0['OneInputOneOutputNoEventLM.x1'], 0)
         self.assertEqual(x0['OneInputOneOutputNoEventLM.z1'], 0)
+        # DataFrame check, x0
+        self.assertEqual(x0.data['OneInputOneOutputNoEventLM_2.x1'][0], 0)
+        self.assertEqual(x0.data['OneInputOneOutputNoEventLM.x1'][0], 0)
+        self.assertEqual(x0.data['OneInputOneOutputNoEventLM.z1'][0], 0)
         # Only provide non-zero input for first model
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
+        # DataFrame check, x
+        self.assertSetEqual(set(x.data.columns.to_list()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 1)
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 1)
         z = m_composite.output(x)
         self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
+        # DataFrame Check, z
+        self.assertSetEqual(set(z.data.columns.to_list()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
+        self.assertEqual(z.data['OneInputOneOutputNoEventLM_2.z1'][0], 1)
+        self.assertEqual(z.data['OneInputOneOutputNoEventLM.z1'][0], 1)
 
         # Propogate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
+        # DataFrame Check, x
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 3)
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 2)
 
         # Test with connections - state, no event
         m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')])
@@ -1290,7 +1314,6 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1',})
         self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
         self.assertSetEqual(m_composite.events, set())
-        
         x0 = m_composite.initialize()
         self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
@@ -1300,15 +1323,25 @@ class TestModels(unittest.TestCase):
         x = m_composite.next_state(x0, u, 1)
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
+        # DataFrame Check, x
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 1)
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 1)
         z = m_composite.output(x)
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
+        # DataFrame Check, z
+        self.assertEqual(z.data['OneInputOneOutputNoEventLM_2.z1'][0], 1)
+        self.assertEqual(z.data['OneInputOneOutputNoEventLM.z1'][0], 1)
 
         # Propogate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
+        # DataFrame checks, x
+        self.assertSetEqual(set(x.data.columns.to_list()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 3)
+        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 2)
 
         # Test with connections - two events
         m_composite = CompositeModel([m2, m2], connections=[('OneInputNoOutputOneEventLM.x1', 'OneInputNoOutputOneEventLM_2.u1')])
