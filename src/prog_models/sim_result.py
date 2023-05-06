@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 from typing import Callable, Dict, List, Union
 
-from .utils.containers import DictLikeMatrixWrapper
-from .visualize import plot_timeseries
+from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.visualize import plot_timeseries
 
 
 class SimResult(UserList):

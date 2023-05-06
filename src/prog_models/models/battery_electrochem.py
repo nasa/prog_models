@@ -6,7 +6,7 @@ import numpy as np
 from scipy.optimize import fsolve
 import warnings
 
-from .. import PrognosticsModel
+from prog_models import PrognosticsModel
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -500,7 +500,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         charge_EOD = (x['qnS'] + x['qnB'])/self.parameters['qnMax']
         voltage_EOD = (v - self.parameters['VEOD'])/self.parameters['VDropoff'] 
         return {
-            'EOD': min(charge_EOD, voltage_EOD)
+            'EOD': np.clip(min(charge_EOD, voltage_EOD), 0, 1)
         }
 
     def output(self, x: dict):

@@ -5,6 +5,7 @@ from collections import UserDict
 from copy import deepcopy
 import json
 from numbers import Number
+import numpy as np
 import types
 from typing import Callable
 
@@ -28,7 +29,7 @@ class PrognosticsModelParameters(UserDict):
         dict_in: Initial parameters
         callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
     """
-    def __init__(self, model : "PrognosticsModel", dict_in : dict = {}, callbacks : dict = {}, _copy: bool = True):
+    def __init__(self, model: "PrognosticsModel", dict_in: dict = {}, callbacks: dict = {}, _copy: bool = True):
         super().__init__()
         self._m = model
         self.callbacks = {}
@@ -48,16 +49,29 @@ class PrognosticsModelParameters(UserDict):
     def __sizeof__(self):
         return getsizeof(self)
 
+    def __eq__(self, other):
+        if set(self.data.keys()) != set(other.data.keys()):
+            return False
+        for key, value in self.data.items():
+            if not np.all(value == other[key]): 
+                  # Note: np.all is used to handle numpy array elements
+                  # Otherwise value == other[key] would return a numpy array of bools for each element
+                  return False
+        return True
+        
+
     def copy(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)
 
     def __copy__(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)
     
-    def __deepcopy__(self):
-        return self.__class__(self._m, self.data, self.callbacks, _copy=True)
+    def __deepcopy__(self, memo):
+        result = self.__class__(self._m, self.data, self.callbacks, _copy=True)
+        memo[id(self)] = result
+        return result
 
-    def __setitem__(self, key : str, value : float, _copy : bool = False) -> None:
+    def __setitem__(self, key: str, value: float, _copy: bool = False) -> None:
         """Set model configuration, overrides dict.__setitem__()
 
         Args:
