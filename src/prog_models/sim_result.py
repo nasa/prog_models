@@ -4,10 +4,11 @@ from collections import UserList, defaultdict
 from copy import deepcopy
 from matplotlib.pyplot import figure
 import numpy as np
-from typing import Callable, Dict, List
+import pandas as pd
+from typing import Callable, Dict, List, Union
 
-from prog_models.utils.containers import DictLikeMatrixWrapper
-from prog_models.visualize import plot_timeseries
+from .utils.containers import DictLikeMatrixWrapper
+from .visualize import plot_timeseries
 
 
 class SimResult(UserList):
@@ -17,22 +18,34 @@ class SimResult(UserList):
     Args:
             times (array[float]): Times for each data point where times[n] corresponds to data[n]
             data (array[Dict[str, float]]): Data points where data[n] corresponds to times[n]
+            frame (pd.DataFrame): all times and data sorted in a pandas DataFrame
     """
 
-    __slots__ = ['times', 'data']  # Optimization 
-    
-    def __init__(self, times : list = None, data : list = None, _copy = True):
+    __slots__ = ['times', 'data', 'frame']  # Optimization
+
+    def __init__(self, times: list[float] = None, data: list[Union[DictLikeMatrixWrapper, dict]] = None, _copy=True):
+        # empty lists are passed
         if times is None or data is None:
-            self.times = [] 
+            self.times = []
             self.data = []
+            self.frame = pd.DataFrame()
         else:
             self.times = times.copy()
             if _copy:
                 self.data = deepcopy(data)
             else:
                 self.data = data
+            # creating multi row pd.DataFrame from data list of dict
+            if len(self.data) > 0:
+                self.frame = pd.concat([
+                    pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
+                ], ignore_index=True, axis=0)
+            else:
+                self.frame = pd.DataFrame(self.data)
+            self.frame.insert(0, "time", self.times)
+            self.frame.reindex()
 
-    def __eq__(self, other : "SimResult") -> bool:
+    def __eq__(self, other: "SimResult") -> bool:
         """Compare 2 SimResults
 
         Args:
@@ -41,11 +54,14 @@ class SimResult(UserList):
         Returns:
             bool: If the two SimResults are equal
         """
-        return self.times == other.times and self.data == other.data
+        time_check = self.times == other.times
+        data_check = (self.data == other.data)
+        frame_check = self.frame.equals(other.frame)
+        return time_check and data_check and frame_check
 
-    def index(self, other : dict, *args, **kwargs) -> int:
+    def index(self, other: dict, *args, **kwargs) -> int:
         """
-        Get the index of the first sample where other occurs
+        Get the index of the first location where other occurs
 
         Args:
             other (dict)
@@ -55,7 +71,7 @@ class SimResult(UserList):
         """
         return self.data.index(other, *args, **kwargs)
 
-    def extend(self, other : "SimResult") -> None:
+    def extend(self, other: "SimResult") -> None:
         """
         Extend the SimResult with another SimResult or LazySimResult object
 
@@ -66,10 +82,11 @@ class SimResult(UserList):
         if isinstance(other, SimResult):
             self.times.extend(other.times)
             self.data.extend(other.data)
+            self.frame = pd.concat([self.frame, other.frame], ignore_index=True, axis=0)
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
 
-    def pop(self, index : int = -1) -> dict:
+    def pop(self, index: int = -1) -> dict:
         """Remove and return an element
 
         Args:
@@ -78,10 +95,18 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
+        if index is -1:
+            index_df = len(self.frame.index) - 1
+        else:
+            index_df = index
         self.times.pop(index)
+        temp_df = self.frame.T
+        temp_df.pop(index_df)
+        self.frame = temp_df.T
+        self.frame = self.frame.reset_index(drop=True)
         return self.data.pop(index)
 
-    def remove(self, d : dict = None, t : float = None) -> None:
+    def remove(self, d: Union[float, dict] = None, t: float = None) -> None:
         """Remove an element
 
         Args:
@@ -91,19 +116,25 @@ class SimResult(UserList):
         if sum([i is None for i in (d, t)]) != 1:
             raise ValueError("ValueError: Only one named argument (d, t) can be specified.")
 
-        if (t is not None):
-            self.data.pop(self.times.index(t))
-            self.times.remove(t)
+        if t is not None:
+            # removes the index of the timestamp meant for removal
+            index = self.times.index(t)
+            self.pop(index)
         else:
-            self.times.pop(self.data.index(d))
-            self.data.remove(d)
+            # finds index of dictionary meant to be removed
+            if isinstance(d, dict) and len(d) > 0:
+                index = self.data.index(d)
+                self.pop(index)
+            else:
+                raise ValueError
 
     def clear(self) -> None:
         """Clear the SimResult"""
         self.times = []
         self.data = []
+        self.frame = pd.DataFrame()
 
-    def time(self, index : int) -> float:
+    def get_time(self, index: int) -> float:
         """Get time for data point at index `index`
 
         Args:
@@ -112,27 +143,23 @@ class SimResult(UserList):
         Returns:
             float: Time for which the data point at index `index` corresponds
         """
+        # return self.frame['time'].iat[index]
         return self.times[index]
 
-    def to_numpy(self, keys = None) -> np.ndarray:
+    def to_numpy(self, keys: list = None) -> np.ndarray:
         """
         Convert from simresult to numpy array
-
         Args:
             keys: Subset of keys to return as part of numpy array (by default, all)
-
         Returns:
             np.ndarray: numpy array representing simresult
         """
-        if len(self.data) == 0:
+        if len(self.data) is 0:
             return np.array([[]], dtype=np.float64)
-        if len(self.data[0]) == 0:
-            return np.array([[] for _ in self.data], dtype=np.float64)
-        if isinstance(self.data[0], DictLikeMatrixWrapper) and keys is None:
-            return np.array([u_i.matrix[:, 0] for u_i in self.data], dtype=np.float64)
-        if keys is None:
-            keys = self.data[0].keys()
-        return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
+        if keys is not None:
+            with_keys_numpy = self.frame.drop(['time'], axis=1)[keys].to_numpy(dtype=np.float64)
+            return with_keys_numpy
+        return self.frame.drop(['time'], axis=1).to_numpy(dtype=np.float64)
 
     def plot(self, **kwargs) -> figure:
         """
@@ -154,7 +181,7 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        return plot_timeseries(self.times, self.data, legend = {'display': True}, options=kwargs)
+        return plot_timeseries(self.times, self.data, legend={'display': True}, options=kwargs)
 
     def monotonicity(self) -> Dict[str, float]:
         """
@@ -170,7 +197,6 @@ class SimResult(UserList):
         https://www.sciencedirect.com/science/article/pii/S0004370222000078
 
         Args:
-            None
 
         Returns:
             float: Value between [0, 1] indicating monotonicity of a given event for the Prediction.
@@ -185,16 +211,31 @@ class SimResult(UserList):
         result = {}
         for key, l in by_event.items():
             mono_sum = 0
-            for i in range(len(l)-1): 
-                mono_sum += np.sign(l[i+1] - l[i])
-            result[key] = abs(mono_sum / (len(l)-1))
+            for i in range(len(l) - 1):
+                mono_sum += np.sign(l[i + 1] - l[i])
+            result[key] = abs(mono_sum / (len(l) - 1))
         return result
+
+    def monotonicity_df(self) -> pd.DataFrame:
+        """
+        Returns:
+            pd.DataFrame: values from monotonicity in a DataFrame
+        """
+        # creating multi row pd.DataFrame from data list of dict
+        mono_dict = self.monotonicity()
+        if len(mono_dict) > 0:
+            mono_df = pd.DataFrame(mono_dict, index=[0])
+        else:
+            mono_df = pd.DataFrame()
+        return mono_df
+
+
 
     def __not_implemented(self):  # lgtm [py/inheritance/signature-mismatch]
         raise NotImplementedError("Not Implemented")
 
     # Functions of list not implemented
-    # Specified here to stop users from accidentally trying to use them 
+    # Specified here to stop users from accidentally trying to use them
     # (due to this classes similarity to list)
     append = __not_implemented
     count = __not_implemented
@@ -207,7 +248,8 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     """
     Used to store the result of a simulation, which is only calculated on first request
     """
-    def __init__(self, fcn : Callable, times : list = None, states : list = None, _copy = True) -> None:
+
+    def __init__(self, fcn: Callable, times: list = None, states: list = None, _copy: bool = True) -> None:
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -219,15 +261,27 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if times is None or states is None:
             self.times = []
             self.states = []
+            self.frame = pd.DataFrame()
         else:
             self.times = times.copy()
             if _copy:
                 self.states = deepcopy(states)
+
             else:
                 self.states = states
+            if len(self.states) > 0:  # BOOKMARK
+                # state DataFrame
+                self.frame = pd.concat([
+                    pd.DataFrame(dict(dframe), index=[0]) for dframe in self.states
+                ], ignore_index=True, axis=0)
+                # inserting time column
+                self.frame.insert(0, "time", self.times)
+                self.frame.reindex()
+            else:
+                self.frame = pd.DataFrame()
 
     def __reduce__(self):
-        return (self.__class__.__base__, (self.times, self.data))
+        return self.__class__.__base__, (self.times, self.data)
 
     def is_cached(self) -> bool:
         """
@@ -243,33 +297,38 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         self.times = []
         self.__data = None
         self.states = []
+        self.frame = pd.DataFrame()
 
-    def extend(self, other : "LazySimResult", _copy=True) -> None:
+    def extend(self, other: "LazySimResult", _copy: bool = True) -> None:
         """
         Extend the LazySimResult with another LazySimResult object
         Raise ValueError if SimResult is passed
         Function fcn of other LazySimResult MUST match function fcn of LazySimResult object to be extended
 
         Args:
-            other (LazySimResult)
+            _copy: bool
+            other: (LazySimResult)
 
         """
-        if (isinstance(other, self.__class__)):
+        if isinstance(other, self.__class__):
             self.times.extend(other.times)
             if _copy:
                 self.states.extend(deepcopy(other.states))
+                self.frame = pd.concat([self.frame, deepcopy(other.frame)], ignore_index=True, axis=0)
             else:
                 self.states.extend(other.states)
+                self.frame = pd.concat([self.frame, other.frame], ignore_index=True, axis=0)
             if self.__data is None or not other.is_cached():
                 self.__data = None
             else:
                 self.__data.extend(other.data)
-        elif (isinstance(other, SimResult)):
-            raise ValueError(f"ValueError: {self.__class__} cannot be extended by SimResult. First convert to SimResult using to_simresult() method.")
+        elif isinstance(other, SimResult):
+            raise ValueError(
+                f"ValueError: {self.__class__} cannot be extended by SimResult. First convert to SimResult using to_simresult() method.")
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}.")
 
-    def pop(self, index : int = -1) -> dict:
+    def pop(self, index: int = -1) -> dict:
         """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
@@ -279,12 +338,21 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             dict: Element Removed
         """
         self.times.pop(index)
+        # to pop from self.frame
+        if index is -1:
+            index_df = len(self.frame.index) - 1
+        else:
+            index_df = index
+        temp_df = self.frame.T
+        temp_df.pop(index_df)
+        self.frame = temp_df.T
+        self.frame = self.frame.reset_index(drop=True)
         x = self.states.pop(index)
         if self.__data is not None:
             return self.__data.pop(index)
         return self.fcn(x)
 
-    def remove(self, d : float = None, t : float = None, s = None) -> None:
+    def remove(self, d: float = None, t: float = None, s=None) -> None:
         """Remove an element
 
         Args:
@@ -294,24 +362,14 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         if sum([i is None for i in (d, t, s)]) != 2:
             raise ValueError("ValueError: Only one named argument (d, t, s) can be specified.")
-
-        if (t is not None):
-            target_index = self.times.index(t)
-            self.times.pop(target_index)
-            self.states.pop(target_index)
-            if self.__data is not None:
-                self.__data.pop(target_index)
-        elif (s is not None):
-            target_index = self.states.index(s)
-            self.times.pop(target_index)
-            self.states.pop(target_index)
-            if self.__data is not None:
-                self.__data.pop(target_index)
+        # get index value
+        if t is not None:
+            index = self.times.index(t)
+        elif s is not None:
+            index = self.states.index(s)
         else:
-            target_index = self.data.index(d)
-            self.times.pop(target_index)
-            self.states.pop(target_index)
-            self.__data.pop(target_index)
+            index = self.data.index(d)
+        self.pop(index)
 
     def to_simresult(self) -> SimResult:
         return SimResult(self.times, self.data)
@@ -327,3 +385,23 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if self.__data is None:
             self.__data = [self.fcn(x) for x in self.states]
         return self.__data
+
+    def get_frame_data(self) -> pd.DataFrame:
+        """
+        place fcn data (list[dict]) into a pd.DataFrame format.
+
+        Returns:
+            pd.DataFrame: frame
+        """
+        if len(self.data) == 0:
+            return pd.DataFrame()
+        else:
+            # creating fcn(x) DataFrame
+            # fcn data DataFrame
+            frame = pd.concat([
+                pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
+            ], ignore_index=True, axis=0)
+            # inserting time column
+            frame.insert(0, "time", self.times)
+            frame.reindex()
+            return frame
