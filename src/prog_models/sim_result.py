@@ -23,7 +23,7 @@ class SimResult(UserList):
 
     __slots__ = ['times', 'data', 'frame']  # Optimization
 
-    def __init__(self, times: list[float] = None, data: list[Union[DictLikeMatrixWrapper, dict]] = None, _copy=True):
+    def __init__(self, times: List[float] = None, data: List[Union[DictLikeMatrixWrapper, dict]] = None, _copy=True):
         # empty lists are passed
         if times is None or data is None:
             self.times = []
