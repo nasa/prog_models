@@ -16,7 +16,7 @@ def run_example():
     # Define vehicle information:
     vehicle_params = {
         'dt': 0.1,
-        'vehicle_model': 'tarot18', # Define vehicle
+        'vehicle_model': 'tarot18', 
         'process_noise': 0,
         'measurement_noise': 0
     }
@@ -26,6 +26,7 @@ def run_example():
 
     # Define coarse waypoints: waypoints must be defined with a dictionary of numpy arrays or as columns in a text file 
     # See documentation for specific information on inputting waypoints 
+    # Latitude, longitude, and altitude values are required; ETAs are optional 
     waypoints = {}
     waypoints['lat_deg']   = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
     waypoints['lon_deg']   = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
@@ -35,29 +36,56 @@ def run_example():
     # Define reference trajectory parameters, if desired
     ref_params = {
         'nurbs_order': 4,
-        # 'cruise_speed': 6.0,
-        # 'ascent_speed': 3.0,
-        # 'descent_speed': 3.0,
-        # 'landing_speed': 1.5
     }
 
     # Calculate reference trajectory 
-    ref_traj = traj_gen(waypoints, vehicle, **ref_params)
+    ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **ref_params)
+    vehicle.parameters['ref_traj'] = ref_traj
 
-    # Define controller
-    ctrl = LQR_I(ref_traj,vehicle)
-    # ctrl = LQR(ref_traj, vehicle)
+    # Define controller and build scheduled control 
+    ctrl = LQR(ref_traj, vehicle)
     ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
 
     # Set simulation options 
     options = {
-        'dt': 0.1, ### THIS IS CURRENTLY REQUIRED - this needs help, issue with consistency in dt 
-        'save_freq': vehicle_params['dt'],
-        'horizon': 100
+        'dt': 0.1, 
+        'save_freq': vehicle_params['dt']
     }
 
-    # Generate trajectory
-    traj_results = vehicle.simulate_to(300, ctrl, **options)
+    # Simulate vehicle to fly trajectory 
+    traj_results = vehicle.simulate_to_threshold(ctrl, **options)
+
+    # Visualize Results
+    vehicle.visualize_traj(traj_results)
+
+    # Now define another trajectory through the same waypoints but with speeds defined instead of ETAs
+    del waypoints['time_unix'] # Delete ETAs for this example
+
+    # If ETAs are not provided, speeds must be defined in reference trajectory parameters 
+    ref_params = {
+        'nurbs_order': 4,
+        'cruise_speed': 8.0,
+        'ascent_speed': 2.0,
+        'descent_speed': 3.0,
+        'landing_speed': 2
+    }
+
+    # Re-calculate reference trajectory 
+    ref_traj_speeds = traj_gen(waypoints, vehicle, **ref_params)
+    vehicle.parameters['ref_traj'] = ref_traj_speeds
+
+    # Define controller and build scheduled control. This time we'll use LQR_I
+    ctrl = LQR_I(ref_traj_speeds, vehicle)
+    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
+
+    # Set simulation options 
+    options = {
+        'dt': 0.1, 
+        'save_freq': vehicle_params['dt']
+    }
+
+    # Simulate vehicle to fly trajectory 
+    traj_results = vehicle.simulate_to_threshold(ctrl, **options)
 
     debug = 1
 

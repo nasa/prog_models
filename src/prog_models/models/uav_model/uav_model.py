@@ -141,7 +141,7 @@ class UAVGen(PrognosticsModel):
     -------------
      .. [0] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
     """
-    events = [] # ['TrajectoryComplete']
+    events = ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
     states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t']
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
@@ -152,19 +152,16 @@ class UAVGen(PrognosticsModel):
         # Simulation parameters:
         'dt': 0.1, 
         'gravity': 9.81,
-        'cruise_speed': None, 
-        'ascent_speed': None, 
-        'descent_speed': None,  
-        'landing_speed': None, 
-        'hovering_time': 0.0,
-        'takeoff_time': 0.0, 
-        'landing_time': 0.0, 
         'final_time_buffer_sec': 30, 
         'final_space_buffer_m': 2, 
 
         # Vehicle parameters:
         'vehicle_model': 'tarot18', 
         'vehicle_payload': 0.0,
+        'vehicle_max_speed': 15.0, #### These are needed for traj_gen, are these okay defaults?
+        'vehicle_max_roll': 0.7853981633974483, ##### fix this 
+        'vehicle_max_pitch': 0.7853981633974483, #### fix this 
+        'ref_traj': None
     }
 
     def __init__(self, **kwargs):
@@ -278,6 +275,13 @@ class UAVGen(PrognosticsModel):
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
     def event_state(self, x : dict) -> dict:
+
+        # Based on time 
+        return {
+                'TrajectoryComplete': x['t']/self.parameters['ref_traj']['t'][-1]
+        }
+
+        # Based on reference trajectory
         # # Extract next waypoint information 
         # num_wypts = len(self.parameters['waypoints']['waypoints_time']) - 1 # Don't include initial waypoint
         # index_next = self.parameters['waypoints']['next_waypoint']
@@ -334,7 +338,6 @@ class UAVGen(PrognosticsModel):
         #     return {
         #             'TrajectoryComplete': (num_wypts - index_next)/num_wypts
         #         }
-        pass
  
     def output(self, x : dict):
         # Output is the same as the state vector, without time 
@@ -342,31 +345,32 @@ class UAVGen(PrognosticsModel):
 
 
     def threshold_met(self, x : dict) -> dict:
-        # t_lower_bound = self.parameters['waypoints']['waypoints_time'][-1] - (self.parameters['waypoints']['waypoints_time'][-1] - self.parameters['waypoints']['waypoints_time'][-2])/2
-        # t_upper_bound = self.parameters['waypoints']['waypoints_time'][-1] + self.parameters['final_time_buffer_sec']
-        # if x['t'] < t_lower_bound:
-        #     # Trajectory hasn't reached final ETA
-        #     return {
-        #         'TrajectoryComplete': False
-        #     }
-        # elif t_lower_bound <= x['t'] <= t_upper_bound:
-        #     # Trajectory is within bounds of final ETA
-        #     dist_now = np.sqrt((x['x']-self.parameters['waypoints']['waypoints_x'][-1])**2 + (x['y']-self.parameters['waypoints']['waypoints_y'][-1])**2 + (x['z']-self.parameters['waypoints']['waypoints_z'][-1])**2)
-        #     if dist_now <= self.parameters['final_space_buffer_m']:
-        #         return {
-        #             'TrajectoryComplete': True
-        #         }
-        #     else: 
-        #         return {
-        #             'TrajectoryComplete': False
-        #         }
-        # else: 
-        #     # Trajectory has passed acceptable bounds of final ETA - simulation terminated
-        #     warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
-        #     return {
-        #         'TrajectoryComplete': True
-        #     }
-        pass
+        # threshold_met is defined based on success of completing the reference trajectory
+        # For threshold_met to evaluate as True, the vehicle must be within a defined sphere around the final point in the reference trajectory, within some acceptable time interval
+        t_lower_bound = self.parameters['ref_traj']['t'][-1] - (self.parameters['ref_traj']['t'][-1] - self.parameters['ref_traj']['t'][-2])/2
+        t_upper_bound = self.parameters['ref_traj']['t'][-1] + self.parameters['final_time_buffer_sec']
+        if x['t'] < t_lower_bound:
+            # Trajectory hasn't reached final ETA
+            return {
+                'TrajectoryComplete': False
+            }
+        elif t_lower_bound <= x['t'] <= t_upper_bound:
+            # Trajectory is within bounds of final ETA
+            dist_now = np.sqrt((x['x']-self.parameters['ref_traj']['x'][-1])**2 + (x['y']-self.parameters['ref_traj']['y'][-1])**2 + (x['z']-self.parameters['ref_traj']['z'][-1])**2)
+            if dist_now <= self.parameters['final_space_buffer_m']:
+                return {
+                    'TrajectoryComplete': True
+                }
+            else: 
+                return {
+                    'TrajectoryComplete': False
+                }
+        else: 
+            # Trajectory has passed acceptable bounds of final ETA - simulation terminated
+            warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
+            return {
+                'TrajectoryComplete': True
+            }
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
 
@@ -425,82 +429,68 @@ class UAVGen(PrognosticsModel):
 
         return A, B
 
-    # TODO: fix visualzation; currently requires ref_traj internally 
-    # def visualize_traj(self, pred):
-    #     """
-    #     This method provides functionality to visualize a predicted trajectory generated, plotted with the reference trajectory and coarse waypoints. 
+    def visualize_traj(self, pred):
+        """
+        This method provides functionality to visualize a predicted trajectory generated, plotted with the reference trajectory and coarse waypoints. 
 
-    #     Calling this returns a figure with two subplots: 1) latitude (deg) vs longitude (deg), and 2) altitude (m) vs time.
+        Calling this returns a figure with two subplots: 1) x vs y, and 2) z vs time.
 
-    #     Parameters
-    #     ----------
-    #     pred : UAVGen model simulation  
-    #            SimulationResults from simulate_to or simulate_to_threshold for a defined UAVGen class
+        Parameters
+        ----------
+        pred : UAVGen model simulation  
+               SimulationResults from simulate_to or simulate_to_threshold for a defined UAVGen class
 
-    #     Returns 
-    #     -------
-    #     fig : Visualization of trajectory generation results 
-    #     """
+        Returns 
+        -------
+        fig : Visualization of trajectory generation results 
+        """
 
-    #     import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt
 
-    #     # Conversions
-    #     # -----------
-    #     deg2rad = np.pi/180.0
-    #     rad2deg = 180.0/np.pi
+        # Conversions
+        # -----------
+        deg2rad = np.pi/180.0
+        rad2deg = 180.0/np.pi
         
-    #     # Extract reference trajectory information
-    #     # ----------------------------------------
-    #     waypoints   = self.ref_traj.route
-    #     eta         = self.ref_traj.route.eta
-    #     depart_time = self.ref_traj.route.departure_time
-    #     time        = self.ref_traj.time
-    #     ref_pos     = self.ref_traj.geodetic_pos
+        # Extract reference trajectory information
+        # ----------------------------------------
+        depart_time = self.parameters['ref_traj']['t'][0] # self.ref_traj.route.departure_time
+        time        = self.parameters['ref_traj']['t']
+        ref_x       = self.parameters['ref_traj']['x'].tolist()
+        ref_y       = self.parameters['ref_traj']['y'].tolist()
+        ref_z       = self.parameters['ref_traj']['z'].tolist() 
 
-    #     # Extract predicted trajectory information
-    #     # ----------------------------------------
-    #     pred_time = pred.times
-    #     pred_x = [pred.outputs[iter]['x'] for iter in range(len(pred_time))]
-    #     pred_y = [pred.outputs[iter]['y'] for iter in range(len(pred_time))]
-    #     pred_z = [pred.outputs[iter]['z'] for iter in range(len(pred_time))]
+        # Extract predicted trajectory information
+        # ----------------------------------------
+        pred_time = pred.times
+        pred_x = [pred.outputs[iter]['x'] for iter in range(len(pred_time))]
+        pred_y = [pred.outputs[iter]['y'] for iter in range(len(pred_time))]
+        pred_z = [pred.outputs[iter]['z'] for iter in range(len(pred_time))]
 
-    #     pred_lat = []
-    #     pred_lon = []
-    #     pred_alt = []
+        # Initialize Figure
+        # ----------------
+        params = dict(figsize=(13, 9), fontsize=14, linewidth=2.0, alpha_preds=0.6)
+        fig, (ax1, ax2) = plt.subplots(2)
 
-    #     for iter1 in range(len(pred_time)):
-    #         x_temp, y_temp, z_temp = self.coord_transform.enu2geodetic(pred_x[iter1], pred_y[iter1], pred_z[iter1])
-    #         pred_lat.append(x_temp)
-    #         pred_lon.append(y_temp)
-    #         pred_alt.append(z_temp)
+        # Plot trajectory predictions
+        # -------------------------
+        # First plot waypoints (dots) and reference trajectory (commanded, line)
+        # ax1.plot(waypoints.lon * rad2deg, waypoints.lat  * rad2deg, 'o', color='tab:orange', alpha=0.5, markersize=10, label='__nolegend__')
+        ax1.plot(ref_x, ref_y, '--', linewidth=params['linewidth'], color='tab:orange', alpha=0.5, label='reference trajectory')
+        ax1.plot(pred_x, pred_y,'-', color='tab:blue', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
+
+        ax1.set_xlabel('x', fontsize=params['fontsize'])
+        ax1.set_ylabel('y', fontsize=params['fontsize'])
+        ax1.legend(fontsize=params['fontsize'])
+
+        # Add altitude plot
+        # -------------------------------------------------------
+        # time_vector = [depart_time + datetime.timedelta(seconds=pred_time[ii]) for ii in range(len(pred_time))]
+        # ax2.plot_date(eta, waypoints.alt, '--o', color='tab:orange', alpha=0.5, linewidth=params['linewidth'], label='__nolegend__')
+        ax2.plot(time, ref_z, '-', color='tab:orange', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='reference trajectory')
+        ax2.plot(pred_time, pred_z,'-', color='tab:blue',alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
         
-    #     pred_lat_deg = [pred_lat[iter] * rad2deg for iter in range(len(pred_lat))]
-    #     pred_lon_deg = [pred_lon[iter] * rad2deg for iter in range(len(pred_lon))]
+        ax2.set_xlabel('time stamp, -', fontsize=params['fontsize'])
+        ax2.set_ylabel('z', fontsize=params['fontsize'])
 
-    #     # Initialize Figure
-    #     # ----------------
-    #     params = dict(figsize=(13, 9), fontsize=14, linewidth=2.0, alpha_preds=0.6)
-    #     fig, (ax1, ax2) = plt.subplots(2)
-
-    #     # Plot trajectory predictions
-    #     # -------------------------
-    #     # First plot waypoints (dots) and reference trajectory (commanded, line)
-    #     ax1.plot(waypoints.lon * rad2deg, waypoints.lat  * rad2deg, 'o', color='tab:orange', alpha=0.5, markersize=10, label='__nolegend__')
-    #     ax1.plot(ref_pos[:, 1] * rad2deg, ref_pos[:, 0] * rad2deg, '--', linewidth=params['linewidth'], color='tab:orange', alpha=0.5, label='traj')
-    #     ax1.plot(pred_lon_deg, pred_lat_deg,'-', color='tab:blue', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
-
-    #     ax1.set_xlabel('longitude, deg', fontsize=params['fontsize'])
-    #     ax1.set_ylabel('latitude, deg', fontsize=params['fontsize'])
-    #     ax1.legend(fontsize=params['fontsize'])
-
-    #     # Add altitude plot
-    #     # -------------------------------------------------------
-    #     time_vector = [depart_time + datetime.timedelta(seconds=pred_time[ii]) for ii in range(len(pred_time))]
-    #     ax2.plot_date(eta, waypoints.alt, '--o', color='tab:orange', alpha=0.5, linewidth=params['linewidth'], label='__nolegend__')
-    #     ax2.plot(time_vector, pred_alt,'-', color='tab:blue',
-    #                   alpha=params['alpha_preds'], linewidth=params['linewidth'], label='__nolegend__')
-        
-    #     ax2.set_xlabel('time stamp, -', fontsize=params['fontsize'])
-    #     ax2.set_ylabel('altitude, m', fontsize=params['fontsize'])
-
-    #     return fig
+        return fig

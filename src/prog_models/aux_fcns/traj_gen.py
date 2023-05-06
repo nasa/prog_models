@@ -9,7 +9,13 @@ from .traj_gen_utils import route, trajectory
 from prog_models.exceptions import ProgModelInputException
 
 
-def trajectory_gen_fcn(waypoints_info, vehicle, **params):
+def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
+
+    # Check for waypoints and vehicle information
+    if waypoints is None:
+        raise ProgModelInputException("No waypoints were provided to generate reference trajectory.")
+    if vehicle is None:
+        raise ProgModelInputException("No vehicle model was provided to generate reference trajectory.")
 
     parameters = {  # Set to defaults
         # Flight information
@@ -17,40 +23,35 @@ def trajectory_gen_fcn(waypoints_info, vehicle, **params):
         'flight_plan': None,
 
         # Simulation parameters:
-        'dt': vehicle.parameters['dt'], 
-        'gravity': vehicle.parameters['gravity'],
-        'cruise_speed': vehicle.parameters['cruise_speed'],
-        'ascent_speed': vehicle.parameters['ascent_speed'],
-        'descent_speed': vehicle.parameters['descent_speed'],
-        'landing_speed': vehicle.parameters['landing_speed'],
-        'hovering_time': vehicle.parameters['hovering_time'],
-        'takeoff_time': vehicle.parameters['takeoff_time'], 
-        'landing_time': vehicle.parameters['landing_time'],
+        'cruise_speed': None,
+        'ascent_speed': None,
+        'descent_speed': None,
+        'landing_speed': None,
+        'hovering_time': 0.0,
+        'takeoff_time': 0.0, 
+        'landing_time': 0.0,
         'waypoint_weights': 20.0, # 10? 
         'adjust_eta': None, 
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
-
-        # Vehicle parameters: 
-        # TODO: These should be consistent with vehicle model, so should come from vehicle_info.parameters, 
-        # but these values aren't currently in parameters for the vehicle model 
-        'vehicle_max_speed': 15.0, #### NEED TO FIX THIS 
-        'vehicle_max_roll': 0.7853981633974483, ### NEED TO FIX 
-        'vehicle_max_pitch': 0.7853981633974483, #### NEED TO FIX 
-        'vehicle_model': 'tarot18'
-        # 'vehicle_payload': 0.0,
     }
 
     # Update parameters with any user-defined parameters 
-        # TODO: This is necessary so the user can configure nurbs_order, etc. 
-        # But this will override any vehicle_info parameters, if the user defines them 
-        # Either need to include warnings if the user overrides them, or need to do this differently 
     parameters.update(params)
 
-    if isinstance(waypoints_info, dict):
-        parameters['flight_plan'] = waypoints_info
-    elif isinstance(waypoints_info, str):
-        parameters['flight_file'] = waypoints_info
+    # Add vehicle-specific parameters 
+    parameters['dt'] = vehicle.parameters['dt']
+    parameters['gravity'] = vehicle.parameters['gravity']
+    parameters['vehicle_max_speed'] = vehicle.parameters['vehicle_max_speed']
+    parameters['vehicle_max_roll'] = vehicle.parameters['vehicle_max_roll']
+    parameters['vehicle_max_pitch'] = vehicle.parameters['vehicle_max_pitch']
+    parameters['vehicle_model'] = vehicle.parameters['vehicle_model']
+
+    # Add waypoints to parameters 
+    if isinstance(waypoints, dict):
+        parameters['flight_plan'] = waypoints
+    elif isinstance(waypoints, str):
+        parameters['flight_file'] = waypoints
     else:
         raise ProgModelInputException("Waypoints have incorrect format. Must be defined as dictionary or string specifying text file.")
 
