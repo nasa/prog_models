@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from prog_models import PrognosticsModel
+from .. import PrognosticsModel
 
 
 def update_Cq(params):
