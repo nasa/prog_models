@@ -1151,13 +1151,11 @@ class PrognosticsModel(ABC):
                 Array of output containers where output[x] corresponds to time[x]
             method (str, optional):
                 Optimization method- see scipy.optimize.minimize for options
-
             tol (int, optional):
                 Tolerance for termination. Depending on the provided minimization method, specifying tolerance sets solver-specific options to tol
             error_method (str, optional):
                 Method to use in calculating error. See calc_error for options
             bounds (tuple or dict, optional):
-
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
             options (dict, optional):
                 Options passed to optimizer. see scipy.optimize.minimize for options
@@ -1181,8 +1179,8 @@ class PrognosticsModel(ABC):
 
         config = {
             'error_method': 'MSE',
-            'bounds': tuple((-np.inf, np.inf) for _ in keys),            'options': None,
-            'error_method': 'MSE'
+            'bounds': tuple((-np.inf, np.inf) for _ in keys),
+            'options': None,
         }
         config.update(kwargs)
 
