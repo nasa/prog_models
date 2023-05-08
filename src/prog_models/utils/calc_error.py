@@ -1,10 +1,15 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+"""
+This file contains functions for calculating error given a model and some data (times, inputs, outputs). This is used by the PrognosticsModel.calc_error() method.
+"""
+
 from collections.abc import Iterable
 from warnings import warn
 import math
 import numpy as np
+
 
 def MAX_E(m, times, inputs, outputs, **kwargs):
     """
@@ -41,7 +46,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -55,7 +60,7 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
         warn(f"configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
-    counter = 0 
+    counter = 0
     t_last = times[0]
     err_max = 0
     z_obs = m.output(x)  # Initialize
@@ -70,10 +75,14 @@ def MAX_E(m, times, inputs, outputs, **kwargs):
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")                
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                
                 else: 
                     warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
@@ -149,7 +158,7 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, self.StateContainer):
-        x = [self.StateContainer(x_i) for x_i in x]
+        x = self.StateContainer(x)
 
     if not isinstance(inputs[0], self.InputContainer):
         inputs = [self.InputContainer(u_i) for u_i in inputs]
@@ -178,14 +187,18 @@ def MSE(self, times, inputs, outputs, **kwargs) -> float:
                 # Only recalculate if required
                 z_obs = self.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
-            if any (np.isnan(z_obs.matrix)):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
+            if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
-            err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
+            err_total += np.sum(np.square(z.matrix - z_obs.matrix), where=~np.isnan(z.matrix))
             counter += 1
 
     return err_total/counter
@@ -225,7 +238,7 @@ def MAE(m, times, inputs, outputs, **kwargs):
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -254,12 +267,16 @@ def MAE(m, times, inputs, outputs, **kwargs):
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
             err_total += np.sum(
                 np.abs(z.matrix - z_obs.matrix))
@@ -301,7 +318,7 @@ def MAPE(m, times, inputs, outputs, **kwargs):
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -330,12 +347,16 @@ def MAPE(m, times, inputs, outputs, **kwargs):
                 # Only recalculate if required
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
+            # The none check above is used to cover the case where the model
+            # is not able to produce an output for a given input yet
+            # For example, in LSTM models, the first few inputs will not 
+            # produce an output until the model has received enough data
+            # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
-                    raise ValueError(f"""Model unstable- NAN reached in simulation (t={t}) before cutoff threshold.
-                    Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data""")     
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
             err_total += np.sum(np.abs(z.matrix - z_obs.matrix)/z.matrix)
             counter += 1

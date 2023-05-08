@@ -6,11 +6,11 @@ Example using the Ensemble Model feature
 
 .. dropdown:: More details
 
-    Ensemble model is an approach to modeling where one or more different models are simulated together and then aggregated into a single prediction. This is generally done to improve the accuracy of prediction when you have multiple models that each represent part of the behavior, or represent a distribution of different behaviors. 
+    Ensemble model is an approach to modeling where one or more different models are simulated together and then aggregated into a single prediction. This is generally done to improve the accuracy of prediction when you have multiple models that each represent part of the behavior or represent a distribution of different behaviors. 
 
-    In this example, 4 different equivilant circuit models are setup with different configuration parameters. They are each simulated individually. Then an ensemble model is created for the 4 models, and that is simulated individually. The results are plotted. 
+    In this example, 4 different equivalent circuit models are setup with different configuration parameters. They are each simulated individually. Then an ensemble model is created for the 4 models, and that is simulated individually. The results are plotted. 
 
-    The results are partially skewed by a poorly configured model, so we change the aggregation method to acocunt for that. and resimulate, showing the results
+    The results are partially skewed by a poorly configured model, so we change the aggregation method to account for that. and resimulate, showing the results
 
     Finally, an ensemble model is created for two different models with different states. That model is simulated with time and the results are plotted. 
 """

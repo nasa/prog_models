@@ -13,9 +13,9 @@ from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
-from prog_models.utils import ProgressBar
-from prog_models.utils import calc_error
+from prog_models.utils import ProgressBar, calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
 from prog_models.utils.serialization import CustomEncoder, custom_decoder
 from prog_models.utils.size import getsizeof
@@ -135,7 +135,7 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, params: dict) -> None:
-        # This method is called when depickling and in construction. It builds the model from the parameters
+        # This method is called when de-pickling and in construction. It builds the model from the parameters
         
         if not hasattr(self, 'inputs'):
             self.inputs = []
@@ -299,7 +299,7 @@ class PrognosticsModel(ABC):
         Returns
         -------
         dx : StateContainer
-            First derivitive of state, with keys defined by model.states \n
+            First derivative of state, with keys defined by model.states \n
             e.g., dx = m.StateContainer({'abc': 3.1, 'def': -2.003}) given states = ['abc', 'def']
 
         Example
@@ -412,51 +412,6 @@ class PrognosticsModel(ABC):
                 warn("State {} limited to {} (was {})".format(key, limit[1], x[key]), ProgModelStateLimitWarning)
                 x[key] = np.minimum(x[key], limit[1])
         return x
-
-    def __next_state(self, x, u, dt: float):
-        """
-        State transition equation: Calls next_state(), calculating the next state, and then adds noise
-
-        Parameters
-        ----------
-        x : StateContainer
-            state, with keys defined by model.states \n
-            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-        u : InputContainer
-            Inputs, with keys defined by model.inputs \n
-            e.g., u = m.InputContainer({'i':3.2}) given inputs = ['i']
-        dt : float
-            Timestep size in seconds (≥ 0) \n
-            e.g., dt = 0.1
-
-        Returns
-        -------
-        x : StateContainer
-            Next state, with keys defined by model.states
-            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-
-        Example
-        -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | x = m.__next_state(x, u, 0.1) # Returns state, with noise, at 3.1 seconds given input u
-
-        See Also
-        --------
-        next_state
-
-        Note
-        ----
-        A model should not overwrite '__next_state'
-        A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative.
-        """
-        # Calculate next state and add process noise
-        next_state = self.apply_process_noise(self.next_state(x, u, dt), dt)
-
-        # Apply Limits
-        return self.apply_limits(next_state)
 
     def performance_metrics(self, x) -> dict:
         """
@@ -623,7 +578,7 @@ class PrognosticsModel(ABC):
     @property
     def is_state_transition_model(self) -> bool:
         """
-        If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propogate state forward.
+        If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propagate state forward.
 
         Returns:
             bool: if the model is a state transition model
@@ -643,7 +598,7 @@ class PrognosticsModel(ABC):
 
     def state_at_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs):
         """
-        Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state tranisition model, this returns the state at which threshold_met returns true for each event.
+        Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state transition model, this returns the state at which threshold_met returns true for each event.
 
         Args:
             x (StateContainer):
@@ -654,7 +609,7 @@ class PrognosticsModel(ABC):
 
         Returns:
             state_at_event (dict[str, StateContainer]):
-                state at each events occurance, with keys defined by model.events \n
+                state at each events occurrence, with keys defined by model.events \n
                 e.g., state_at_event = {'impact': {'x1': 10, 'x2': 11}, 'falling': {'x1': 15, 'x2': 20}} given events = ['impact', 'falling'] and states = ['x1', 'x2']
 
         Note:
@@ -927,7 +882,6 @@ class PrognosticsModel(ABC):
             x = self.StateContainer(x)
         
         # Optimization
-        next_state = self.__next_state
         output = self.__output
         threshold_met_eqn = self.threshold_met
         event_state = self.event_state
@@ -975,7 +929,7 @@ class PrognosticsModel(ABC):
         save_pt_index = 0
         save_pts = config['save_pts']
 
-        # confgure optional intermediate printing
+        # configure optional intermediate printing
         if config['print']:
             def update_all():
                 saved_times.append(t)
@@ -1030,19 +984,6 @@ class PrognosticsModel(ABC):
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
-        
-        if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
-            # Wrapper around next_state
-            def next_state(x, u, dt):
-                # Calculate next state, and convert
-                x_new = self.next_state(x, u, dt)
-                x_new = self.StateContainer(x_new)
-
-                # Calculate next state and add process noise
-                next_state = self.apply_process_noise(x_new, dt)
-
-                # Apply Limits
-                return self.apply_limits(next_state)
 
         if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
@@ -1072,21 +1013,16 @@ class PrognosticsModel(ABC):
             apply_limits = self.apply_limits
             apply_process_noise = self.apply_process_noise
             StateContainer = self.StateContainer
-            def next_state(x, u, dt):
-                dx1 = StateContainer(dx(x, u))
-                
-                x2 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx1.items()})
-                dx2 = dx(x2, u)
-
-                x3 = StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx2.items()})
-                dx3 = dx(x3, u)
-                
-                x4 = StateContainer({key: x[key] + dt*dx_i for key, dx_i in dx3.items()})   
-                dx4 = dx(x4, u)
-
-                x = StateContainer({key: x[key]+ dt/3*(dx1[key]/2 + dx2[key] + dx3[key] + dx4[key]/2) for key in dx1.keys()})
-                return apply_limits(apply_process_noise(x))
-        elif config['integration_method'].lower() != 'euler':
+            if not isinstance(self.dx(x.copy(), u), DictLikeMatrixWrapper):
+                next_state = rk4_next_state
+            else:
+                next_state = rk4_next_state_wrapper
+        elif config['integration_method'].lower() == 'euler':
+            if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
+                next_state = euler_next_state_wrapper
+            else:
+                next_state = euler_next_state
+        else:
             raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
        
         while t < horizon:
@@ -1096,7 +1032,7 @@ class PrognosticsModel(ABC):
             # This is sometimes referred to as 'leapfrog integration'
             u = load_eqn(t, x)
             t = t + dt/2
-            x = next_state(x, u, dt)
+            x = next_state(self, x, u, dt)
 
             # Save if at appropriate time
             if (t >= next_save):
@@ -1152,10 +1088,10 @@ class PrognosticsModel(ABC):
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
-            times (list[float]): Array of times for each sample.
-            inputs (list[dict]): Array of input dictionaries where input[x] corresponds to time[x].
-            outputs (list[dict]): Array of output dictionaries where output[x] corresponds to time[x].
-
+            times (list[float]): array of times for each sample
+            inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
+            outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        
         Keyword Args:
             method (str, optional): Error method to use. Supported methods include:
                 * MSE (Mean Squared Error)
@@ -1171,7 +1107,7 @@ class PrognosticsModel(ABC):
                 stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
                 before the model goes unstable in order to produce a valid estimate of mean squared error. 
 
-                If the model goes unstable before stability_tol is met, NaN is returned. 
+                If the model goes unstable before stability_tol is met, a ValueError is raised.
                 Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
         Returns:
@@ -1179,6 +1115,10 @@ class PrognosticsModel(ABC):
 
         See Also:
             :func:`calc_error.MSE`
+            :func:`calc_error.RMSE`
+            :func:`calc_error.MAX_E`
+            :func:`calc_error.MAPE`
+            :func:`calc_error.MAE`
         """
         method = kwargs.get('method', 'MSE')
 
@@ -1211,11 +1151,13 @@ class PrognosticsModel(ABC):
                 Array of output containers where output[x] corresponds to time[x]
             method (str, optional):
                 Optimization method- see scipy.optimize.minimize for options
+
             tol (int, optional):
                 Tolerance for termination. Depending on the provided minimization method, specifying tolerance sets solver-specific options to tol
             error_method (str, optional):
                 Method to use in calculating error. See calc_error for options
             bounds (tuple or dict, optional):
+
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
             options (dict, optional):
                 Options passed to optimizer. see scipy.optimize.minimize for options
@@ -1224,31 +1166,28 @@ class PrognosticsModel(ABC):
 
         See: examples.param_est
         """
-        # Documenting 
         from scipy.optimize import minimize
 
         if keys is None:
-            # if no keys provided, use all
+            # if no keys provided, use all keys that are Numbers
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
         
         if isinstance(keys, set):
             raise ValueError(f"Can not pass in keys as a Set. Sets are unordered by construction, so bounds may be out of order.")
         
         for key in keys:
-            # if isinstance(key, Sequence):
-            #     raise ValueError(f"Key '{key}' cannot be a Sequence")
             if key not in self.parameters:
                 raise ValueError(f"Key '{key}' not in model parameters")
 
         config = {
-            'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': None,
+            'error_method': 'MSE',
+            'bounds': tuple((-np.inf, np.inf) for _ in keys),            'options': None,
             'error_method': 'MSE'
         }
         config.update(kwargs)
 
         if isinstance(times, set) or isinstance(inputs, set) or isinstance(outputs, set):
-            raise TypeError(f"Times, Inputs, and Outputs cannot be a Set. Sets are unordered by definition, so passing in arguments as Sets may have undefined behavior.")
+            raise TypeError(f"Times, inputs, and outputs cannot be a set. Sets are unordered by definition, so passing in arguments as sets may result in incorrect behavior.")
 
         # if parameters not in parent wrapper sequence, then place them into one.
         if isinstance(times, np.ndarray):
@@ -1276,11 +1215,9 @@ class PrognosticsModel(ABC):
             if len(missing_args) > 0:
                 # Concat into string
                 missing_args_str = ', '.join(missing_args)
-                # missing_args_str = missing_args_str[:-2] # Remove last comma and space
                 raise ValueError(f"Missing keyword arguments {missing_args_str}")
-            
             # Check lengths of args
-            if len(times) != len(inputs) or len(inputs) != len(outputs): 
+            if len(times) != len(inputs) or len(inputs) != len(outputs):
                 raise ValueError(f"Times, inputs, and outputs must be same length. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if len(times) == 0:
                 # Since inputs, times, and outputs are already confirmed to be the same length, only check that one is not empty
@@ -1299,12 +1236,10 @@ class PrognosticsModel(ABC):
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
             if len(config['bounds']) != len(keys):
-                error = f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})"
-                raise ValueError(error)
+                raise ValueError(f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})")
         for bound in config['bounds']:
             if (isinstance(bound, set)):
-                error = f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order."
-                raise TypeError(error)
+                raise TypeError(f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
             if (not isinstance(bound, Iterable)) or (len(bound) != 2):
                 raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
@@ -1319,8 +1254,7 @@ class PrognosticsModel(ABC):
         for i, (times, inputs, outputs) in enumerate(runs):
             has_changed = False
             if len(times) != len(inputs) or len(inputs) != len(outputs):
-                error = f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}"
-                raise ValueError(error)
+                raise ValueError(f"Times, inputs, and outputs must be same length for the run at index {i}. Length of times: {len(times)}, Length of inputs: {len(inputs)}, Length of outputs: {len(outputs)}")
             if len(times) == 0:
                 raise ValueError(f"Times, inputs, and outputs for Run {i} must have at least one element")
             if not isinstance(inputs[0], self.InputContainer):
