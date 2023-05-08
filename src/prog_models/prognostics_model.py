@@ -187,7 +187,7 @@ class PrognosticsModel(ABC):
 
         outputs = self.outputs
 
-        class OutputContainer(containers.OutputContainer):
+        class OutputContainer(DictLikeMatrixWrapper):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
@@ -301,7 +301,7 @@ class PrognosticsModel(ABC):
         Returns
         -------
         dx : StateContainer
-            First derivitive of state, with keys defined by model.states \n
+            First derivative of state, with keys defined by model.states \n
             e.g., dx = m.StateContainer({'abc': 3.1, 'def': -2.003}) given states = ['abc', 'def']
 
         Example
