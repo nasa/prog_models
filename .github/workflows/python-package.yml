@@ -29,6 +29,7 @@ jobs:
         python -m pip install notebook
         python -m pip install testbook
         python -m pip install requests
+        python -m pip install fastdtw
     - name: Run tests
       run: python -m tests
     - name: Upload

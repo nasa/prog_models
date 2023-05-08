@@ -46,7 +46,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertWarns(UserWarning) as cm:
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1, stability_tol = 10)
         self.assertEqual(
-            "configurable cutoff must be some float value in the domain (0, 1]."  
+            "Configurable cutoff must be some float value in the domain (0, 1]."  
             " Received 10. Resetting value to 0.95",
             str(cm.warning)
         )

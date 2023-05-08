@@ -434,27 +434,20 @@ def DTW(m, times, inputs, outputs, **kwargs):
                     break
             simulated.append(z_obs)
             counter += 1
-
+        
     from scipy.spatial.distance import euclidean
 
-    transform = []
-    for index in simulated:
-        inner_list = []
-        for key in index.keys():
-            inner_list.append(index.get(key))
-        transform.append(inner_list)
+    def dtw_helper(x):
+        transform = []
+        for index in x:
+            inner_list = []
+            for key in index.keys():
+                inner_list.append(index.get(key))
+            transform.append(inner_list)
+        
+        return transform
 
-    simulated = transform
-
-    transform = []
-    for index in outputs:
-        inner_list = []
-        for key in index.keys():
-            inner_list.append(index.get(key))
-        transform.append(inner_list)
-
-    observed = transform
-
+    simulated, observed = dtw_helper(simulated), dtw_helper(outputs)
     distance, path = fastdtw(simulated, observed, dist=euclidean)
 
     return distance
