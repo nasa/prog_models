@@ -173,14 +173,14 @@ class PrognosticsModel(ABC):
 
         states = self.states
 
-        class StateContainer(containers.StateContainer):
+        class StateContainer(DictLikeMatrixWrapper):
             def __init__(self, data):
                 super().__init__(states, data)
         self.StateContainer = StateContainer
 
         inputs = self.inputs
 
-        class InputContainer(containers.InputContainer):
+        class InputContainer(DictLikeMatrixWrapper):
             def __init__(self, data):
                 super().__init__(inputs, data)
         self.InputContainer = InputContainer
@@ -981,13 +981,13 @@ class PrognosticsModel(ABC):
         
         # Auto Container wrapping
         dt0 = next_time(t, x) - t
-        if not isinstance(u, InputContainer):
+        if not isinstance(u, DictLikeMatrixWrapper):
             # Wrapper around the future loading equation
             def load_eqn(t, x):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
-        if not isinstance(self.output(x), OutputContainer):
+        if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
             def output(x):
                 # Calculate output, convert to outputcontainer
@@ -1102,7 +1102,7 @@ class PrognosticsModel(ABC):
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
-            dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samplesDefaults to use time between samples.
+            dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to time between samples.
             stability_tol (double, optional): Configurable parameter.
                 Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
                 In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
