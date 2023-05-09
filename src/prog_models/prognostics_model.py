@@ -15,7 +15,7 @@ from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, 
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar, calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper
-from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
+from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.parameters import PrognosticsModelParameters
 from prog_models.utils.serialization import CustomEncoder, custom_decoder
 from prog_models.utils.size import getsizeof
@@ -359,14 +359,8 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        if isinstance(x, DictLikeMatrixWrapper) and isinstance(dx, DictLikeMatrixWrapper):
-            return self.StateContainer(x.matrix + dx.matrix * dt)
-        elif isinstance(dx, dict) or isinstance(x, dict):
-            return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
-        else:
-            raise ValueError(f"ValueError: dx return must be of type StateContainer, was {type(dx)}")
+        return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
     @property
     def is_continuous(self):
@@ -583,7 +577,9 @@ class PrognosticsModel(ABC):
         Returns:
             bool: if the model is a state transition model
         """
-        has_overridden_transition = type(self).next_state != PrognosticsModel.next_state or type(self).dx != PrognosticsModel.dx
+        has_default_next_state = type(self).next_state == PrognosticsModel.next_state
+        has_integrator_next_state = type(self).next_state in next_state_functions.values()
+        has_overridden_transition = not (has_default_next_state or has_integrator_next_state) or type(self).dx != PrognosticsModel.dx
         return has_overridden_transition and len(self.states) > 0
 
     @property
@@ -835,7 +831,6 @@ class PrognosticsModel(ABC):
         config = { # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
-            'integration_method': 'euler',
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100, # Default horizon (in s), essentially inf
@@ -882,11 +877,14 @@ class PrognosticsModel(ABC):
             x = self.StateContainer(x)
         
         # Optimization
-        output = self.__output
-        threshold_met_eqn = self.threshold_met
         event_state = self.event_state
         load_eqn = future_loading_eqn
+        next_state = self.next_state
+        apply_noise = self.apply_process_noise
+        apply_limits = self.apply_limits
+        output = self.__output
         progress = config['progress']
+        threshold_met_eqn = self.threshold_met
 
         # Threshold Met Equations
         def check_thresholds(thresholds_met):
@@ -985,6 +983,12 @@ class PrognosticsModel(ABC):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
+        if not isinstance(next_state(x, u, dt0), DictLikeMatrixWrapper):
+            # Wrapper around the next state equation
+            def next_state(x, u, dt):
+                x = self.next_state(x, u, dt)
+                return self.StateContainer(x)
+
         if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
             def output(x):
@@ -1001,29 +1005,10 @@ class PrognosticsModel(ABC):
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
 
-        if config['integration_method'].lower() == 'rk4':
-            # Using RK4 Method
-            dx = self.dx
-
-            try:
-                dx(x, load_eqn(t, x))
-            except ProgModelException:
-                raise ProgModelException("dx(x, u) must be defined to use RK4 method")
-
-            apply_limits = self.apply_limits
-            apply_process_noise = self.apply_process_noise
-            StateContainer = self.StateContainer
-            if not isinstance(self.dx(x.copy(), u), DictLikeMatrixWrapper):
-                next_state = rk4_next_state
-            else:
-                next_state = rk4_next_state_wrapper
-        elif config['integration_method'].lower() == 'euler':
-            if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
-                next_state = euler_next_state_wrapper
-            else:
-                next_state = euler_next_state
-        else:
-            raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
+        if 'integration_method' in config:
+            # Update integration method for the duration of the simulation
+            old_integration_method = self.parameters.get('integration_method', 'euler')
+            self.parameters['integration_method'] = config['integration_method']
        
         while t < horizon:
             dt = next_time(t, x)
@@ -1032,7 +1017,9 @@ class PrognosticsModel(ABC):
             # This is sometimes referred to as 'leapfrog integration'
             u = load_eqn(t, x)
             t = t + dt/2
-            x = next_state(self, x, u, dt)
+            x = next_state(x, u, dt)
+            x = apply_noise(x, dt)
+            x = apply_limits(x)
 
             # Save if at appropriate time
             if (t >= next_save):
@@ -1072,6 +1059,10 @@ class PrognosticsModel(ABC):
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
             saved_event_states = SimResult(saved_times, saved_event_states, _copy=False)
+
+        if 'integration_method' in config:
+            # Reset integration method
+            self.parameters['integration_method'] = old_integration_method
         
         return self.SimulationResults(
             saved_times, 
