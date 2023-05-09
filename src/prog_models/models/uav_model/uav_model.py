@@ -104,28 +104,6 @@ class UAVGen(PrognosticsModel):
           Time step in seconds for trajectory generation
         gravity : Optional, float
           m/s^2, gravity magnitude
-        cruise_speed : float
-          m/s, avg speed in-between way-points
-        ascent_speed : float
-          m/s, vertical speed (up)
-        descent_speed : float
-          m/s, vertical speed (down)
-        landing_speed : float
-          m/s, landing speed when altitude < 10m
-        hovering_time : Optional, float
-          s, time to hover between waypoints
-        takeoff_time : Optional, float
-          s, additional takeoff time 
-        landing_time: Optional, float
-          s, additional landing time 
-        waypoint_weights: Optional, float
-          weights of the waypoints in nurbs calculation 
-        adjust_eta: Optional, dict 
-          Dictionary with keys ['hours', 'seconds'], to adjust route time
-        nurbs_basis_length: Optional, float
-          Length of the basis function in the nurbs algorithm
-        nurbs_order: Optional, int
-          Order of the nurbs curve
         final_time_buffer_sec: Optional, float
           s, defines an acceptable time range to reach the final waypoint
         final_space_buffer_m: Optional, float
@@ -167,9 +145,13 @@ class UAVGen(PrognosticsModel):
     def __init__(self, **kwargs):
 
       super().__init__(**kwargs)
-      
+
       # Build aircraft model
       # ====================
+      # Check for supported vehicle type
+      if self.parameters['vehicle_model'] != 'tarot18' and self.parameters['vehicle_model'] != 'djis1000':
+        raise ProgModelInputException("Specified vehicle type is not supported. Only 'tarot18' and 'djis1000' are currently supported.")
+      
       # build aicraft, which means create rotorcraft from type (model), initialize state vector, steady-state input (i.e., hover thrust for rotorcraft), controller type 
       # and corresponding setup (scheduled, real-time) and initialization.
       aircraft1 = AircraftModels.build_model(model=self.parameters['vehicle_model'],

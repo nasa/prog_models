@@ -15,7 +15,7 @@ def run_example():
 
     # Define vehicle information:
     vehicle_params = {
-        'dt': 0.1,
+        'dt': 0.1, 
         'vehicle_model': 'tarot18', 
         'process_noise': 0,
         'measurement_noise': 0
@@ -35,7 +35,7 @@ def run_example():
 
     # Define reference trajectory parameters, if desired
     ref_params = {
-        'nurbs_order': 4,
+        'nurbs_order': 4
     }
 
     # Calculate reference trajectory 

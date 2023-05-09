@@ -70,7 +70,7 @@ class LQR():
     """ Linear Quadratic Regulator"""
     def __init__(self, x_ref, vehicle, **kwargs):
 
-        self.type      = 'LQR'                # type of controller
+        self.type      = 'LQR'                  # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
         self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
         self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)

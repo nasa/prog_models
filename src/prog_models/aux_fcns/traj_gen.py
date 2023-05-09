@@ -10,17 +10,60 @@ from prog_models.exceptions import ProgModelInputException
 
 
 def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
+    """
+    Function to generate a flyable trajectory from coarse waypoints using the NURBS algorithm 
+        TODO: @Matteo, can you make this a bit more descriptive/correct?
+
+    Required arguments:
+    ------------------
+        waypoints: dict[str, np.array] or str 
+            This argument specifies coarse waypoints. 
+            dict format must include keys: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
+                Values for each key must be numpy arrays
+            str format specifies the name of a file that includes waypoint information 
+                Columns must have the following headers and be in this order: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
+
+        vehicle: 
+            This argument must be an instance of the UAVGen class (prog_model.models.uav_model.uav_model.UAVGen)
+
+    Keyword arguments:
+    -----------------
+        cruise_speed : float
+          m/s, avg speed in-between way-points; required only if ETAs are not specified
+        ascent_speed : float
+          m/s, vertical speed (up); required only if ETAs are not specified
+        descent_speed : float
+          m/s, vertical speed (down); required only if ETAs are not specified
+        landing_speed : float
+          m/s, landing speed when altitude < 10m
+        hovering_time : Optional, float
+          s, time to hover between waypoints
+        takeoff_time : Optional, float
+          s, additional takeoff time 
+        landing_time: Optional, float
+          s, additional landing time 
+        waypoint_weights: Optional, float
+          weights of the waypoints in nurbs calculation 
+        adjust_eta: Optional, dict 
+          Dictionary with keys ['hours', 'seconds'], to adjust route time
+        nurbs_basis_length: Optional, float
+          Length of the basis function in the nurbs algorithm
+        nurbs_order: Optional, int
+          Order of the nurbs curve
+
+    Returns:
+    -------
+        ref_traj:  
+            Reference state vector as a function of time 
+    """
 
     # Check for waypoints and vehicle information
     if waypoints is None:
-        raise ProgModelInputException("No waypoints were provided to generate reference trajectory.")
+        raise ProgModelInputException("No waypoints or flight plan information were provided to generate reference trajectory.")
     if vehicle is None:
         raise ProgModelInputException("No vehicle model was provided to generate reference trajectory.")
 
     parameters = {  # Set to defaults
-        # Flight information
-        'flight_file': None, 
-        'flight_plan': None,
 
         # Simulation parameters:
         'cruise_speed': None,
@@ -39,6 +82,10 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     # Update parameters with any user-defined parameters 
     parameters.update(params)
 
+    # Check if user has erroneously defined dt and provide warning 
+    if 'dt' in params.keys():
+        warn("Reference trajectory is generated with vehicle-defined dt value. dt = {} will used, and any user-define value will be ignored.".format(vehicle.parameters['dt']))
+
     # Add vehicle-specific parameters 
     parameters['dt'] = vehicle.parameters['dt']
     parameters['gravity'] = vehicle.parameters['gravity']
@@ -47,51 +94,35 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     parameters['vehicle_max_pitch'] = vehicle.parameters['vehicle_max_pitch']
     parameters['vehicle_model'] = vehicle.parameters['vehicle_model']
 
-    # Add waypoints to parameters 
-    if isinstance(waypoints, dict):
-        parameters['flight_plan'] = waypoints
-    elif isinstance(waypoints, str):
-        parameters['flight_file'] = waypoints
-    else:
-        raise ProgModelInputException("Waypoints have incorrect format. Must be defined as dictionary or string specifying text file.")
-
     # Get Flight Plan
     # ================
-    # Option 1: fligh_plan, in form of dict of numpy arrays with way-points and time, is passed, while there's no file to load the flight plan
-    if parameters['flight_plan'] is not None and parameters['flight_file'] == None:
-        # Check for appropriate input:
-        if not isinstance(parameters['flight_plan'], dict):
-            raise ProgModelInputException("'flight_plan' must be a dictionary. Type {} was given".format(type(parameters['flight_plan'])))
-        for flight_plan_element in parameters['flight_plan'].values():
+    # Option 1: waypoints in form of dict of numpy arrays 
+    if isinstance(waypoints,dict): 
+        for flight_plan_element in waypoints.values(): 
             if not isinstance(flight_plan_element, np.ndarray):
-                raise ProgModelInputException("'flight_plan' entries must be numpy arrays specifying waypoint information. Type {} was given".format(type(flight_plan_element)))
+                raise ProgModelInputException("When specifying waypoints with type dict, must define lat/lon/alt using numpy arrays. Type {} was given".format(type(flight_plan_element)))
         
         # Extract data from flight plan: latitude, longitude, altitude, time stamps
-        flightplan = trajectory.load.convert_dict_inputs(parameters['flight_plan'])
+        flightplan = trajectory.load.convert_dict_inputs(waypoints)
         lat = flightplan['lat_rad']
         lon = flightplan['lon_rad']
         alt = flightplan['alt_m']
         tstamps = flightplan['timestamp']
       
     # Option 2: a file with flight plan is passed
-    elif parameters['flight_file'] != None and parameters['flight_plan'] == None:
-        flightplan = trajectory.load.get_flightplan(fname=parameters['flight_file'])
+    elif isinstance(waypoints,str):
+        flightplan = trajectory.load.get_flightplan(fname=waypoints)
         # Extract data from flight plan: latitude, longitude, altitude, time stamps
         lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
-      
-    # Option 3: both file with flight plan and dictionary with flight plan are passed, throw an error. Only 1 flight plan is allowed
-    elif parameters['flight_file'] != None and parameters['flight_plan'] != None:
-        raise ProgModelInputException("Too many flight plan inputs - please input either flight_plan dictionary or flight_file, not both.")
-      
-    # Option 4: no flight plan is passed. Throw an error. 
+
+    # Option 3: incorrect format is passed for waypoints 
     else:
-        raise ProgModelInputException("No flight plan information supplied. Please provide flight_plan or flight_file.")
-    
+        raise ProgModelInputException("Waypoints have incorrect format. Must be defined as dictionary or string specifying text file.")
 
     # Generate route
     # ==============
     if len(tstamps) > 1:
-        # ETAs specified: 
+        # Case 1: ETAs specified 
         # Check if speeds have been defined and warn user if so:
         if parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None:
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
@@ -100,11 +131,11 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
                                 vehicle_max_speed = parameters['vehicle_max_speed'],
                                 parameters = parameters)
     else: 
-        # ETAs not specified:  
+        # Case 2: ETAs not specified; speeds must be provided  
         # Check that speeds have been provided:
         if parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None:
             raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
-        # Build route (set of way-points with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
+        # Build route (set of waypoints with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = parameters) 
 
@@ -122,7 +153,6 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
                     max_theta=parameters['vehicle_max_pitch'])                # rad, allowable pitch for the aircraft
     
     if parameters['vehicle_model'] == 'tarot18' or parameters['vehicle_model'] == 'djis1000':
-        # x_ref  = np.concatenate((ref_traj.cartesian_pos, ref_traj.attitude, ref_traj.velocity, ref_traj.angular_velocity, np.expand_dims(ref_traj.time, axis=1)), axis=1).T
         x_ref = {}
         x_ref['x'] = ref_traj.cartesian_pos[:,0]
         x_ref['y'] = ref_traj.cartesian_pos[:,1]
