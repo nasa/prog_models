@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 
 from prog_models import PrognosticsModel
+from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 def calc_x(x: float, forces: float, Ls: float, new_x: float) -> float:
@@ -430,6 +431,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         # Append this way because the keys in the structure but the values are
         # missing - this is due to the behavior of subclassed models calling
         # their parent functions.
+
         next_x.matrix = np.vstack((next_x.matrix, np.array([
             np.atleast_1d(x['wb']),
             np.atleast_1d(x['wi']),
@@ -437,6 +439,18 @@ class PneumaticValveWithWear(PneumaticValveBase):
             np.atleast_1d(x['wr']),
             np.atleast_1d(x['wt'])
         ])))
+        # Variables for extending model
+        np_ex = np.array([
+            np.atleast_1d(x['wb']),
+            np.atleast_1d(x['wi']),
+            np.atleast_1d(x['wk']),
+            np.atleast_1d(x['wr']),
+            np.atleast_1d(x['wt'])
+        ])
+        keys_ex = ['wb', 'wi', 'wk', 'wr', 'wt']
+        extend_next = DictLikeMatrixWrapper(keys_ex, np_ex)
+        next_x.update(extend_next)  # extends dictionary for model
+        print(next_x.data)
         return next_x
 
 

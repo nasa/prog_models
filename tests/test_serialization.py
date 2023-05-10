@@ -9,12 +9,12 @@ from prog_models.data_models import DMDModel
 
 
 class TestSerialization(unittest.TestCase):
-    def setUp(self):
+    """def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__
+        sys.stdout = sys.__stdout__"""
 
     def test_serialization_basic(self):
         batt = Battery()
@@ -30,7 +30,6 @@ class TestSerialization(unittest.TestCase):
             else:
                 i = 4.5
             return batt.InputContainer({'i': i})
-        
         def future_loading_2(t, x=None):
             # Variable (piece-wise) future loading scheme 
             if (t < 300):
@@ -57,7 +56,7 @@ class TestSerialization(unittest.TestCase):
 
         # Generate surrogate model  
         surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
-
+        print(surrogate_orig)
         # Serialize parameters
         save_json_dict = surrogate_orig.to_json()
 
@@ -91,6 +90,7 @@ class TestSerialization(unittest.TestCase):
         for i in range(min(len(surrogate_results.times), len(new_results.times))):
             self.assertEqual(surrogate_results.times[i], new_results.times[i])
             for key in surrogate_results.states[0].keys():
+                print(key)
                 self.assertAlmostEqual(surrogate_results.states[i][key], new_results.states[i][key], delta = 3e-01)
             for key in surrogate_results.inputs[0].keys():
                 self.assertAlmostEqual(surrogate_results.inputs[i][key], new_results.inputs[i][key], delta = 3e-01)

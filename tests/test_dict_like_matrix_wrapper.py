@@ -6,54 +6,52 @@ import pickle
 import sys
 import unittest
 
+from numpy import float64
+
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models import ProgModelTypeError
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
-    def setUp(self):
+    """def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__
-    
+        sys.stdout = sys.__stdout__"""
+
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
-        self.assertListEqual(list(c1.values()), [1, 2])
-        self.assertListEqual(list(c1.items()), [('a', 1), ('b', 2)])
+        self.assertListEqual(list(c1.values()), [1., 2.])
+        self.assertListEqual(list(c1.items()), [('a', 1.), ('b', 2.)])
         self.assertEqual(c1['a'], 1)
         self.assertEqual(c1['b'], 2)
-        self.assertTrue((c1.matrix == np.array([[1], [2]])).all())
-
+        self.assertTrue(np.array_equal(c1.matrix, np.array([[1.], [2.]])))
         # Membership
         self.assertIn('a', c1)
         self.assertIn('b', c1)
         self.assertNotIn('c', c1)
         self.assertEqual(len(c1), 2)
-
         # Setting by dict
-        c1['a'] = -1
-        self.assertTrue((c1.matrix == np.array([[-1], [2]])).all())
-        self.assertEqual(c1['a'], -1)
-        
+        c1['a'] = -1.0
+        self.assertTrue((c1.matrix == np.array([[-1.], [2.]])).all())
+        self.assertEqual(c1['a'], -1.0)
         # Setting by matrix
-        c1.matrix[1][0] = -2
-        self.assertTrue((c1.matrix == np.array([[-1], [-2]])).all())
-        self.assertEqual(c1['b'], -2)
-
+        c1.matrix[1][0] = -2.0
+        c1.update({'b': -2.0})
+        self.assertTrue(np.all(c1.matrix == np.array([[-1.], [-2.]])))
+        self.assertEqual(c1['b'], -2.0)
         # Pickling
         c2 = pickle.loads(pickle.dumps(c1))
-        self.assertTrue((c2.matrix == np.array([[-1], [-2]])).all())
-        self.assertEqual(c2['a'], -1)
-        self.assertEqual(c2['b'], -2)
-
+        self.assertTrue(np.all((c2.matrix == np.array([[-1.], [-2.]]))))
+        self.assertEqual(c2['a'], -1.0)
+        self.assertEqual(c2['b'], -2.0)
         # Equality
-        c2 = DictLikeMatrixWrapper(['a', 'b'], {'a': -1, 'b': -2})
+        c2 = DictLikeMatrixWrapper(['a', 'b'], {'a': -1.0, 'b': -2.0})
+        print('c1 and c2', c1, c2)
         self.assertEqual(c1, c2)
-
         # update
-        c1.update({'c': 3, 'b': 2})
+        c1.update({'c': 3.0, 'b': 2.0})
         self.assertTrue((c1.matrix == np.array([[-1], [2], [3]])).all())
         self.assertEqual(c1['c'], 3)
         self.assertListEqual(c1.keys(), ['a', 'b', 'c'])
@@ -62,7 +60,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertTrue((c1.matrix == np.array([[-1], [2], [5], [7]])).all())
         self.assertEqual(c1['d'], 7)
         self.assertListEqual(c1.keys(), ['a', 'b', 'c', 'd'])
-
         # deleting items
         del c1['a']
         self.assertTrue((c1.matrix == np.array([[2], [5], [7]])).all())
@@ -77,6 +74,7 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
     def test_dict_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
+        print(c1)
         self._checks(c1)
     
     def test_array_init(self):
@@ -85,6 +83,7 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
     def test_matrix_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], np.matrix([[1], [2]]))
+        print(c1)
         self._checks(c1)
 
     def test_broken_init(self):

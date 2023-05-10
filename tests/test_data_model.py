@@ -15,12 +15,12 @@ from prog_models.models import ThrownObject
 
 
 class TestDataModel(unittest.TestCase):      
-    def setUp(self):
+    """def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__
+        sys.stdout = sys.__stdout__"""
       
     def _test_simple_case(self, 
         DataModelType, 

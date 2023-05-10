@@ -652,7 +652,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
         return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
     def output(self, _):

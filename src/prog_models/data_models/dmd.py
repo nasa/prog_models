@@ -298,6 +298,8 @@ class DMDModel(LinearModel, DataModel):
                 x = np.array([[] for _ in u])
 
             if isinstance(z, SimResult):
+                print(type(z))
+                print(z)
                 z = z.to_numpy(config['output_keys'])
 
             if event_states != None:

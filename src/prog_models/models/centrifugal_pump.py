@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 
 from prog_models import PrognosticsModel
+from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class CentrifugalPumpBase(PrognosticsModel):
@@ -337,12 +338,15 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
             self.parameters['wRadial'] = x['wRadial']
             self.parameters['wThrust'] = x['wThrust']
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
-
-        next_x.matrix = np.vstack((next_x.matrix, np.array([
+        # Variables for extending model
+        np_ex = np.array([
             np.atleast_1d(x['wA']),
             np.atleast_1d(x['wRadial']),
             np.atleast_1d(x['wThrust'])
-        ])))
+        ])
+        keys_ex = ['wA', 'wRadial', 'wThrust']
+        extend_next = DictLikeMatrixWrapper(keys_ex, np_ex)
+        next_x.extend(extend_next)  # extends dictionary for model
         return next_x
 
 

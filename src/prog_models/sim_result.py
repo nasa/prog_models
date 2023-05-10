@@ -95,7 +95,7 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        if index is -1:
+        if index == -1:
             index_df = len(self.frame.index) - 1
         else:
             index_df = index
@@ -154,10 +154,11 @@ class SimResult(UserList):
         Returns:
             np.ndarray: numpy array representing simresult
         """
-        if len(self.data) is 0:
+        if len(self.data) == 0:
             return np.array([[]], dtype=np.float64)
         if keys is not None:
             with_keys_numpy = self.frame.drop(['time'], axis=1)[keys].to_numpy(dtype=np.float64)
+
             return with_keys_numpy
         return self.frame.drop(['time'], axis=1).to_numpy(dtype=np.float64)
 
@@ -339,7 +340,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.times.pop(index)
         # to pop from self.frame
-        if index is -1:
+        if index == -1:
             index_df = len(self.frame.index) - 1
         else:
             index_df = index
