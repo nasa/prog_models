@@ -311,6 +311,19 @@ class PneumaticValveBase(PrognosticsModel):
             pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
             dp = [u['pL'] - u['pR']] * len(x['x'])
 
+        state_array = np.array([
+            np.atleast_1d(x['Aeb'] + params['wb'] * dt),     # Aeb
+            np.atleast_1d(x['Aet'] + params['wt'] * dt),     # Aet
+            np.atleast_1d(x['Ai'] + Aidot * dt),             # Ai
+            np.atleast_1d(x['k'] + kdot * dt),               # k
+            np.atleast_1d(x['mBot'] + mBotdot * dt),         # mBot
+            np.atleast_1d(x['mTop'] + mTopdot * dt),         # mTop
+            np.atleast_1d(x['r'] + rdot * dt),               # r
+            np.atleast_1d(vel),                              # v
+            np.atleast_1d(pos),                              # x
+            np.atleast_1d(dp)                                # pL - pR
+        ])
+        state_keys = ['Aeb', 'Aet', 'Ai', 'k', 'mBot', 'mTop', 'r','v', 'x', 'pDiff', 'wb', 'wi', 'wk', 'wr', 'wt']
         return self.StateContainer(np.array([
             np.atleast_1d(x['Aeb'] + params['wb'] * dt),     # Aeb
             np.atleast_1d(x['Aet'] + params['wt'] * dt),     # Aet
@@ -439,18 +452,16 @@ class PneumaticValveWithWear(PneumaticValveBase):
             np.atleast_1d(x['wr']),
             np.atleast_1d(x['wt'])
         ])))
-        # Variables for extending model
-        np_ex = np.array([
+        next_ext = np.array([
             np.atleast_1d(x['wb']),
             np.atleast_1d(x['wi']),
             np.atleast_1d(x['wk']),
             np.atleast_1d(x['wr']),
             np.atleast_1d(x['wt'])
         ])
-        keys_ex = ['wb', 'wi', 'wk', 'wr', 'wt']
-        extend_next = DictLikeMatrixWrapper(keys_ex, np_ex)
-        next_x.update(extend_next)  # extends dictionary for model
-        print(next_x.data)
+        next_x_keys_ext = ['wb', 'wi', 'wk', 'wr', 'wt']
+        extend_df = DictLikeMatrixWrapper(next_x_keys_ext, next_ext)
+        next_x.extend(extend_df)
         return next_x
 
 

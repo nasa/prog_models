@@ -13,12 +13,12 @@ from prog_models import ProgModelTypeError
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
-    """def setUp(self):
+    def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
@@ -48,7 +48,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertEqual(c2['b'], -2.0)
         # Equality
         c2 = DictLikeMatrixWrapper(['a', 'b'], {'a': -1.0, 'b': -2.0})
-        print('c1 and c2', c1, c2)
         self.assertEqual(c1, c2)
         # update
         c1.update({'c': 3.0, 'b': 2.0})
@@ -74,7 +73,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
     def test_dict_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
-        print(c1)
         self._checks(c1)
     
     def test_array_init(self):
@@ -83,7 +81,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
     def test_matrix_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], np.matrix([[1], [2]]))
-        print(c1)
         self._checks(c1)
 
     def test_broken_init(self):

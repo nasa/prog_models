@@ -187,6 +187,7 @@ class TestPneumaticValve(unittest.TestCase):
             self.assertAlmostEqual(x[key], x_test[key], 7)
 
         config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
+        print('future_loading\n', future_loading)
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
         self.assertAlmostEqual(times[-1], 782.53, 0)
 

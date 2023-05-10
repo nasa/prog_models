@@ -22,6 +22,7 @@ class TestSurrogate(unittest.TestCase):
 
     def test_surrogate_improper_input(self):
         m = ThrownObject()
+        print(m)
         def load_eqn(t = None, x = None):
             return m.InputContainer({})
         with self.assertRaises(ProgModelInputException):

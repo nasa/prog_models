@@ -8,12 +8,12 @@ from prog_models.models.centrifugal_pump import CentrifugalPump, CentrifugalPump
 
 
 class TestCentrifugalPump(unittest.TestCase):
-    """def setUp(self):
+    def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def test_centrifugal_pump_base(self):
         pump = CentrifugalPumpBase(process_noise=0)

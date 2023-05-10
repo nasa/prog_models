@@ -280,7 +280,7 @@ class PrognosticsModel(ABC):
         ----
         Configured using parameters `process_noise` and `process_noise_dist`
         """
-        x.matrix += dt*np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape)
+        x.matrix += dt * np.random.normal(0, self.parameters['process_noise'].matrix, size=x.matrix.shape)
         return x
 
     def dx(self, x, u):

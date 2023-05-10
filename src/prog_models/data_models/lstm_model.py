@@ -254,7 +254,7 @@ class LSTMStateTransitionModel(DataModel):
                     # No inputs
                     u = []
                 else:
-                    u = np.array([u_i.matrix[:,0] for u_i in u])
+                    u = np.array([u_i.matrix[:, 0] for u_i in u])
 
             if len(u) > 0 and len(u) <= window:
                 raise TypeError(f"Not enough data for window size {window}. Only {len(u)} elements present.")
@@ -285,7 +285,7 @@ class LSTMStateTransitionModel(DataModel):
                     # No outputs
                     z = []
                 else:
-                    z = np.array([z_i.matrix[:,0] for z_i in z])
+                    z = np.array([z_i.matrix[:, 0] for z_i in z])
 
             if isinstance(z, (list, np.ndarray)):
                 if len(z) != len(u) and len(u) != 0 and len(z) != 0:

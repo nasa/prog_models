@@ -22,12 +22,12 @@ def future_loading(t, x=None):
 
 
 class TestBattery(unittest.TestCase):
-    """def setUp(self):
+    def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
     
     def test_battery_circuit(self):
         batt = BatteryCircuit()
@@ -35,7 +35,6 @@ class TestBattery(unittest.TestCase):
 
     def test_battery_electrochem(self):
         batt = BatteryElectroChem()
-        print(batt)
         (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         self.assertEqual(BatteryElectroChem, BatteryElectroChemEODEOL)
 

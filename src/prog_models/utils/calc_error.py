@@ -358,6 +358,6 @@ def MAPE(m, times, inputs, outputs, **kwargs):
                 else:
                     warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
-            err_total += np.sum(np.abs(z.matrix - z_obs.matrix)/z.matrix)
+            err_total += np.sum(np.abs(z.matrix - z_obs.matrix) / z.matrix)
             counter += 1
     return err_total/counter

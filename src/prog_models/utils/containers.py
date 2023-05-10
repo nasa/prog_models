@@ -1,6 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
-
+import numpy as np
 from numpy import float64, matrix, ndarray, array, newaxis, nan, delete, atleast_1d, array_equal
 import pandas as pd
 from prog_models.exceptions import ProgModelTypeError
@@ -23,9 +23,7 @@ class DictLikeMatrixWrapper():
         if not isinstance(keys, list):
             keys = list(keys)  # creates list with keys
         self._keys = keys.copy()
-
         if isinstance(data, matrix):
-            print(data)
             self.data = pd.DataFrame(array(data, dtype=float64), index=self._keys, dtype=float64).T
             self.matrix = self.data.T.to_numpy(dtype=float64)
         elif isinstance(data, ndarray):
@@ -43,7 +41,6 @@ class DictLikeMatrixWrapper():
             else:
                 self.data = pd.DataFrame(data, columns=self._keys)
             self.matrix = self.data.to_numpy(dtype=float64).T if len(data) > 0 else array([])
-
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
@@ -51,14 +48,12 @@ class DictLikeMatrixWrapper():
         """
         reduce is overridden for pickles
         """
-        return DictLikeMatrixWrapper, (self._keys, self.matrix)
+        return DictLikeMatrixWrapper, (self.keys(), self.matrix)
 
     def __getitem__(self, key: str) -> int:
         """
         get all values associated with a key, ex: all values of 'i'
         """
-        print('self', self)
-        print(key)
         row = self.data.loc[:, key].to_list()  # creates list from a column of pandas DF
         if len(row) == 1:  # list contains 1 value, returns that value (non-vectorized)
             return row[0]
@@ -133,19 +128,19 @@ class DictLikeMatrixWrapper():
         return self.__repr__()
 
     def get(self, key: str, default=None):
-        """
-        gets the list of values associated with the key given
-        """
-        if key in self._keys:
-            return self.data.loc[0, key]
-        return default
+         """
+         gets the list of values associated with the key given
+         """
+         if key in self._keys:
+             return self.data.loc[0, key]
+         return default
 
     def copy(self) -> "DictLikeMatrixWrapper":
         """
         creates copy of object
         """
         matrix_df = self.data.T.to_numpy(dtype=float64).copy()
-        return DictLikeMatrixWrapper(self._keys, matrix_df)
+        return DictLikeMatrixWrapper(self.keys(), matrix_df)
 
     def keys(self) -> list:
         """
@@ -176,13 +171,11 @@ class DictLikeMatrixWrapper():
         """
         merges other DictLikeMatrixWrapper, updating values
         """
-        print('other: ', other)
         if isinstance(other, dict):
             other = DictLikeMatrixWrapper(other.keys(), other)
         for key in other.data.columns.to_list():
             if key in self.data.columns.to_list():  # checks to see if the key exists
                 # Existing key
-                print(other.data.loc[0, key], 'before', self.data.loc[0, key], self.data.loc[0, key].dtype)
                 self.data.loc[0, key] = other.data.loc[0, key]
             else:  # the key doesn't exist within
                 # the key
@@ -198,12 +191,13 @@ class DictLikeMatrixWrapper():
         and to the data DataFrame. Will only add the data and keys that are new.
         Does not update existing keys' data.
         """
-        # print('extend')
         if isinstance(other, dict):
             other = DictLikeMatrixWrapper(other.keys(), other)
-        for key in other.data.columns.to_list():
-            if key is not self.data.columns.to_list():  # checks to see if the key exists
-                self.data.insert(len(self.data.columns), column=key, value=other.data.loc[0, key])
+        check_keys = any(item in other.keys() for item in self.keys())
+        if check_keys is False:  # checks to see if the key exists
+            self.data = pd.concat([self.data, other.data], axis=1)
+        else:
+            ValueError
         self._keys = self.data.index.to_list()
         self.matrix = self.data.T.to_numpy(dtype=float64)
 

@@ -93,7 +93,7 @@ def rk4_next_state(model, x, u, dt: float):
     PrognosticsModel.next_state
     """
     dx1 = model.StateContainer(model.dx(x, u))
-    x2 = x.matrix + dx1.matrix*dt/2
+    x2 = x.matrix + dx1.matrix * dt / 2
     dx2 = model.dx(x2, u)
 
     x3 = model.StateContainer({key: x[key] + dt*dx_i/2 for key, dx_i in dx2.items()})
