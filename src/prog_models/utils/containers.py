@@ -25,13 +25,11 @@ class DictLikeMatrixWrapper():
         self._keys = keys.copy()
         if isinstance(data, matrix):
             self.data = pd.DataFrame(array(data, dtype=float64), index=self._keys, dtype=float64).T
-            self.matrix = self.data.T.to_numpy(dtype=float64)
         elif isinstance(data, ndarray):
             if data.ndim == 1:
                 data = data[newaxis].T
                 self.data = pd.DataFrame(data, self._keys)
             self.data = pd.DataFrame(dict(zip(self._keys, data)), dtype=float64)
-            self.matrix = self.data.T.to_numpy(dtype=float64)
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
             if data and not isinstance(list(data.values())[0], ndarray):  # len(self.matrix[0]) == 1:
                 if isinstance(data, DictLikeMatrixWrapper):
@@ -40,9 +38,27 @@ class DictLikeMatrixWrapper():
                     nan, None)
             else:
                 self.data = pd.DataFrame(data, columns=self._keys)
-            self.matrix = self.data.to_numpy(dtype=float64).T if len(data) > 0 else array([])
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
+
+    @property
+    def matrix(self) -> pd.DataFrame:
+        """
+        Getter -- creating matrix from self.data
+
+            Return: ndarray, of all the data
+        """
+        return self.data.values.T
+
+    @matrix.setter
+    def matrix(self, new_value: Union[float, int, ndarray]) -> None:
+        """
+        Setter -- changes values in self.data based on index
+
+            Return: None
+        """
+        self.data.loc[:, :] = new_value.T
+
 
     def __reduce__(self):
         """
@@ -75,7 +91,6 @@ class DictLikeMatrixWrapper():
         # self.matrix = delete(self.matrix, self._keys.index(key), axis=0)
         self._keys.remove(key)
         self.data = self.data.drop(columns=[key], axis=1)
-        self.matrix = self.data.T.to_numpy(dtype=float64)
 
     def __add__(self, other: "DictLikeMatrixWrapper") -> "DictLikeMatrixWrapper":
         """
@@ -103,15 +118,12 @@ class DictLikeMatrixWrapper():
         if isinstance(other, dict):  # checks that the list of keys for each matrix match
             list_key_check = (list(self.keys()) == list(
                 other.keys()))  # checks that the list of keys for each matrix are equal
-            matrix_check = (self.matrix == array(
-                [[other[key]] for key in self._keys])).all()  # checks to see that each row matches
             # check if DF is the same or if both are empty
-            return list_key_check and matrix_check
+            return list_key_check
         list_key_check = self.keys() == other.keys()
-        matrix_check = (self.matrix == other.matrix).all()
         # check if DF is the same or if both are empty
         df_check = self.data.equals(other.data) or (self.data.empty and other.data.empty)
-        return list_key_check and matrix_check and df_check
+        return list_key_check and df_check
 
     def __hash__(self):
         """
@@ -171,17 +183,9 @@ class DictLikeMatrixWrapper():
         """
         merges other DictLikeMatrixWrapper, updating values
         """
-        if isinstance(other, dict):
-            other = DictLikeMatrixWrapper(other.keys(), other)
-        for key in other.data.columns.to_list():
-            if key in self.data.columns.to_list():  # checks to see if the key exists
-                # Existing key
-                self.data.loc[0, key] = other.data.loc[0, key]
-            else:  # the key doesn't exist within
-                # the key
-                self.data.insert(len(self.data.columns), column=key, value=other.data.loc[0, key])
+        self.data[list(dict(other).keys())] = list(dict(other).values())
+        self.data.astype('float64')
         self._keys = self.data.columns.to_list()
-        self.matrix = self.data.T.to_numpy(dtype=float64)
 
     def extend(self, other: Union["DictLikeMatrixWrapper", dict]) -> None:
         """
@@ -199,7 +203,6 @@ class DictLikeMatrixWrapper():
         else:
             ValueError
         self._keys = self.data.index.to_list()
-        self.matrix = self.data.T.to_numpy(dtype=float64)
 
     def __contains__(self, key: str) -> bool:
         """

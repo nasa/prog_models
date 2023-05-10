@@ -740,8 +740,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
         x_dot2 = BatteryElectroChemEOL.dx(self, x, u)
-        x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
-        return x_dot
+        np_state_matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
+        return self.StateContainer(np_state_matrix)
 
     def output(self, x : dict) -> dict:
         with warnings.catch_warnings():

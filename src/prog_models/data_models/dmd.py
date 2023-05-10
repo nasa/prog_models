@@ -420,7 +420,7 @@ class DMDModel(LinearModel, DataModel):
         if self.B.shape[1] != 0:
            x.matrix += np.matmul(self.B, u.matrix)
         
-        return x   
+        return self.StateContainer(x.matrix)
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         # Save keyword arguments same as DMD training for approximation 
