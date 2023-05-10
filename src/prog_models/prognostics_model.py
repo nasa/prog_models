@@ -43,12 +43,14 @@ class PrognosticsModel(ABC):
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+        integration_method: Optional, str
+          Integration method used by next state in continuous models, e.g. 'rk4' or 'euler' (default: 'euler'). If the model is discrete, this parameter will return an error.
 
     Additional parameters specific to the model
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException 
+        ProgModelTypeError, ProgModelInputException, ProgModelException
 
     Example
     -------
