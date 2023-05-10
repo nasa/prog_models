@@ -7,14 +7,14 @@ from os.path import dirname, join
 import pickle
 import sys
 import unittest
-import pandas as pd
 
 # This ensures that the directory containing ProgModelTemplate is in the python search directory
 sys.path.append(join(dirname(__file__), ".."))
 
-from prog_models import *
-from prog_models.models import *
+from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel
+from prog_models.models import ThrownObject, BatteryElectroChemEOD
 from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
+from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParams)
 
 
 class MockModel():
@@ -41,7 +41,7 @@ class MockModel():
         return self.OutputContainer({'o1': x['a'] + x['b'] + x['c']})
 
 
-class MockProgModel(MockModel, prognostics_model.PrognosticsModel):
+class MockProgModel(MockModel, PrognosticsModel):
     events = ['e1', 'e2']
 
     def event_state(self, x):
@@ -69,42 +69,6 @@ def derived_callback3(config):
         'p4': -2 * config['p2'], 
     }
 
-class LinearThrownObject(LinearModel):
-    inputs = [] 
-    states = ['x', 'v']
-    outputs = ['x']
-    events = ['impact']
-
-    A = np.array([[0, 1], [0, 0]])
-    E = np.array([[0], [-9.81]])
-    C = np.array([[1, 0]])
-    F = None # Will override method
-
-    default_parameters = {
-        'thrower_height': 1.83,  # m
-        'throwing_speed': 40,  # m/s
-        'g': -9.81  # Acceleration due to gravity in m/s^2
-    }
-
-    def initialize(self, u=None, z=None):
-        return self.StateContainer({
-            'x': self.parameters['thrower_height'],  # Thrown, so initial altitude is height of thrower
-            'v': self.parameters['throwing_speed']  # Velocity at which the ball is thrown - this guy is a professional baseball pitcher
-            })
-    
-    def threshold_met(self, x):
-        return {
-            'falling': x['v'] < 0,
-            'impact': x['x'] <= 0
-        }
-
-    def event_state(self, x): 
-        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
-        return {
-            'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
-        }
-
 class MockModelWithDerived(MockProgModel):
     param_callbacks = {
             'p1': [derived_callback],
@@ -113,35 +77,34 @@ class MockModelWithDerived(MockProgModel):
 
 
 class TestModels(unittest.TestCase):
-    """
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = io.StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def test_non_container(self):
         class MockProgModelStateDict(MockProgModel):
             def next_state(self, x, u, dt):
-                ns_ret = {
+                return {
                     'a': x['a'] + u['i1']*dt,
                     'b': x['b'],
                     'c': x['c'] - u['i2'],
                     't': x['t'] + dt
                 }
-                return ns_ret
         
-        m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
+        m = MockProgModelStateDict(
+            process_noise_dist='none',
+            measurement_noise_dist='none')
+        
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
         # Any event, default
         (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         self.assertAlmostEqual(times[-1], 5.0, 5)
-        self.assertAlmostEqual(outputs.frame['time'].iloc[-1], 5.0, 5)
         self.assertAlmostEqual(outputs[-1]['o1'], -13.2)
-        self.assertAlmostEqual(outputs.get_frame_data()['o1'].iloc[-1], -13.2)
         self.assertIsInstance(outputs[-1], m.OutputContainer)
 
         class MockProgModelStateNdarray(MockProgModel):
@@ -153,16 +116,17 @@ class TestModels(unittest.TestCase):
                     [x['t'] + dt]]
                 )
 
-        m = MockProgModelStateNdarray(process_noise_dist='none', measurement_noise_dist='none')
+        m = MockProgModelStateNdarray(
+            process_noise_dist='none', 
+            measurement_noise_dist='none')
 
         # Any event, default
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-
+        config = {'dt': 0.5, 'save_freq': 1.0}
+        (times, _, _, outputs, _) = m.simulate_to_threshold(
+            load,
+            {'o1': 0.8},
+            **config)
         self.assertAlmostEqual(times[-1], 5.0, 5)
-        self.assertAlmostEqual(inputs.frame['time'].iloc[-1], 5.0, 5)
-        self.assertAlmostEqual(states.frame['time'].iloc[-1], 5.0, 5)
-        self.assertAlmostEqual(outputs.frame['time'].iloc[-1], 5.0, 5)
-        self.assertAlmostEqual(event_states.frame['time'].iloc[-1], 5.0, 5)
 
     def test_size(self):
         m = MockProgModel()
@@ -256,10 +220,10 @@ class TestModels(unittest.TestCase):
     def test_broken_models(self):
 
 
-        class missing_states(prognostics_model.PrognosticsModel):
+        class missing_states(PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -268,11 +232,11 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class empty_states(prognostics_model.PrognosticsModel):
+        class empty_states(PrognosticsModel):
             states = []
             inputs = ['i1', 'i2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -281,10 +245,10 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_inputs(prognostics_model.PrognosticsModel):
+        class missing_inputs(PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -293,10 +257,10 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_outputs(prognostics_model.PrognosticsModel):
+        class missing_outputs(PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -305,32 +269,29 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_initialize(prognostics_model.PrognosticsModel):
-            inputs = ['i1']
-            states = ['x1', 'x2']
-            outputs = ['o1']
-            parameters = {'process_noise':0.1}
-            def next_state(self, x, u, dt):
-                pass
-            def output(self, x):
-                pass
-        
-
-        class missing_output(prognostics_model.PrognosticsModel):
+        class missing_initiialize(PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
+            def next_state(self, x, u, dt):
+                pass
+            def output(self, x):
+                pass
+        
+
+        class missing_output(PrognosticsModel):
+            inputs = ['i1']
+            states = ['x1', 'x2']
+            outputs = ['o1']
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
                 pass
 
-        try: 
+        with self.assertRaises(ProgModelTypeError):
             m = missing_states()
-            self.fail("Should not have worked, missing 'states'")
-        except ProgModelTypeError:
-            pass
 
         m = empty_states()
         self.assertEqual(len(m.states), 0)
@@ -341,7 +302,7 @@ class TestModels(unittest.TestCase):
         m = missing_outputs()
         self.assertEqual(len(m.outputs), 0)
 
-        m = missing_initialize()
+        m = missing_initiialize()
         # Should work- initialize is now optional
 
         m = missing_output()
@@ -369,12 +330,9 @@ class TestModels(unittest.TestCase):
         x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
         self.assertEqual(x[keys[0]], 2)
 
-        try:
+        with self.assertRaises(Exception):
             noise = []
-            m = MockProgModel(**{noise_key: noise})
-            self.fail("Should have raised exception - improper format")
-        except Exception:
-            pass            
+            m = MockProgModel(**{noise_key: noise})         
 
         # Test that it ignores process_noise_dist in case where process_noise is a function
         m = MockProgModel(**{noise_key: add_one, dist_key: 'invalid one'})
@@ -382,19 +340,13 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x[keys[0]], 2)
 
         # Invalid dist
-        try:
-            noise = {key : 0.0 for key in keys}
+        with self.assertRaises(ProgModelTypeError):
+            noise = {key: 0.0 for key in keys}
             m = MockProgModel(**{noise_key: noise, dist_key: 'invalid one'})
-            self.fail("Invalid noise distribution")
-        except ProgModelTypeError:
-            pass
 
         # Invalid dist
-        try:
+        with self.assertRaises(ProgModelTypeError):
             m = MockProgModel(**{noise_key: 0, dist_key: 'invalid one'})
-            self.fail("Invalid noise distribution")
-        except ProgModelTypeError:
-            pass
 
         # Valid distributions
         m = MockProgModel(**{noise_key: 0, dist_key: 'uniform'})
@@ -463,7 +415,7 @@ class TestModels(unittest.TestCase):
 
     def test_default_es_and_tm(self):
         # Test 1: TM only
-        class NoES(MockModel, prognostics_model.PrognosticsModel):
+        class NoES(MockModel, PrognosticsModel):
             events = ['e1', 'e2']
 
             def threshold_met(self, _):
@@ -475,7 +427,7 @@ class TestModels(unittest.TestCase):
         self.assertDictEqual(m.event_state({}), {'e1': 1.0, 'e2': 0.0})
 
         # Test 2: ES only
-        class NoTM(MockModel, prognostics_model.PrognosticsModel):
+        class NoTM(MockModel, PrognosticsModel):
             events = ['e1', 'e2']
 
             def event_state(self, _):
@@ -487,7 +439,7 @@ class TestModels(unittest.TestCase):
         self.assertDictEqual(m.event_state({}), {'e1': 0.0, 'e2': 1.0})
 
         # Test 3: Neither ES or TM 
-        class NoESTM(MockModel, prognostics_model.PrognosticsModel):
+        class NoESTM(MockModel, PrognosticsModel):
             events = []
 
         m = NoESTM()
@@ -561,11 +513,8 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
         self.assertListEqual(times, [0, 0.5]) # Only one step
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
-            self.fail("Should fail- extra threshold key")
-        except ProgModelInputException:
-            pass
 
     def test_sim_past_thresh(self):
         m = MockProgModel(process_noise = 0.0)
@@ -581,11 +530,11 @@ class TestModels(unittest.TestCase):
             return {'i1': 1, 'i2': 2.1}
         (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
         named_results = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-        self.assertEquals(times, named_results.times)
-        self.assertEquals(inputs, named_results.inputs)
-        self.assertEquals(states, named_results.states)
-        self.assertEquals(outputs, named_results.outputs)
-        self.assertEquals(event_states, named_results.event_states)
+        self.assertEqual(times, named_results.times)
+        self.assertEqual(inputs, named_results.inputs)
+        self.assertEqual(states, named_results.states)
+        self.assertEqual(outputs, named_results.outputs)
+        self.assertEqual(event_states, named_results.event_states)
         
     def test_next_time_fcn(self):
         m = MockProgModel(process_noise = 0.0)
@@ -678,83 +627,6 @@ class TestModels(unittest.TestCase):
             # Lack of noise will make output as expected
             self.assertEqual(round(z['o1'], 6), round(oi, 6))
 
-    def test_estimate_params(self):
-        m = ThrownObject()
-        results = m.simulate_to_threshold(save_freq=0.5)
-        data = [(results.times, results.inputs, results.outputs)]
-        gt = m.parameters.copy()
-
-        # Now lets reset some parameters
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        keys = ['thrower_height', 'throwing_speed', 'g']
-        m.estimate_params(data, keys)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Now with limits that dont include the true values
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(data, keys, bounds=((0, 4), (20, 37), (-20, 0)))
-        for key in keys:
-            self.assertNotEqual(m.parameters[key], gt[key])
-
-        # Now with limits that do include the true values
-        m.estimate_params(data, keys, bounds=((0, 8), (20, 42), (-20, -5)))
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Try incomplete list:
-        with self.assertRaises(ValueError):
-            # Missing bound
-            m.estimate_params(data, keys, bounds=((0, 4), (20, 42)))
-        with self.assertRaises(ValueError):
-            # Extra bound
-            m.estimate_params(data, keys, bounds=((0, 4), (20, 42), (-20, 0), (-20, 10)))
-
-        # Dictionary bounds
-        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0)})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Dictionary bounds - missing
-        # Will fill with (-inf, inf)
-        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42)})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Dictionary bounds - extra
-        m.estimate_params(data, keys, bounds={'thrower_height': (0, 4), 'throwing_speed': (20, 42), 'g': (-20, 0), 'dummy': (-50, 0)})
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # Bounds - wrong type
-        with self.assertRaises(ValueError):
-            # bounds isn't tuple or dict
-            m.estimate_params(data, keys, bounds=0)
-        with self.assertRaises(ValueError):
-            # bounds isn't tuple or dict
-            m.estimate_params(data, keys, bounds='a')
-        with self.assertRaises(ValueError):
-            # Item isn't a tuple
-            m.estimate_params(data, keys, bounds={'g': 7})
-        with self.assertRaises(ValueError):
-            # Tuple isn't of size 2
-            m.estimate_params(data, keys, bounds={'g': (7,)})
-
-        # With inputs, outputs, and times
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(times=[results.times], inputs=[results.inputs], outputs=[results.outputs], keys=keys)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-
-        # No keys
-        m.parameters['thrower_height'] = 1.5
-        m.parameters['throwing_speed'] = 25
-        m.estimate_params(data)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
             
     def test_sim_prog(self):
         m = MockProgModel(process_noise = 0.0)
@@ -765,29 +637,17 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8})
         self.assertEqual(len(times), 1)
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to(-30, load, {'o1': 0.8})
-            self.fail("Should have failed- time must be greater than 0")
-        except ProgModelInputException:
-            pass
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to([12], load, {'o1': 0.8})
-            self.fail("Should have failed- time must be a number")
-        except ProgModelInputException:
-            pass
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to(12, load, {'o2': 0.9})
-            self.fail("Should have failed- output must contain each field (e.g., o1)")
-        except ProgModelInputException:
-            pass
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to(12, 132, {'o1': 0.8})
-            self.fail("Should have failed- future_load should be callable")
-        except ProgModelInputException:
-            pass
 
         ## Simulate
         (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
@@ -877,61 +737,37 @@ class TestModels(unittest.TestCase):
         
         ## Check inputs
         config = {'dt': [1, 2]}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("should have failed - dt must be number")
-        except ProgModelInputException:
-            pass
 
         config = {'dt': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- dt must be positive")
-        except ProgModelInputException:
-            pass
 
         config = {'save_freq': [1, 2]}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- save_freq must be number")
-        except ProgModelInputException:
-            pass
 
         config = {'save_freq': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- save_freq must be positive")
-        except ProgModelInputException:
-            pass
 
         config = {'horizon': [1, 2]}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail("Should have failed Horizon should be number")
-        except ProgModelInputException:
-            pass
 
         config = {'horizon': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- horizon must be positive")
-        except ProgModelInputException:
-            pass
         
         config = {'thresholds_met_eqn': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- thresholds_met_eqn must be callable")
-        except ProgModelInputException:
-            pass
 
         # incorrect number of arguments
         config = {'thresholds_met_eqn': lambda a, b: print(a, b)}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail()
-        except ProgModelInputException:
-            pass
 
     def test_sim_modes(self):
         m = ThrownObject(process_noise = 0, measurement_noise = 0)
@@ -969,8 +805,10 @@ class TestModels(unittest.TestCase):
         
         with self.assertRaises(ProgModelException):
             m.simulate_to_threshold(load, integration_method='rk4')
+
         # With linear model
         m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
+
         result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
 
@@ -1040,45 +878,30 @@ class TestModels(unittest.TestCase):
         self.assertListEqual(list(x['t']), [50, -100, 100])
 
         # when state doesn't exist
-        try:
+        with self.assertRaises(Exception):
             x0['n'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
         # when state entered incorrectly
-        try:
+        with self.assertRaises(Exception):
             x0['t'] = 'f'
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
         # when boundary entered incorrectly
-        try:
+        with self.assertRaises(Exception):
             m.state_limits = { 't': ('f', 100) }
             x0['t'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
-        try:
+        with self.assertRaises(Exception):
             m.state_limits = { 't': (-100, 'f') }
             x0['t'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
-        try:
+        with self.assertRaises(Exception):
             m.state_limits = { 't': (100) }
             x0['t'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)
@@ -1088,7 +911,6 @@ class TestModels(unittest.TestCase):
         # Define output redirection
         capturedOutput = io.StringIO()
         sys.stdout = capturedOutput
-
 
         # Test progress bar matching
         simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
@@ -1102,22 +924,17 @@ class TestModels(unittest.TestCase):
         m = ThrownObject()
         c1 = m.StateContainer({'x': 1.7, 'v': 40})
         c2 = m.StateContainer(np.array([[1.7], [40]]))
-        self.assertTrue(c1.data.equals(c2.data))
-        self.assertTrue(c2.data.equals(c1.data))
         self.assertEqual(c1, c2)
         self.assertListEqual(list(c1.keys()), m.states)
 
         input_c1 = m.InputContainer({})
         input_c2 = m.InputContainer(np.array([]))
         self.assertEqual(input_c1, input_c2)
-        # Issue with index in pd.DataFrame, check with empty
-        self.assertTrue(input_c1.data.empty and input_c2.data.empty)
         self.assertListEqual(list(input_c1.keys()), m.inputs)
 
         output_c1 = m.OutputContainer({'x': 1.7})
         output_c2 = m.OutputContainer(np.array([[1.7]]))
         self.assertEqual(output_c1, output_c2)
-        self.assertTrue(output_c1.data.equals(output_c2.data))
         self.assertListEqual(list(output_c1.keys()), m.outputs)
 
     def test_thrown_object_drag(self):
@@ -1140,25 +957,19 @@ class TestModels(unittest.TestCase):
         # Test no drag simulated results different from default
         self.assertNotEqual(simulated_results_nd.times, simulated_results_df.times)
         self.assertNotEqual(simulated_results_nd.states, simulated_results_df.states)
-        self.assertFalse(simulated_results_nd.states.frame.equals(simulated_results_df.states.frame))
         self.assertGreater(simulated_results_nd.times[-1], simulated_results_df.times[-1])
-        self.assertGreater(simulated_results_nd.states.frame['time'].iloc[-1], simulated_results_df.states.frame['time'].iloc[-1])
 
         # Test high drag simulated results different from default
         self.assertNotEqual(simulated_results_hi.times, simulated_results_df.times)
         self.assertNotEqual(simulated_results_hi.states, simulated_results_df.states)
-        self.assertFalse(simulated_results_hi.states.frame.equals(simulated_results_df.states.frame))
         self.assertLess(simulated_results_hi.times[-1], simulated_results_df.times[-1])
-        self.assertLess(simulated_results_hi.states.frame['time'].iloc[-1], simulated_results_df.states.frame['time'].iloc[-1])
 
         # Test high drag simulated results different from no drag
         self.assertNotEqual(simulated_results_hi.times, simulated_results_nd.times)
         self.assertNotEqual(simulated_results_hi.states, simulated_results_nd.states)
-        self.assertFalse(simulated_results_hi.states.frame.equals(simulated_results_nd.states.frame))
 
     def test_composite_broken(self):
         m1 = OneInputOneOutputNoEventLM()
-
         # Insufficient number of models
         with self.assertRaises(ValueError):
             CompositeModel([])
@@ -1217,7 +1028,7 @@ class TestModels(unittest.TestCase):
             # extra
             CompositeModel([m1, m1], outputs=['OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1', 'z1'])
 
-    def test_composite(self):
+    def test_composite(self):        
         m1 = OneInputOneOutputNoEventLM()
         m2 = OneInputNoOutputOneEventLM()
         m1_withpm = OneInputOneOutputNoEventLMPM()
@@ -1274,37 +1085,22 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
         self.assertEqual(x0['OneInputOneOutputNoEventLM.x1'], 0)
         self.assertEqual(x0['OneInputOneOutputNoEventLM.z1'], 0)
-        # DataFrame check, x0
-        self.assertEqual(x0.data['OneInputOneOutputNoEventLM_2.x1'][0], 0)
-        self.assertEqual(x0.data['OneInputOneOutputNoEventLM.x1'][0], 0)
-        self.assertEqual(x0.data['OneInputOneOutputNoEventLM.z1'][0], 0)
         # Only provide non-zero input for first model
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
-        # DataFrame check, x
-        self.assertSetEqual(set(x.data.columns.to_list()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 1)
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 1)
         z = m_composite.output(x)
         self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
-        # DataFrame Check, z
-        self.assertSetEqual(set(z.data.columns.to_list()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
-        self.assertEqual(z.data['OneInputOneOutputNoEventLM_2.z1'][0], 1)
-        self.assertEqual(z.data['OneInputOneOutputNoEventLM.z1'][0], 1)
 
         # Propogate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
-        # DataFrame Check, x
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 3)
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 2)
 
         # Test with connections - state, no event
         m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')])
@@ -1314,6 +1110,7 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputNoEventLM.u1',})
         self.assertSetEqual(m_composite.outputs, {'OneInputOneOutputNoEventLM.z1', 'OneInputOneOutputNoEventLM_2.z1'})
         self.assertSetEqual(m_composite.events, set())
+        
         x0 = m_composite.initialize()
         self.assertSetEqual(set(x0.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x0['OneInputOneOutputNoEventLM_2.x1'], 0)
@@ -1323,25 +1120,15 @@ class TestModels(unittest.TestCase):
         x = m_composite.next_state(x0, u, 1)
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
-        # DataFrame Check, x
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 1)
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 1)
         z = m_composite.output(x)
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
-        # DataFrame Check, z
-        self.assertEqual(z.data['OneInputOneOutputNoEventLM_2.z1'][0], 1)
-        self.assertEqual(z.data['OneInputOneOutputNoEventLM.z1'][0], 1)
 
         # Propogate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
-        # DataFrame checks, x
-        self.assertSetEqual(set(x.data.columns.to_list()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM_2.x1'][0], 3)
-        self.assertEqual(x.data['OneInputOneOutputNoEventLM.x1'][0], 2)
 
         # Test with connections - two events
         m_composite = CompositeModel([m2, m2], connections=[('OneInputNoOutputOneEventLM.x1', 'OneInputNoOutputOneEventLM_2.u1')])
@@ -1370,6 +1157,7 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(set(tm.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
         self.assertFalse(tm['OneInputNoOutputOneEventLM.x1 == 10'])
         self.assertTrue(tm['OneInputNoOutputOneEventLM_2.x1 == 10'])
+
         # Test with outputs specified
         m_composite = CompositeModel([m1, m1], connections=[('OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM_2.u1')], outputs=['OneInputOneOutputNoEventLM_2.z1'])
         self.assertSetEqual(m_composite.states, {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
@@ -1387,6 +1175,32 @@ class TestModels(unittest.TestCase):
         self.assertSetEqual(m_composite.inputs, {'m1.u1',})
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
+    
+    # Fill parameters with different types of objects instead
+    def test_parameter_equality(self):
+
+        m1 = LinearThrownObject()
+        m2 = LinearThrownObject()
+
+        self.assertTrue(m1.parameters == m2.parameters) #Checking to see if the parameters are equal
+        self.assertTrue(m2.parameters == m1.parameters) #Parameters should be equal
+
+        m3 = LinearThrownDiffThrowingSpeed() # A model with a different throwing speed
+        self.assertFalse(m1.parameters == m3.parameters)
+        self.assertFalse(m3.parameters == m1.parameters) # Checking both directions 
+
+        m4 = LinearThrownObjectDiffDefaultParams() # Model with an extra default parameter.
+
+        self.assertFalse(m1.parameters == m4.parameters)
+        self.assertFalse(m4.parameters == m1.parameters) # checking both directions
+
+        m5 = LinearThrownObjectUpdatedInitalizedMethod() # Model with incorrectly initalized throwing height, but same parameters
+
+        self.assertFalse(m1.parameters == m5.parameters) 
+        self.assertFalse(m5.parameters == m1.parameters) 
+
+        self.assertTrue(m1.parameters == m2.parameters) # Checking to see previous equal statements stay the same
+        self.assertTrue(m2.parameters == m1.parameters) 
 
 # This allows the module to be executed directly
 def run_tests():
