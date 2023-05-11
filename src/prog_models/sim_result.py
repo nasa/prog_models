@@ -36,7 +36,7 @@ class SimResult(UserList):
     @property
     def frame(self) -> pd.DataFrame:
         """
-            Return -- pd.DataFrame, A pandas DataFrame representing the SimResult data
+            pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
         if len(self.data) > 0:  #
             self._frame = pd.concat([
