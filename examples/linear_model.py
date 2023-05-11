@@ -12,7 +12,7 @@ from prog_models import LinearModel
 
 class ThrownObject(LinearModel):
     """
-    Model that similates an object thrown into the air without air resistance
+    Model that simulates an object thrown into the air without air resistance
 
     Events (2)
         | falling: The object is falling
