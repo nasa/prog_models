@@ -81,7 +81,6 @@ class DictLikeMatrixWrapper():
         sets a row at the key given
         """
         index = self._keys.index(key)  # the int value index for the key given
-        self.matrix[index] = atleast_1d(value)
         self.data.loc[:, key] = float64(value)
 
     def __delitem__(self, key: str) -> None:
@@ -96,7 +95,7 @@ class DictLikeMatrixWrapper():
         """
         add another matrix to the existing matrix
         """
-        rowadded = self.data.add(other.data).T.to_numpy(dtype=float64)
+        rowadded = self.data.add(other.data).values.T
         return DictLikeMatrixWrapper(self._keys, rowadded)
 
     def __iter__(self):
