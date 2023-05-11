@@ -122,7 +122,7 @@ class SimResult(UserList):
         self.data = []
         self._frame = None
 
-    def time(self, index: int) -> float:
+    def get_time(self, index: int) -> float:
         """Get time for data point at index `index`
 
         Args:
