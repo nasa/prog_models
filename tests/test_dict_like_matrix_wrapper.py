@@ -38,7 +38,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertEqual(c1['a'], -1.0)
         # Setting by matrix
         c1.matrix[1][0] = -2.0
-        c1.update({'b': -2.0})
         self.assertTrue(np.all(c1.matrix == np.array([[-1.], [-2.]])))
         self.assertEqual(c1['b'], -2.0)
         # Pickling
