@@ -345,7 +345,8 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
             np.atleast_1d(x['wRadial']),
             np.atleast_1d(x['wThrust'])
         ])
-        return self.StateContainer(np.vstack((next_x.matrix, np_ex)))
+        next_x.matrix = np.vstack((next_x.matrix, np_ex))
+        return next_x
 
 
 
