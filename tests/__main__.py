@@ -16,6 +16,7 @@ from tests.test_direct import main as direct_main
 from tests.test_linear_model import main as linear_main
 from tests.test_composite import main as composite_main
 from tests.test_serialization import main as serialization_main
+from tests.test_estimate_params import main as estimate_params_main
 from tests.test_ensemble import main as ensemble_main
 
 if __name__ == '__main__':
@@ -40,11 +41,10 @@ if __name__ == '__main__':
         was_successful = False
 
     try:
-    
         examples_main()
     except Exception:
         was_successful = False
-        
+    
     try:
         battery_main()
     except Exception:
@@ -102,6 +102,11 @@ if __name__ == '__main__':
 
     try:
         serialization_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        estimate_params_main()
     except Exception:
         was_successful = False
 

@@ -47,7 +47,7 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -162,7 +162,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -244,7 +244,7 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -326,7 +326,7 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
-        x = [m.StateContainer(x_i) for x_i in x]
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]

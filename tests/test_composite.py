@@ -8,9 +8,6 @@ import pickle
 import sys
 import unittest
 
-# This ensures that the directory containing ProgModelTemplate is in the python search directory
-sys.path.append(join(dirname(__file__), ".."))
-
 from prog_models import *
 from prog_models.models import *
 from prog_models.models.test_models.linear_models import (
@@ -218,7 +215,7 @@ class TestCompositeModel(unittest.TestCase):
         self.assertSetEqual(m_composite.events, set())
         x0 = m_composite.initialize()
         z = m_composite.output(x0)
-        self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', })
+        self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1'})
 
         # With Names
         m_composite = CompositeModel([('m1', m1), ('m2', m2)], connections=[('m1.x1', 'm2.u1')])
