@@ -6,7 +6,6 @@ import numpy as np
 import warnings
 
 from prog_models import PrognosticsModel
-from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class CentrifugalPumpBase(PrognosticsModel):
