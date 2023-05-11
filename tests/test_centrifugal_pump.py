@@ -180,7 +180,7 @@ class TestCentrifugalPump(unittest.TestCase):
         self.assertEqual(CentrifugalPump, CentrifugalPumpWithWear)
         # CentrifugalPump is alias for "with wear"
 
-    def test_centrifugal_pump_namedtuple_access(self):  # FAILED
+    def test_centrifugal_pump_namedtuple_access(self):
         pump = CentrifugalPumpWithWear(process_noise=0)
 
         cycle_time = 3600
