@@ -97,13 +97,13 @@ class ThrownObject(PrognosticsModel):
             })
     
     def next_state(self, x: dict, u: dict, dt: float):
-        next_x =  x['x'] + x['v']*dt
+        next_x = x['x'] + x['v']*dt
         drag_acc = self.parameters['lumped_param'] * x['v'] * x['v']
         next_v = x['v'] + (self.parameters['g'] - drag_acc*np.sign(x['v']))*dt
         return self.StateContainer(np.array([
-            np.atleast_1d(next_x),
-            np.atleast_1d(next_v)  # Acceleration of gravity
-        ]))
+                np.atleast_1d(next_x),
+                np.atleast_1d(next_v)  # Acceleration of gravity
+            ]))
 
     def output(self, x: dict):
         return self.OutputContainer(np.array([[x['x']]]))

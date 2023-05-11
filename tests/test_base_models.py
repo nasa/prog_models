@@ -78,7 +78,7 @@ class MockModelWithDerived(MockProgModel):
 
 class TestModels(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = io.StringIO()
 
     def tearDown(self):

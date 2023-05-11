@@ -10,7 +10,7 @@ from prog_models.data_models import DMDModel
 
 class TestSerialization(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):

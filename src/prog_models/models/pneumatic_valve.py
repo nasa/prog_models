@@ -432,16 +432,13 @@ class PneumaticValveWithWear(PneumaticValveBase):
         # missing - this is due to the behavior of subclassed models calling
         # their parent functions.
 
-        next_ext = np.array([
+        next_x.matrix = np.vstack((next_x.matrix, np.array([
             np.atleast_1d(x['wb']),
             np.atleast_1d(x['wi']),
             np.atleast_1d(x['wk']),
             np.atleast_1d(x['wr']),
             np.atleast_1d(x['wt'])
-        ])
-        next_x_keys_ext = ['wb', 'wi', 'wk', 'wr', 'wt']
-        extend_df = DictLikeMatrixWrapper(next_x_keys_ext, next_ext)
-        next_x.extend(extend_df)
+        ])))
         return next_x
 
 

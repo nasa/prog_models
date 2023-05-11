@@ -20,12 +20,12 @@ This file includes tests that are too long to be run as part of the automated te
 
 
 class TestManual(unittest.TestCase):
-    """def setUp(self):
-        # set stdout (so it wont print)
+    def setUp(self):
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def test_nasa_battery_download(self):
         (desc, data) = nasa_battery.load_data(1)

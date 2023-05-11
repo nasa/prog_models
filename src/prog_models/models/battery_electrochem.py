@@ -2,6 +2,8 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from copy import deepcopy
+from typing import Union
+
 import numpy as np
 from scipy.optimize import fsolve
 import warnings
@@ -640,9 +642,8 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'qMax': (0, np.inf)
     }
 
-    def dx(self, _, u : dict):
+    def dx(self, _, u: dict):
         params = self.parameters
-
         return self.StateContainer(np.array([
             np.atleast_1d(params['wq'] * abs(u['i'])),
             np.atleast_1d(params['wr'] * abs(u['i'])),
@@ -729,7 +730,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
 
-    def dx(self, x : dict, u : dict):
+    def dx(self, x: Union[dict, "StateContainer"], u : dict):
         # Set EOD Parameters (corresponding to health)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -741,9 +742,10 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
         x_dot2 = BatteryElectroChemEOL.dx(self, x, u)
         np_state_matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
+        # updating StateContainer object
         return self.StateContainer(np_state_matrix)
 
-    def output(self, x : dict) -> dict:
+    def output(self, x: dict) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['qMobile'] = x['qMax']

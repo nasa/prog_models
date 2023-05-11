@@ -233,7 +233,7 @@ class CentrifugalPumpBase(PrognosticsModel):
         wdot = (Te-friction-backTorque)/params['I']
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
-        return self.StateContainer(np.array([
+        state_array = np.array([
             np.atleast_1d(x['w'] + wdot * dt),
             np.atleast_1d(x['Q'] + Qdot * dt),
             np.atleast_1d(x['Tt'] + Ttdot * dt),
@@ -243,7 +243,9 @@ class CentrifugalPumpBase(PrognosticsModel):
             np.atleast_1d(x['rRadial'] + rRadialdot * dt),
             np.atleast_1d(x['rThrust'] + rThrustdot * dt),
             np.atleast_1d(QLeak)
-        ]))
+        ])
+
+        return self.StateContainer(state_array)
 
     def output(self, x: dict):
         Qout = np.maximum(0, x['Q']-x['QLeak'])
@@ -344,10 +346,8 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
             np.atleast_1d(x['wRadial']),
             np.atleast_1d(x['wThrust'])
         ])
-        keys_ex = ['wA', 'wRadial', 'wThrust']
-        extend_next = DictLikeMatrixWrapper(keys_ex, np_ex)
-        next_x.extend(extend_next)  # extends dictionary for model
-        return next_x
+        return self.StateContainer(np.vstack((next_x.matrix, np_ex)))
+
 
 
 CentrifugalPump = CentrifugalPumpWithWear

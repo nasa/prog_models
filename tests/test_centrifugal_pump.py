@@ -9,7 +9,7 @@ from prog_models.models.centrifugal_pump import CentrifugalPump, CentrifugalPump
 
 class TestCentrifugalPump(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
