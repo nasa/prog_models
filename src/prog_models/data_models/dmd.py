@@ -415,12 +415,13 @@ class DMDModel(LinearModel, DataModel):
 
         return m_dmd
 
-    def next_state(self, x, u, _):   
+    def next_state(self, x, u, _):
+        # using current state values to calculate the values for the next StateContainer
         x.matrix = np.matmul(self.A, x.matrix) + self.E
         if self.B.shape[1] != 0:
            x.matrix += np.matmul(self.B, u.matrix)
         
-        return self.StateContainer(x.matrix)
+        return x    # return updated StateContainer, x
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
         # Save keyword arguments same as DMD training for approximation 
