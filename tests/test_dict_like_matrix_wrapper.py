@@ -22,7 +22,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
-        print(list(c1.values()), [1., 2.])
         self.assertListEqual(list(c1.values()), [1., 2.])
         self.assertListEqual(list(c1.items()), [('a', 1.), ('b', 2.)])
         self.assertEqual(c1['a'], 1)
