@@ -145,9 +145,9 @@ class SimResult(UserList):
             return np.array([[]], dtype=np.float64)
         if keys is not None:
             if all(item in self.frame.columns.to_list() for item in keys) is True:
-                with_keys_numpy = self.frame.drop(['time'], axis=1)[keys].to_numpy(dtype=np.float64)
-                return with_keys_numpy
-        return self.frame.drop(['time'], axis=1).to_numpy(dtype=np.float64)
+                return self.frame[keys].to_numpy(dtype=np.float64)
+            else:
+                raise KeyError(f'Every key in keys must be present in SimResult. Missing {key}')
 
     def plot(self, **kwargs) -> figure:
         """
