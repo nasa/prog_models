@@ -1,12 +1,13 @@
+# Copyright © 2021 United States Government as represented by the Administrator of the
+# National Aeronautics and Space Administration.  All Rights Reserved.
+
 """
 Controllers
 """
 
 # IMPORTS
 # ========
-# from utilities.imports_ import np
 import numpy as np
-
 
 # LQR general function
 # ====================
@@ -70,6 +71,13 @@ class LQR():
     """ Linear Quadratic Regulator"""
     def __init__(self, x_ref, vehicle, **kwargs):
 
+        # Check correct arguments:
+        if not isinstance(x_ref, dict):
+            raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
+        for vals in x_ref.values():
+            if not isinstance(vals, np.ndarray):
+                raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
+        
         self.type      = 'LQR'                  # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
         self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
@@ -100,6 +108,10 @@ class LQR():
     
     def __call__(self, t, x=None):
 
+        # Check that build_scheduled_control has been called
+        if not hasattr(self,'scheduled_states'):
+            raise TypeError("Scheduled states do not exist. Controller's build_scheduled_control function must be called before using controller to simulate.")
+
         if x is None:
             x_k = np.zeros((self.n_states, 1))
         else:
@@ -122,6 +134,7 @@ class LQR():
         u[0]         += self.ss_input
         u[0]  = min(max([0, u[0]]), self.vehicle_max_thrust)
         return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]}
+        # return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3], 'mission_complete': t/self.ref_traj['t'][-1]}
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
@@ -143,12 +156,7 @@ class LQR():
 
         n, m = state_vector_vals.shape
         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        # if self.type == 'LQR':
         self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
-        # elif self.type == 'LQR_I':
-        #     self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
-        # else: 
-        #     raise ProgModelInputException("Controller {} is not supported. Supported controllers: {}".format(self.type, ['LQR', 'LQR_I']))
         self.scheduled_states = state_vector_vals
 
         for j in range(m):

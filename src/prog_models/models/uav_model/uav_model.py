@@ -9,7 +9,7 @@ from typing import Callable
 from prog_models.prognostics_model import PrognosticsModel
 from .vehicles import AircraftModels
 from prog_models.aux_fcns.traj_gen_utils import geometry as geom
-from prog_models.exceptions import ProgModelInputException
+from prog_models.exceptions import ProgModelInputException, ProgModelException
 
 class UAVGen(PrognosticsModel):
     """
@@ -87,19 +87,6 @@ class UAVGen(PrognosticsModel):
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
-        flight_file : Optional, str
-          Text file to specify waypoint information. Necessary columns must be in the following
-          order with units specified: latitude (labeled 'lat_deg' or 'lat_rad'), longitude 
-          (labeled 'lon_deg' or 'lon_rad'), and altitude (labeled 'alt_ft' or 'alt_m'). An 
-          additional column for ETAs may be included (labeled 'time_unix). Note that while
-          'flight_file' is optional, either 'flight_file' or 'flight_plan' must be specified.
-        flight_plan : Optional, dict[str, numpy array]
-          Dictionary to specify waypoint information. Necessary keys must include the following
-          with units specified: latitude ('lat_deg' or 'lat_rad'), longitude 
-          (labeled 'lon_deg' or 'lon_rad'), and altitude (labeled 'alt_ft' or 'alt_m'). An 
-          additional key for ETAs may be included (labeled 'time_unix). Each key must correspond
-          to a numpy array of values. Note that while 'flight_plan' is optional, either 
-          'flight_file' or 'flight_plan' must be specified.
         dt : Optional, float
           Time step in seconds for trajectory generation
         gravity : Optional, float
@@ -122,6 +109,7 @@ class UAVGen(PrognosticsModel):
     events = ['TrajectoryComplete']
     inputs = ['T','mx','my','mz']
     states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t']
+    # states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t', 'mission_complete']
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
     is_vectorized = True
 
@@ -182,7 +170,8 @@ class UAVGen(PrognosticsModel):
           'p': 0, #self.ref_traj.angular_velocity[0, 0],
           'q': 0, #self.ref_traj.angular_velocity[0, 1],
           'r': 0, #self.ref_traj.angular_velocity[0, 2],
-          't': 0
+          't': 0,
+          # 'mission_complete': 0
           })
     
     def dx(self, x : dict, u : dict):
@@ -248,7 +237,8 @@ class UAVGen(PrognosticsModel):
         dxdt[10] = ((Izz - Ixx) * p * r + tq * self.vehicle_model.geom['arm_length']) / Iyy     # Angular acceleration along body y-axis: pitch rate
         dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz                   # Angular acceleration along body z-axis: yaw rate
         dxdt[12] = 1                                                                            # Auxiliary time variable
-
+        # dxdt[13] = (u['mission_complete'] - x['mission_complete'])/self.parameters['dt']
+        
         # Set vehicle state:
         state_temp = np.array([x[iter] for iter in x.keys()])
         self.vehicle_model.set_state(state=state_temp + dxdt*self.parameters['dt'])
@@ -355,6 +345,10 @@ class UAVGen(PrognosticsModel):
             }
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+
+        # Check that reference trajectory has been specified
+        if self.parameters['ref_traj'] is None:
+          raise ProgModelException("Reference trajectory must be specified in vehicle parameters to simulate vehicle.")
 
         # Check for appropriately defined dt - must be same as vehicle model 
         if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:

@@ -8,9 +8,7 @@ Functions to extract user-defined waypoint information and convert to appropriat
 import numpy as np
 import datetime as dt
 
-# from ..utilities import loadsavewrite_utils as loadsave
 from prog_models.aux_fcns.traj_gen_utils import loadsave_utils as loadsave
-from prog_models.exceptions import ProgModelInputException
 
 DEG2RAD = np.pi/180.0
 FEET2MET = 0.3048
@@ -55,16 +53,16 @@ def convert_dict_inputs(input_dict):
 
     # Check units and return warnings if incorrect:
     if 'lat_deg' not in input_dict.keys() and 'lat_rad' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints latitude must be defined in degrees (with lat_deg) or radians (with lat_rad).")
+        raise TypeError("Waypoints latitude must be defined in degrees (with lat_deg) or radians (with lat_rad).")
     elif 'lon_deg' not in input_dict.keys() and 'lon_rad' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints longitude must be defined in degrees (with lon_deg) or radians (with lon_rad).")
+        raise TypeError("Waypoints longitude must be defined in degrees (with lon_deg) or radians (with lon_rad).")
     elif 'alt_ft' not in input_dict.keys() and 'alt_m' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints altitude must be defined in feet (with alt_ft) or meters (with alt_m).")
+        raise TypeError("Waypoints altitude must be defined in feet (with alt_ft) or meters (with alt_m).")
     if len(input_dict.keys()) > 3 and 'time_unix' not in input_dict.keys():
-        raise ProgModelInputException("Waypoints input incorrectly. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
+        raise TypeError("Waypoints input incorrectly. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
     input_shape = [input_dict[key].shape for key in input_dict.keys()]
     if all(input_shape[iter] == input_shape[0] for iter in range(len(input_shape))) == False:
-        raise ProgModelInputException("Waypoints input incorectly. Arrays of lat/lon/alt/time have different dimensions.")
+        raise TypeError("Waypoints input incorectly. Arrays of lat/lon/alt/time have different dimensions.")
 
     # Convert, if necessary
     if 'lat_deg' in input_dict.keys():

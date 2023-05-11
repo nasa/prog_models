@@ -6,8 +6,6 @@ from warnings import warn
 
 from prog_models.prognostics_model import PrognosticsModel
 from .traj_gen_utils import route, trajectory
-from prog_models.exceptions import ProgModelInputException
-
 
 def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     """
@@ -53,15 +51,15 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     Returns:
     -------
-        ref_traj:  
+        ref_traj: dict[str, np.array]
             Reference state vector as a function of time 
     """
 
     # Check for waypoints and vehicle information
     if waypoints is None:
-        raise ProgModelInputException("No waypoints or flight plan information were provided to generate reference trajectory.")
+        raise TypeError("No waypoints or flight plan information were provided to generate reference trajectory.")
     if vehicle is None:
-        raise ProgModelInputException("No vehicle model was provided to generate reference trajectory.")
+        raise TypeError("No vehicle model was provided to generate reference trajectory.")
 
     parameters = {  # Set to defaults
 
@@ -100,7 +98,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     if isinstance(waypoints,dict): 
         for flight_plan_element in waypoints.values(): 
             if not isinstance(flight_plan_element, np.ndarray):
-                raise ProgModelInputException("When specifying waypoints with type dict, must define lat/lon/alt using numpy arrays. Type {} was given".format(type(flight_plan_element)))
+                raise TypeError("When specifying waypoints with type dict, must define lat/lon/alt using numpy arrays. Type {} was given".format(type(flight_plan_element)))
         
         # Extract data from flight plan: latitude, longitude, altitude, time stamps
         flightplan = trajectory.load.convert_dict_inputs(waypoints)
@@ -117,7 +115,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Option 3: incorrect format is passed for waypoints 
     else:
-        raise ProgModelInputException("Waypoints have incorrect format. Must be defined as dictionary or string specifying text file.")
+        raise TypeError("Waypoints have incorrect format. Must be defined as dictionary or string specifying text file.")
 
     # Generate route
     # ==============
@@ -134,7 +132,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
         # Case 2: ETAs not specified; speeds must be provided  
         # Check that speeds have been provided:
         if parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None:
-            raise ProgModelInputException("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
+            raise TypeError("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
         # Build route (set of waypoints with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = parameters) 
@@ -168,6 +166,6 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
         x_ref['r'] = ref_traj.angular_velocity[:,2]
         x_ref['t'] = ref_traj.time
     else: 
-        raise ProgModelInputException("Reference trajectory format is not yet configured for this vehicle type.")
+        raise TypeError("Reference trajectory format is not yet configured for this vehicle type.")
 
     return x_ref
