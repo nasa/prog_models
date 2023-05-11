@@ -36,9 +36,7 @@ class SimResult(UserList):
     @property
     def frame(self) -> pd.DataFrame:
         """
-        Getter -- creating multi row pd.DataFrame from data list of dict
-
-            Return: pd.DataFrame, of all the data and times
+            Return -- pd.DataFrame, A pandas DataFrame representing the SimResult data
         """
         if len(self.data) > 0:  #
             self._frame = pd.concat([
