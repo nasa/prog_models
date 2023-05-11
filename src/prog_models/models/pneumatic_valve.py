@@ -311,19 +311,6 @@ class PneumaticValveBase(PrognosticsModel):
             pos = [calc_x(xi, force, params['Ls'], new_x_i) for xi, force, new_x_i in zip(x['x'], pistonForces, new_x)]
             dp = [u['pL'] - u['pR']] * len(x['x'])
 
-        state_array = np.array([
-            np.atleast_1d(x['Aeb'] + params['wb'] * dt),     # Aeb
-            np.atleast_1d(x['Aet'] + params['wt'] * dt),     # Aet
-            np.atleast_1d(x['Ai'] + Aidot * dt),             # Ai
-            np.atleast_1d(x['k'] + kdot * dt),               # k
-            np.atleast_1d(x['mBot'] + mBotdot * dt),         # mBot
-            np.atleast_1d(x['mTop'] + mTopdot * dt),         # mTop
-            np.atleast_1d(x['r'] + rdot * dt),               # r
-            np.atleast_1d(vel),                              # v
-            np.atleast_1d(pos),                              # x
-            np.atleast_1d(dp)                                # pL - pR
-        ])
-        state_keys = ['Aeb', 'Aet', 'Ai', 'k', 'mBot', 'mTop', 'r','v', 'x', 'pDiff', 'wb', 'wi', 'wk', 'wr', 'wt']
         return self.StateContainer(np.array([
             np.atleast_1d(x['Aeb'] + params['wb'] * dt),     # Aeb
             np.atleast_1d(x['Aet'] + params['wt'] * dt),     # Aet
