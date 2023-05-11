@@ -13,6 +13,8 @@ from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
+from prog_models.utils import ProgressBar
+from prog_models.utils import calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
