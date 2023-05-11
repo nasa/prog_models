@@ -730,7 +730,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
 
-    def dx(self, x: Union[dict, "StateContainer"], u : dict):
+    def dx(self, x: StateContainer, u : dict):
         # Set EOD Parameters (corresponding to health)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
