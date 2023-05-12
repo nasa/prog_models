@@ -48,7 +48,7 @@ if __name__ == '__main__':
         print("\Benchmarking Failed: ", e)
         was_successful = False
 
-    print("\n\nTesting individual exectution of test files")
+    print("\n\nTesting individual execution of test files")
 
     # Run tests individually to test them and make sure they can be executed individually
     try:

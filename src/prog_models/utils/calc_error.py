@@ -423,7 +423,6 @@ def DTW(m, times, inputs, outputs, **kwargs):
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     # Worth checking if this is needed for the scope of our algorithm.
-
                     # When model goes unstable after cutoffThreshold, we want to match the last stable observed value with the 
                         # equivalent user-provided output by truncating our user-provided series to match the length of our observed series.
                     # outputs = list(outputs)
@@ -434,7 +433,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
                     break
             simulated.append(z_obs)
             counter += 1
-        
+
     from scipy.spatial.distance import euclidean
 
     def dtw_helper(x):
@@ -444,7 +443,6 @@ def DTW(m, times, inputs, outputs, **kwargs):
             for key in index.keys():
                 inner_list.append(index.get(key))
             transform.append(inner_list)
-        
         return transform
 
     simulated, observed = dtw_helper(simulated), dtw_helper(outputs)
