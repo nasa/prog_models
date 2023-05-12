@@ -194,7 +194,6 @@ class DictLikeMatrixWrapper():
 
         returns: a string of dictionaries containing all the keys and associated matrix values
         """
-        warn('DictLikeMatrix will be deprecated after version 1.5 of ProgPy and replaced by Pandas.', DeprecationWarning, stacklevel=2)
         if len(self.matrix) > 0 and len(
                 self.matrix[0]) == 1:  # the matrix has rows and the first row/list has one value in it
             return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
