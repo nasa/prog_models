@@ -339,21 +339,3 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if self.__data is None:
             self.__data = [self.fcn(x) for x in self.states]
         return self.__data
-
-    @property
-    def frame(self) -> pd.DataFrame:
-        """
-        Getter -- creating multi row pd.DataFrame from data list of dict
-
-            Return: pd.DataFrame, of all the data and times
-        """
-        if len(self.data) > 0:  #
-            self._frame = pd.concat([
-                pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
-            ], ignore_index=True, axis=0)
-        else:
-            self._frame = pd.DataFrame()
-        if self.times is not None:
-            self._frame.insert(0, "time", self.times)
-            self._frame.reindex()
-        return self._frame
