@@ -143,12 +143,13 @@ class SimResult(UserList):
         """
         if len(self.data) == 0:
             return np.array([[]], dtype=np.float64)
-        if keys is not None:
-            if all(item in self.frame.columns.to_list() for item in keys) is True:
-                return self.frame[keys].to_numpy(dtype=np.float64)
-            else:
-                raise KeyError(f'Every key in keys must be present in SimResult. Missing {key}')
-
+        if len(self.data[0]) == 0:
+            return np.array([[] for _ in self.data], dtype=np.float64)
+        if isinstance(self.data[0], DictLikeMatrixWrapper) and keys is None:
+            return np.array([u_i.matrix[:, 0] for u_i in self.data], dtype=np.float64)
+        if keys is None:
+            keys = self.data[0].keys()
+        return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
