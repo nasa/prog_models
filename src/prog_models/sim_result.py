@@ -38,6 +38,7 @@ class SimResult(UserList):
         """
             pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
+        warn('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
         if len(self.data) > 0:  #
             self._frame = pd.concat([
                 pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
