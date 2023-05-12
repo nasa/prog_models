@@ -2,16 +2,14 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 import numpy as np
-import pandas as pd
 from typing import Union
 
 from prog_models.exceptions import ProgModelTypeError
 
-
 class DictLikeMatrixWrapper():
     """
-    A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessable. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
-
+    A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessible. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
+    
     Arguments:
         keys -- list: The keys of the dictionary. e.g., model.states or model.inputs
         data -- dict or numpy array: The contained data (e.g., :term:`input`, :term:`state`, :term:`output`). If numpy array should be column vector in same order as keys
@@ -21,7 +19,7 @@ class DictLikeMatrixWrapper():
         """ Initializes the container
         """
         if not isinstance(keys, list):
-            keys = list(keys)  # creates list with keys
+            keys = list(keys)   # creates list with keys
         self._keys = keys.copy()
         if isinstance(data, np.matrix):
             self.matrix = np.array(data, dtype=np.float64)
@@ -30,23 +28,13 @@ class DictLikeMatrixWrapper():
                 data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
-            self.matrix = np.array(
-                [
-                    np.ravel([data[key]]) if key in data else [None] for key in keys
-                ], dtype=np.float64)
+          # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
+          self.matrix = np.array(
+             [
+                  np.ravel([data[key]]) if key in data else [None] for key in keys
+              ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
-
-    @property
-    def frame(self) -> pd.DataFrame:
-        """
-            frame -- Getter for pd.DataFrame
-
-            Returns: pd.DataFrame
-        """
-        self._frame = pd.DataFrame(self.matrix.T, columns=self._keys)
-        return self._frame
 
     def __reduce__(self):
         """
@@ -58,18 +46,19 @@ class DictLikeMatrixWrapper():
         """
         get all values associated with a key, ex: all values of 'i'
         """
-        row = self.matrix[self._keys.index(key)]  # creates list from a row of matrix
-        if len(row) == 1:  # list contains 1 value, returns that value (non-vectorized)
+        row = self.matrix[self._keys.index(key)]    #creates list from a row of matrix
+        if len(row) == 1:   #list contains 1 value, returns that value (non-vectorized)
             return row[0]
-        return row  # returns entire row/list (vectorized case)
+        return row #returns entire row/list (vectorized case)
 
     def __setitem__(self, key: str, value: int) -> None:
         """
         sets a row at the key given
         """
-        index = self._keys.index(key)  # the int value index for the key given
+        index = self._keys.index(key)   #the int value index for the key given
         self.matrix[index] = np.atleast_1d(value)
 
+    
     def __delitem__(self, key: str) -> None:
         """
         removes row associated with key
@@ -99,11 +88,9 @@ class DictLikeMatrixWrapper():
         """
         Compares two DictLikeMatrixWrappers (i.e. *Containers) or a DictLikeMatrixWrapper and a dictionary
         """
-        if isinstance(other, dict):  # checks that the list of keys for each matrix match
-            list_key_check = (list(self.keys()) == list(
-                other.keys()))  # checks that the list of keys for each matrix are equal
-            matrix_check = (self.matrix == np.array(
-                [[other[key]] for key in self._keys])).all()  # checks to see that each row matches
+        if isinstance(other, dict): #checks that the list of keys for each matrix match
+            list_key_check = (list(self.keys()) == list(other.keys()))  #checks that the list of keys for each matrix are equal
+            matrix_check = (self.matrix == np.array([[other[key]] for key in self._keys])).all()    #checks to see that each row matches
             return list_key_check and matrix_check
         list_key_check = self.keys() == other.keys()
         matrix_check = (self.matrix == other.matrix).all()
@@ -145,17 +132,15 @@ class DictLikeMatrixWrapper():
         """
         returns array of matrix values
         """
-        if len(self.matrix) > 0 and len(
-                self.matrix[0]) == 1:  # if the first row of the matrix has one value (i.e., non-vectorized)
-            return np.array([value[0] for value in self.matrix])  # the value from the first row
-        return self.matrix  # the matrix (vectorized case)
+        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:   #if the first row of the matrix has one value (i.e., non-vectorized)
+            return np.array([value[0] for value in self.matrix])    #the value from the first row
+        return self.matrix    # the matrix (vectorized case)
 
     def items(self) -> zip:
         """
         returns keys and values as a list of tuples (for iterating)
         """
-        if len(self.matrix) > 0 and len(
-                self.matrix[0]) == 1:  # first row of the matrix has one value (non-vectorized case)
+        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:   #first row of the matrix has one value (non-vectorized case)
             return zip(self._keys, np.array([value[0] for value in self.matrix]))
         return zip(self._keys, self.matrix)
 
@@ -163,11 +148,11 @@ class DictLikeMatrixWrapper():
         """
         merges other DictLikeMatrixWrapper, updating values
         """
-        for key in other.keys():
-            if key in self._keys:  # checks to see if every key in 'other' is in 'self'
+        for key in other.keys():   
+            if key in self._keys:   #checks to see if every key in 'other' is in 'self'
                 # Existing key
                 self[key] = other[key]
-            else:  # else it isn't it is appended to self._keys list
+            else:   #else it isn't it is appended to self._keys list
                 # A new key!
                 self._keys.append(key)
                 self.matrix = np.vstack((self.matrix, np.array([other[key]])))
@@ -190,7 +175,12 @@ class DictLikeMatrixWrapper():
 
         returns: a string of dictionaries containing all the keys and associated matrix values
         """
-        if len(self.matrix) > 0 and len(
-                self.matrix[0]) == 1:  # the matrix has rows and the first row/list has one value in it
+        if len(self.matrix) > 0 and len(self.matrix[0]) == 1:   #the matrix has rows and the first row/list has one value in it
             return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
-        return str(dict(zip(self._keys, self.matrix)))
+        return str(dict(zip(self._keys, self.matrix)))  
+
+InputContainer = DictLikeMatrixWrapper
+
+StateContainer = DictLikeMatrixWrapper
+
+OutputContainer = DictLikeMatrixWrapper

@@ -13,8 +13,9 @@ from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
-from prog_models.utils import ProgressBar, calc_error
-from prog_models.utils.containers import DictLikeMatrixWrapper
+from prog_models.utils import ProgressBar
+from prog_models.utils import calc_error
+from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
 from prog_models.utils.parameters import PrognosticsModelParameters
 from prog_models.utils.serialization import CustomEncoder, custom_decoder
@@ -1084,13 +1085,13 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
+    def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
             times (list[float]): array of times for each sample
-            inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-            outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+            inputs (list[InputContainer]): array of input dictionaries where input[x] corresponds to time[x]
+            outputs (list[OutputContainer]): array of output dictionaries where output[x] corresponds to time[x]
         
         Keyword Args:
             method (str, optional): Error method to use. Supported methods include:
@@ -1100,7 +1101,7 @@ class PrognosticsModel(ABC):
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
             x0 (dict, optional): Initial state
-            dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+            dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to time between samples.
             stability_tol (double, optional): Configurable parameter.
                 Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
                 In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
@@ -1137,7 +1138,8 @@ class PrognosticsModel(ABC):
         # If we get here, method is not supported
         raise ProgModelInputException(f"Error method '{method}' not supported")
     
-    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times = None, inputs = None, outputs = None, method = 'nelder-mead', **kwargs) -> None:
+    def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times: List[float] = None, inputs: List[InputContainer] = None,
+                        outputs: List[OutputContainer] = None, method: str = 'nelder-mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
 
         Keyword Args:
