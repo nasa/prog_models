@@ -76,7 +76,6 @@ class DictLikeMatrixWrapper():
         """
         removes row associated with key
         """
-        warn('delitem will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
         self.matrix = np.delete(self.matrix, self._keys.index(key), axis=0)
         self._keys.remove(key)
 
