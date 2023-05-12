@@ -101,7 +101,7 @@ class DictLikeMatrixWrapper():
         """
         Compares two DictLikeMatrixWrappers (i.e. *Containers) or a DictLikeMatrixWrapper and a dictionary
         """
-        warn('eq will be deprecated after version 1.5 of ProgPy and will be replaced with pd.DataFrame.equals and pd.Series.equals.', DeprecationWarning, stacklevel=2)
+        warn('Behavior of '==' operator will change after version 1.5 of ProgPy. New behavior will return element wise equality as a new series. To check if two data frames are equals use pd.DataFrame.equals and pd.Series.equals.', DeprecationWarning, stacklevel=2)
         if isinstance(other, dict):  # checks that the list of keys for each matrix match
             list_key_check = (list(self.keys()) == list(
                 other.keys()))  # checks that the list of keys for each matrix are equal
