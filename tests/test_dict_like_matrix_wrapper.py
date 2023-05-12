@@ -6,8 +6,6 @@ import pickle
 import sys
 import unittest
 
-from numpy import float64
-
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models import ProgModelTypeError
 
