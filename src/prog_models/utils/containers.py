@@ -95,7 +95,6 @@ class DictLikeMatrixWrapper():
         """
         returns the length of key list
         """
-        warn('len will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
         return len(self._keys)
 
     def __eq__(self, other: "DictLikeMatrixWrapper") -> bool:
