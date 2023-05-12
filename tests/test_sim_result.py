@@ -29,7 +29,7 @@ class TestSimResult(unittest.TestCase):
         self.assertListEqual(list(result), state)
         self.assertListEqual(result.times, time)
         for i in range(5):
-            self.assertEqual(result.get_time(i), time[i])
+            self.assertEqual(result.time(i), time[i])
             self.assertEqual(result[i], state[i])
         try:
             tmp = result[5]
@@ -257,18 +257,18 @@ class TestSimResult(unittest.TestCase):
         time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
-        self.assertEqual(result.get_time(0), result.times[0])
-        self.assertEqual(result.get_time(1), result.times[1])
-        self.assertEqual(result.get_time(2), result.times[2])
-        self.assertEqual(result.get_time(3), result.times[3])
-        self.assertEqual(result.get_time(4), result.times[4])
+        self.assertEqual(result.time(0), result.times[0])
+        self.assertEqual(result.time(1), result.times[1])
+        self.assertEqual(result.time(2), result.times[2])
+        self.assertEqual(result.time(3), result.times[3])
+        self.assertEqual(result.time(4), result.times[4])
 
-        self.assertRaises(TypeError, result.get_time, )  # Test no input given
-        self.assertRaises(TypeError, result.get_time, "0")  # Tests specifying an invalid index type
-        self.assertRaises(TypeError, result.get_time, [0, 1])
-        self.assertRaises(TypeError, result.get_time, {})
-        self.assertRaises(TypeError, result.get_time, set())
-        self.assertRaises(TypeError, result.get_time, 1.5)
+        self.assertRaises(TypeError, result.time, )  # Test no input given
+        self.assertRaises(TypeError, result.time, "0")  # Tests specifying an invalid index type
+        self.assertRaises(TypeError, result.time, [0, 1])
+        self.assertRaises(TypeError, result.time, {})
+        self.assertRaises(TypeError, result.time, set())
+        self.assertRaises(TypeError, result.time, 1.5)
 
     def test_plot(self):
         # Testing model taken from events.py
@@ -542,7 +542,7 @@ class TestSimResult(unittest.TestCase):
         self.assertFalse(result.is_cached())
         self.assertListEqual(result.times, time)
         for i in range(5):
-            self.assertEqual(result.get_time(i), time[i])
+            self.assertEqual(result.time(i), time[i])
             self.assertEqual(result[i], {k: v * 2 for k, v in state[i].items()})
         self.assertTrue(result.is_cached())
 
@@ -553,7 +553,7 @@ class TestSimResult(unittest.TestCase):
             pass
 
         try:
-            tmp = result.get_time(NUM_ELEMENTS)
+            tmp = result.time(NUM_ELEMENTS)
             self.fail("Should be out of range error")
         except IndexError:
             pass
