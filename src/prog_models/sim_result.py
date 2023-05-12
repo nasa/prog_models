@@ -171,6 +171,7 @@ class SimResult(UserList):
         Returns:
             Figure
         """
+        warn('Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
         return plot_timeseries(self.times, self.data, legend={'display': True}, options=kwargs)
 
     def monotonicity(self) -> Dict[str, float]:
