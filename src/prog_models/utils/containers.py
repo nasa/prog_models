@@ -59,7 +59,7 @@ class DictLikeMatrixWrapper():
         """
         self._matrix = value
 
-    def dot(self, other: np.ndarray | pd.Series | pd.DataFrame):
+    def dot(self, other: Union[np.ndarray, pd.Series, pd.DataFrame]):
         """
         matrix multiplication
         """
