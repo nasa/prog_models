@@ -6,6 +6,7 @@ from matplotlib.pyplot import figure
 import numpy as np
 import pandas as pd
 from typing import Callable, Dict, List
+from warnings import warn
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models.visualize import plot_timeseries

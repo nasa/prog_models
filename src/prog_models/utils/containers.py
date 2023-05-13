@@ -25,19 +25,45 @@ class DictLikeMatrixWrapper():
             keys = list(keys)  # creates list with keys
         self._keys = keys.copy()
         if isinstance(data, np.matrix):
-            self.matrix = np.array(data, dtype=np.float64)
+            self._matrix = np.array(data, dtype=np.float64)
         elif isinstance(data, np.ndarray):
             if data.ndim == 1:
                 data = data[np.newaxis].T
-            self.matrix = data
+            self._matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
             # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
-            self.matrix = np.array(
+            self._matrix = np.array(
                 [
                     np.ravel([data[key]]) if key in data else [None] for key in keys
                 ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
+
+    @property
+    def matrix(self) -> np.array:
+        """
+            matrix -- Getter for numpy array
+
+            Returns: numpy array
+        """
+        warn('Matrix will be deprecated after version 1.5 of ProgPy. When using for matrix multiplication, please use .dot function. e.g., c.dot(np.array([1, 2, 3])).', DeprecationWarning, stacklevel=2)
+        return self._matrix
+
+    @matrix.setter
+    def matrix(self, value: np.array) -> None:
+        """
+            matrix -- Setter for numpy array
+
+            Arguments:
+                value -- numpy array
+        """
+        self._matrix = value
+
+    def dot(self, other: np.ndarray | pd.Series | pd.DataFrame):
+        """
+        matrix multiplication
+        """
+        return self.frame.dot(other)
 
     @property
     def frame(self) -> pd.DataFrame:
@@ -89,6 +115,7 @@ class DictLikeMatrixWrapper():
         """
         creates iterator object for the list of keys
         """
+        warn("After v1.5, iteration will iterate through values instead of keys. Please iterate through keys directly (e.g., for k in s.keys())", DeprecationWarning, stacklevel=2)
         return iter(self._keys)
 
     def __len__(self) -> int:
@@ -97,11 +124,7 @@ class DictLikeMatrixWrapper():
         """
         return len(self._keys)
 
-    def __eq__(self, other: "DictLikeMatrixWrapper") -> bool:
-        """
-        Compares two DictLikeMatrixWrappers (i.e. *Containers) or a DictLikeMatrixWrapper and a dictionary
-        """
-        warn('Behavior of '==' operator will change after version 1.5 of ProgPy. New behavior will return element wise equality as a new series. To check if two data frames are equals use pd.DataFrame.equals and pd.Series.equals.', DeprecationWarning, stacklevel=2)
+    def equals(self, other):
         if isinstance(other, dict):  # checks that the list of keys for each matrix match
             list_key_check = (list(self.keys()) == list(
                 other.keys()))  # checks that the list of keys for each matrix are equal
@@ -111,6 +134,13 @@ class DictLikeMatrixWrapper():
         list_key_check = self.keys() == other.keys()
         matrix_check = (self.matrix == other.matrix).all()
         return list_key_check and matrix_check
+
+    def __eq__(self, other: "DictLikeMatrixWrapper") -> bool:
+        """
+        Compares two DictLikeMatrixWrappers (i.e. *Containers) or a DictLikeMatrixWrapper and a dictionary
+        """
+        warn("Behavior of '==' operator will change after version 1.5 of ProgPy. New behavior will return element wise equality as a new series. To check if two data frames are equals use pd.DataFrame.equals and pd.Series.equals.", DeprecationWarning, stacklevel=2)
+        return self.equals(other)
 
     def __hash__(self):
         """
@@ -149,6 +179,7 @@ class DictLikeMatrixWrapper():
         """
         returns array of matrix values
         """
+        warn("After v1.5, values will be a property instead of a function.", DeprecationWarning, stacklevel=2)
         if len(self.matrix) > 0 and len(
                 self.matrix[0]) == 1:  # if the first row of the matrix has one value (i.e., non-vectorized)
             return np.array([value[0] for value in self.matrix])  # the value from the first row
