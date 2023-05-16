@@ -16,9 +16,11 @@ class TestSurrogate(unittest.TestCase):
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     def tearDown(self):
         sys.stdout = sys.__stdout__
+        warnings.filterwarnings("default", category=DeprecationWarning)
 
     def test_surrogate_improper_input(self):
         m = ThrownObject()
@@ -504,22 +506,22 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({})
         
         # treat warnings as exceptions
-        warnings.filterwarnings("error")
-
-        try:
+        with self.assertWarns(UserWarning):
             surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys = ['v'], training_noise = 0)
-            self.fail('warning not raised')
-        except Warning:
-            pass
 
+        warnings.filterwarnings("error")
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        # This is needed to check that warning doesn't occur
         try:
             # Set sufficiently large failure tolerance
             surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys = ['v'], stability_tol=1e99)
-        except Warning:
-            self.fail('Warning raised')
+        except Warning as w:
+            if w is not DeprecationWarning:  # Ignore deprecation warnings
+                self.fail('Warning raised')
         
         # Reset Warnings
         warnings.filterwarnings("default")
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     def test_surrogate_use_error_cases(self):
         m = ThrownObject()
