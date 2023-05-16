@@ -42,7 +42,7 @@ class SimResult(UserList):
             '[] will be deprecated after version 1.5 of ProgPy. Users may use pandas Dataframe \'iloc\'  to access '
             'data by element.',
             DeprecationWarning, stacklevel=2)
-        return super()[item]
+        return super().__getitem__(item)
     
     def __iter__(self):
         """
@@ -52,13 +52,13 @@ class SimResult(UserList):
             'iteration will be deprecated after version 1.5 of ProgPy. The function will be renamed, iterrows, '
             'and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
-        super().__iter__(self)
+        return super().__iter__()
     
     def iterrows(self):
         """
             Iterates -- through keys
         """
-        super().__iter__(self)
+        return super().__iter__()
 
     @property
     def frame(self) -> pd.DataFrame:
