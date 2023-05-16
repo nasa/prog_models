@@ -222,8 +222,6 @@ class TestCalcError(unittest.TestCase):
 
         self.assertEqual(m.calc_error(times, inputs, outputs, method = 'dtw'), 4.8146507570483195)
 
-        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
-
         m = BatteryElectroChemEOD()
         options = {
             'save_freq': 200, # Frequency at which results are saved
