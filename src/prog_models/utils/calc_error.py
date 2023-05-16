@@ -436,6 +436,8 @@ def DTW(m, times, inputs, outputs, **kwargs):
 
     from scipy.spatial.distance import euclidean
 
+    print(simulated)
+
     def dtw_helper(x):
         transform = []
         for index in x:
@@ -444,7 +446,6 @@ def DTW(m, times, inputs, outputs, **kwargs):
                 inner_list.append(index.get(key))
             transform.append(inner_list)
         return transform
-
     simulated, observed = dtw_helper(simulated), dtw_helper(outputs)
     distance, path = fastdtw(simulated, observed, dist=euclidean)
 

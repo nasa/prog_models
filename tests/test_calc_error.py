@@ -210,8 +210,19 @@ class TestCalcError(unittest.TestCase):
         m = LinearThrownObject()
         results = m.simulate_to_threshold(save_freq = 0.5)
 
+        times = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0]
+        inputs = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+        outputs = [{'x': 2.83}, {'x': 22.868664648480163}, {'x': 40.422881456712254}, {'x': 55.51861687290881}, {'x': 68.06865643702567}, 
+                   {'x': 78.16641111234323}, {'x': 85.89550327176332}, {'x': 91.18868647545982}, {'x': 94.01376508127296}, 
+                   {'x': 94.31711597903195}, {'x': 92.22337598299377}, {'x': 87.67210201789473}, {'x': 80.62858869729064}, {'x': 71.10796509926787}, 
+                   {'x': 59.19579056829866}, {'x': 44.79567793740186}, {'x': 27.97245305860176}, {'x': 8.736607826437163}, {'x': -12.879687324031048}]
         # Does not work readily with a LinearThrown Object
-        hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw')
+
+        hold = m.calc_error(times, inputs, outputs, method = 'dtw')
+
+        self.assertEqual(m.calc_error(times, inputs, outputs, method = 'dtw'), 4.8146507570483195)
+
+        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m = BatteryElectroChemEOD()
         options = {
@@ -235,12 +246,6 @@ class TestCalcError(unittest.TestCase):
 
         # Does not work readily with a LinearThrown Object
         hold = m.calc_error(results.times, results.inputs, results.outputs, method = 'dtw', dt=1)
-
-        """
-        Should I include different error metrics within calc_error? Such as different parameter lengths should not be allowed?
-
-        Does this go against the whole idea of using DTW in the first place? Not exactly...
-        """
 
 def run_tests():
     unittest.main()
