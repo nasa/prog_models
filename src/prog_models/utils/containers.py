@@ -68,9 +68,7 @@ class DictLikeMatrixWrapper():
     @property
     def frame(self) -> pd.DataFrame:
         """
-            frame -- Getter for pd.DataFrame
-
-            Returns: pd.DataFrame
+            Returns: frame - pd.DataFrame
         """
         warn('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
         self._frame = pd.DataFrame(self.matrix.T, columns=self._keys)

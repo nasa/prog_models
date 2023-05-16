@@ -34,6 +34,32 @@ class SimResult(UserList):
             else:
                 self.data = data
 
+    def __getitem__(self, item):
+        """
+        created for deprecation warning. [] continues to be handled by parent
+        """
+        warn(
+            '[] will be deprecated after version 1.5 of ProgPy. Users may use pandas Dataframe \'iloc\'  to access '
+            'data by element.',
+            DeprecationWarning, stacklevel=2)
+        return super()[item]
+    
+    def __iter__(self):
+        """
+        created for deprecation warning. iteration continues to be handled by parent
+        """
+        warn(
+            'iteration will be deprecated after version 1.5 of ProgPy. The function will be renamed, iterrows, '
+            'and users may begin using it under this name now.',
+            DeprecationWarning, stacklevel=2)
+        super().__iter__(self)
+    
+    def iterrows(self):
+        """
+            Iterates -- through keys
+        """
+        super().__iter__(self)
+
     @property
     def frame(self) -> pd.DataFrame:
         """
@@ -72,7 +98,21 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
+        warn('index will be deprecated after version 1.5 of ProgPy. The function will be renamed, indexofdata, and users may begin using it under this name now.',
+            DeprecationWarning, stacklevel=2)
+
         return self.data.index(other, *args, **kwargs)
+    def indexofdata(self, other: dict, *args, **kwargs) -> int:
+        """
+        Get the index of the first sample where other occurs
+
+        Args:
+            other (dict)
+
+        Returns:
+            int: Index of first sample where other occurs
+        """
+        return self.index(other, *args, **kwargs)
 
     def extend(self, other: "SimResult") -> None:
         """
@@ -97,8 +137,23 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
+        warn('pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
+            DeprecationWarning, stacklevel=2)
+
         self.times.pop(index)
         return self.data.pop(index)
+
+    def popbyindex(self, index: int = -1) -> dict:
+        """Remove and return an element
+
+        Args:
+            index (int, optional): Index of element to be removed. Defaults to -1.
+
+        Returns:
+            dict: Element Removed
+        """
+        return self.pop(index)
+
 
     def remove(self, d: dict = None, t: float = None) -> None:
         """Remove an element
