@@ -91,7 +91,7 @@ class PrognosticsModelParameters(UserDict):
         if key in self.callbacks:
             for callback in self.callbacks[key]:
                 changes = callback(self)
-                self.update(changes)  # Merge in changes
+                self.update(changes) # Merge in changes
 
         # Handle setting integration_method. This will override the next_state method
         if key == 'integration_method':

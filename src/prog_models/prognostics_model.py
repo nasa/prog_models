@@ -13,7 +13,8 @@ from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
 from prog_models.sim_result import SimResult, LazySimResult
-from prog_models.utils import ProgressBar, calc_error
+from prog_models.utils import ProgressBar
+from prog_models.utils import calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.parameters import PrognosticsModelParameters
@@ -50,7 +51,7 @@ class PrognosticsModel(ABC):
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException
+        ProgModelTypeError, ProgModelInputException, ProgModelException 
 
     Example
     -------
@@ -361,6 +362,7 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
+        # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
         return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
@@ -879,14 +881,14 @@ class PrognosticsModel(ABC):
             x = self.StateContainer(x)
         
         # Optimization
+        output = self.__output
+        threshold_met_eqn = self.threshold_met
         event_state = self.event_state
         load_eqn = future_loading_eqn
         next_state = self.next_state
         apply_noise = self.apply_process_noise
         apply_limits = self.apply_limits
-        output = self.__output
         progress = config['progress']
-        threshold_met_eqn = self.threshold_met
 
         # Threshold Met Equations
         def check_thresholds(thresholds_met):
