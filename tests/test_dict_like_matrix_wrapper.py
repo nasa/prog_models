@@ -11,12 +11,12 @@ from prog_models import ProgModelTypeError
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
-    def setUp(self):
+    """def setUp(self):
         # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__
+        sys.stdout = sys.__stdout__"""
 
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
@@ -68,6 +68,7 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertTrue((c1.matrix == np.array([[]])).all())
         self.assertListEqual(c1.keys(), [])
 
+
     def test_dict_init(self):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
         self._checks(c1)
@@ -88,6 +89,12 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
         c2 = pickle.loads(pickle.dumps(c1))
         self.assertTrue((c2.matrix == np.array([[1], [2]])).all())
+
+    def test_dot(self):
+        c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
+        c2 = DictLikeMatrixWrapper(['a', 'b'], {'a': 4, 'b': 5})
+        c1_dot_c2 = c1.dot(c2.matrix)  # should be, (1*4) + (2*5) = 14
+        self.assertTrue((c1_dot_c2[0] == 14).all())
 
 # This allows the module to be executed directly
 def run_tests():

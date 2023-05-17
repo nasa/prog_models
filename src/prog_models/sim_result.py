@@ -77,7 +77,7 @@ class SimResult(UserList):
             self._frame.reindex()
         return self._frame
 
-    def __eq__(self, other: "SimResult") -> bool:
+    def equals(self, other: "SimResult") -> bool:
         """Compare 2 SimResults
 
         Args:
@@ -88,7 +88,23 @@ class SimResult(UserList):
         """
         return self.times == other.times and self.data == other.data
 
-    def index(self, other: dict, *args, **kwargs) -> int:
+    def __eq__(self, other) -> bool:
+        """Compare 2 SimResults
+
+        Args:
+            other (SimResult)
+
+        Returns:
+            bool: If the two SimResults are equal
+        """
+        warn(
+            ' \' == \' will be deprecated after version 1.5 of ProgPy. The function will be available as \' equals() \', '
+            'and users may begin using it under this name now.',
+            DeprecationWarning, stacklevel=2)
+
+        return self.equals(other)
+
+    def index_of_data(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
 
@@ -102,7 +118,7 @@ class SimResult(UserList):
             DeprecationWarning, stacklevel=2)
 
         return self.data.index(other, *args, **kwargs)
-    def indexofdata(self, other: dict, *args, **kwargs) -> int:
+    def index(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
 
@@ -112,7 +128,11 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
-        return self.index(other, *args, **kwargs)
+        warn(
+            'index will be deprecated after version 1.5 of ProgPy. The function will be renamed, indexofdata, and users may begin using it under this name now.',
+            DeprecationWarning, stacklevel=2)
+
+        return self.index_of_data(other, *args, **kwargs)
 
     def extend(self, other: "SimResult") -> None:
         """
@@ -128,6 +148,18 @@ class SimResult(UserList):
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
 
+    def pop_by_index(self, index: int = -1) -> dict:
+        """Remove and return an element
+
+        Args:
+            index (int, optional): Index of element to be removed. Defaults to -1.
+
+        Returns:
+            dict: Element Removed
+        """
+        self.times.pop(index)
+        return self.data.pop(index)
+
     def pop(self, index: int = -1) -> dict:
         """Remove and return an element
 
@@ -137,22 +169,11 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        warn('pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
+        warn(
+            'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
 
-        self.times.pop(index)
-        return self.data.pop(index)
-
-    def popbyindex(self, index: int = -1) -> dict:
-        """Remove and return an element
-
-        Args:
-            index (int, optional): Index of element to be removed. Defaults to -1.
-
-        Returns:
-            dict: Element Removed
-        """
-        return self.pop(index)
+        return self.pop_by_index(index)
 
 
     def remove(self, d: dict = None, t: float = None) -> None:
