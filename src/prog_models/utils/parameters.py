@@ -16,7 +16,7 @@ from prog_models.utils.size import getsizeof
 from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:  # Fix circular import issue in PrognosticsModelParameters init
+if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
     from prog_models.prognostics_model import PrognosticsModel
 
 
