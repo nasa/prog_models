@@ -987,7 +987,7 @@ class PrognosticsModel(ABC):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
-        if not isinstance(next_state(x, u, dt0), DictLikeMatrixWrapper):
+        if not isinstance(next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
             # Wrapper around the next state equation
             def next_state(x, u, dt):
                 x = self.next_state(x, u, dt)
