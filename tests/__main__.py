@@ -4,6 +4,7 @@ from tests.test_base_models import main as base_models_main
 from tests.test_sim_result import main as sim_result_main
 from tests.test_dict_like_matrix_wrapper import main as dict_like_matrix_wrapper_main
 from tests.test_examples import main as examples_main
+from tests.test_battery import main as battery_main
 from tests.test_centrifugal_pump import main as centrifugal_pump_main
 from tests.test_pneumatic_valve import main as pneumatic_valve_main
 from tests.test_tutorials import main as tutorials_main
@@ -113,6 +114,7 @@ if __name__ == '__main__':
         estimate_params_main()
     except Exception:
         was_successful = False
+
 
     if not was_successful:
         raise Exception("Failed test")

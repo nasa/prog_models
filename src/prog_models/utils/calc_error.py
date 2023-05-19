@@ -1,17 +1,16 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+from prog_models.sim_result import SimResult, LazySimResult
 """
 This file contains functions for calculating error given a model and some data (times, inputs, outputs). This is used by the PrognosticsModel.calc_error() method.
 """
 
-from prog_models.sim_result import SimResult, LazySimResult
 from collections.abc import Iterable
 from typing import List
 from warnings import warn
 import math
 import numpy as np
-
 
 acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
 
@@ -128,12 +127,13 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     """Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
-        times (list[float], list[list[float]]): Array of times for each sample.
-        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
-        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
+        m (PrognosticsModel): Model to use for comparison
+        times (list[float]): array of times for each sample
+        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
+        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
 
     Keyword Args:
-        x0 (StateContainer, dict, optional): Initial state.
+        x0 (dict, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -148,9 +148,9 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
         float: Total error
     """
 
-    # _runs = kwargs.get('_runs', None)
+    _runs = kwargs.get('_runs', None)
     
-    x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+    x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
@@ -162,8 +162,8 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
         if _runs is not None:
             raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
-    if not isinstance(x, self.StateContainer):
-        x = self.StateContainer(x)
+    if not isinstance(x, m.StateContainer):
+        x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
@@ -174,18 +174,16 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
-    z_obs = self.output(x)
+    z_obs = m.output(x)
     cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
             t_new = min(t_last + dt, t)
             x = m.next_state(x, u, t_new-t_last)
-            x = m.next_state(x, u, t_new-t_last)
             t_last = t_new
             if t >= t_last:
                 # Only recalculate if required
-                z_obs = m.output(x)
                 z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             # The none check above is used to cover the case where the model
