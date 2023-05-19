@@ -11,10 +11,11 @@ import unittest
 # This ensures that the directory containing ProgModelTemplate is in the python search directory
 sys.path.append(join(dirname(__file__), ".."))
 
-from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel, LinearModel
+from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel
 from prog_models.models import ThrownObject, BatteryElectroChemEOD
 from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
 from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParams)
+
 
 class MockModel():
     states = ['a', 'b', 'c', 't']
@@ -93,7 +94,10 @@ class TestModels(unittest.TestCase):
                     't': x['t'] + dt
                 }
         
-        m = MockProgModelStateDict(process_noise_dist='none', measurement_noise_dist='none')
+        m = MockProgModelStateDict(
+            process_noise_dist='none',
+            measurement_noise_dist='none')
+        
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
@@ -112,10 +116,16 @@ class TestModels(unittest.TestCase):
                     [x['t'] + dt]]
                 )
 
-        m = MockProgModelStateNdarray(process_noise_dist='none', measurement_noise_dist='none')
+        m = MockProgModelStateNdarray(
+            process_noise_dist='none', 
+            measurement_noise_dist='none')
 
         # Any event, default
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        config = {'dt': 0.5, 'save_freq': 1.0}
+        (times, _, _, outputs, _) = m.simulate_to_threshold(
+            load,
+            {'o1': 0.8},
+            **config)
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
     def test_size(self):
@@ -213,7 +223,7 @@ class TestModels(unittest.TestCase):
         class missing_states(PrognosticsModel):
             inputs = ['i1', 'i2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -226,7 +236,7 @@ class TestModels(unittest.TestCase):
             states = []
             inputs = ['i1', 'i2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -238,7 +248,7 @@ class TestModels(unittest.TestCase):
         class missing_inputs(PrognosticsModel):
             states = ['x1', 'x2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -250,7 +260,7 @@ class TestModels(unittest.TestCase):
         class missing_outputs(PrognosticsModel):
             states = ['x1', 'x2']
             inputs = ['i1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
@@ -263,7 +273,7 @@ class TestModels(unittest.TestCase):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def next_state(self, x, u, dt):
                 pass
             def output(self, x):
@@ -274,17 +284,14 @@ class TestModels(unittest.TestCase):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
-            parameters = {'process_noise':0.1}
+            parameters = {'process_noise': 0.1}
             def initialize(self, u, z):
                 pass
             def next_state(self, x, u, dt):
                 pass
 
-        try: 
+        with self.assertRaises(ProgModelTypeError):
             m = missing_states()
-            self.fail("Should not have worked, missing 'states'")
-        except ProgModelTypeError:
-            pass
 
         m = empty_states()
         self.assertEqual(len(m.states), 0)
@@ -323,12 +330,9 @@ class TestModels(unittest.TestCase):
         x = getattr(m, "apply_{}".format(noise_key))({key: 1 for key in keys})
         self.assertEqual(x[keys[0]], 2)
 
-        try:
+        with self.assertRaises(Exception):
             noise = []
-            m = MockProgModel(**{noise_key: noise})
-            self.fail("Should have raised exception - inproper format")
-        except Exception:
-            pass            
+            m = MockProgModel(**{noise_key: noise})         
 
         # Test that it ignores process_noise_dist in case where process_noise is a function
         m = MockProgModel(**{noise_key: add_one, dist_key: 'invalid one'})
@@ -336,19 +340,13 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x[keys[0]], 2)
 
         # Invalid dist
-        try:
-            noise = {key : 0.0 for key in keys}
+        with self.assertRaises(ProgModelTypeError):
+            noise = {key: 0.0 for key in keys}
             m = MockProgModel(**{noise_key: noise, dist_key: 'invalid one'})
-            self.fail("Invalid noise distribution")
-        except ProgModelTypeError:
-            pass
 
         # Invalid dist
-        try:
+        with self.assertRaises(ProgModelTypeError):
             m = MockProgModel(**{noise_key: 0, dist_key: 'invalid one'})
-            self.fail("Invalid noise distribution")
-        except ProgModelTypeError:
-            pass
 
         # Valid distributions
         m = MockProgModel(**{noise_key: 0, dist_key: 'uniform'})
@@ -515,11 +513,8 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
         self.assertListEqual(times, [0, 0.5]) # Only one step
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
-            self.fail("Should fail- extra threshold key")
-        except ProgModelInputException:
-            pass
 
     def test_sim_past_thresh(self):
         m = MockProgModel(process_noise = 0.0)
@@ -642,29 +637,17 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8})
         self.assertEqual(len(times), 1)
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to(-30, load, {'o1': 0.8})
-            self.fail("Should have failed- time must be greater than 0")
-        except ProgModelInputException:
-            pass
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to([12], load, {'o1': 0.8})
-            self.fail("Should have failed- time must be a number")
-        except ProgModelInputException:
-            pass
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to(12, load, {'o2': 0.9})
-            self.fail("Should have failed- output must contain each field (e.g., o1)")
-        except ProgModelInputException:
-            pass
 
-        try:
+        with self.assertRaises(ProgModelInputException):
             m.simulate_to(12, 132, {'o1': 0.8})
-            self.fail("Should have failed- future_load should be callable")
-        except ProgModelInputException:
-            pass
 
         ## Simulate
         (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
@@ -754,61 +737,37 @@ class TestModels(unittest.TestCase):
         
         ## Check inputs
         config = {'dt': [1, 2]}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("should have failed - dt must be number")
-        except ProgModelInputException:
-            pass
 
         config = {'dt': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- dt must be positive")
-        except ProgModelInputException:
-            pass
 
         config = {'save_freq': [1, 2]}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- save_freq must be number")
-        except ProgModelInputException:
-            pass
 
         config = {'save_freq': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- save_freq must be positive")
-        except ProgModelInputException:
-            pass
 
         config = {'horizon': [1, 2]}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail("Should have failed Horizon should be number")
-        except ProgModelInputException:
-            pass
 
         config = {'horizon': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- horizon must be positive")
-        except ProgModelInputException:
-            pass
         
         config = {'thresholds_met_eqn': -1}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail("Should have failed- thresholds_met_eqn must be callable")
-        except ProgModelInputException:
-            pass
 
         # incorrect number of arguments
         config = {'thresholds_met_eqn': lambda a, b: print(a, b)}
-        try:
+        with self.assertRaises(ProgModelInputException):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
-            self.fail()
-        except ProgModelInputException:
-            pass
 
     def test_sim_modes(self):
         m = ThrownObject(process_noise = 0, measurement_noise = 0)
@@ -919,45 +878,30 @@ class TestModels(unittest.TestCase):
         self.assertListEqual(list(x['t']), [50, -100, 100])
 
         # when state doesn't exist
-        try:
+        with self.assertRaises(Exception):
             x0['n'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
         # when state entered incorrectly
-        try:
+        with self.assertRaises(Exception):
             x0['t'] = 'f'
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
         # when boundary entered incorrectly
-        try:
+        with self.assertRaises(Exception):
             m.state_limits = { 't': ('f', 100) }
             x0['t'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
-        try:
+        with self.assertRaises(Exception):
             m.state_limits = { 't': (-100, 'f') }
             x0['t'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
-        try:
+        with self.assertRaises(Exception):
             m.state_limits = { 't': (100) }
             x0['t'] = 0
             (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
-            self.fail()
-        except Exception:
-            pass
 
     def test_progress_bar(self):
         m = MockProgModel(process_noise = 0.0)

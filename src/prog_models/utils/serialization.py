@@ -4,7 +4,7 @@
 import json
 import numpy as np
 
-from .containers import DictLikeMatrixWrapper
+from prog_models.utils.containers import DictLikeMatrixWrapper
 
 __all__ = ['CustomEncoder', 'custom_decoder']
 

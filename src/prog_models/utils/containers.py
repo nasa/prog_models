@@ -6,7 +6,6 @@ from typing import Union
 
 from prog_models.exceptions import ProgModelTypeError
 
-
 class DictLikeMatrixWrapper():
     """
     A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessible. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
@@ -29,10 +28,11 @@ class DictLikeMatrixWrapper():
                 data = data[np.newaxis].T
             self.matrix = data
         elif isinstance(data, (dict, DictLikeMatrixWrapper)):
-            self.matrix = np.array(
-                [
-                    [data[key]] if key in data else [None] for key in keys
-                ], dtype=np.float64)
+          # ravel is used to prevent vectorized case, where data[key] returns multiple values,  from resulting in a 3D matrix
+          self.matrix = np.array(
+             [
+                  np.ravel([data[key]]) if key in data else [None] for key in keys
+              ], dtype=np.float64)
         else:
             raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
@@ -178,3 +178,9 @@ class DictLikeMatrixWrapper():
         if len(self.matrix) > 0 and len(self.matrix[0]) == 1:   #the matrix has rows and the first row/list has one value in it
             return str({key: value[0] for key, value in zip(self._keys, self.matrix)})
         return str(dict(zip(self._keys, self.matrix)))  
+
+InputContainer = DictLikeMatrixWrapper
+
+StateContainer = DictLikeMatrixWrapper
+
+OutputContainer = DictLikeMatrixWrapper

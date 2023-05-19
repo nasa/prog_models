@@ -151,6 +151,7 @@ jobs:
         coverage run -a -m tests.test_datasets
         coverage run -a -m tests.test_dict_like_matrix_wrapper
         coverage run -a -m tests.test_direct
+        coverage run -a -m tests.test_estimate_params
         coverage run -a -m tests.test_ensemble
         coverage run -a -m tests.test_estimate_params
         coverage run -a -m tests.test_linear_model
