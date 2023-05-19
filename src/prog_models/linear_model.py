@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 from prog_models import PrognosticsModel
 
-
 class LinearModel(PrognosticsModel, ABC):
     """
     A linear prognostics :term:`model`. Used when behavior can be described using a simple linear time-series model defined by the following equations:
