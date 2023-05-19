@@ -1198,7 +1198,6 @@ class PrognosticsModel(ABC):
         if isinstance(outputs, np.ndarray):
             outputs = outputs.tolist()
         if not runs and times and inputs and outputs:
-            # for i, (times, inputs, outputs) in runs:
             if not isinstance(times[0], (Sequence, np.ndarray)):
                 times = [times]
             if not isinstance(inputs[0], (Sequence, np.ndarray)):
@@ -1231,7 +1230,7 @@ class PrognosticsModel(ABC):
             # Allows for partial bounds definition, and definition by key name
             for key in config['bounds'].keys():
                 if key not in self.parameters:
-                    warn(f"{key} is not a valid parameter that should be passed in to the bounds") 
+                    warn(f"{key} is not a valid parameter and should not be passed in to the bounds") 
             config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
             if not isinstance(config['bounds'], Iterable):
@@ -1281,7 +1280,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=method, bounds = config['bounds'], options=config['options'], tol=tol)
+        res = minimize(optimization_fcn, params, method=method, bounds=config['bounds'], options=config['options'], tol=tol)
 
         if not res.success:
             warn(f"Parameter Estimation did not converge: {res.message}")
