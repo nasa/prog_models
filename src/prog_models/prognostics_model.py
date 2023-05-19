@@ -1131,6 +1131,11 @@ class PrognosticsModel(ABC):
         """
         method = kwargs.get('method', 'MSE')
 
+
+        # Length of data must at least be two.
+
+        # 3 Sets of Iterables should not be supported
+
         method_map = {
             'mse': calc_error.MSE,
             'max_e': calc_error.MAX_E,

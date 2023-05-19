@@ -354,7 +354,7 @@ class TestCalcError(unittest.TestCase):
         self.assertEqual(
             "Data must be a dictionary or numpy array, not <class 'list'>",
             str(cm.exception)
-        )
+        )        
 
         times = [1, [0, 1, 2, 3]]
         inputs = [{}, [{}]*4]
@@ -369,11 +369,13 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
         
-        # with self.assertRaises(ProgModelTypeError) as cm:
         hold = m.calc_error([[1]], [[{}]], [[{'1':1}]])
 
+
+        # Not support
         hold2 = m.calc_error([[[1]]], [[{}]], [[{'1':1}]])
 
+        # Not support
         hold3 = m.calc_error([[[[1]]]], [[{}]], [[{'1':1}]])
 
         self.assertEqual(hold, hold2)
