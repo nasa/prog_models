@@ -921,7 +921,7 @@ class TestEstimateParams(unittest.TestCase):
         # works as intended for everything
         bound = ((-15, 15), (24, 42), (-20, 10))
 
-        # Includes the correct amount of bounds needed. Might not even use for sake of how large everything is.
+        # Testing that high tolerance results in high error
         # Now lets reset some parameters
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
@@ -972,7 +972,6 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [15])
         hold2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # self.assertEqual(hold2, check2)
         self.assertNotEqual(hold1, hold2)
 
         m.parameters['thrower_height'] = 3.1
@@ -1059,7 +1058,7 @@ class TestEstimateParams(unittest.TestCase):
         self.assertNotEqual(track1, track2)
 
 
-        # Anyways, here are tests that are checking for how tolerance and options work alongside one another
+        # Tests to check how tolerance and options work together
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
