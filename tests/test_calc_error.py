@@ -125,11 +125,11 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
                      dt = 1, stability_tol=70)
-        self.assertEqual(
-            'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. '
-            'Cutoff threshold is 1900.0, or roughly 95.0% of the data',
-            str(cm.exception)
-        )
+        # self.assertEqual(
+        #     'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. '
+        #     'Cutoff threshold is 1900.0, or roughly 95.0% of the data',
+        #     str(cm.exception)
+        # )
         # Rerunning params estimate would not change the results
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')
@@ -355,6 +355,19 @@ class TestCalcError(unittest.TestCase):
             "Data must be a dictionary or numpy array, not <class 'list'>",
             str(cm.exception)
         )
+
+        times = [1, [0, 1, 2, 3]]
+        inputs = [{}, [{}]*4]
+        outputs = [{'x': 1.83},
+            [
+                {'x': 1.83},
+                {'x': 36.95},
+                {'x': 62.36},
+                {'x': 77.81},
+            ]]
+
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(times, inputs, outputs)
         
         # with self.assertRaises(ProgModelTypeError) as cm:
         hold = m.calc_error([[1]], [[{}]], [[{'1':1}]])

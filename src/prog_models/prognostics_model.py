@@ -1085,6 +1085,14 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
+    def check_iterable(self, iter, name, run = False):
+        count = sum(isinstance(element, Iterable) and not isinstance(element, (str, bytes)) for element in iter)
+        if 0 < count < len(iter):
+            if run is not False:
+                raise ValueError(f"Some, but not all elements, are iterable for parameter {name} and run {run}")
+            else:
+                raise ValueError(f'Some, but not all, elements are iterable for parameter {name}')
+
     def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
@@ -1145,12 +1153,21 @@ class PrognosticsModel(ABC):
         if len(times) != len(inputs) or len(inputs) != len(outputs):
             raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
+        self.check_iterable(times, 'times')
+        self.check_iterable(inputs, 'inputs')
+        self.check_iterable(outputs, 'outputs')
+
         # Strings are also considered Iterable as well...
         if isinstance(times[0], str):
             raise TypeError("Times values cannot be strings")
         if isinstance(times[0], Iterable):
-            # Calculate error for each
-            error = [method(self, t, i, o, _runs=run, **kwargs) for run, (t, i, o) in enumerate(zip(times, inputs, outputs))]
+            # Calculate error for each index
+            error = []
+            for run, (t, i, o) in enumerate(zip(times, inputs, outputs)):
+                self.check_iterable(t, 'times', run)
+                self.check_iterable(i, 'inputs', run)
+                self.check_iterable(o, 'outputs', run)
+                error.append(method(self, t, i, o, _runs=run, **kwargs))
             return sum(error)/len(error)
         
         x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
@@ -1230,12 +1247,6 @@ class PrognosticsModel(ABC):
             raise TypeError(f"Times, inputs, and outputs cannot be a set. Sets are unordered by definition, so passing in arguments as sets may result in incorrect behavior.")
 
         # if parameters not in parent wrapper sequence, then place them into one.
-        if isinstance(times, np.ndarray):
-            times = times.tolist()
-        if isinstance(inputs, np.ndarray):
-            inputs = inputs.tolist()
-        if isinstance(outputs, np.ndarray):
-            outputs = outputs.tolist()
         if isinstance(times, np.ndarray):
             times = times.tolist()
         if isinstance(inputs, np.ndarray):

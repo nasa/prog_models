@@ -128,12 +128,12 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (dict, optional): Initial state.
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -147,7 +147,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     Returns:
         float: Total error
     """
-
+    
     _runs = kwargs.get('_runs', None)
     
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))

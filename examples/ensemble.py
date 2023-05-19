@@ -10,7 +10,7 @@ Example using the Ensemble Model feature
 
     In this example, 4 different equivalent circuit models are setup with different configuration parameters. They are each simulated individually. Then an ensemble model is created for the 4 models, and that is simulated individually. The results are plotted. 
 
-    The results are partially skewed by a poorly configured model, so we change the aggregation method to account for that. and re-simulate, showing the results
+    The results are partially skewed by a poorly configured model, so we change the aggregation method to account for that. and resimulate, showing the results
 
     Finally, an ensemble model is created for two different models with different states. That model is simulated with time and the results are plotted. 
 """

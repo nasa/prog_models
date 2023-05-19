@@ -677,8 +677,22 @@ class TestEstimateParams(unittest.TestCase):
         time1 = [0, 1, 2, 4, 5, 6, 7, 8, 9]
         time2 = [0, 1, 2, 3]
 
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
-        track2 = m.calc_error(results.times, results.inputs, results.outputs)
+        inputs = [[{}]*9, [{}]*4]
+        outputs = [[{'x': 1.83},
+            {'x': 36.95},
+            {'x': 62.36},
+            {'x': 77.81},
+            {'x': 83.45},
+            {'x': 79.28},
+            {'x': 65.3},
+            {'x': 41.51},
+            {'x': 7.91},], 
+            [
+                {'x': 1.83},
+                {'x': 36.95},
+                {'x': 62.36},
+                {'x': 77.81},
+            ]]
         
         
         # Checking to see if multiple runs can exist.
@@ -905,3 +919,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
