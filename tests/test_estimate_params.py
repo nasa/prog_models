@@ -911,8 +911,6 @@ class TestEstimateParams(unittest.TestCase):
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
         keys = ['thrower_height', 'throwing_speed', 'g']
-
-        # works as intended for everything
         bound = ((-15, 15), (24, 42), (-20, 10))
 
         # Testing that high tolerance results in high error
@@ -923,7 +921,7 @@ class TestEstimateParams(unittest.TestCase):
 
         # High tolerance would result in a higher calc_error
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                          bounds=bound, keys = keys, tol = 100)
+                          bounds=bound, keys = keys, tol = .1)
         if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
             raise ValueError("m.parameter shouldn't be too close to the original parameters")
         check = m.calc_error(results.times, results.inputs, results.outputs)

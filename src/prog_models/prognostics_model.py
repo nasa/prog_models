@@ -1186,6 +1186,7 @@ class PrognosticsModel(ABC):
             'error_method': 'MSE',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
             'options': None,
+            'tol': None
         }
         config.update(kwargs)
 
@@ -1282,7 +1283,7 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=method, bounds=config['bounds'], options=config['options'], tol=tol)
+        res = minimize(optimization_fcn, params, method=method, bounds=config['bounds'], options=config['options'], tol=config['tol'])
 
         if not res.success:
             warn(f"Parameter Estimation did not converge: {res.message}")
