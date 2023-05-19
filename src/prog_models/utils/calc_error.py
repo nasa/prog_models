@@ -435,9 +435,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
             counter += 1
 
     from scipy.spatial.distance import euclidean
-
-    print(simulated)
-
+    
     def dtw_helper(x):
         transform = []
         for index in x:

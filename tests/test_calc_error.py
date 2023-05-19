@@ -222,7 +222,7 @@ class TestCalcError(unittest.TestCase):
 
         self.assertEqual(m.calc_error(times, inputs, outputs, method = 'dtw'), 4.8146507570483195)
 
-        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
+        hold2 = m.calc_error(results.times, results.inputs, results.outputs, method = 'MAE')
 
         m = BatteryElectroChemEOD()
         options = {
