@@ -163,26 +163,27 @@ def MSE(self, times, inputs, outputs, _runs = None, **kwargs) -> float:
     t_last = times[0]
     err_total = 0
     z_obs = self.output(x)
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
             t_new = min(t_last + dt, t)
-            x = self.next_state(x, u, t_new-t_last)
+            x = m.next_state(x, u, t_new-t_last)
             t_last = t_new
             if t >= t_last:
                 # Only recalculate if required
-                z_obs = self.output(x)
+                z_obs = m.output(x)
         if not (None in z_obs.matrix or None in z.matrix):
             if any (np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
-                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
+                if t <= cutoffThreshold:
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
                     break
             err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
             counter += 1
-
+    
     return err_total/counter
 
 def MAE(m, times, inputs, outputs, **kwargs):
