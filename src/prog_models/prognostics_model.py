@@ -1162,6 +1162,9 @@ class PrognosticsModel(ABC):
             runs (list[tuple], depreciated):
                 data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
 
+        Returns:
+            OptimizeResult: Optimization Result of estimate_params() 
+
         See: examples.param_est
         """
         from scipy.optimize import minimize

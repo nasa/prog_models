@@ -19,19 +19,6 @@ from tests.test_serialization import main as serialization_main
 from tests.test_estimate_params import main as estimate_params_main
 from tests.test_ensemble import main as ensemble_main
 
-from io import StringIO
-import matplotlib.pyplot as plt
-import sys
-from timeit import timeit
-from unittest.mock import patch
-
-from examples import sim as sim_example
-
-def _test_ex():
-    # Run example
-    sim_example.run_example()
-
-
 if __name__ == '__main__':
     was_successful = True
 

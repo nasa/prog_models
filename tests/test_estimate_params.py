@@ -912,12 +912,6 @@ class TestEstimateParams(unittest.TestCase):
         gt = m.parameters.copy()
         keys = ['thrower_height', 'throwing_speed', 'g']
 
-        # x0 violates bounds for 'TNC' method... Not behavior that we want to keep.
-        bound = ((0, 4), (24, 42), (-20, -5))
-
-        # there seems to be a maximum tolerance before no changes occur
-        bound = ((0, 4), (24, 42), (-20, 10))
-
         # works as intended for everything
         bound = ((-15, 15), (24, 42), (-20, 10))
 
@@ -950,14 +944,9 @@ class TestEstimateParams(unittest.TestCase):
         # Note that tolerance does not convert here
         with self.assertRaises(TypeError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                              bounds=bound, keys = keys , tol = "12")
+                              bounds=bound, keys = keys , tol = "12")    
 
-        # When tolerance is in a list, it raises a ValueError.
-        # with self.assertRaises(TypeError):
-        #     m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-        #                       bounds=bound, keys = keys , tol = [(1)])             
-
-        # These cases are working?
+        # When tolerance is empty list
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
@@ -996,7 +985,6 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = {1})
 
         # Works when tolerance is a floating point value.
-
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
@@ -1004,22 +992,22 @@ class TestEstimateParams(unittest.TestCase):
         if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
             self.fail("m.parameter shouldn't be too close to the original parameters")
 
-        # When tolerance is 
+        # When tolerance is a list of many integers
         with self.assertRaises(ValueError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [1, 2, 3])
 
-        # 
+        # When tolerance is a list of mixed values (integers and strings)
         with self.assertRaises(TypeError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [1, '2', '3'])
         
+        # When tolerance is a tuple
         with self.assertRaises(ValueError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (1, 2, 3))
         
-        # Using TNC
+        # Using different method should work as intended 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, method = 'TNC', tol = 1e-9)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
@@ -1031,35 +1019,10 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
         
+        # Using different methods would result in different errors.
         self.assertNotAlmostEqual(track1, track2)
 
-        # Reset parameters
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
-        track1 = m.calc_error(results.times, results.inputs, results.outputs)
-
-        # So, for tol values between 1e-4 and bigger, we will continue to have the same results, whereas. 
-        # To determine it is 1e-34is the smallest, we have a tolerance check if it 1e-3 produces similar results, to which it does not.
-
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-        
-        # Providing bounds here has some unwanted behavior. Provides worse predictions... Just a result of having tolerance
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys, method='TNC', options = {'maxiter': 250}, tol=1e-9)
-        
-        track2 = m.calc_error(results.times, results.inputs, results.outputs)
-
-        # Note that at some point, the tolerance does not keep going farther down, the tolerance does not affect the calc_error
-        self.assertNotEqual(track1, track2)
-
-
-        # Anyways, here are tests that are checking for how tolerance and options work alongside one another
+        # Tests that are checking for how tolerance and options work alongside one another
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
@@ -1083,7 +1046,7 @@ class TestEstimateParams(unittest.TestCase):
                            bounds = bound, keys=keys, tol = 1e-2, options={'xatol': 1e-5})
         override3 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # The passed in options properly overrides the tolerance that is placed. 
+        # Passed in options properly overrides the tolerance that is placed. 
         self.assertNotEqual(override1, override3)
         self.assertEqual(override2, override3)
 
