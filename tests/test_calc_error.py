@@ -7,13 +7,13 @@ import unittest
 from prog_models import *
 from prog_models.models import *
 
-
 class TestCalcError(unittest.TestCase):
     """
     Main Testing class for calc_error.
 
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
+
     # @unittest.skip
     def test_calc_error(self):
         # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
@@ -42,21 +42,30 @@ class TestCalcError(unittest.TestCase):
         # Running calc_error before setting incorrect parameters
         m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
 
+        with self.assertWarns(UserWarning) as cm:
+            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1, stability_tol = 10)
+        self.assertEqual(
+            "Configurable cutoff must be some float value in the domain (0, 1]."  
+            " Received 10. Resetting value to 0.95",
+            str(cm.warning)
+        )
+
         # Initializing parameters to very erroneous values       
-        m.parameters['qMax'] = 8000
+        m.parameters['qMax'] = 4000
         keys = ['qMax']
 
         # Before running estimate_params
         with self.assertRaises(ValueError):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
 
-        m.estimate_params([(simulated_results.times, simulated_results.inputs, simulated_results.outputs)], keys, dt=1)
+        m.estimate_params([(simulated_results.times, simulated_results.inputs, simulated_results.outputs)], keys, dt=0.5)
+
         # After running estimate_params. Note that this would not change the outcome of the result
         with self.assertRaises(ValueError):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)    
 
-
-        for i in np.arange(0.1, 1, 0.1):
+        # Running through various dt values that could work
+        for i in np.arange(0, 1, 0.1):
             with self.assertRaises(ValueError):
                 m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
 
@@ -66,12 +75,17 @@ class TestCalcError(unittest.TestCase):
  
         # Creating duplicate model
         m1 = BatteryElectroChemEOD()
+
+        orig_params = m1.parameters.copy()
+
         # Much bigger parameter initialization
         m.parameters['kp'] = m1.parameters['kp'] = 10000
         m.parameters['kn'] = m1.parameters['kn'] = 1000 
         m.parameters['qpMax'] = m1.parameters['qpMax'] = 4500
         m.parameters['qMax'] = m1.parameters['qMax'] = 9000
         keys = ['kp', 'kn', 'qpMax','qMax']
+
+        change_params = m1.parameters.copy()
 
         simulated_results = m.simulate_to(2000, future_loading, **options)
         m1_sim_results = m1.simulate_to(2000, future_loading, **options)
@@ -83,15 +97,18 @@ class TestCalcError(unittest.TestCase):
         # They are being spammed almost. Increasing save_frequency increases spam
 
         # Calling estimate_params does not change any of the parameters here because we are always accounting for exceptions...
-        m.estimate_params(times = simulated_results.times, inputs = simulated_results.inputs, outputs = simulated_results.outputs, keys = keys, method='Powell')
-        m1.estimate_params(times = m1_sim_results.times, inputs = m1_sim_results.inputs, outputs = m1_sim_results.outputs, keys = keys, method='CG')
+
+        m.estimate_params(data, keys, method='Powell')
+        m1.estimate_params(data_m1, keys, method='CG')
+
+        updated_params = m1.parameters.copy()
+
+        # Checking to make sure estimate_params actually changed values away from the original and to something else
+        self.assertEqual(change_params, updated_params)
+        self.assertNotEqual(orig_params, updated_params)
         
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-        self.assertEqual(
-            'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. Cutoff threshold is 10, or roughly 95.0% of the data',
-            str(cm.exception)
-        )
         
         with self.assertRaises(ValueError):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
@@ -105,6 +122,14 @@ class TestCalcError(unittest.TestCase):
             str(cm.warning)
         )
 
+        with self.assertRaises(ValueError) as cm:
+            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
+                     dt = 1, stability_tol=70)
+        self.assertEqual(
+            'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. '
+            'Cutoff threshold is 1900.0, or roughly 95.0% of the data',
+            str(cm.exception)
+        )
         # Rerunning params estimate would not change the results
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')
@@ -128,6 +153,8 @@ class TestCalcError(unittest.TestCase):
         data = [(simulated_results.times, simulated_results.inputs, simulated_results.outputs)]
         data_m1 = [(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs)]
 
+        converge1 = m1.parameters.copy()
+
         with self.assertRaises(ValueError):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
         
@@ -137,11 +164,16 @@ class TestCalcError(unittest.TestCase):
         m.estimate_params(data, keys, method='Powell', options={'maxiter': 10000, 'disp': False})
         m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 10000, 'disp': False})
 
+        converge2 = m1.parameters.copy()
+
+        self.assertEqual(converge1, converge2)
+
         with self.assertRaises(ValueError):
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
         
         with self.assertRaises(ValueError):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+
 
 
     """
