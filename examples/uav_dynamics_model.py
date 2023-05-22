@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
-from prog_models.models.uav_model import UAVGen 
+from prog_models.models.uav_model import UAVGen, SmallRotorcraft
 from prog_models.loading_fcns.controllers import LQR_I, LQR
 
 def run_example(): 
@@ -22,7 +22,8 @@ def run_example():
     }
 
     # Initialize vehicle 
-    vehicle = UAVGen(**vehicle_params)
+    # vehicle = UAVGen(**vehicle_params)
+    vehicle = SmallRotorcraft(**vehicle_params)
 
     # Define coarse waypoints: waypoints must be defined with a dictionary of numpy arrays or as columns in a text file 
     # See documentation for specific information on inputting waypoints 
@@ -44,7 +45,7 @@ def run_example():
 
     # Define controller and build scheduled control 
     ctrl = LQR(ref_traj, vehicle)
-    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
+    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
 
     # Set simulation options 
     options = {
@@ -76,7 +77,7 @@ def run_example():
 
     # Define controller and build scheduled control. This time we'll use LQR_I
     ctrl = LQR_I(ref_traj_speeds, vehicle)
-    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
+    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
 
     # Set simulation options 
     options = {

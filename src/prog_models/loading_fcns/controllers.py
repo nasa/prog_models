@@ -32,10 +32,11 @@ def lqr_fn(A, B, Q, R):
     """
     n     = A.shape[0]
     R_inv = np.linalg.inv(R)
+    B_tr  = B.T
 
     # --------- Generate hamiltonian matrix ------------ #
     HM1 = A
-    HM2 = - np.dot( np.dot( B, R_inv), B.T )
+    HM2 = - np.dot( np.dot( B, R_inv), B_tr )
     HM3 = - Q
     HM4 = - A.T
 
@@ -52,7 +53,7 @@ def lqr_fn(A, B, Q, R):
     Y = V_[n:, :n] # second half (row-wise) 
 
     # ----------- Estimate control gain ----------------- #
-    K = np.dot( np.dot( np.dot(R_inv, B.T), Y ), np.linalg.inv(X) )
+    K = np.dot( np.dot( np.dot(R_inv, B_tr), Y ), np.linalg.inv(X) )
     K = np.real(K) # some spuriorus imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
 
     # Calculate the eigenvalues of the matrix A - B*K
@@ -79,8 +80,8 @@ class LQR():
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
         self.n_inputs  = len(self.inputs)       # number of inputs
         self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
-        self.ss_input  = vehicle.vehicle_model.steadystate_input
-        self.vehicle_max_thrust = vehicle.vehicle_model.dynamics['max_thrust']
+        self.ss_input  = vehicle.parameters['steadystate_input']
+        self.vehicle_max_thrust = vehicle.dynamics['max_thrust']
         
         # Default control parameters
         # --------------------------------
