@@ -14,14 +14,14 @@ tags:
 authors:
   - name: Christopher Teubert
     orcid: 0000-0001-6788-4507
-    equal-contrib: true
+    equal-contrib: false
     affiliation: 1
   - name: Katelyn Jarvis
-    equal-contrib: true
+    equal-contrib: false
     affiliation: 1
   - name: Matteo Corbetta
     orcid: 0000-0002-7169-1051
-    equal-contrib: true
+    equal-contrib: false
     affiliation: 2
 affiliations:
  - name: NASA Ames Research Center, United States
