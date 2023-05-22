@@ -314,41 +314,43 @@ class UAVGen(PrognosticsModel):
     def output(self, x : dict):
         # Output is the same as the state vector, without time 
         return self.OutputContainer(x.matrix[0:-1])
+        # return self.OutputContainer(x.matrix[0:-2])
 
 
     def threshold_met(self, x : dict) -> dict:
-        # threshold_met is defined based on success of completing the reference trajectory
-        # For threshold_met to evaluate as True, the vehicle must be within a defined sphere around the final point in the reference trajectory, within some acceptable time interval
-        t_lower_bound = self.parameters['ref_traj']['t'][-1] - (self.parameters['ref_traj']['t'][-1] - self.parameters['ref_traj']['t'][-2])/2
-        t_upper_bound = self.parameters['ref_traj']['t'][-1] + self.parameters['final_time_buffer_sec']
-        if x['t'] < t_lower_bound:
-            # Trajectory hasn't reached final ETA
-            return {
-                'TrajectoryComplete': False
-            }
-        elif t_lower_bound <= x['t'] <= t_upper_bound:
-            # Trajectory is within bounds of final ETA
-            dist_now = np.sqrt((x['x']-self.parameters['ref_traj']['x'][-1])**2 + (x['y']-self.parameters['ref_traj']['y'][-1])**2 + (x['z']-self.parameters['ref_traj']['z'][-1])**2)
-            if dist_now <= self.parameters['final_space_buffer_m']:
-                return {
-                    'TrajectoryComplete': True
-                }
-            else: 
-                return {
-                    'TrajectoryComplete': False
-                }
-        else: 
-            # Trajectory has passed acceptable bounds of final ETA - simulation terminated
-            warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
-            return {
-                'TrajectoryComplete': True
-            }
+        # # threshold_met is defined based on success of completing the reference trajectory
+        # # For threshold_met to evaluate as True, the vehicle must be within a defined sphere around the final point in the reference trajectory, within some acceptable time interval
+        # t_lower_bound = self.parameters['ref_traj']['t'][-1] - (self.parameters['ref_traj']['t'][-1] - self.parameters['ref_traj']['t'][-2])/2
+        # t_upper_bound = self.parameters['ref_traj']['t'][-1] + self.parameters['final_time_buffer_sec']
+        # if x['t'] < t_lower_bound:
+        #     # Trajectory hasn't reached final ETA
+        #     return {
+        #         'TrajectoryComplete': False
+        #     }
+        # elif t_lower_bound <= x['t'] <= t_upper_bound:
+        #     # Trajectory is within bounds of final ETA
+        #     dist_now = np.sqrt((x['x']-self.parameters['ref_traj']['x'][-1])**2 + (x['y']-self.parameters['ref_traj']['y'][-1])**2 + (x['z']-self.parameters['ref_traj']['z'][-1])**2)
+        #     if dist_now <= self.parameters['final_space_buffer_m']:
+        #         return {
+        #             'TrajectoryComplete': True
+        #         }
+        #     else: 
+        #         return {
+        #             'TrajectoryComplete': False
+        #         }
+        # else: 
+        #     # Trajectory has passed acceptable bounds of final ETA - simulation terminated
+        #     warn("Trajectory simulation extends beyond the final ETA. Either the final waypoint was not reached in the alotted time (and the simulation was terminated), or simulation was run for longer than the trajectory length.")
+        #     return {
+        #         'TrajectoryComplete': True
+        #     }
+        pass
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
 
         # Check that reference trajectory has been specified
-        if self.parameters['ref_traj'] is None:
-          raise ProgModelException("Reference trajectory must be specified in vehicle parameters to simulate vehicle.")
+        # if self.parameters['ref_traj'] is None:
+        #   raise ProgModelException("Reference trajectory must be specified in vehicle parameters to simulate vehicle.")
 
         # Check for appropriately defined dt - must be same as vehicle model 
         if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:

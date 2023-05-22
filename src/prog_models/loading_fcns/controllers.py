@@ -113,13 +113,15 @@ class LQR():
             x_k = np.zeros((self.n_states, 1))
         else:
             x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
+            # x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-2)])
         
         # Identify reference state (desired state) at t
         t_k = np.round(t + self.dt/2.0, 1)  # current time step
         time_ind = np.argmin(np.abs(t_k - self.ref_traj['t'].tolist())) # get index of time value in ref_traj closest to t_k
         x_ref_k = []
         for state in self.states:
-            x_ref_k.append(self.ref_traj[state][time_ind])
+            if state != 'mission_complete':
+                x_ref_k.append(self.ref_traj[state][time_ind])
         x_ref_k = np.asarray(x_ref_k[:-1]) # get rid of time index in state vector
         x_k = x_k.reshape(x_k.shape[0],)
 

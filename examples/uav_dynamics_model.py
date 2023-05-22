@@ -41,7 +41,7 @@ def run_example():
 
     # Calculate reference trajectory 
     ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **ref_params)
-    vehicle.parameters['ref_traj'] = ref_traj
+    # vehicle.parameters['ref_traj'] = ref_traj
 
     # Define controller and build scheduled control 
     ctrl = LQR(ref_traj, vehicle)
@@ -54,7 +54,8 @@ def run_example():
     }
 
     # Simulate vehicle to fly trajectory 
-    traj_results = vehicle.simulate_to_threshold(ctrl, **options)
+    # traj_results = vehicle.simulate_to_threshold(ctrl, **options)
+    traj_results = vehicle.simulate_to(100, ctrl, **options)
 
     # Visualize Results
     vehicle.visualize_traj(traj_results)
