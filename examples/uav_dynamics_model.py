@@ -86,7 +86,7 @@ def run_example():
 
     # Simulate vehicle to fly trajectory 
     traj_results = vehicle.simulate_to_threshold(ctrl, **options)
-
+    vehicle.visualize_traj(traj_results)
     debug = 1
 
 # This allows the module to be executed directly 

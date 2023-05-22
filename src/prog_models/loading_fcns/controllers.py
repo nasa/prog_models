@@ -45,12 +45,7 @@ def lqr_fn(A, B, Q, R):
 
     # --------- Extract eigevectors whose eigenvalues have real part < 0 ------------ #
     eig_val, eig_vec = np.linalg.eig(HM)
-    e = len(eig_val)
-    V_ = np.zeros((e, 1))
-    for ii in range(e):
-        if np.real(eig_val[ii]) < 0:
-            V_ = np.concatenate((V_, eig_vec[:, ii].reshape((e,1))), axis=1)
-    V_ = V_[:, 1:]
+    V_ = eig_vec[:, np.real(eig_val)<0.0]
 
     # --------- Partition matrix of resulting eigenvectors ------------ #
     X = V_[:n, :n] # first half (row-wise)
@@ -81,15 +76,12 @@ class LQR():
         self.type      = 'LQR'                  # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
         self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
-        self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)
-        self.n_outputs = 3                      # number of outputs
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
         self.n_inputs  = len(self.inputs)       # number of inputs
-        self.err_hist  = []                     # error history (integral)
         self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
         self.ss_input  = vehicle.vehicle_model.steadystate_input
         self.vehicle_max_thrust = vehicle.vehicle_model.dynamics['max_thrust']
-
+        
         # Default control parameters
         # --------------------------------
         self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
@@ -104,8 +96,12 @@ class LQR():
 
         # Initialize other controller-related variables
         # ---------------------------------------------
-        self.dt        = vehicle.parameters['dt']
-    
+        self.dt = vehicle.parameters['dt']
+
+        # Initialize control gain storage matrix:
+        # ---------------------------------------
+        self.control_gains = np.zeros((self.n_inputs, self.n_states, 1))
+
     def __call__(self, t, x=None):
 
         # Check that build_scheduled_control has been called
@@ -156,7 +152,7 @@ class LQR():
 
         n, m = state_vector_vals.shape
         assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        self.control_gains = np.zeros((self.n_inputs, self.n_states, m))
+        self.control_gains = np.zeros((self.control_gains.shape[0], self.control_gains.shape[1], m))
         self.scheduled_states = state_vector_vals
 
         for j in range(m):
@@ -175,6 +171,9 @@ class LQR_I(LQR):
         super().__init__(x_ref, vehicle, **kwargs)
 
         self.type      = 'LQR_I'                # type of controller
+        self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)
+        self.n_outputs = 3                      # number of outputs
+        self.err_hist  = []                     # error history (integral)
 
         # Default control parameters
         # --------------------------------
@@ -188,7 +187,7 @@ class LQR_I(LQR):
 
         # Initialize other controller-related variables
         # ---------------------------------------------
-        self.C         = np.zeros((self.n_outputs, self.n_states))
+        self.C = np.zeros((self.n_outputs, self.n_states))
         self.C[:self.n_outputs, :self.n_outputs] = np.eye(self.n_outputs)
 
         # Initialize Augmented state space matrices for integral action
@@ -199,6 +198,10 @@ class LQR_I(LQR):
         # Generate augmented Q and R for integral term
         self.parameters['Qi'] = np.diag(np.concatenate((np.diag(self.parameters['Q']), self.parameters['qi']), axis=0))
         self.parameters['Ri'] = self.parameters['R']
+
+        # Control gain storage matrix:
+        # -----------------------------
+        self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, 1))
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
@@ -214,28 +217,6 @@ class LQR_I(LQR):
         err_integral = np.sum(err_hist[:, max([0, len(self.err_hist) - self.parameters['int_lag']]):], axis=1) * self.dt
         return - np.dot(gain[:, :self.n_states], error) - np.dot(gain[:, self.n_states:], err_integral)
 
-    def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
-        
-        if state_vector_vals is None:
-            # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
-            n_schedule_grid = 360*2 + 1
-            index_scheduled_var = 5
-            state_vector_vals = np.zeros((self.n_states, n_schedule_grid))
-            state_vector_vals[index_scheduled_var, :] = np.linspace(-2.0*np.pi, 2.0*np.pi, n_schedule_grid)
-
-        n, m = state_vector_vals.shape
-        assert n == self.n_states, "number of states set at initialization and size of state_vector_vals mismatch."
-        self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, m))
-        self.scheduled_states = state_vector_vals 
-
-        for j in range(m):
-            phi, theta, psi = state_vector_vals[3:6, j]
-            p,       q,   r = state_vector_vals[-3:, j]
-            Aj,          Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
-            self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
-
-        print('Control gain matrices complete.')
-
     def reset_controller(self):
 
         # Reset Error history (from integral action, if exist)
@@ -243,3 +224,8 @@ class LQR_I(LQR):
         if hasattr(self, 'err_hist'):
             self.err_hist = []    
         print("Controller reset complete")
+
+
+if __name__ == '__main__':
+
+    print('Controllers')
