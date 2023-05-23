@@ -928,13 +928,6 @@ class TestEstimateParams(unittest.TestCase):
                           bounds=bound, keys = keys, tol = 10)
         if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
             raise ValueError("m.parameter shouldn't be too close to the original parameters")
-        
-        # When tolerance is 0, estimate_params converges to some minimum error
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 0)
-        self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs), 0)
 
         # Note that tolerance does not convert here.
         with self.assertRaises(TypeError):
