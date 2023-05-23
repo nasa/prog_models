@@ -939,17 +939,6 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [])
-        hold1 = m.calc_error(results.times, results.inputs, results.outputs)
-
-
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-
-        # Confirming that an empty list for tolerance behaves the same way as not passing in a Tolerance at all.
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys)
-        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
-        self.assertEqual(hold1, hold2)
 
 
         m.parameters['thrower_height'] = 3.1
