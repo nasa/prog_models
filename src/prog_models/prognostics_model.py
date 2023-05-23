@@ -1131,11 +1131,6 @@ class PrognosticsModel(ABC):
         """
         method = kwargs.get('method', 'MSE')
 
-
-        # Length of data must at least be two.
-
-        # 3 Sets of Iterables should not be supported
-
         method_map = {
             'mse': calc_error.MSE,
             'max_e': calc_error.MAX_E,
@@ -1151,34 +1146,41 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException(f"Error method '{method}' not supported")
         
         acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
-
         types = {type(times), type(inputs), type(outputs)}
-        if not all(t in acceptable_types for t in types):
-            raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
-        if len(times) != len(inputs) or len(inputs) != len(outputs):
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. Current lengths are: times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
+        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+        dt = kwargs.get('dt', 10)
+        stability_tol = kwargs.get('stability_tol', 0.95)
+        run = kwargs.get('run', None)
+
+        if not all(t in acceptable_types for t in types):
+            type_error = f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types"
+            type_error += f" at run {run}" if run is not None else ""
+            type_error += f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}"
+            raise TypeError(type_error)
+        if len(times) != len(inputs) or len(inputs) != len(outputs):
+            len_error = "Times, inputs, and outputs must all be the same length. Current lengths"
+            len_error += f" at run {run}" if run is not None else ""
+            len_error += f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
+            raise ValueError(len_error)
+        if len(times) < 2:
+            # raise ValueError(f"Must Provide at least 2 data points. Currently only passing in {len(times)}")
+            less_2_error = "Must provide at least 2 data points for times, inputs, and outputs"
+            less_2_error += " at run {run}." if run is not None else ""
+            raise ValueError(less_2_error)
+
+        # Determines if all values of parameters are iterables
         self.check_iterable(times, 'times')
         self.check_iterable(inputs, 'inputs')
         self.check_iterable(outputs, 'outputs')
 
-        # Strings are also considered Iterable as well...
         if isinstance(times[0], str):
             raise TypeError("Times values cannot be strings")
         if isinstance(times[0], Iterable):
-            # Calculate error for each index
-            error = []
-            for run, (t, i, o) in enumerate(zip(times, inputs, outputs)):
-                self.check_iterable(t, 'times', run)
-                self.check_iterable(i, 'inputs', run)
-                self.check_iterable(o, 'outputs', run)
-                error.append(method(self, t, i, o, _runs=run, **kwargs))
+            # Calculate error for each
+            error = [self.calc_error(t, i, z, run = r, **kwargs) for r, (t, i, z) in enumerate(zip(times, inputs, outputs))]
             return sum(error)/len(error)
         
-        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-        dt = kwargs.get('dt', 10)
-        stability_tol = kwargs.get('stability_tol', 0.95)
-
         # Checks stability_tol is within bounds
         # Throwing a default after the warning.
         if not isinstance(stability_tol, Number):

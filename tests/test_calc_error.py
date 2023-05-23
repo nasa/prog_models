@@ -13,8 +13,6 @@ class TestCalcError(unittest.TestCase):
 
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
-
-    # @unittest.skip
     def test_calc_error(self):
         # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
         m = BatteryElectroChemEOD()
@@ -95,7 +93,6 @@ class TestCalcError(unittest.TestCase):
 
         # Check out the warnings that are occurring here...
         # They are being spammed almost. Increasing save_frequency increases spam
-
         # Calling estimate_params does not change any of the parameters here because we are always accounting for exceptions...
 
         m.estimate_params(data, keys, method='Powell')
@@ -287,7 +284,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current lengths are: times = 1, inputs = 2, outputs = 2",
+            "Times, inputs, and outputs must all be the same length. Current lengths: times = 1, inputs = 2, outputs = 2",
             str(cm.exception)
         )
 
@@ -296,7 +293,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. At run 0, current lengths are times = 8, inputs = 9, outputs = 9",
+            "Times, inputs, and outputs must all be the same length. Current lengths at run 0: times = 8, inputs = 9, outputs = 9",
             str(cm.exception)
         )
 
@@ -305,7 +302,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. At run 1, current lengths are times = 3, inputs = 4, outputs = 4",
+            "Times, inputs, and outputs must all be the same length. Current lengths at run 1: times = 3, inputs = 4, outputs = 4",
             str(cm.exception)
         )
 
@@ -344,7 +341,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error({1, 2, 3}, ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
         self.assertEqual(
-            "Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = set, inputs = tuple, and outputs = tuple",
+            "Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types: times = set, inputs = tuple, and outputs = tuple",
             str(cm.exception)
         )
 
