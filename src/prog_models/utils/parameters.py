@@ -9,6 +9,7 @@ import numpy as np
 import types
 from typing import Callable
 
+from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
 from prog_models.utils.serialization import *
 from prog_models.utils.size import getsizeof
@@ -91,6 +92,18 @@ class PrognosticsModelParameters(UserDict):
             for callback in self.callbacks[key]:
                 changes = callback(self)
                 self.update(changes) # Merge in changes
+
+        # Handle setting integration_method. This will override the next_state method
+        if key == 'integration_method':
+            if self._m.is_discrete and self._m.is_state_transition_model:
+                raise ProgModelTypeError(
+                    "Cannot set integration method for discrete model (where next_state is overridden)")
+            if value.lower() not in next_state_functions.keys():
+                raise ProgModelTypeError(
+                    f"Unsupported integration method {value.lower()}")
+            self._m.next_state = types.MethodType(
+                next_state_functions[value.lower()],
+                self._m)
         
         if key == 'process_noise' or key == 'process_noise_dist':
             if callable(self['process_noise']):  # Provided a function
