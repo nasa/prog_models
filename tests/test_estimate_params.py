@@ -928,8 +928,15 @@ class TestEstimateParams(unittest.TestCase):
                           bounds=bound, keys = keys, tol = 10)
         if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
             raise ValueError("m.parameter shouldn't be too close to the original parameters")
+        
+        # When tolerance is 0, estimate_params converges to some minimum error
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 0)
+        self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs), 0)
 
-        # Note that tolerance does not convert here
+        # Note that tolerance does not convert here.
         with self.assertRaises(TypeError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                               bounds=bound, keys = keys , tol = "12")    
@@ -939,38 +946,32 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [])
+        hold1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-
+        # Tolerance works as intended as long as it is within a sequence of length 1
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10  
-
-        # Tolerance works as intended as long as it is within a sequence of length 1
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [15])
         hold2 = m.calc_error(results.times, results.inputs, results.outputs)
         # Making sure that it has a different value.
         self.assertNotEqual(hold1, hold2)
 
-
+        # Confirming that passing tolerance as a sequence of length 1 outputs the same error as setting tolerance to the value in the original sequence.
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-
-        # Confirming that passing tolerance as a sequence of length 1 outputs the same error as setting tolerance to the value in the original sequence.
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 15)
         hold1 = m.calc_error(results.times, results.inputs, results.outputs)
         self.assertEqual(hold1, hold2)
 
-
+        # Now testing with a different type of sequence
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-
-        # Now testing with a different type of sequence
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (15))
         hold2 = m.calc_error(results.times, results.inputs, results.outputs)
         self.assertEqual(hold1, hold2)
-
 
         # Cannot pass Sets into tolerance
         with self.assertRaises(TypeError):
@@ -1003,45 +1004,40 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, method = 'TNC', tol = 1e-9)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-
+        # Using different methods should result in different errors.
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
-        
-        # Using different methods should result in different errors.
         self.assertNotAlmostEqual(track1, track2)
 
-
+        # Tests checking very small tolerance values
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-
-        # Tests that are checking for how tolerance and options work alongside one another
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
+                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-14)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # So, for tol values between 1e-4 and bigger, we will continue to have the same results, whereas. 
-        # To determine it is 1e-34is the smallest, we have a tolerance check if it 1e-3 produces similar results, to which it does not.
+        # Now testing what occurs with even smaller tolerance
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
+                            bounds=bound, keys=keys, method='TNC', tol=1e-20)
+        track2 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-        
-        # Providing bounds here has some unwanted behavior. Provides worse predictions... Just a result of having tolerance
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                          bounds=bound, keys=keys, method='TNC', options = {'maxiter': 250}, tol=1e-9)
-        
-        track2 = m.calc_error(results.times, results.inputs, results.outputs)
+                            bounds=bound, keys=keys, method='TNC', tol=1e-9)
 
-        # Note that at some point, the tolerance does not keep going farther down, the tolerance does not affect the calc_error
-        self.assertNotEqual(track1, track2)
+        # Note that at some point, estimate_params will converge to some number regardless of how small the tol is.
+        self.assertEqual(track1, track2)
 
-
-        # Tests to check how tolerance and options work together
+        # Tests to check how tolerance and options work together.
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
