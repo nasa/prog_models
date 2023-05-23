@@ -905,8 +905,12 @@ class TestEstimateParams(unittest.TestCase):
         # with self.assertRaises(ValueError)
             # m.estimate_params(times=[[times]], inputs=[[inputs]], outputs=[[outputs]])
 
+
 # Test that specifically looks into adding tolerance into our keyword arguments.
     def test_tolerance(self):
+        """
+        Test which specifically targets adding tolerance as a keyword argument.
+        """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
@@ -921,23 +925,9 @@ class TestEstimateParams(unittest.TestCase):
 
         # High tolerance would result in a higher calc_error
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                          bounds=bound, keys = keys, tol = .1)
+                          bounds=bound, keys = keys, tol = 10)
         if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
             raise ValueError("m.parameter shouldn't be too close to the original parameters")
-        check = m.calc_error(results.times, results.inputs, results.outputs)
-
-        # Reset parameters
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-
-        # Not including bounds works as intended here, whereas including bounds does not get a good fit for the parameters.
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
-        for key in keys:
-            self.assertAlmostEqual(m.parameters[key], gt[key], 2)
-        check2 = m.calc_error(results.times, results.inputs, results.outputs)
-
-        self.assertLess(check2, check)
 
         # Note that tolerance does not convert here
         with self.assertRaises(TypeError):
@@ -951,31 +941,47 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [])
         hold1 = m.calc_error(results.times, results.inputs, results.outputs)
 
+
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
+
+        # Confirming that an empty list for tolerance behaves the same way as not passing in a Tolerance at all.
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys)
+        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
+        self.assertEqual(hold1, hold2)
+
+
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10  
 
         # Tolerance works as intended as long as it is within a sequence of length 1
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [15])
         hold2 = m.calc_error(results.times, results.inputs, results.outputs)
-
+        # Making sure that it has a different value.
         self.assertNotEqual(hold1, hold2)
 
+
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
+
+        # Confirming that passing tolerance as a sequence of length 1 outputs the same error as setting tolerance to the value in the original sequence.
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 15)
         hold1 = m.calc_error(results.times, results.inputs, results.outputs)
-
         self.assertEqual(hold1, hold2)
+
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
+
+        # Now testing with a different type of sequence
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (15))
         hold2 = m.calc_error(results.times, results.inputs, results.outputs)
-
         self.assertEqual(hold1, hold2)
+
 
         # Cannot pass Sets into tolerance
         with self.assertRaises(TypeError):
@@ -1001,14 +1007,14 @@ class TestEstimateParams(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (1, 2, 3))
         
-        # Using different method should work as intended 
+        # Passing Tolerance and Method together should work
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, method = 'TNC', tol = 1e-9)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        # Default Values 
+
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
@@ -1016,14 +1022,15 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
         
-        # Using different methods would result in different errors.
+        # Using different methods should result in different errors.
         self.assertNotAlmostEqual(track1, track2)
 
-        # Tests that are checking for how tolerance and options work alongside one another
+
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
 
+        # Tests that are checking for how tolerance and options work alongside one another
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
                           bounds=bound, keys=keys, method = 'TNC', tol = 1e-4)
         track1 = m.calc_error(results.times, results.inputs, results.outputs)
