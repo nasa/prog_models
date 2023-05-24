@@ -55,7 +55,7 @@ def run_example():
 
     # Simulate vehicle to fly trajectory 
     # traj_results = vehicle.simulate_to_threshold(ctrl, **options)
-    traj_results = vehicle.simulate_to(100, ctrl, **options)
+    traj_results = vehicle.simulate_to(350, ctrl, **options)
 
     # Visualize Results
     vehicle.visualize_traj(traj_results)
