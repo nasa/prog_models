@@ -22,8 +22,8 @@ def run_example():
     }
 
     # Initialize vehicle 
-    # vehicle = UAVGen(**vehicle_params)
-    vehicle = SmallRotorcraft(**vehicle_params)
+    vehicle = UAVGen(**vehicle_params)
+    # vehicle = SmallRotorcraft(**vehicle_params)
 
     # Define coarse waypoints: waypoints must be defined with a dictionary of numpy arrays or as columns in a text file 
     # See documentation for specific information on inputting waypoints 
@@ -41,7 +41,7 @@ def run_example():
 
     # Calculate reference trajectory 
     ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **ref_params)
-    # vehicle.parameters['ref_traj'] = ref_traj
+    vehicle.parameters['ref_traj'] = ref_traj
 
     # Define controller and build scheduled control 
     ctrl = LQR(ref_traj, vehicle)
