@@ -79,7 +79,8 @@ class LQR():
         # self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
         self.n_states  = len(self.states) - 2   # number of states (minus one to remove time)
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
-        self.n_inputs  = len(self.inputs)       # number of inputs
+        # self.n_inputs  = len(self.inputs)       # number of inputs
+        self.n_inputs  = len(self.inputs) - 1       # number of inputs
         self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
         self.ss_input  = vehicle.parameters['steadystate_input']
         self.vehicle_max_thrust = vehicle.dynamics['max_thrust']
