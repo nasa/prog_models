@@ -17,9 +17,11 @@ from prog_models.exceptions import ProgModelInputException, ProgModelException
 class SmallRotorcraft(PrognosticsModel):
 
     events = ['TrajectoryComplete']
-    inputs = ['T','mx','my','mz']
+    # inputs = ['T','mx','my','mz']
+    inputs = ['T','mx','my','mz', 'mission_complete']
     n_inputs = len(inputs)
-    states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t']
+    # states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r','t']
+    states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r', 't', 'mission_complete']
     n_states = len(states)
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
     n_outputs = len(outputs)
@@ -138,7 +140,7 @@ class SmallRotorcraft(PrognosticsModel):
         dxdt[10] = ((Izz - Ixx) * p * r + tq * self.geom['arm_length']) / Iyy     # Angular acceleration along body y-axis: pitch rate
         dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz                   # Angular acceleration along body z-axis: yaw rate
         dxdt[12] = 1                                                                            # Auxiliary time variable
-        # dxdt[13] = (u['mission_complete'] - x['mission_complete'])/self.parameters['dt']
+        dxdt[13] = (u['mission_complete'] - x['mission_complete'])/self.parameters['dt']
         
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
@@ -209,7 +211,8 @@ class SmallRotorcraft(PrognosticsModel):
  
     def output(self, x : dict):
         # Output is the same as the state vector, without time 
-        return self.OutputContainer(x.matrix[0:-1])
+        # return self.OutputContainer(x.matrix[0:-1])
+        return self.OutputContainer(x.matrix[0:-2])
 
 
     def threshold_met(self, x : dict) -> dict:
