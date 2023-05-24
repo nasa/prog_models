@@ -7,7 +7,9 @@ from warnings import warn
 from typing import Callable
 
 from prog_models.prognostics_model import PrognosticsModel
-from .vehicles import AircraftModels
+# from .vehicles import AircraftModels
+from .vehicles.aero import aerodynamics as aero
+from .vehicles import vehicles
 from prog_models.aux_fcns.traj_gen_utils import geometry as geom
 from prog_models.exceptions import ProgModelInputException, ProgModelException
 
@@ -498,6 +500,9 @@ class SmallRotorcraft(PrognosticsModel):
         'steadystate_input': None,
         'final_time_buffer_sec': 30, 
         'final_space_buffer_m': 2, 
+        
+        # State initialization:
+        'x0': {key: 0.0 for key in states},
 
         # Vehicle parameters:
         'vehicle_model': 'tarot18', 
@@ -519,9 +524,9 @@ class SmallRotorcraft(PrognosticsModel):
         # Select model
         # ------------
         if self.parameters['vehicle_model'].lower() == 'djis1000':
-            self.mass, self.geom, self.dynamics = AircraftModels.vehicles.DJIS1000(self.parameters['vehicle_payload'], gravity)
+            self.mass, self.geom, self.dynamics = vehicles.DJIS1000(self.parameters['vehicle_payload'], gravity)
         elif self.parameters['vehicle_model'].lower() == 'tarot18':   
-            self.mass, self.geom, self.dynamics = AircraftModels.vehicles.TAROT18(self.parameters['vehicle_payload'], gravity)
+            self.mass, self.geom, self.dynamics = vehicles.TAROT18(self.parameters['vehicle_payload'], gravity)
         else:                                                         
             self.mass, self.geom, self.dynamics = dict(), dict(), dict()
         
@@ -530,34 +535,10 @@ class SmallRotorcraft(PrognosticsModel):
             self.parameters['steadystate_input'] = self.mass['total'] * self.parameters['gravity']
         
         # Introduction of Aerodynamic effects:
-        self.aero = dict(drag=AircraftModels.aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
-                                                            Cd=self.dynamics['aero']['cd'],
-                                                            air_density=self.parameters['air_density']),
+        self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
+                                                      Cd=self.dynamics['aero']['cd'],
+                                                      air_density=self.parameters['air_density']),
                         lift=None)
-        
-    def initialize(self, u=None, z=None): 
-      # Extract initial state from reference trajectory    
-      # TODO: needs to be more general, but don't have ref_traj here 
-      if u is None:
-        self.InputContainer({'T': self.parameters['steadystate_input'], 'mx': 0.0, 'my': 0.0, 'mz': 0.0})
-      else:
-        self.InputContainer(u)
-
-      return self.StateContainer({'x': 0, # self.ref_traj.cartesian_pos[0, 0],
-                                  'y': 0, #self.ref_traj.cartesian_pos[0, 1],
-                                  'z': 0, #self.ref_traj.cartesian_pos[0, 2],
-                                  'phi': 0, #self.ref_traj.attitude[0, 0],
-                                  'theta': 0, #self.ref_traj.attitude[0, 1],
-                                  'psi': 0, # self.ref_traj.attitude[0, 2],
-                                  'vx': 0, #self.ref_traj.velocity[0, 0],
-                                  'vy': 0, #self.ref_traj.velocity[0, 1],
-                                  'vz': 0, #self.ref_traj.velocity[0, 2],
-                                  'p': 0, #self.ref_traj.angular_velocity[0, 0],
-                                  'q': 0, #self.ref_traj.angular_velocity[0, 1],
-                                  'r': 0, #self.ref_traj.angular_velocity[0, 2],
-                                  't': 0,
-                                  # 'mission_complete': 0
-                                  })
 
     def dx(self, x : dict, u : dict):
 
