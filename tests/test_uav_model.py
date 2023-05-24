@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
-from prog_models.models.uav_model import UAVGen 
+from prog_models.models.uav_model import SmallRotorcraft 
 from prog_models.loading_fcns.controllers import LQR_I, LQR
 from prog_models.exceptions import ProgModelInputException, ProgModelException
 from prog_models.aux_fcns.traj_gen_utils import geometry as geom
@@ -25,7 +25,7 @@ class TestUAVGen(unittest.TestCase):
     def test_reference_trajectory_generation(self):
 
         # Define vehicle, necessary to pass to ref_traj
-        vehicle = UAVGen()
+        vehicle = SmallRotorcraft()
 
         # Define waypoints 
         waypoints = {}
@@ -148,7 +148,7 @@ class TestUAVGen(unittest.TestCase):
     def test_controllers(self):
 
         # Instantiate vehicle 
-        vehicle = UAVGen()
+        vehicle = SmallRotorcraft()
 
         # Define waypoints 
         waypoints = {}
@@ -189,7 +189,7 @@ class TestUAVGen(unittest.TestCase):
     def test_vehicle(self):
 
         # Instantiate vehicle 
-        vehicle = UAVGen()
+        vehicle = SmallRotorcraft()
 
         # Define waypoints 
         waypoints = {}
@@ -203,11 +203,11 @@ class TestUAVGen(unittest.TestCase):
 
         # Instantiate controller
         ctrl = LQR(ref_traj, vehicle)
-        ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.vehicle_model.mass['total']*vehicle.parameters['gravity']])
+        ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
 
         # Testing appropriate input parameters: 
         with self.assertRaises(ProgModelInputException):
-            vehicle_wrong = UAVGen(**{'vehicle_model': 'fakemodel'})
+            vehicle_wrong = SmallRotorcraft(**{'vehicle_model': 'fakemodel'})
 
         # Test exception if no reference trajectory specified in vehicle parameters
         with self.assertRaises(ProgModelException):

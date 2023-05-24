@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
-from prog_models.models.uav_model import UAVGen, SmallRotorcraft
+from prog_models.models.uav_model import SmallRotorcraft
 from prog_models.loading_fcns.controllers import LQR_I, LQR
 
 def run_example(): 
@@ -22,8 +22,7 @@ def run_example():
     }
 
     # Initialize vehicle 
-    vehicle = UAVGen(**vehicle_params)
-    # vehicle = SmallRotorcraft(**vehicle_params)
+    vehicle = SmallRotorcraft(**vehicle_params)
 
     # Define coarse waypoints: waypoints must be defined with a dictionary of numpy arrays or as columns in a text file 
     # See documentation for specific information on inputting waypoints 

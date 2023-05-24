@@ -1,4 +1,4 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from .uav_model import UAVGen, SmallRotorcraft
+from .uav_model import SmallRotorcraft
