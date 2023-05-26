@@ -155,7 +155,7 @@ class LinearThrownObject(LinearModel):
             'impact': x['x'] <= 0
         }
 
-    def event_state(self, x): 
+    def event_state(self, x):
         x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
         return {
             'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed

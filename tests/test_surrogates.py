@@ -2,6 +2,7 @@
 
 import chaospy as cp
 from io import StringIO
+import matplotlib.pyplot as plt
 import sys
 import unittest
 import warnings
@@ -33,40 +34,40 @@ class TestSurrogate(unittest.TestCase):
         with self.assertRaises(ProgModelInputException):
             m.generate_surrogate([load_eqn], save_pts = [10])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], trim_data_to = -1)
+            m.generate_surrogate([load_eqn], trim_data_to=-1)
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], trim_data_to = 'invalid')
+            m.generate_surrogate([load_eqn], trim_data_to='invalid')
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], trim_data_to = 1.5)
+            m.generate_surrogate([load_eqn], trim_data_to=1.5)
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], states = ['invalid'])
+            m.generate_surrogate([load_eqn], states=['invalid'])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], states = ['x', 'invalid', 'v'])
+            m.generate_surrogate([load_eqn], states=['x', 'invalid', 'v'])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], inputs = ['invalid'])
+            m.generate_surrogate([load_eqn], inputs=['invalid'])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], outputs = ['invalid'])
+            m.generate_surrogate([load_eqn], outputs=['invalid'])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], outputs = ['invalid', 'x'])    
+            m.generate_surrogate([load_eqn], outputs=['invalid', 'x'])    
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], events = ['invalid'])
+            m.generate_surrogate([load_eqn], events=['invalid'])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], events = ['falling', 'impact', 'invalid'])
+            m.generate_surrogate([load_eqn], events=['falling', 'impact', 'invalid'])
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], stability_tol = -1)
+            m.generate_surrogate([load_eqn], stability_tol=-1)
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], stability_tol = 'invalid')
+            m.generate_surrogate([load_eqn], stability_tol='invalid')
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], training_noise = -1)
+            m.generate_surrogate([load_eqn], training_noise=-1)
         with self.assertRaises(ProgModelInputException):
-            m.generate_surrogate([load_eqn], training_noise = ['invalid'])
+            m.generate_surrogate([load_eqn], training_noise=['invalid'])
     
     def test_surrogate_basic_thrown_object(self):
-        m = ThrownObject(process_noise = 0, measurement_noise = 0)
-        def load_eqn(t = None, x = None):
+        m = ThrownObject(process_noise=0, measurement_noise=0)
+        def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
-        surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', training_noise=0)
+        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, [stateTest for stateTest in m.states if (stateTest not in m.outputs and stateTest not in m.events)] + m.outputs + m.events)
@@ -85,7 +86,7 @@ class TestSurrogate(unittest.TestCase):
         surrogate_results = surrogate.simulate_to_threshold(load_eqn, **options)
 
         MSE = m.calc_error(surrogate_results.times, surrogate_results.inputs, surrogate_results.outputs)
-        self.assertLess(MSE, 10) # Pretty good approx
+        self.assertLess(MSE, 10)  # Pretty good approx
 
         self.assertAlmostEqual(surrogate_results.times[-1], result.times[-1], delta=0.26)
         for i in range(min(len(result.times), len(surrogate_results.times))):

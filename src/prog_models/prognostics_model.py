@@ -51,7 +51,7 @@ class PrognosticsModel(ABC):
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException 
+        ProgModelTypeError, ProgModelInputException, ProgModelException
 
     Example
     -------
@@ -362,7 +362,6 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
         return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
@@ -729,12 +728,9 @@ class PrognosticsModel(ABC):
         if not isinstance(time, Number) or time < 0:
             raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
 
-        # Configure
-        config = { # Defaults
-            'thresholds_met_eqn': (lambda x: False), # Override threshold
-            'horizon': time
-        }
-        kwargs.update(config) # Config should override kwargs
+        # Override threshold_met_eqn and horizon
+        kwargs['thresholds_met_eqn'] = lambda x: False
+        kwargs['horizon'] = time
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
@@ -832,12 +828,12 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("threshold_keys must be event names")
 
         # Configure
-        config = { # Defaults
+        config = {  # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
             'save_pts': [],
             'save_freq': 10.0,
-            'horizon': 1e100, # Default horizon (in s), essentially inf
+            'horizon': 1e100,  # Default horizon (in s), essentially inf
             'print': False,
             'x': None,
             'progress': False

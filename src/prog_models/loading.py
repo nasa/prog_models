@@ -25,7 +25,7 @@ class MovingAverage():
     >>>     future_load.add_load(load)
     >>> m.simulate_to_threshold(future_load)
     """
-    def __init__(self, InputContainer, window = 10):
+    def __init__(self, InputContainer, window=10):
         self.window = window
         self.InputContainer = InputContainer
         self.values = {}

@@ -101,7 +101,7 @@ class EnsembleModel(PrognosticsModel):
 
         return self.OutputContainer(zs_final)
         
-    def event_state(self, x):
+    def event_state(self, x) -> dict:
         es = [m.event_state(m.StateContainer(x)) for m in self.parameters['models']]
         es_final = {}
         for es_i in es:

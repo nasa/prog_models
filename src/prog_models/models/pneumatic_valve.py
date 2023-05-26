@@ -164,7 +164,7 @@ class PneumaticValveBase(PrognosticsModel):
     default_parameters = {  # Set to defaults
         # Environmental Parameters
         'R': 8.314,  # Universal Gas Constant
-        'g': 9.81, 
+        'g': 9.81,
         'pAtm': 101325,
 
         # Valve Parameters
@@ -185,7 +185,7 @@ class PneumaticValveBase(PrognosticsModel):
         # Supply gas params (Note: Default is nitrogen)
         'gas_mass': 28.01e-3,
         'gas_temp': 293,
-        'gas_gamma': 1.4, 
+        'gas_gamma': 1.4,
         'gas_z': 1,
         'gas_R': 296.8225633702249454,
 

@@ -29,7 +29,7 @@ class ESC(PrognosticsModel):
 
     Simple Electronic-Speed Controller (ESC) :term:`model` for powertrain modeling.
     This model replicates the behavior of the speed controller with pulse-width modulation (PWM) and commutation matrix.
-    Duty cycle simulated with a square wave using scipy signal.square function. 
+    Duty cycle simulated with a square wave using scipy signal.square function.
 
     References: [0]_, [1]_.
 

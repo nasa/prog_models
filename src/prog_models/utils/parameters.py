@@ -16,7 +16,7 @@ from prog_models.utils.size import getsizeof
 from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
-if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
+if TYPE_CHECKING:  # Fix circular import issue in PrognosticsModelParameters init
     from prog_models.prognostics_model import PrognosticsModel
 
 
@@ -91,7 +91,7 @@ class PrognosticsModelParameters(UserDict):
         if key in self.callbacks:
             for callback in self.callbacks[key]:
                 changes = callback(self)
-                self.update(changes) # Merge in changes
+                self.update(changes)  # Merge in changes
 
         # Handle setting integration_method. This will override the next_state method
         if key == 'integration_method':

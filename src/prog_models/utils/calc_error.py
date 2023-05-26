@@ -62,7 +62,7 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
 
-    counter = 0 
+    counter = 0
     t_last = times[0]
     err_max = 0
     z_obs = m.output(x)  # Initialize

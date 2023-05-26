@@ -26,7 +26,7 @@ class MockModel():
         'x0': {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
     }
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u={}, z={}):
         return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
@@ -52,7 +52,8 @@ class MockProgModel(MockModel, PrognosticsModel):
             }
 
     def threshold_met(self, x):
-        return {key : value < 1e-6 for (key, value) in self.event_state(x).items()}
+        return {
+            key: value < 1e-6 for (key, value) in self.event_state(x).items()}
 
 def derived_callback(config):
     return {
@@ -65,8 +66,8 @@ def derived_callback2(config):
     }
 
 def derived_callback3(config):
-    return {  # Testing 2nd chained update 
-        'p4': -2 * config['p2'], 
+    return {  # Testing 2nd chained update
+        'p4': -2 * config['p2'],
     }
 
 class MockModelWithDerived(MockProgModel):

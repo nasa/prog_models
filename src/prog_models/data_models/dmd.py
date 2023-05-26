@@ -7,10 +7,11 @@ from scipy.interpolate import interp1d
 import types
 from warnings import warn
 
-from ..exceptions import ProgModelInputException
-from ..sim_result import SimResult, LazySimResult
-from .. import LinearModel, PrognosticsModel
-from . import DataModel
+from prog_models.exceptions import ProgModelInputException
+from prog_models.sim_result import SimResult, LazySimResult
+from prog_models import LinearModel, PrognosticsModel
+from prog_models.data_models import DataModel
+
 
 class DMDModel(LinearModel, DataModel):
     """
@@ -64,7 +65,7 @@ class DMDModel(LinearModel, DataModel):
         if isinstance(dmd_matrix, PrognosticsModel):
             # Keep for backwards compatability (in first version, model was passed into constructor)
             warn('Passing a PrognosticsModel into DMDModel is deprecated and will be removed in v1.5.  Please use DMDModel.from_model instead', DeprecationWarning)
-            return cls.from_model(dmd_matrix, args[0], **kwargs) 
+            return cls.from_model(dmd_matrix, args[0], **kwargs)
         return DataModel.__new__(cls)
 
     def __getnewargs__(self):
@@ -101,7 +102,7 @@ class DMDModel(LinearModel, DataModel):
         n_outputs = len(params['output_keys'])
         
         has_overwritten_threshold_eqn = hasattr(self, 'events')
-        if has_overwritten_threshold_eqn: 
+        if has_overwritten_threshold_eqn:
              # To support overridding to add custom threshold equation
             n_events = 0
         else:
@@ -111,15 +112,15 @@ class DMDModel(LinearModel, DataModel):
 
         n_total = n_states + n_outputs + n_events
 
-        self.A = dmd_matrix[:,0:n_total]
-        self.B = np.vstack(dmd_matrix[:,n_total:n_total+n_inputs]) 
-        self.C = np.zeros((n_outputs,n_total))
+        self.A = dmd_matrix[:, 0:n_total]
+        self.B = np.vstack(dmd_matrix[:, n_total:n_total+n_inputs])
+        self.C = np.zeros((n_outputs, n_total))
         for iter1 in range(n_outputs):
-            self.C[iter1,n_states+iter1] = 1 
+            self.C[iter1, n_states+iter1] = 1
         if not has_overwritten_threshold_eqn:
-            self.F = np.zeros((n_events,n_total))
+            self.F = np.zeros((n_events, n_total))
         for iter2 in range(n_events):
-            self.F[iter2,n_states+n_outputs+iter2] = 1 
+            self.F[iter2, n_states+n_outputs+iter2] = 1
 
         super().__init__(**params)
         
@@ -131,34 +132,34 @@ class DMDModel(LinearModel, DataModel):
             self.parameters['x0'] = self.StateContainer(params['x0'])
 
     @classmethod
-    def from_data(cls, times, inputs, outputs, states = None, event_states = None, **kwargs):
+    def from_data(cls, times, inputs, outputs, states=None, event_states=None, **kwargs):
         """
         Create a DMD model from data
 
         Args:
-            times (list[list]): 
+            times (list[list]):
                 list of input data for use in data. Each element is the times for a single run of size (n_times)
-            inputs (list[np.array]): 
+            inputs (list[np.array]):
                 list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
-            outputs (list[np.array]): 
+            outputs (list[np.array]):
                 list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
-            states (list[np.array], optional): 
+            states (list[np.array], optional):
                 list of :term:`state` data for use in data. Each element is the states for a single run of size (n_times, n_states)
-            event_states (list[np.array], optional): 
+            event_states (list[np.array], optional):
                 list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
 
         Keyword Args:
-            trim_data_to (float, optional): 
+            trim_data_to (float, optional):
                 Fraction (0-1) of data resulting from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold` used to train DMD surrogate model
                 e.g. if trim_data_to = 0.7 and the simulated data spans from t=0 to 100, the surrogate model is trained on the data from t=0 to 70 \n   
-                Note: To trim data to a set time, use the 'horizon' parameter  
+                Note: To trim data to a set time, use the 'horizon' parameter
             stability_tol (float, optional):
                 Value that determines the tolerance for DMD matrix stability
             training_noise (float, optional):
                 Noise added to the training data sampled from a standard normal distribution with standard deviation of training_noise. Adding noise to the training data results in a slight perturbation that removes any linear dependencies among the data
-            input_keys (list[str], optional): 
+            input_keys (list[str], optional):
                 List of :term:`input` keys
-            state_keys (list[str], optional): 
+            state_keys (list[str], optional):
                 List of :term:`state` keys
             output_keys (list[str], optional):
                 List of :term:`output` keys
@@ -175,20 +176,20 @@ class DMDModel(LinearModel, DataModel):
             DMDModel: Model generated from data
         """
         # Configure
-        config = { # Defaults
+        config = {  # Defaults
             'trim_data_to': 1,
             'stability_tol': 1e-05,
             'training_noise': 1e-05,
             'input_keys': None,
             'state_keys': None,
             'output_keys': None,
-            'event_keys': None, 
+            'event_keys': None,
             'dt': None
         }
         config.update(kwargs)
 
         # Input validation
-        if not isinstance(config['trim_data_to'], Number) or config['trim_data_to']>1 or config['trim_data_to']<=0:
+        if not isinstance(config['trim_data_to'], Number) or config['trim_data_to'] > 1 or config['trim_data_to'] <= 0:
             raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
         if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
             raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
@@ -257,7 +258,7 @@ class DMDModel(LinearModel, DataModel):
 
         for input_key in config['input_keys']:
             if input_key in config['output_keys'] or input_key in config['event_keys']:
-                warn(f"Input value '{input_key}' is duplicated in outputs or events")     
+                warn(f"Input value '{input_key}' is duplicated in outputs or events")
 
         for output_key in config['output_keys']:
             if output_key in config['event_keys']:
@@ -287,12 +288,12 @@ class DMDModel(LinearModel, DataModel):
 
             if isinstance(u, SimResult):
                 u = u.to_numpy(config['input_keys'])
-            
+
             if states != None:
                 x = states[run]
                 if len(x) != len(u):
                     raise ProgModelInputException(f"Must have same number of steps for inputs, states, and outputs in a single run. Not true for states in run {run}")
-                if isinstance(x, SimResult):     
+                if isinstance(x, SimResult):
                     x = x.to_numpy(config['state_keys'])
             else:
                 x = np.array([[] for _ in u])
@@ -304,7 +305,7 @@ class DMDModel(LinearModel, DataModel):
                 es = event_states[run]
                 if len(es) != len(u):
                     raise ProgModelInputException(f"Must have same number of steps for inputs, event_states, and outputs in a single run. Not true for event_states in run {run}")
-                if isinstance(es, SimResult):    
+                if isinstance(es, SimResult):
                     es = es.to_numpy(config['event_keys'])
             else:
                 es = np.array([[] for _ in u])
@@ -316,11 +317,11 @@ class DMDModel(LinearModel, DataModel):
                 u = u[:index]
                 x = x[:index]
                 z = z[:index]
-                es = es[:index]       
+                es = es[:index]
             
             # Interpolate
             # This is done when dt and save_freq are not equal. 
-            # dt is the frequency at which simulation is performed to generate data, 
+            # dt is the frequency at which simulation is performed to generate data,
             # while save_freq is the frequency for the dmd_matrix
             if config['save_freq'] != config['dt'] or config['dt'] is None:
                 if isinstance(config['save_freq'], (tuple, list, np.ndarray)):
@@ -339,7 +340,7 @@ class DMDModel(LinearModel, DataModel):
                 if n_states != 0:
                     x = interp1d(t, x, axis=0)(t_new)
                 z = interp1d(t, z, axis=0)(t_new)
-                if n_events != 0:  
+                if n_events != 0:
                     # Optimization - avoid interpolation of empty array
                     es = interp1d(t, es, axis=0)(t_new)
                 t = t_new  # Reset time to new timestep
@@ -359,9 +360,9 @@ class DMDModel(LinearModel, DataModel):
             time_list.append(t)
             x_mat = np.hstack((x, z, es, u)).T
             x_list.append(x_mat[:, :-1])
-            xprime_list.append(x_mat[:-n_inputs if n_inputs != 0 else None, 1:])    
+            xprime_list.append(x_mat[:-n_inputs if n_inputs != 0 else None, 1:])
 
-        # Format training data for DMD and solve for matrix A, in the form X' = AX 
+        # Format training data for DMD and solve for matrix A, in the form X' = AX
         print('Generate DMD Surrogate Model')
 
         if 'x0' not in config:
@@ -372,22 +373,22 @@ class DMDModel(LinearModel, DataModel):
         xprime_mat = np.hstack((xprime_list[:]))
 
         # Calculate DMD matrix using the Moore-Penrose pseudo-inverse:
-        dmd_matrix = np.dot(xprime_mat,np.linalg.pinv(x_mat))        
+        dmd_matrix = np.dot(xprime_mat, np.linalg.pinv(x_mat))
 
         # Check for stability of dmd_matrix
-        eig_val, _ = np.linalg.eig(dmd_matrix[:,0:-n_inputs if n_inputs > 0 else None])            
+        eig_val, _ = np.linalg.eig(dmd_matrix[:, 0:-n_inputs if n_inputs > 0 else None])
         
-        if sum(eig_val>1) != 0:
+        if sum(eig_val > 1) != 0:
             for eig_val_i in eig_val:
-                if eig_val_i>1 and eig_val_i-1>config['stability_tol']:
+                if eig_val_i > 1 and (eig_val_i-1) > config['stability_tol']:
                     warn("The DMD matrix is unstable, may result in poor approximation.")
 
         del config['dt']
 
         # Build Model
         return cls(
-            dmd_matrix, 
-            dt = config['save_freq'], 
+            dmd_matrix,
+            dt=config['save_freq'],
             **config)
         
     @classmethod
@@ -415,27 +416,27 @@ class DMDModel(LinearModel, DataModel):
 
         return m_dmd
 
-    def next_state(self, x, u, _):   
+    def next_state(self, x, u, _):
         x.matrix = np.matmul(self.A, x.matrix) + self.E
         if self.B.shape[1] != 0:
            x.matrix += np.matmul(self.B, u.matrix)
         
         return x   
 
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
-        # Save keyword arguments same as DMD training for approximation 
+    def simulate_to_threshold(self, future_loading_eqn, first_output=None, threshold_keys=None, **kwargs):
+        # Save keyword arguments same as DMD training for approximation
         kwargs_sim = kwargs.copy()
         kwargs_sim['save_freq'] = self.dt
         kwargs_sim['dt'] = self.dt
 
         # Simulate to threshold at DMD time step
-        results = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs_sim)
+        results = super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs_sim)
         
         # Interpolate results to be at user-desired time step
         if 'dt' in kwargs:
             warn("dt is not used in DMD approximation")
 
-        # Default parameters 
+        # Default parameters
         config = {
             'dt': None,
             'save_freq': None,
@@ -454,7 +455,7 @@ class DMDModel(LinearModel, DataModel):
         # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
         # Define time vector based on user specifications
         time_basic = [results.times[0], results.times[-1]]
-        time_basic.extend(config['save_pts'])                       
+        time_basic.extend(config['save_pts'])
         if config['save_freq'] != None:
             if isinstance(config['save_freq'], tuple):
                 # Tuple used to specify start and frequency
@@ -462,9 +463,9 @@ class DMDModel(LinearModel, DataModel):
                 # Use starting time or the next multiple
                 t_start = config['save_freq'][0]
                 start = max(t_start, results.times[0] - (results.times[0]-t_start)%t_step)
-                time_array = np.arange(start+t_step,results.times[-1],t_step)
+                time_array = np.arange(start+t_step, results.times[-1],t_step)
             else: 
-                time_array = np.arange(results.times[0]+config['save_freq'],results.times[-1],config['save_freq'])
+                time_array = np.arange(results.times[0]+config['save_freq'], results.times[-1], config['save_freq'])
             time_basic.extend(time_array.tolist())
         time_interp = sorted(time_basic)
 

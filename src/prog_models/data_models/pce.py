@@ -104,12 +104,12 @@ class PolynomialChaosExpansion(DataModel):
 
         # Train
         inputs = inputs.T
-        expansion = cp.generate_expansion(order=params['order'], dist=params['J']) # Order=2 is the only hyperparameter
+        expansion = cp.generate_expansion(order=params['order'], dist=params['J'])  # Order=2 is the only hyperparameter
         surrogates = [
             cp.fit_regression(expansion, inputs, toe_i) for toe_i in time_of_event.T
         ]
 
-        return cls(surrogates, times = times, input_keys = input_keys, **params)
+        return cls(surrogates, times=times, input_keys=input_keys, **params)
 
     @classmethod
     def from_model(cls, m, x, input_dists, times, **kwargs):
@@ -135,8 +135,8 @@ class PolynomialChaosExpansion(DataModel):
                 Order of the polynomial chaos expansion
         """
         default_params = {
-            'N': 1000, 
-            'dt': 0.1, 
+            'N': 1000,
+            'dt': 0.1,
         }
         params = default_params.copy()
         params.update(kwargs)
@@ -156,7 +156,7 @@ class PolynomialChaosExpansion(DataModel):
                             pdf = input_dists[key].pdf,
                             ppf = input_dists[key].ppf
                         )
-                        for key in m.inputs 
+                        for key in m.inputs
                         for _ in range(len(times))
                         ]
         J = cp.J(*input_dists)  # Joint distribution to sample from
@@ -171,7 +171,7 @@ class PolynomialChaosExpansion(DataModel):
         for i in range(params['N']):
             # Sample
             inputs = np.reshape(all_samples[:, i], (len(m.inputs), len(times)))
-            interpolator = sp.interpolate.interp1d(times, inputs, bounds_error = False, fill_value = inputs[:, -1])
+            interpolator = sp.interpolate.interp1d(times, inputs, bounds_error=False, fill_value=inputs[:, -1])
 
             # Simulate to get data
             time_of_event_i = m.time_of_event(x, future_loading, dt=params['dt'])
@@ -182,6 +182,6 @@ class PolynomialChaosExpansion(DataModel):
         params['input_keys'] = m.inputs
         params['x'] = x
         params['times'] = times
-        return cls.from_data(inputs = all_samples.T, time_of_event = time_of_event, event_keys = m.events, J=J, **params)
+        return cls.from_data(inputs=all_samples.T, time_of_event=time_of_event, event_keys=m.events, J=J, **params)
 
 PCE = PolynomialChaosExpansion

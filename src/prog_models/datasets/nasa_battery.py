@@ -42,7 +42,7 @@ urls = {
 cache = {}  # Cache for downloaded data
 # Cache is used to prevent files from being downloaded twice
 
-def load_data(batt_id : str) -> tuple:
+def load_data(batt_id: str) -> tuple:
     """
     .. versionadded:: 1.3.0
 
@@ -77,7 +77,7 @@ def load_data(batt_id : str) -> tuple:
         # Download data
         try:
             response = requests.get(url, allow_redirects=True)
-        except requests.exceptions.RequestException as e: # handle chain of errors
+        except requests.exceptions.RequestException:  # handle chain of errors
             raise ConnectionRefusedError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
         # Unzip response
@@ -94,19 +94,19 @@ def load_data(batt_id : str) -> tuple:
 
     # Reformat
     desc = {
-        'procedure': str(result['procedure'][0,0][0]),
-        'description': str(result['description'][0,0][0]),
-        'runs': 
+        'procedure': str(result['procedure'][0, 0][0]),
+        'description': str(result['description'][0, 0][0]),
+        'runs':
         [
             {
-                'type': str(run_type[0]), 
+                'type': str(run_type[0]),
                 'desc': str(desc[0]),
                 'date': str(date[0])
-            } for (run_type, desc, date) in zip(result['step'][0,0]['type'][0], result['step'][0,0]['comment'][0], result['step'][0,0]['date'][0])
+            } for (run_type, desc, date) in zip(result['step'][0, 0]['type'][0], result['step'][0, 0]['comment'][0], result['step'][0,0]['date'][0])
         ]
     }
 
-    result = result['step'][0,0]
+    result = result['step'][0, 0]
     result = [
         pd.DataFrame(np.array([
             result[key][0, i][0] for key in ('relativeTime', 'current', 'voltage', 'temperature')
