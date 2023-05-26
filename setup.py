@@ -49,7 +49,7 @@ setup(
     keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management', 'surrogate modeling', 'model tuning', 'simulation', 'ivhm'],
     package_dir = {"":"src"},
     packages = find_packages(where = 'src'),
-    python_requires='>=3.7, <3.11',
+    python_requires='>=3.7, <3.12',
     install_requires = INSTALL_REQS,
     license = 'NOSA',
     project_urls={  # Optional

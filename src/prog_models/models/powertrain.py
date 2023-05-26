@@ -20,7 +20,7 @@ class Powertrain(PrognosticsModel):
     Parameters for a standard propeller for commercial UAV are also added to the powertrain model, so that the load torque 
     acting on the motor can be computed. At this stage, the propeller is modeled simply as a load torque proportional to the square of the rotor speed. 
     When simulating the full PWM signal, this model needs a very small time step size (e.g., dt=1e-5) to show the full dynamics.
-    Faster simulations can be achieved by ignoring the PWM square wave and acting directing on the input voltage. For example, modulating 
+    Faster simulations can be achieved by ignoring the PWM square wave and acting directing on the input voltage. For example, modulating
     the input voltage to replicate the behavior of a throttle.
 
     References:
@@ -93,7 +93,7 @@ class Powertrain(PrognosticsModel):
     }
 
     default_parameters = {
-        # Load parameters 
+        # Load parameters
         'c_q': 5.42e-7,  # coefficient of torque (APC data, derived) [dimensionless]
         'rho': 1.225,  # (Kg/m^3)
         'D': 0.381,  # (m)

@@ -9,13 +9,14 @@ import numpy as np
 import types
 from typing import Callable
 
+from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
 from prog_models.utils.serialization import *
 from prog_models.utils.size import getsizeof
 from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
-if TYPE_CHECKING: # Fix circular import issue in PrognosticsModelParameters init
+if TYPE_CHECKING:  # Fix circular import issue in PrognosticsModelParameters init
     from prog_models.prognostics_model import PrognosticsModel
 
 
@@ -27,18 +28,19 @@ class PrognosticsModelParameters(UserDict):
     Args:
         model: PrognosticsModel for which the params correspond
         dict_in: Initial parameters
-        callbacks: Any callbacks for derived parameters f(parameters) : updates (dict)
+        callbacks: Any callbacks for derived parameters f(parameters): updates (dict)
     """
     def __init__(self, model: "PrognosticsModel", dict_in: dict = {}, callbacks: dict = {}, _copy: bool = True):
         super().__init__()
         self._m = model
         self.callbacks = {}
-        # Note: Callbacks are set to empty to prevent calling callbacks with a partial or empty dict on line 32. 
+        # Note: Callbacks are set to empty to prevent calling callbacks with a
+        # partial or empty dict on line 32.
         for (key, value) in dict_in.items():
             self.__setitem__(key, value, _copy=_copy)
 
         # Add and run callbacks
-        # Has to be done here so the base parameters are all set 
+        # Has to be done here so the base parameters are all set
         self.callbacks = callbacks
         for key in callbacks:
             if key in self:
@@ -53,13 +55,13 @@ class PrognosticsModelParameters(UserDict):
         if set(self.data.keys()) != set(other.data.keys()):
             return False
         for key, value in self.data.items():
-            if not np.all(value == other[key]): 
-                  # Note: np.all is used to handle numpy array elements
-                  # Otherwise value == other[key] would return a numpy array of bools for each element
-                  return False
+            if not np.all(value == other[key]):
+                # Note: np.all is used to handle numpy array elements
+                # Otherwise value == other[key] would return a numpy array of
+                # bools for each element
+                return False
         return True
-        
-
+    
     def copy(self):
         return self.__class__(self._m, self.data, self.callbacks, _copy=False)
 
@@ -90,7 +92,20 @@ class PrognosticsModelParameters(UserDict):
         if key in self.callbacks:
             for callback in self.callbacks[key]:
                 changes = callback(self)
-                self.update(changes) # Merge in changes
+                self.update(changes)  # Merge in changes
+
+        # Handle setting integration_method.
+        # This will override the next_state method
+        if key == 'integration_method':
+            if self._m.is_discrete and self._m.is_state_transition_model:
+                raise ProgModelTypeError(
+                    "Cannot set integration method for discrete model (where next_state is overridden)")
+            if value.lower() not in next_state_functions.keys():
+                raise ProgModelTypeError(
+                    f"Unsupported integration method {value.lower()}")
+            self._m.next_state = types.MethodType(
+                next_state_functions[value.lower()],
+                self._m)
         
         if key == 'process_noise' or key == 'process_noise_dist':
             if callable(self['process_noise']):  # Provided a function
@@ -124,7 +139,8 @@ class PrognosticsModelParameters(UserDict):
                     fcn = process_noise_functions['gaussian']
                     self._m.apply_process_noise = types.MethodType(fcn, self._m)
                 
-                # Make sure every key is present (single value already handled above)
+                # Make sure every key is present
+                # (single value already handled above)
                 if not all([key in self['process_noise'] for key in self._m.states]):
                     raise ProgModelTypeError("Process noise must have every key in model.states")
 
@@ -159,7 +175,8 @@ class PrognosticsModelParameters(UserDict):
                     fcn = measurement_noise_functions['gaussian']
                     self._m.apply_measurement_noise = types.MethodType(fcn, self._m)
                     
-                # Make sure every key is present (single value already handled above)
+                # Make sure every key is present
+                # (single value already handled above)
                 if not all([key in self['measurement_noise'] for key in self._m.outputs]):
                     raise ProgModelTypeError("Measurement noise must have ever key in model.outputs")
 

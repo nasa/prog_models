@@ -58,7 +58,7 @@ class TestPneumaticValve(unittest.TestCase):
             'wt': array([0]*4)
         }
 
-        x = m.next_state(x0, future_loading(0), 0.1)
+        m.next_state(x0, future_loading(0), 0.1)
 
     def test_pneumatic_valve_with_wear(self):
         # Test using PneumaticValveWithWear
@@ -465,15 +465,4 @@ def main():
         raise Exception("Failed test")
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('main()', "output.dat")
-
-    import pstats
-
-    with open("output_time.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("time").print_stats()
-
-    with open("output_calls.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("calls").print_stats()
+    main()

@@ -8,7 +8,6 @@ import pandas as pd
 import sys
 import unittest
 from unittest.mock import patch
-from tests.test_battery import main as battery_main
 
 
 sys.path.append(join(dirname(__file__), ".."))  # Needed to access examples
@@ -85,9 +84,6 @@ class TestManual(unittest.TestCase):
     def test_ensemble_example(self):
         with patch('matplotlib.pyplot.show'):
             ensemble.run_example()
-    
-    def test_battery_main(self):
-        battery_main()
 
 # This allows the module to be executed directly
 def run_tests():

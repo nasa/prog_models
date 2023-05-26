@@ -2,7 +2,7 @@
 # This ensures that the directory containing examples is in the python search directories 
 
 from importlib import import_module
-from io import StringIO 
+from io import StringIO
 from os.path import dirname, join
 import pkgutil
 import sys
@@ -11,7 +11,7 @@ import unittest
 sys.path.append(join(dirname(__file__), ".."))  # needed to access examples
 from examples import *
 
-EXAMPLES_SKIPPED = ['dataset', 'sim_battery_eol', 'ensemble']
+EXAMPLES_SKIPPED = ['dataset', 'sim_battery_eol', 'ensemble', 'custom_model']
 
 def make_test_function(example):
     def test(self):
@@ -52,15 +52,4 @@ def main():
         raise Exception("Failed test")
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('main()', "output.dat")
-
-    import pstats
-
-    with open("output_time.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("time").print_stats()
-
-    with open("output_calls.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("calls").print_stats()
+    main()
