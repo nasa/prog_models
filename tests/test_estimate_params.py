@@ -1019,12 +1019,6 @@ class TestEstimateParams(unittest.TestCase):
                             bounds=bound, keys=keys, method='TNC', tol=1e-20)
         track2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
-                            bounds=bound, keys=keys, method='TNC', tol=1e-9)
-
         # Note that at some point, estimate_params will converge to some number regardless of how small the tol is.
         self.assertEqual(track1, track2)
 
