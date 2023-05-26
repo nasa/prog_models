@@ -172,7 +172,6 @@ class TestCalcError(unittest.TestCase):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
 
 
-
     """
     Base tests that ensure first-level workability within calc_error
     """
@@ -307,7 +306,7 @@ class TestCalcError(unittest.TestCase):
             str(cm.exception)
         )
 
-    def test_type_errors(self):
+    def test_errors(self):
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
         gt = m.parameters.copy()
@@ -385,6 +384,13 @@ class TestCalcError(unittest.TestCase):
         # Expecting this to pass
         m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
 
+        with self.assertRaises(ProgModelInputException) as cm:
+            m.calc_error(results.times, results.inputs, results.outputs, method = "Test")
+        self.assertEqual(
+            "Error method 'Test' not supported",
+            str(cm.exception)
+        )
+
 
         
     def test_RMSE(self):
@@ -412,15 +418,4 @@ def main():
         raise Exception("Failed test")
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('main()', "output.dat")
-
-    import pstats
-
-    with open("output_time.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("time").print_stats()
-
-    with open("output_calls.txt", 'w') as f:
-        p = pstats.Stats("output.dat", stream=f)
-        p.sort_stats("calls").print_stats()
+    main()
