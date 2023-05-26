@@ -108,9 +108,12 @@ def load_data(batt_id: str) -> tuple:
 
     result = result['step'][0, 0]
     result = [
-        pd.DataFrame(np.array([
-            result[key][0, i][0] for key in ('relativeTime', 'current', 'voltage', 'temperature')
-        ], np.float64).T, columns = ('relativeTime', 'current', 'voltage', 'temperature')) for i in range(result.shape[1])
+        pd.DataFrame(
+            np.array([
+                result[key][0, i][0] for key in ('relativeTime', 'current', 'voltage', 'temperature')
+            ], np.float64).T,
+            columns=('relativeTime', 'current', 'voltage', 'temperature')
+        ) for i in range(result.shape[1])
     ]
     for r in result:
         r.set_index('relativeTime')

@@ -396,7 +396,7 @@ class DMDModel(LinearModel, DataModel):
         process_noise_temp = {key: 0 for key in m.events}
         config = {
             'add_dt': False,
-            'process_noise': {**m.parameters['process_noise'],**m.parameters['measurement_noise'],**process_noise_temp},
+            'process_noise': {**m.parameters['process_noise'], **m.parameters['measurement_noise'], **process_noise_temp},
             'measurement_noise': m.parameters['measurement_noise'],
             'process_noise_dist': m.parameters.get('process_noise_dist', 'normal'),
             'measurement_noise_dist': m.parameters.get('measurement_noise_dist', 'normal')
@@ -446,25 +446,26 @@ class DMDModel(LinearModel, DataModel):
 
         if (config['save_freq'] == self.dt or
             (isinstance(config['save_freq'], tuple) and
-                config['save_freq'][0]%self.dt < 1e-9 and
+                config['save_freq'][0] % self.dt < 1e-9 and
                 config['save_freq'][1] == self.dt)
             ) and config['save_pts'] == []:
-            # In this case, the user wants what the DMD approximation returns 
-            return results 
+            # In this case, the user wants what the DMD approximation returns
+            return results
 
-        # In this case, the user wants something different than what the DMD approximation retuns, so we must interpolate 
+        # In this case, the user wants something different than what the DMD 
+        # approximation retuns, so we must interpolate.
         # Define time vector based on user specifications
         time_basic = [results.times[0], results.times[-1]]
         time_basic.extend(config['save_pts'])
-        if config['save_freq'] != None:
+        if config['save_freq'] is not None:
             if isinstance(config['save_freq'], tuple):
                 # Tuple used to specify start and frequency
                 t_step = config['save_freq'][1]
                 # Use starting time or the next multiple
                 t_start = config['save_freq'][0]
-                start = max(t_start, results.times[0] - (results.times[0]-t_start)%t_step)
-                time_array = np.arange(start+t_step, results.times[-1],t_step)
-            else: 
+                start = max(t_start, results.times[0] - (results.times[0]-t_start) % t_step)
+                time_array = np.arange(start+t_step, results.times[-1], t_step)
+            else:
                 time_array = np.arange(results.times[0]+config['save_freq'], results.times[-1], config['save_freq'])
             time_basic.extend(time_array.tolist())
         time_interp = sorted(time_basic)
@@ -473,7 +474,7 @@ class DMDModel(LinearModel, DataModel):
         states_dict_temp = {}
         for states_name in self.states:
             states_list_temp = [results.states[iter1a][states_name] for iter1a in range(len(results.states))]
-            states_dict_temp[states_name] = interp1d(results.times,states_list_temp)(time_interp)
+            states_dict_temp[states_name] = interp1d(results.times, states_list_temp)(time_interp)
         states_interp = [
             self.StateContainer({key: state[i] for key, state in states_dict_temp.items()})
             for i in range(len(time_interp))
@@ -483,13 +484,13 @@ class DMDModel(LinearModel, DataModel):
         inputs_dict_temp = {}
         for inputs_name in self.inputs:
             inputs_list_temp = [results.inputs[iter1a][inputs_name] for iter1a in range(len(results.inputs))]
-            inputs_dict_temp[inputs_name] = interp1d(results.times,inputs_list_temp)(time_interp)
+            inputs_dict_temp[inputs_name] = interp1d(results.times, inputs_list_temp)(time_interp)
         inputs_interp = [
             self.InputContainer({key: input[i] for key, input in inputs_dict_temp.items()}) for i in range(len(time_interp))
         ]
 
-        states = SimResult(time_interp,states_interp)
-        inputs = SimResult(time_interp,inputs_interp)
+        states = SimResult(time_interp, states_interp)
+        inputs = SimResult(time_interp, inputs_interp)
         outputs = LazySimResult(self.output, time_interp, states_interp)
         event_states = LazySimResult(self.event_state, time_interp, states_interp)
 

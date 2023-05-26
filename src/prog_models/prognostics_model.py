@@ -1310,10 +1310,10 @@ class PrognosticsModel(ABC):
         -------
         See examples/generate_surrogate
         """
-        from .data_models import SURROAGATE_METHOD_LOOKUP
+        from prog_models.data_models import SURROGATE_METHOD_LOOKUP
 
-        if method not in SURROAGATE_METHOD_LOOKUP.keys():
-            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
+        if method not in SURROGATE_METHOD_LOOKUP.keys():
+            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROGATE_METHOD_LOOKUP.keys()))
 
         # Configure
         config = { # Defaults
@@ -1373,7 +1373,7 @@ class PrognosticsModel(ABC):
         if not all([x in self.events for x in config['event_keys']]):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
-        return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
+        return SURROGATE_METHOD_LOOKUP[method](self, load_functions, **config)
     
     def to_json(self):
         """
