@@ -235,9 +235,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-    if not result:
-        raise Exception("Failed test")
-
-if __name__ == '__main__':
-    main()
