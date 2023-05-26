@@ -75,6 +75,7 @@ class TestEstimateParams(unittest.TestCase):
         """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
+        gt = m.parameters.copy()
 
         # Reset some parameters
         m.parameters['thrower_height'] = 1.5
@@ -512,6 +513,7 @@ class TestEstimateParams(unittest.TestCase):
         """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
+        gt = m.parameters.copy()
 
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
