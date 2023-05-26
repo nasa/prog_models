@@ -10,6 +10,7 @@ import unittest
 from prog_models import PrognosticsModel
 from prog_models.models import ThrownObject
 
+
 class TestDirect(unittest.TestCase):
     def setUp(self):
         # set stdout (so it wont print)

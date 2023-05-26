@@ -6,7 +6,7 @@ from .dmd import DMDModel
 from .lstm_model import LSTMStateTransitionModel
 from .pce import PolynomialChaosExpansion, PCE
 
-SURROAGATE_METHOD_LOOKUP = {
+SURROGATE_METHOD_LOOKUP = {
     'dmd': DMDModel.from_model,
     'lstm': LSTMStateTransitionModel.from_model,
     'pce': PolynomialChaosExpansion.from_model,

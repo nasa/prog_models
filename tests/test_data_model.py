@@ -14,7 +14,7 @@ from prog_models.data_models import LSTMStateTransitionModel, DataModel, DMDMode
 from prog_models.models import ThrownObject
 
 
-class TestDataModel(unittest.TestCase):      
+class TestDataModel(unittest.TestCase):
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
@@ -22,12 +22,12 @@ class TestDataModel(unittest.TestCase):
     def tearDown(self):
         sys.stdout = sys.__stdout__
       
-    def _test_simple_case(self, 
-        DataModelType, 
-        m = ThrownObject(), 
-        max_error=2, 
-        TIMESTEP = 0.01, 
-        WITH_STATES = True, 
+    def _test_simple_case(self,
+        DataModelType,
+        m = ThrownObject(),
+        max_error=2,
+        TIMESTEP = 0.01,
+        WITH_STATES = True,
         WITH_DT = True,
         **kwargs):
 
@@ -48,11 +48,11 @@ class TestDataModel(unittest.TestCase):
             times = [data.times, data.times],
             inputs = [data.inputs, data.inputs],
             outputs = [data.outputs, data.outputs],
-            event_states = [data.event_states, data.event_states],  
+            event_states = [data.event_states, data.event_states],
             output_keys = list(m.outputs),
             save_freq = TIMESTEP,
             validation_split=0.5,
-            **kwargs)  
+            **kwargs)
         
         self.assertIsInstance(m2, DataModelType)
         self.assertIsInstance(m2, DataModel)
@@ -64,9 +64,9 @@ class TestDataModel(unittest.TestCase):
         if isinstance(m2, DMDModel):
             future_loading2 = future_loading
         else:
-            def future_loading2(t, x = None):
-                # Future Loading is a bit complicated here 
-                # Loading for the resulting model includes the data inputs, 
+            def future_loading2(t, x=None):
+                # Future Loading is a bit complicated here
+                # Loading for the resulting model includes the data inputs,
                 # and the output from the last timestep
                 nonlocal t_counter, x_counter
                 z = m.output(x_counter)
@@ -85,7 +85,7 @@ class TestDataModel(unittest.TestCase):
         _stdout = sys.stdout
         sys.stdout = StringIO()
         actual_out = StringIO()
-        m2.summary(file = actual_out)
+        m2.summary(file=actual_out)
         self.assertEqual(sys.stdout.getvalue(), '')
         self.assertNotEqual(actual_out.getvalue(), '')
         sys.stdout = _stdout
@@ -108,7 +108,7 @@ class TestDataModel(unittest.TestCase):
         _stdout = sys.stdout
         sys.stdout = StringIO()
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], early_stop=False, **cfg)
-        end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
+        end = sys.stdout.getvalue().rsplit("Epoch ", 1)[1]
         value = int(end.split(f"/{cfg['epochs']}", 1)[0])
         self.assertEqual(value, cfg['epochs'])
 
@@ -116,7 +116,7 @@ class TestDataModel(unittest.TestCase):
         sys.stdout = StringIO()
         # Default = True
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], **cfg)
-        end = sys.stdout.getvalue().rsplit("Epoch ",1)[1]
+        end = sys.stdout.getvalue().rsplit("Epoch ", 1)[1]
         value = int(end.split(f"/{cfg['epochs']}", 1)[0])
         self.assertNotEqual(value, cfg['epochs'])
         sys.stdout = _stdout
@@ -130,11 +130,11 @@ class TestDataModel(unittest.TestCase):
         self.assertSetEqual(set(m.states), set(keys))
 
         # Create from model
-        LSTMStateTransitionModel(m.parameters['output_model'], m.parameters['state_model'], output_keys = ['x'])
+        LSTMStateTransitionModel(m.parameters['output_model'], m.parameters['state_model'], output_keys=['x'])
         try:
-        # Test pickling model m
+            # Test pickling model m
             with self.assertWarns(RuntimeWarning):
-            # Will raise warning suggesting using save and load from keras.
+                # Will raise warning suggesting using save and load from keras.
                 pickled_m = pickle.dumps(m)
                 m2 = pickle.loads(pickled_m)
                 self.assertIsInstance(m2, LSTMStateTransitionModel)
@@ -175,7 +175,8 @@ class TestDataModel(unittest.TestCase):
         m = ThrownObject()
 
         def future_loading(t, x=None):
-            return m.InputContainer({})  # No input for thrown object 
+            return m.InputContainer({})  # No input for thrown object
+        
         m3 = LSTMStateTransitionModel.from_model(
             m,
             [future_loading for _ in range(5)],
@@ -192,7 +193,7 @@ class TestDataModel(unittest.TestCase):
         x_counter = m.initialize()
 
         def future_loading2(t, x=None):
-            # Future Loading is a bit complicated here 
+            # Future Loading is a bit complicated here
             # Loading for the resulting model includes the data inputs, 
             # and the output from the last timestep
             nonlocal t_counter, x_counter
@@ -219,18 +220,18 @@ class TestDataModel(unittest.TestCase):
             m,
             [future_loading for _ in range(5)],
             dt = [TIMESTEP, TIMESTEP/2, TIMESTEP/4, TIMESTEP*2, TIMESTEP*4],
-            window=2, 
+            window=2,
             epochs=30,
-            add_dt = False)  
+            add_dt = False)
 
         # Should get keys from original model
         self.assertSetEqual(set(m3.inputs), set(['x_t-1']))
         self.assertSetEqual(set(m3.outputs), set(m.outputs))
 
-         # Step 3: Use model to simulate_to time of threshold
+        # Step 3: Use model to simulate_to time of threshold
         t_counter = 0
         x_counter = m.initialize()
-        def future_loading2(t, x = None):
+        def future_loading2(t, x=None):
             # Future Loading is a bit complicated here 
             # Loading for the resulting model includes the data inputs, 
             # and the output from the last timestep

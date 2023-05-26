@@ -6,6 +6,7 @@ from typing import Union
 
 from prog_models.exceptions import ProgModelTypeError
 
+
 class DictLikeMatrixWrapper():
     """
     A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessible. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
@@ -58,7 +59,6 @@ class DictLikeMatrixWrapper():
         index = self._keys.index(key)   #the int value index for the key given
         self.matrix[index] = np.atleast_1d(value)
 
-    
     def __delitem__(self, key: str) -> None:
         """
         removes row associated with key

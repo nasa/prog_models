@@ -26,7 +26,7 @@ class MockModel():
         'x0': {'a': 1, 'b': 5, 'c': -3.2, 't': 0}
     }
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u={}, z={}):
         return self.StateContainer(self.parameters['x0'])
 
     def next_state(self, x, u, dt):
@@ -52,7 +52,8 @@ class MockProgModel(MockModel, PrognosticsModel):
             }
 
     def threshold_met(self, x):
-        return {key : value < 1e-6 for (key, value) in self.event_state(x).items()}
+        return {
+            key: value < 1e-6 for (key, value) in self.event_state(x).items()}
 
 def derived_callback(config):
     return {
@@ -65,8 +66,8 @@ def derived_callback2(config):
     }
 
 def derived_callback3(config):
-    return {  # Testing 2nd chained update 
-        'p4': -2 * config['p2'], 
+    return {  # Testing 2nd chained update
+        'p4': -2 * config['p2'],
     }
 
 class MockModelWithDerived(MockProgModel):
@@ -127,6 +128,57 @@ class TestModels(unittest.TestCase):
             {'o1': 0.8},
             **config)
         self.assertAlmostEqual(times[-1], 5.0, 5)
+
+    def test_integration_type(self):
+        m_default_integration = LinearThrownObject(process_noise=0, measurement_noise=0)  
+        m_rk4_integration = LinearThrownObject(integration_method='rk4', process_noise=0, measurement_noise=0)
+
+        # compare two models with different integration types
+        x_default = m_default_integration.initialize()
+        u_default = m_default_integration.InputContainer({})
+        x_default = m_default_integration.next_state(x_default, u_default, 0.1)
+        
+        x_rk4 = m_rk4_integration.initialize()
+        u_rk4 = m_rk4_integration.InputContainer({})
+        x_rk4 = m_rk4_integration.next_state(x_rk4, u_rk4, 0.1)
+
+        # The two models should have close but different values for x
+        self.assertAlmostEqual(x_default['x'], x_rk4['x'], delta=0.1)
+        self.assertNotEqual(x_default['x'], x_rk4['x'])
+
+        # Velocity should be exactly the same (because it's linear)
+        self.assertEqual(x_default['v'], x_rk4['v'])
+
+        # Now, if we change the integrator for the default model, it should be the same as the rk4 model
+        m_default_integration.parameters['integration_method'] = 'rk4'
+        x_default = m_default_integration.initialize()
+        u_default = m_default_integration.InputContainer({})
+        x_default = m_default_integration.next_state(x_default, u_default, 0.1)
+
+        # Both velocity (v) and position (x) should be equal
+        # This is because we changed the integration method to rk4 for the default model
+        self.assertEqual(x_default['v'], x_rk4['v'])
+        self.assertEqual(x_default['x'], x_rk4['x'])
+
+    def test_integration_type_error(self):
+        with self.assertRaises(ProgModelTypeError):
+            # unsupported integration type
+            m = LinearThrownObject(integration_method='invalid')
+
+        with self.assertRaises(ProgModelTypeError):
+            # change integration type for a discrete model
+            m = ThrownObject(integration_method='rk4')
+
+        # Repeat with setting in params
+        m = LinearThrownObject()
+        with self.assertRaises(ProgModelTypeError):
+            # unsupported integration type
+            m.parameters['integration_method'] = 'invalid'
+
+        m = ThrownObject()
+        with self.assertRaises(ProgModelTypeError):
+            # change integration type for a discrete model
+            m.parameters['integration_method'] = 'rk4'
 
     def test_size(self):
         m = MockProgModel()
