@@ -16,7 +16,7 @@ from prog_models import PrognosticsModel
 
 # REPLACE THIS WITH DERIVED PARAMETER CALLBACKS (IF ANY)
 # See examples.derived_params
-# 
+#
 # Each function defines one or more derived parameters as a function of the other parameters.
 def example_callback(params):
     # Return format: dict of key: new value pair for at least one derived parameter
@@ -35,7 +35,7 @@ class ProgModelTemplate(PrognosticsModel):
 
     # REPLACE THE FOLLOWING LIST WITH EVENTS BEING PREDICTED
     events = [
-        'Example Event' 
+        'Example Event'
     ]
     
     # REPLACE THE FOLLOWING LIST WITH INPUTS (LOADING)
@@ -54,18 +54,18 @@ class ProgModelTemplate(PrognosticsModel):
 
     # REPLACE THE FOLLOWING LIST WITH OUTPUTS (MEASURED VALUES)
     outputs = [
-        'Example Output 1', 
-        'Example Output 2'  
+        'Example Output 1',
+        'Example Output 2' 
     ]
 
     # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
-    # Note- everything required to configure the model 
-    # should be in parameters- this is to enable the serialization features 
+    # Note- everything required to configure the model
+    # should be in parameters- this is to enable the serialization features
     default_parameters = {  # Set default parameters
         'Example Parameter 1': 0,
         'Example Parameter 2': 3,
         'process_noise': 0.1,  # Process noise
-        'x0': {  # Initial state  
+        'x0': {  # Initial state
             'Examples State 1': 1.5,
             'Examples State 2': -935,
             'Examples State 3': 42.1,
@@ -85,7 +85,7 @@ class ProgModelTemplate(PrognosticsModel):
     # See examples.derived_params
     # Format: "trigger": [callbacks]
     # Where trigger is the parameter that the derived parameters are derived from.
-    # And callbacks are one or more callback functions that define parameters that are 
+    # And callbacks are one or more callback functions that define parameters that are
     # derived from that parameter
     # REPLACE THIS WITH ACTUAL DERIVED PARAMETER CALLBACKS
     param_callbacks = {
@@ -104,12 +104,12 @@ class ProgModelTemplate(PrognosticsModel):
     #     # ADD OPTIONS CHECKS HERE
 
     #     # e.g., Checking for required parameters
-    #     # if not 'required_param' in kwargs: 
+    #     # if not 'required_param' in kwargs:
     #     #   throw Exception;
 
     #     super().__init__(**kwargs) # Run Parent constructor
 
-    # Model state initialization - there are two ways to provide the logic to initialize model state. 
+    # Model state initialization - there are two ways to provide the logic to initialize model state.
     # 1. Provide the initial state in parameters['x0'], or
     # 2. Provide an Initialization function
     #
@@ -238,7 +238,7 @@ class ProgModelTemplate(PrognosticsModel):
         # NOTE: KEYS FOR z MATCH 'outputs' LIST ABOVE
         z = self.OutputContainer({
             'Example Output 1': 0.0,
-            'Example Output 2': 0.0  
+            'Example Output 2': 0.0
         })
 
         return z
@@ -268,7 +268,8 @@ class ProgModelTemplate(PrognosticsModel):
 
         return event_x
         
-    # Note: Thresholds met equation below is not strictly necessary. By default threshold_met will check if event_state is ≤ 0 for each event
+    # Note: Thresholds met equation below is not strictly necessary.
+    # By default threshold_met will check if event_state is ≤ 0 for each event
     def threshold_met(self, x):
         """
         For each event threshold, calculate if it has been met

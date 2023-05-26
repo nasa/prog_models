@@ -29,7 +29,7 @@ class ESC(PrognosticsModel):
 
     Simple Electronic-Speed Controller (ESC) :term:`model` for powertrain modeling.
     This model replicates the behavior of the speed controller with pulse-width modulation (PWM) and commutation matrix.
-    Duty cycle simulated with a square wave using scipy signal.square function. 
+    Duty cycle simulated with a square wave using scipy signal.square function.
 
     References: [0]_, [1]_.
 
@@ -59,7 +59,7 @@ class ESC(PrognosticsModel):
     ------------
         process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)

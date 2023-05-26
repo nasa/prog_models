@@ -21,7 +21,7 @@ mpl.rcParams['savefig.dpi']      = 300
 
 # VISUALIZE FUNCTIONS
 # ==========================
-def get_subplot_dim(num_subplots : int, rowfirst : bool = True) -> tuple:
+def get_subplot_dim(num_subplots: int, rowfirst: bool = True) -> tuple:
     """
     Compute the number of rows and columns (nrows, ncols) for a figure with multiple subplots.
     The function returns number of rows and columns given num_subplots.
@@ -71,7 +71,7 @@ def get_subplot_dim(num_subplots : int, rowfirst : bool = True) -> tuple:
                 nrows += 1
     return nrows, ncols
 
-def set_plot_options(opt : dict) -> dict:
+def set_plot_options(opt: dict) -> dict:
     """
     Set default plot options by integrating the options specified by the user in 'opt'
     The visualize library works with specific values to generate the plots.
@@ -168,7 +168,7 @@ def set_plot_options(opt : dict) -> dict:
 
     return opt
 
-def set_legend_options(leg_opt : dict, s_names : List[str]) -> dict:
+def set_legend_options(leg_opt: dict, s_names: List[str]) -> dict:
     """
     Set all remaining legend options given the legend options already specified by the users "leg_opt", 
     and the names of the time series in the plot "s_names."
@@ -231,7 +231,7 @@ def set_legend_options(leg_opt : dict, s_names : List[str]) -> dict:
 
     return leg_opt
 
-def set_savefig_options(sfo : dict) -> dict:
+def set_savefig_options(sfo: dict) -> dict:
     """
     Set all remaining save figure options given the options already specified by the user "sfo".
 
@@ -269,7 +269,7 @@ def set_savefig_options(sfo : dict) -> dict:
         sfo_list['filename'] = 'timeseries_plot.pdf'
     return sfo
 
-def set_legend(ax : plt.axis, item : int, s_names : List[str], leg_opt : dict) -> plt.axis:
+def set_legend(ax: plt.axis, item: int, s_names: List[str], leg_opt: dict) -> plt.axis:
     """
     Set legend for axis 'ax' for the 'item-th' time series entry. All time series labels are defined in 's_names'.
     For a comprehensive explanation of all legend options, see the Matplotlib guide on their website.
@@ -325,7 +325,7 @@ def set_legend(ax : plt.axis, item : int, s_names : List[str], leg_opt : dict) -
                      framealpha=leg_opt['framealpha'], facecolor=leg_opt['facecolor'],
                      edgecolor=leg_opt['edgecolor'], title=leg_opt['title'])
 
-def display_labels(nrows : int, ncols : int, subplot_num : int, ax : plt.axis, opt : dict, series_names : List[str]) -> None:
+def display_labels(nrows: int, ncols: int, subplot_num: int, ax: plt.axis, opt: dict, series_names: List[str]) -> None:
     """
     Display label option for time series plot
 
@@ -367,7 +367,7 @@ def display_labels(nrows : int, ncols : int, subplot_num : int, ax : plt.axis, o
     elif 'all' in opt['display_labels']:    
         set_labels(ax, opt, series_names)
 
-def extract_option(opt : dict, idx : int, series_names : List[str]) -> str:
+def extract_option(opt: dict, idx: int, series_names: List[str]) -> str:
     """
     Extract option from either dictionary or list of plot options.
     The function takes the option "opt" and returns the option at index "idx" if opt is a list,
@@ -417,7 +417,7 @@ def extract_option(opt : dict, idx : int, series_names : List[str]) -> str:
         return opt[idx]
     return opt
 
-def set_ax_options(ax : plt.axis, opts : dict) -> None:
+def set_ax_options(ax: plt.axis, opts: dict) -> None:
     """
     Set label options for plot axis.
 
@@ -453,7 +453,7 @@ def set_ax_options(ax : plt.axis, opts : dict) -> None:
     if opts['yticks']:
         ax.set_yticklabels(opts['yticks'], rotation=opts['ytick_rotation'], fontsize=opts['ytick_fontsize'])
 
-def set_labels(ax : plt.axis, opt : dict, series_names : List[str], axis : str = 'all') -> None:
+def set_labels(ax: plt.axis, opt: dict, series_names: List[str], axis: str = 'all') -> None:
     """
     Set labels of axis "ax" according to figure options "opt" and the time series names "series_names."
     The function can set both x and y axis when input axis=='all' (default), or rather set only x or y axis (axis='x' or axis='y', respectively).
@@ -498,7 +498,7 @@ def set_labels(ax : plt.axis, opt : dict, series_names : List[str], axis : str =
             ytick_fs  = extract_option(opt['ytick_fontsize'], idx, series_names)
             ax.set_yticklabels(ytick, rotation=ytick_rot, fontsize=ytick_fs)
 
-def plot_timeseries(t : List[float], s : List[dict], legend : dict = None, options : dict = None) -> plt.figure:
+def plot_timeseries(t: List[float], s: List[dict], legend: dict = None, options: dict = None) -> plt.figure:
     """
     Plot time series 's' parametrized by time 't'.
     The function plot time series (in a single plot or subplots) contained in the array of dictionary s, produced by a prognostic model.
@@ -541,8 +541,8 @@ def plot_timeseries(t : List[float], s : List[dict], legend : dict = None, optio
     
     # Set up options
     # ====================
-    fig_options    = set_plot_options(options)                      # Set up figure options
-    legend_options = set_legend_options(legend, series_names)       # Set up legend options
+    fig_options    = set_plot_options(options)                 # Set up figure options
+    legend_options = set_legend_options(legend, series_names)  # Set up legend options
     
     # Generate figure
     # =============
@@ -574,8 +574,8 @@ def plot_timeseries(t : List[float], s : List[dict], legend : dict = None, optio
                       framealpha=legend_options['framealpha'], facecolor=legend_options['facecolor'],
                       edgecolor=legend_options['edgecolor'], title=legend_options['title'])
     
-    else:   # "Not compact" option: one subplot per time series
-        nrows, ncols = get_subplot_dim(m)   # get the number of subplots
+    else:  # "Not compact" option: one subplot per time series
+        nrows, ncols = get_subplot_dim(m)  # get the number of subplots
         
         # Iterate over all subplots to plot the time series
         for item in range(m):

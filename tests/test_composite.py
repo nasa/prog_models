@@ -1,18 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from copy import deepcopy
-import io
-import numpy as np
-from os.path import dirname, join
-import pickle
-import sys
 import unittest
 
 from prog_models import *
 from prog_models.models import *
 from prog_models.models.test_models.linear_models import (
-    OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
-from prog_models.models.thrown_object import LinearThrownObject
+    OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
 
 class TestCompositeModel(unittest.TestCase):
     def test_composite_broken(self):
@@ -147,7 +140,7 @@ class TestCompositeModel(unittest.TestCase):
         # Propogate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3)  # 1 + 2
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
 
         # Test with connections - state, no event

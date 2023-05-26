@@ -67,20 +67,20 @@ class PneumaticValveBase(PrognosticsModel):
     Keyword Args
     ------------
         process_noise : Optional, float or dict[str, float]
-          :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of 
-          values for each state (e.g., {'x1': 0.2, 'x2': 0.3}), 
+          :term:`Process noise<process noise>` (applied at dx/next_state).
+          Can be number (e.g., .2) applied to every state, a dictionary of
+          values for each state (e.g., {'x1': 0.2, 'x2': 0.3}),
           or a function (x) -> x
         process_noise_dist : Optional, str
           distribution for :term:`process noise` 
           e.g., normal, uniform, triangular
         measurement_noise : Optional, float or dict[str, float]
           :term:`Measurement noise<measurement noise>` (applied in output eqn).
-          Can be number (e.g., .2) applied to every output, a dictionary of 
-          values for each output (e.g., {'z1': 0.2, 'z2': 0.3}), 
+          Can be number (e.g., .2) applied to every output, a dictionary of
+          values for each output (e.g., {'z1': 0.2, 'z2': 0.3}),
           or a function (z) -> z
         measurement_noise_dist : Optional, str
-           distribution for :term:`measurement noise` 
+           distribution for :term:`measurement noise`
            e.g., normal, uniform, triangular
         g : float
             Acceleration due to gravity (m/s^2)
@@ -164,7 +164,7 @@ class PneumaticValveBase(PrognosticsModel):
     default_parameters = {  # Set to defaults
         # Environmental Parameters
         'R': 8.314,  # Universal Gas Constant
-        'g': 9.81, 
+        'g': 9.81,
         'pAtm': 101325,
 
         # Valve Parameters
@@ -185,7 +185,7 @@ class PneumaticValveBase(PrognosticsModel):
         # Supply gas params (Note: Default is nitrogen)
         'gas_mass': 28.01e-3,
         'gas_temp': 293,
-        'gas_gamma': 1.4, 
+        'gas_gamma': 1.4,
         'gas_z': 1,
         'gas_R': 296.8225633702249454,
 
@@ -379,7 +379,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
     This class implements a Pneumatic Valve model as described in the following paper:
     `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://www.phmsociety.org/node/602`
 
-    :term:`Events<event>`: (4) 
+    :term:`Events<event>`: (4)
         See PneumaticValveBase
 
     :term:`Inputs/Loading<input>`: (5)
