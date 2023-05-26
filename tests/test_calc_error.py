@@ -306,6 +306,15 @@ class TestCalcError(unittest.TestCase):
             str(cm.exception)
         )
 
+        # times = [[[1, 2], [1, 2]], [[1, 2], [1, 2]]]
+        # inputs = [[{} for _ in range(2)] for _ in range(2)]
+        # outputs = [
+        #     [{'x': 1.83}, {'x': 36.95}],
+        #     [{'x': 62.36}, {'x': 77.81}]
+        # ]
+
+        # m.calc_error(times, inputs, outputs)
+
     def test_errors(self):
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
