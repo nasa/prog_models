@@ -905,8 +905,6 @@ class TestEstimateParams(unittest.TestCase):
         # with self.assertRaises(ValueError)
             # m.estimate_params(times=[[times]], inputs=[[inputs]], outputs=[[outputs]])
 
-
-# Test that specifically looks into adding tolerance into our keyword arguments.
     def test_tolerance(self):
         """
         Test which specifically targets adding tolerance as a keyword argument.

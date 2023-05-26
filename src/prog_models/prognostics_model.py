@@ -1165,7 +1165,7 @@ class PrognosticsModel(ABC):
                 data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
 
         Returns:
-            OptimizeResult: Optimization Result of estimate_params() 
+            OptimizeResult: Scipy minimize Optimization Result from estimating parameters. See scipy's scipy.optimize.OptimizeResult documentation for details. 
 
         See: examples.param_est
         """
@@ -1233,7 +1233,7 @@ class PrognosticsModel(ABC):
             # Allows for partial bounds definition, and definition by key name
             for key in config['bounds'].keys():
                 if key not in self.parameters:
-                    warn(f"{key} is not a valid parameter and should not be passed in to the bounds") 
+                    warn(f"{key} is not a valid parameter (i.e., it is not a parameter present in this model) and should not be passed in to the bounds") 
             config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
             if not isinstance(config['bounds'], Iterable):
