@@ -258,7 +258,7 @@ class TestCalcError(unittest.TestCase):
 
         # The value of time1, time2, inputs, and outputs are arbitrary values
 
-        times = [[0, 1, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3]]
+        times = [[0, 1, 2, 3, 4, 5, 6, 7, 8], [0, 1, 2, 3]]
         inputs = [[{}]*9, [{}]*4]
         outputs = [[{'x': 1.83},
             {'x': 36.95},
@@ -279,7 +279,7 @@ class TestCalcError(unittest.TestCase):
         m.calc_error(times, inputs, outputs)
 
         # Will be testing length errors, will also be providing a 'runs' feedback whenever there are multiple give?
-        incorrectTimes = [[0, 1, 2, 4, 5, 6, 7, 8, 9]]
+        incorrectTimes = [[0, 1, 2, 3, 4, 5, 6, 7, 8]]
 
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
@@ -290,10 +290,11 @@ class TestCalcError(unittest.TestCase):
 
         incorrectTimes = [[0, 1, 2, 4, 5, 6, 7, 8], [0, 1, 2, 3]]
 
+        # Testing when one of the _runs has a data point of different length
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current lengths at run 0: times = 8, inputs = 9, outputs = 9",
+            "Times, inputs, and outputs must all be the same length. Current lengths at data location 0: times = 8, inputs = 9, outputs = 9",
             str(cm.exception)
         )
 
@@ -302,7 +303,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current lengths at run 1: times = 3, inputs = 4, outputs = 4",
+            "Times, inputs, and outputs must all be the same length. Current lengths at data location 1: times = 3, inputs = 4, outputs = 4",
             str(cm.exception)
         )
 
@@ -346,12 +347,27 @@ class TestCalcError(unittest.TestCase):
         )
 
         # Cannot add additional wrappers around inputs and outputs since they need to be dictionaries.
-        with self.assertRaises(ProgModelTypeError) as cm:
+        with self.assertRaises(ValueError) as cm:
             m.calc_error([1], [[{}]], [[{'1':1}]])
         self.assertEqual(
-            "Data must be a dictionary or numpy array, not <class 'list'>",
+            "Must provide at least 2 data points for times, inputs, and outputs",
             str(cm.exception)
-        )        
+        )
+
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error([[1]], [[[{}]]], [[[{'1':1}]]])
+        self.assertEqual(
+            "Must provide at least 2 data points for times, inputs, and outputs",
+            str(cm.exception)
+        )
+
+        # Tests additional wrapper
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error([[[1]]], [[{}]], [[{'1':1}]])
+        self.assertEqual(
+            "Must provide at least 2 data points for times, inputs, and outputs",
+            str(cm.exception)
+        )
 
         times = [1, [0, 1, 2, 3]]
         inputs = [{}, [{}]*4]
@@ -365,25 +381,6 @@ class TestCalcError(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
-        
-        hold = m.calc_error([[1]], [[{}]], [[{'1':1}]])
-
-
-        # Not support
-        hold2 = m.calc_error([[[1]]], [[{}]], [[{'1':1}]])
-
-        # Not support
-        hold3 = m.calc_error([[[[1]]]], [[{}]], [[{'1':1}]])
-
-        self.assertEqual(hold, hold2)
-        self.assertEqual(hold2, hold3)
-
-        with self.assertRaises(ProgModelTypeError) as cm:
-            m.calc_error([[1]], [[[{}]]], [[[{'1':1}]]])
-        self.assertEqual(
-            "Data must be a dictionary or numpy array, not <class 'list'>",
-            str(cm.exception)
-        )
 
         # Expecting this to pass
         m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))

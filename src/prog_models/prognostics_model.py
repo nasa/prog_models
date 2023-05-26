@@ -1149,24 +1149,24 @@ class PrognosticsModel(ABC):
         types = {type(times), type(inputs), type(outputs)}
 
         x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-        dt = kwargs.get('dt', 10)
+        dt = kwargs.get('dt', 1e-99)
         stability_tol = kwargs.get('stability_tol', 0.95)
-        run = kwargs.get('run', None)
+        _loc = kwargs.get('_loc', None)
 
         if not all(t in acceptable_types for t in types):
             type_error = f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types"
-            type_error += f" at run {run}" if run is not None else ""
+            type_error += f" at data location {_loc}" if _loc is not None else ""
             type_error += f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}"
             raise TypeError(type_error)
         if len(times) != len(inputs) or len(inputs) != len(outputs):
             len_error = "Times, inputs, and outputs must all be the same length. Current lengths"
-            len_error += f" at run {run}" if run is not None else ""
+            len_error += f" at data location {_loc}" if _loc is not None else ""
             len_error += f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
             raise ValueError(len_error)
         if len(times) < 2:
             # raise ValueError(f"Must Provide at least 2 data points. Currently only passing in {len(times)}")
             less_2_error = "Must provide at least 2 data points for times, inputs, and outputs"
-            less_2_error += " at run {run}." if run is not None else ""
+            less_2_error += " at data location {_loc}}." if _loc is not None else ""
             raise ValueError(less_2_error)
 
         # Determines if all values of parameters are iterables
@@ -1178,7 +1178,10 @@ class PrognosticsModel(ABC):
             raise TypeError("Times values cannot be strings")
         if isinstance(times[0], Iterable):
             # Calculate error for each
-            error = [self.calc_error(t, i, z, run = r, **kwargs) for r, (t, i, z) in enumerate(zip(times, inputs, outputs))]
+            error = []
+            for r, (t, i, z) in enumerate(zip(times, inputs, outputs)):
+                run_updated = str(r) if _loc is None else _loc + f', {str(r)}'
+                error.append(self.calc_error(t, i, z, _loc=run_updated, **kwargs))
             return sum(error)/len(error)
         
         # Checks stability_tol is within bounds
