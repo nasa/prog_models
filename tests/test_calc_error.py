@@ -175,37 +175,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
 
-    # def test_MSE(self):
-        # m = ThrownObject()
-        # m2 = ThrownObject()
-        # results = m.simulate_to_threshold(save_freq=0.5)
-        # data = [(results.times, results.inputs, results.outputs)]
-        # gt = m.parameters.copy()
 
-    #     self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs),
-    #                         m2.calc_error(results.times, results.inputs, results.outputs))
-        
-    #     results = m2.simulate_to_threshold(save_freq = 0.5)
-
-    #     self.assertEqual(m.calc_error(results.times, results.inputs, results.outputs),
-    #                         m2.calc_error(results.times, results.inputs, results.outputs))
-    def test_RMSE(self):
-        m = ThrownObject()
-        m2 = ThrownObject()
-        results = m.simulate_to_threshold(save_freq=0.5)
-        data = [(results.times, results.inputs, results.outputs)]
-        gt = m.parameters.copy()
-
-
-    def test_MAX_E(self):
-        return
-
-    def test_MAE(self):
-        return
-
-    def test_MAPE(self):
-        return
-    
     def test_DTW(self):
         m = LinearThrownObject()
         results = m.simulate_to_threshold(save_freq = 0.5)
