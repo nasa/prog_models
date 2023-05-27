@@ -30,9 +30,10 @@ class CompositeModel(PrognosticsModel):
 
     Keyword Args:
         outputs (list[str]):
-            Model outputs in format "model_name.output_name". Must be subset of all outputs from models. If not provided, all outputs will be included. 
+            Model outputs in format "model_name.output_name". Must be subset of all outputs from models. If not provided, all outputs will be included.
     """
-    def __init__(self, models, connections = [], **kwargs):
+
+    def __init__(self, models, connections=[], **kwargs):
         # General Input Validation
         if not isinstance(models, Iterable):
             raise ValueError('The models argument must be a list')
@@ -54,7 +55,7 @@ class CompositeModel(PrognosticsModel):
         # Handle models
         for m in models:
             if isinstance(m, Iterable):
-                if len(m) != 2: 
+                if len(m) != 2:
                     raise ValueError('Each model tuple must be of the form (name: str, model). For example ("Batt1", BatteryElectroChem())')
                 if not isinstance(m[0], str):
                     raise ValueError('The first element of each model tuple must be a string')
@@ -94,8 +95,8 @@ class CompositeModel(PrognosticsModel):
         
         # Handle Connections
         kwargs['connections'] = []
-        self.__to_input_connections = {m_name : [] for m_name in self.model_names}
-        self.__to_state_connections = {m_name : [] for m_name in self.model_names}
+        self.__to_input_connections = {m_name: [] for m_name in self.model_names}
+        self.__to_state_connections = {m_name: [] for m_name in self.model_names}
 
         for connection in connections:
             # Input validation
@@ -142,7 +143,7 @@ class CompositeModel(PrognosticsModel):
         # Finish initialization
         super().__init__(**kwargs)
 
-    def initialize(self, u = {}, z = {}):
+    def initialize(self, u={}, z={}):
         if u is None:
             u = {}
         if z is None:

@@ -96,9 +96,9 @@ class LinearModel(PrognosticsModel, ABC):
                             ["C", "outputs", "states"])
         self._propertyCheck(self.n_outputs, 1,
                             ["D", "outputs", "1"])
-        self._propertyCheck(self.n_states, 1, 
+        self._propertyCheck(self.n_states, 1,
                             ["E", "states", "1"])
-        self._propertyCheck(self.n_events, 1, 
+        self._propertyCheck(self.n_events, 1,
                             ["G", "events", "1"])
 
         if self.F is not None:

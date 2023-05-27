@@ -9,6 +9,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
+
 sys.path.append(join(dirname(__file__), ".."))  # Needed to access examples
 from examples import dataset, sim_battery_eol, ensemble
 

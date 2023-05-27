@@ -15,7 +15,7 @@ class EnsembleModel(PrognosticsModel):
         :language: python
         :class: highlight
     
-    Ensembe Models are constructed from a set of other models (e.g., :python:`m = EnsembleModel((m1, m2, m3))`). The models then operate functionally as one prognostic model. 
+    Ensembe Models are constructed from a set of other models (e.g., :python:`m = EnsembleModel((m1, m2, m3))`). The models then operate functionally as one prognostic model.
 
     See example :download:`examples.ensemble <../../../../prog_models/examples/ensemble.py>`
 
@@ -101,7 +101,7 @@ class EnsembleModel(PrognosticsModel):
 
         return self.OutputContainer(zs_final)
         
-    def event_state(self, x):
+    def event_state(self, x) -> dict:
         es = [m.event_state(m.StateContainer(x)) for m in self.parameters['models']]
         es_final = {}
         for es_i in es:

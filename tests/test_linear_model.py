@@ -351,6 +351,12 @@ class TestLinearModel(unittest.TestCase):
         with self.assertRaises(AttributeError):
             mTest.B = np.array([[0], [1], [2], [3]])
 
+
+        # Error Demonstration
+        mTest = LinearThrownObjectFourStates()
+        with self.assertRaises(AttributeError):
+            mTest.B = np.array([[0], [1], [2], [3]])
+
     @unittest.skip
     def test_copy_linear(self):
         m1 = LinearThrownObject()
