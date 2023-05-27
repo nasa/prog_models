@@ -52,7 +52,7 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
     # Define ellipsoid constants
     # -----------------------------
     a  = 6378137.0          # semi-major Earth axis (radius at Equator), meters, according to WGS84
-    f  = 1/298.257223563    # flat parameter of the Ellipsoid, according to WGS84
+    f  = 1/298.257223563    # flat parameter of the ellipsoid, according to WGS84
     b  = (1.0 - f)*a        # semi-minor axis of the ellipsoid (radius at the poles), meters, according to WGS84 = 6356752.314245 
     
     # Define coordinate-dependent values
@@ -73,13 +73,13 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
         sin_lam = np.sin(lam)
         cos_lam = np.cos(lam)
 
-        # trigonometry of sigma
+        # Trigonometry of sigma
         sin_sigma = np.sqrt( (cos_U2 * sin_lam )**2.0 + (cos_U1 * sin_U2 - sin_U1 * cos_U2 * cos_lam)**2.0 )
         if sin_sigma == 0.0:        return 0.0  # coincident points
         cos_sigma = sin_U1 * sin_U2 + cos_U1 * cos_U2 * cos_lam
         sigma      = np.arctan2(sin_sigma, cos_sigma)
 
-        # trigonometry of alpha
+        # Trigonometry of alpha
         sin_alpha  = cos_U1 * cos_U2 * sin_lam / sin_sigma
         cos_alpha2 = 1.0 - sin_alpha**2.0
         # Compute cos(2 \sigma_m)
@@ -176,8 +176,7 @@ def gen_heading_angle(lat, lon, alt):
     print('Generating heading angle ', end=" ")
     # Compute heading using lat-lon coordinates
     # -----------------------------------------
-    # This heading is calculated from North,
-    # while reference frame is ENU (East-North-Up), therefore, the first direction is EAST, not NORTH.
+    # This heading is calculated from North, while reference frame is ENU (East-North-Up), therefore, the first direction is EAST, not NORTH.
     # Need to adjust heading for ENU reference frame after calculating it.
     head = heading_compute_geodetic(lat, lon)
     # Adjust first heading based on altitude (avoid issues with fictitious way-points later on)
@@ -261,8 +260,7 @@ class Coord():
         y0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.sin(self.lon0)
         z0 = (self.alt0 + (1.0 - self.e**2.0) * self.N0) * np.sin(self.lat0)
 
-        # Compute relative distance between the data points and the origin of the
-        # ENU reference frame
+        # Compute relative distance between the data points and the origin of the ENU reference frame
         xd = xecef - x0
         yd = yecef - y0
         zd = zecef - z0
@@ -286,8 +284,7 @@ class Coord():
         yd =  np.cos(self.lon0) * xenu - np.sin(self.lat0) * np.sin(self.lon0) * yenu + np.cos(self.lat0) * np.sin(self.lon0) * zenu
         zd =  np.cos(self.lat0) * yenu + np.sin(self.lat0) * zenu
 
-        # Compute global coordinates in ECEF reference frame by adding the location
-        # of the ENU to the relative ECEF coordinates
+        # Compute global coordinates in ECEF reference frame by adding the location of the ENU to the relative ECEF coordinates
         xecef = xd + x0
         yecef = yd + y0
         zecef = zd + z0
@@ -326,7 +323,7 @@ class Coord():
         # Compute latitude, longitude and altitude.
         lat = np.arctan2( (Z + epsilon * b * np.sin(q)**3.0) , (p - self.e**2.0 * self.a * np.cos(q)**3.0) ) # [rad], latitude
         lon = np.arctan2( Y , X );                                                                           # [rad], longitude
-        N   =  self.a /  np.sqrt(1.0 - self.e**2.0 * np.sin(lat)**2.0);                                    # [m], Radius of curvature on the Earth
+        N   =  self.a /  np.sqrt(1.0 - self.e**2.0 * np.sin(lat)**2.0);                                      # [m], Radius of curvature on the Earth
         alt = (p / np.cos(lat)) - N
         return lat, lon, alt
 

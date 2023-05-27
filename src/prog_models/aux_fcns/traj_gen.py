@@ -2,6 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 import numpy as np
+import pandas as pd
 from warnings import warn
 
 from prog_models.prognostics_model import PrognosticsModel
@@ -10,19 +11,15 @@ from .traj_gen_utils import route, trajectory
 def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     """
     Function to generate a flyable trajectory from coarse waypoints using the NURBS algorithm 
-        TODO: @Matteo, can you make this a bit more descriptive/correct?
 
     Required arguments:
     ------------------
-        waypoints: dict[str, np.array] or str 
-            This argument specifies coarse waypoints. 
-            dict format must include keys: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
-                Values for each key must be numpy arrays
-            str format specifies the name of a file that includes waypoint information 
-                Columns must have the following headers and be in this order: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
+        waypoints: pandas dataframe 
+            This argument specifies coarse waypoints.  
+            Columns must have the following headers: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
 
         vehicle: 
-            This argument must be an instance of the UAVGen class (prog_model.models.uav_model.uav_model.UAVGen)
+            This argument must be an instance of a vehicle PrognosticsModel (currently, only prog_model.models.uav_model.uav_model.SmallRotorcraft is supported)
 
     Keyword arguments:
     -----------------
@@ -58,6 +55,8 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     # Check for waypoints and vehicle information
     if waypoints is None:
         raise TypeError("No waypoints or flight plan information were provided to generate reference trajectory.")
+    if not isinstance(waypoints, pd.DataFrame):
+        raise TypeError("Waypoints must be provided using Pandas DataFrame.")
     if vehicle is None:
         raise TypeError("No vehicle model was provided to generate reference trajectory.")
 
@@ -71,7 +70,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
         'hovering_time': 0.0,
         'takeoff_time': 0.0, 
         'landing_time': 0.0,
-        'waypoint_weights': 20.0, # 10? 
+        'waypoint_weights': 20.0,
         'adjust_eta': None, 
         'nurbs_basis_length': 2000, 
         'nurbs_order': 4, 
@@ -94,28 +93,11 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Get Flight Plan
     # ================
-    # Option 1: waypoints in form of dict of numpy arrays 
-    if isinstance(waypoints,dict): 
-        for flight_plan_element in waypoints.values(): 
-            if not isinstance(flight_plan_element, np.ndarray):
-                raise TypeError("When specifying waypoints with type dict, must define lat/lon/alt using numpy arrays. Type {} was given".format(type(flight_plan_element)))
-        
-        # Extract data from flight plan: latitude, longitude, altitude, time stamps
-        flightplan = trajectory.load.convert_dict_inputs(waypoints)
-        lat = flightplan['lat_rad']
-        lon = flightplan['lon_rad']
-        alt = flightplan['alt_m']
-        tstamps = flightplan['timestamp']
-      
-    # Option 2: a file with flight plan is passed
-    elif isinstance(waypoints,str):
-        flightplan = trajectory.load.get_flightplan(fname=waypoints)
-        # Extract data from flight plan: latitude, longitude, altitude, time stamps
-        lat, lon, alt, tstamps = flightplan['lat'], flightplan['lon'], flightplan['alt'], flightplan['timestamp']
-
-    # Option 3: incorrect format is passed for waypoints 
-    else:
-        raise TypeError("Waypoints have incorrect format. Must be defined as dictionary or string specifying text file.")
+    flightplan = trajectory.load.convert_df_inputs(waypoints)
+    lat = flightplan['lat_rad']
+    lon = flightplan['lon_rad']
+    alt = flightplan['alt_m']
+    tstamps = flightplan['timestamp']
 
     # Generate route
     # ==============

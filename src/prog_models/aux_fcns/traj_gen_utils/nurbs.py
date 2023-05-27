@@ -31,7 +31,7 @@ def knot_vector(n, k):
     :return:        normalized knot vector, [0,1]
     """
     t              = np.zeros((n + k + 1,))             # initialize vector
-    idx_vec        = np.arange(1, n + k + 2)            # generate indexes of the vector
+    idx_vec        = np.arange(1, n + k + 2)            # generate indices of the vector
     msk1           = (idx_vec >= k) * (idx_vec <= n)    # create a mask for values between k and n
     t[msk1]        = (idx_vec[msk1] - 1) - k + 1        # assign values to the masked elements
     t[idx_vec > n] = n - k + 2                          # assign fixed value n-k+2 for everything above index n
@@ -90,7 +90,7 @@ def evaluate(order, t, weights, waypoint_vector, basis_length=1000):
     N = np.zeros((q, waypoint_vector.shape[1]))
     for ii in range(q):
         N[ii, :] = basisfunction(order, U[ii], t)   # first piece of basis function
-    if N[0, 0] == 0:    # Numerical issue: the first point of the first basis is not computed but remain 0 when it should be 1. This fixes it.
+    if N[0, 0] == 0:    # Numerical issue: the first point of the first basis is not computed but remains 0 when it should be 1. This fixes it.
         N[0, 0] = 1.0
 
     S = np.dot(N, weights)        # Calculate denominator of rational basis function
@@ -175,8 +175,7 @@ def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
             counter_2 += 1
 
     # -------- Generate new Yaw vector ---------- #
-    # The fictitious yaw is NOT the average of the true yaw, but it is equal
-    # to the yaw at the previous (true) waypoint.
+    # The fictitious yaw is NOT the average of the true yaw, but it is equal to the yaw at the previous (true) waypoint.
     yaw_new = np.zeros((ps_new.shape[0],))            # Initialize new yaw vector
     counter_1 = 1
     for jj in range(len(yaw)):

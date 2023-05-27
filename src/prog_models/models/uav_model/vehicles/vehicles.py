@@ -24,8 +24,8 @@ def TAROT18(payload=0.0, gravity=9.81):
                 total=None,                 # kg, total mass (to be calculated using payload, num rotors and weight of all arms)
                 body=None,                  # kg, mass of central body
                 payload=payload,            # kg, payload mass
-                Ixx=None,                   # kg*m^2, interia moments along local axis
-                Iyy=None,                   # kg*m^2, interia moments along local axis
+                Ixx=None,                   # kg*m^2, inertia moments along local axis
+                Iyy=None,                   # kg*m^2, inertia moments along local axis
                 Izz=None)                   # kg*m^2, interia moments along local axis
     
     geom = dict(num_rotors=8,           # #, number of rotors
@@ -87,9 +87,9 @@ def DJIS1000(payload=0.0, gravity=9.81):
                 total=None,             # kg, total mass (to be calculated using payload, num rotors and weight of all arms)
                 body=None,              # kg, mass of central body
                 payload=payload,        # kg, payload mass
-                Ixx=None,               # kg*m^2, interia moments along local axis
-                Iyy=None,               # kg*m^2, interia moments along local axis
-                Izz=None)               # kg*m^2, interia moments along local axis
+                Ixx=None,               # kg*m^2, inertia moments along local axis
+                Iyy=None,               # kg*m^2, inertia moments along local axis
+                Izz=None)               # kg*m^2, inertia moments along local axis
 
     geom = dict(num_rotors=8,           # #, number of rotors
                 body_type='thickdisk',  # -, should be either sphere, flatdisk, thickdisk.
@@ -106,7 +106,7 @@ def DJIS1000(payload=0.0, gravity=9.81):
                     max_wind_speed=8.0, # m/s, max wind speed for safe flight
                     max_acceleration=None,  # m/s^2, max acceleration to be calculated using thrust2weight ratio
                     max_thrust=None,    # N, max thrust the power system can deliver
-                    min_thrust=0.0,     # N, min thrust delievered at rotor minimum speed (25% of throttle with KDE motor)
+                    min_thrust=0.0,     # N, min thrust delivered at rotor minimum speed (25% of throttle with KDE motor)
                     state_vars=['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz'],
                     max_roll=45 / 180.0 * np.pi,  # rad, maximum roll during flight
                     max_pitch=45 / 180.0 * np.pi,  # rad, maximum pitch during flight

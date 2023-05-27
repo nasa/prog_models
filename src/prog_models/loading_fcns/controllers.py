@@ -73,14 +73,12 @@ class LQR():
         for vals in x_ref.values():
             if not isinstance(vals, np.ndarray):
                 raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
-        
+
         self.type      = 'LQR'                  # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
-        # self.n_states  = len(self.states) - 1   # number of states (minus one to remove time)
         self.n_states  = len(self.states) - 2   # number of states (minus one to remove time)
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
-        # self.n_inputs  = len(self.inputs)       # number of inputs
-        self.n_inputs  = len(self.inputs) - 1       # number of inputs
+        self.n_inputs  = len(self.inputs) - 1   # number of inputs
         self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
         self.ss_input  = vehicle.parameters['steadystate_input']
         self.vehicle_max_thrust = vehicle.dynamics['max_thrust']
@@ -114,7 +112,6 @@ class LQR():
         if x is None:
             x_k = np.zeros((self.n_states, 1))
         else:
-            # x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-1)])
             x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-2)])
         
         # Identify reference state (desired state) at t
@@ -134,8 +131,7 @@ class LQR():
         u             = self.compute_input(K, error)                 # compute input u given the gain matrix K and the error between current and reference state
         u[0]         += self.ss_input
         u[0]  = min(max([0, u[0]]), self.vehicle_max_thrust)
-        # return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3]}
-        return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3], 'mission_complete': t/self.ref_traj['t'][-1]}
+        return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3], 'mission_complete': t_k/self.ref_traj['t'][-1]}
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
