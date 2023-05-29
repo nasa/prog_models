@@ -27,7 +27,7 @@ def run_example():
 
     # EXAMPLE 1: 
     # Define coarse waypoints: waypoints must be defined as a Pandas DataFrame
-    # See documentation for specific information on inputting waypoints 
+    # See documentation for specific information on defining waypoints 
     # Latitude, longitude, and altitude values are required; ETAs are optional (see Example 3)
 
     # Here, we specify waypoints in a dictionary and then convert it to a Pandas DataFrame
@@ -48,7 +48,7 @@ def run_example():
     # Calculate reference trajectory 
     ref_traj = traj_gen(waypoints=waypoints_pd, vehicle=vehicle, **ref_params)
 
-    # Define controller and build scheduled control 
+    # Define controller and build scheduled control. The controller acts as a future_loading function
     ctrl = LQR(ref_traj, vehicle)
     ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
 
@@ -100,7 +100,7 @@ def run_example():
     # Simulate vehicle to fly trajectory 
     traj_results_speeds = vehicle.simulate_to_threshold(ctrl_speeds, **options)
 
-    # Visualize results - notice these results are slightly difference, since the speeds through the waypoints, and therefore the trajectory, are different than Example 1 and 2
+    # Visualize results - notice these results are slightly different, since the speeds through the waypoints (and therefore the resulting trajectory) are different than Example 1 
     vehicle.visualize_traj(pred=traj_results_speeds, ref=ref_traj_speeds)
 
     # EXAMPLE 3: 
@@ -121,23 +121,23 @@ def run_example():
     x0 = {key: ref_traj[key][ind][0] for key in ref_traj.keys()}
     vehicle.parameters['x0'] = x0
 
-    # Define simulation parameters - note that we must define t0 as start_time since we are not starting at the default of t = 0
+    # Define simulation parameters - note that we must define t0 as start_time since we are not starting at the default of t0 = 0
     options = {
         'dt': 0.1, 
         'save_freq': vehicle_params['dt'],
         't0': start_time
     }
 
-    # Simulate starting at this initial condition from start_time to end_time
+    # Simulate starting at this initial state from start_time to end_time
     traj_results_interval = vehicle.simulate_to(sim_time, ctrl, **options)
 
-    # Plot results with Example 1 results to show same 
+    # Plot results with Example 1 results to show equivalence on this interval 
     z_1 = [traj_results.outputs[iter]['z'] for iter in range(len(traj_results.times))]
     z_4 = [traj_results_interval.outputs[iter]['z'] for iter in range(len(traj_results_interval.times))]
 
     fig, ax = plt.subplots()
     ax.plot(traj_results.times, z_1, '-b', label='Example 1')
-    ax.plot(traj_results_interval.times, z_4, '--r', label='Example 4')
+    ax.plot(traj_results_interval.times, z_4, '--r', label='Example 3')
     ax.legend()
 
 # This allows the module to be executed directly 

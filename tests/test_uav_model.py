@@ -12,7 +12,6 @@ from prog_models.models.uav_model import SmallRotorcraft
 from prog_models.loading_fcns.controllers import LQR_I, LQR
 from prog_models.exceptions import ProgModelInputException, ProgModelException
 from prog_models.aux_fcns.traj_gen_utils import geometry as geom
-from prog_models.loading_fcns.controllers import LQR_I, LQR
 
 class TestUAVGen(unittest.TestCase):
     
