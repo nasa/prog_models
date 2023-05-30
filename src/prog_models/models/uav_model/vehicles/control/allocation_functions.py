@@ -9,7 +9,7 @@ import numpy as np
 # ========
 def rotorcraft_cam(n, l, b, d, constrained=False):
     """
-    Generate control allocation matrix (CAM) to transform rotor's angular velocity into thrust and torques around three main body axis.
+    Generate control allocation matrix (CAM) to transform rotor's angular velocity into thrust and torques around three main body axes.
     
         [T, Mx, My, Mz]^{\top} = \Gamma [\Omega_1^2, \Omega_2^2, ..., \Omega_n^2]^{\top}
     

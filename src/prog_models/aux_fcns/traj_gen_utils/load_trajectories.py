@@ -21,7 +21,7 @@ def convert_df_inputs(input_df):
     :return:              flight plan dictionary with keys: lat (in rad), lon (in rad), alt (in m), time_unix, time_stamp.
     """
 
-    # Check units and return warnings if incorrect:
+    # Check units and return exceptions if incorrect:
     if 'lat_deg' not in input_df.columns and 'lat_rad' not in input_df.columns:
         raise TypeError("Waypoints latitude must be defined in degrees (with lat_deg) or radians (with lat_rad).")
     elif 'lon_deg' not in input_df.columns and 'lon_rad' not in input_df.columns:

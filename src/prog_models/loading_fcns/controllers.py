@@ -25,7 +25,7 @@ def lqr_fn(A, B, Q, R):
 
     :param A:       Nx x Nx state matrix, linearized w.r.t. current attitude and thrust
     :param B:       Nu x Nx input matrix, linearized w.r.t. current attitude
-    :param Q:       Nx x Nx state cost matrix, higher the values of the (i,i)-th element is the more aggresive the controller is w.r.t. that variable
+    :param Q:       Nx x Nx state cost matrix, the higher the values of the (i,i)-th element, the more aggresive the controller is w.r.t. that variable
     :param R:       Nx x Nu input cost matrix, higher values imply higher cost of producing that input (used to limit the amount of power)
     :return K:      Nx x Nu, control gain matrix
     :return E:      Nx x 1, eigenvalues of the matrix A - B * K
@@ -76,9 +76,9 @@ class LQR():
 
         self.type      = 'LQR'                  # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
-        self.n_states  = len(self.states) - 2   # number of states (minus one to remove time)
-        self.inputs    = vehicle.inputs         # input variables of the system to be controlled ()
-        self.n_inputs  = len(self.inputs) - 1   # number of inputs
+        self.n_states  = len(self.states) - 2   # number of states (minus two to remove time and mission_complete)
+        self.inputs    = vehicle.inputs         # input variables of the system to be controlled
+        self.n_inputs  = len(self.inputs) - 1   # number of inputs (minus one to remove mission_complete)
         self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
         self.ss_input  = vehicle.parameters['steadystate_input']
         self.vehicle_max_thrust = vehicle.dynamics['max_thrust']
@@ -92,7 +92,7 @@ class LQR():
                                index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
         self.parameters.update(kwargs)                  # update control parameters according to user
 
-        # Get scheduled variable index (only necessary if scheduled_var is changed, which is not happening at the moment)
+        # Get scheduled variable index 
         self.parameters['index_scheduled_var'] = self.states.index(self.parameters['scheduled_var'])
 
         # Initialize other controller-related variables

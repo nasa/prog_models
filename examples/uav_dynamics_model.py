@@ -2,7 +2,7 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of generating a trajectory for a rotorcraft through a set of coarse waypoints 
+Example of generating a trajectory for a small rotorcraft through a set of coarse waypoints 
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,9 @@ def run_example():
     # Latitude, longitude, and altitude values are required; ETAs are optional (see Example 3)
 
     # Here, we specify waypoints in a dictionary and then convert it to a Pandas DataFrame
+        # Note: waypoints can be specified in a variety of ways and then converted to a Pandas DataFrame for use 
+        # Ex: generate a csv file with columns lat_deg, lon_deg, alt_ft, then use pd.read_csv(filename) to convert 
+        # this to a dataframe for use in the trajectory generation 
     waypoints = {}
     waypoints['lat_deg']   = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
     waypoints['lon_deg']   = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
@@ -48,7 +51,7 @@ def run_example():
     # Calculate reference trajectory 
     ref_traj = traj_gen(waypoints=waypoints_pd, vehicle=vehicle, **ref_params)
 
-    # Define controller and build scheduled control. The controller acts as a future_loading function
+    # Define controller and build scheduled control. The controller acts as a future_loading function when simulating
     ctrl = LQR(ref_traj, vehicle)
     ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
 
@@ -63,10 +66,6 @@ def run_example():
 
     # Visualize Results
     vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
-
-    # Note: waypoints can be specified in a variety of ways and then converted to a Pandas DataFrame for use 
-    # Ex: generate a csv file with columns lat_deg, lon_deg, alt_ft, then use pd.read_csv(filename) to convert 
-    # this to a dataframe for use in the trajectory generation 
 
     # EXAMPLE 2: 
     # In this example, we define another trajectory through the same waypoints but with speeds defined instead of ETAs
@@ -128,7 +127,7 @@ def run_example():
         't0': start_time
     }
 
-    # Simulate starting at this initial state from start_time to end_time
+    # Simulate starting from this initial state from start_time to end_time
     traj_results_interval = vehicle.simulate_to(sim_time, ctrl, **options)
 
     # Plot results with Example 1 results to show equivalence on this interval 

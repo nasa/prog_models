@@ -109,12 +109,12 @@ def evaluate(order, t, weights, waypoint_vector, basis_length=1000):
 
 def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
     """
-    The function takes the original set of curve points and generate a new set containing fictitious, intermediate points.
-    The fictitious points help generating a NURBS trajectory that pass through the desired (true) points according
+    This function takes the original set of curve points and generates a new set containing fictitious, intermediate points.
+    The fictitious points help in generating a NURBS trajectory that passes through the desired (true) points according
     to the weight vector.
 
     The fictitious points are particularly useful for rotary-wing UAV trajectories, since the latter have very small minimum-radius
-    turns and can do sharp turns. Without such fictitious points, the trajectory will look more like a fixed-wing trajectory, where the way-points
+    turns and can do sharp turns. Without such fictitious points, the trajectory will look more like a fixed-wing trajectory, where the waypoints
     are approached, but they are not reached.
 
     :param px:             (n,) array, x-coordinate of points, [m]
@@ -195,12 +195,12 @@ def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_le
     Generate NURBS curve defining the trajectory along x, y and z-axis using the waypoints wpx, wpy, and wpz.
     The additional information necessary to generate the curves are:
     ETA at each waypoint, delta_t to generate the time vector, order of the NURBS curve, weight_vector to assign
-    weights to the way-points, and basis_length used to define the resolution of the NURBS basis functions.
+    weights to the waypoints, and basis_length used to define the resolution of the NURBS basis functions.
 
-    :param wpx:             n x 1, way-points along local x-axis
-    :param wpy:             n x 1, way-points along local y-axis
-    :param wpz:             n x 1, way-points along local z-axis
-    :param eta:             n x 1, eta for each way-point
+    :param wpx:             n x 1, waypoints along local x-axis
+    :param wpy:             n x 1, waypoints along local y-axis
+    :param wpz:             n x 1, waypoints along local z-axis
+    :param eta:             n x 1, ETA for each way-point
     :param delta_t:         scalar, dt used to define time vector
     :param order:           scalar, int, order of the NURBS curve
     :param weight_vector:   n x 1, weights to be assigned to each way-point when generating the curve

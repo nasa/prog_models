@@ -31,27 +31,26 @@ def check_and_adjust_eta_feasibility(lat, lon, alt, eta, vehicle_max_speed, vehi
 def build(lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, vehicle_max_speed=None):
     """
     Generate route given waypoints (lat, lon, alt), departure time, 
-    etas or speed in-between way-points, additional time for hovering, takeoff, landing, and eventually adjust eta in case 
+    etas or speed between waypoints, additional time for hovering, takeoff, landing, and eventually adjust ETA in case 
     one wants to generate a route with ETAs in the past or in the future (for example, if one has wind data referring to a specific point in time).
 
-    To generate a Route, one can either use etas or the speed in-between waypoints. The latter composed of cruise_speed, ascent_speed, 
-    descent_speed, landing_speed. Both etas and speed values as set to None as default, but one of etas or speed values must be provided.
+    To generate a Route, one can either use ETAs or the speed between waypoints. The latter is composed of cruise_speed, ascent_speed, 
+    descent_speed, landing_speed. Both ETAs and speed values as set to None as default, but one of ETAs or speed values must be provided.
     
-    :param name:        str, route name
     :param lat:         1D array or list, latitude positions
     :param lon:         1D array or list, longitude positions
     :param alt:         1D array or list, altitude positions
     :param departure_time:          timestamp, flight departure time
     The following are keywords for the dictionary 'route_parameters':
-        :param cruise_speed:            scalar, cruise speed in-between waypoints, default is None.
+        :param cruise_speed:            scalar, cruise speed between waypoints, default is None.
         :param ascent_speed:            scalar, ascent speed, default is None.
-        :param descent_speed:           scalar, descent_speed, default is None.
-        :param landing_speed:           scalar, landing_speed when vehicle is <10m from the ground, default is None.
+        :param descent_speed:           scalar, descent speed, default is None.
+        :param landing_speed:           scalar, landing speed when vehicle is <10m from the ground, default is None.
         :param hovering_time:           scalar, additional hovering time, default is 0.
         :param add_takeoff_time:        scalar, additional takeoff time, default is 0.
         :param add_landing_time:        scalar, additional landing time, default is 0.
         :param adjust_eta:              dictionary with keys ['hours', 'seconds'], to adjust route time 
-    :param etas:                    1D array or list, etas at each waypoints, in seconds, default is None.
+    :param etas:                    1D array or list, ETAs at each waypoints, in seconds, default is None.
     :return:                        route, from Route class.
     """
     params = dict(
@@ -189,7 +188,7 @@ class Route():
         idx_land = np.asarray(self.alt < self.landing_altitude)
         idx_land_pos = np.where(idx_land)[0]
 
-        # Interpolate eta at landing waypoints linearly
+        # Interpolate ETA at landing waypoints linearly
         if set_landing_eta:
             eta_landing = []
             counter     = 0
@@ -250,9 +249,9 @@ class Route():
 
     def compute_etas_from_speed(self, hovering, takeoff_time, landing_time, distance_method='greatcircle', cruise_speed=None, ascent_speed=None, descent_speed=None, same_wp_hovering_time=1.0, assign_eta=True):
         """
-        :param cruise_speed:        m/s, cruise speed in between waypoints
-        :param ascent_speed:        m/s, ascent speed in between waypoints
-        :param descent_speed:       m/s, descent speed in between waypoints
+        :param cruise_speed:        m/s, cruise speed between waypoints
+        :param ascent_speed:        m/s, ascent speed between waypoints
+        :param descent_speed:       m/s, descent speed between waypoints
         :param hovering:            s, extra time for hovering in between waypoints
         :param takeoff_time:        s, extra time needed to take off
         :param landing_time:        s, extra time needed to land

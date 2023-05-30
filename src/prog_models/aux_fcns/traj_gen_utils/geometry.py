@@ -179,7 +179,7 @@ def gen_heading_angle(lat, lon, alt):
     # This heading is calculated from North, while reference frame is ENU (East-North-Up), therefore, the first direction is EAST, not NORTH.
     # Need to adjust heading for ENU reference frame after calculating it.
     head = heading_compute_geodetic(lat, lon)
-    # Adjust first heading based on altitude (avoid issues with fictitious way-points later on)
+    # Adjust first heading based on altitude (avoid issues with fictitious waypoints later on)
     head = heading_adjust_first_nonzero(head, alt)
     # Adjust heading based on minimum rotation between current and next heading.
     # ---------------------------------------------------------------------------

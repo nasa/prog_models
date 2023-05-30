@@ -24,7 +24,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     Keyword arguments:
     -----------------
         cruise_speed : float
-          m/s, avg speed in-between way-points; required only if ETAs are not specified
+          m/s, avg speed between waypoints; required only if ETAs are not specified
         ascent_speed : float
           m/s, vertical speed (up); required only if ETAs are not specified
         descent_speed : float
@@ -38,13 +38,13 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
         landing_time: Optional, float
           s, additional landing time 
         waypoint_weights: Optional, float
-          weights of the waypoints in nurbs calculation 
+          weights of the waypoints in NURBS calculation 
         adjust_eta: Optional, dict 
           Dictionary with keys ['hours', 'seconds'], to adjust route time
         nurbs_basis_length: Optional, float
-          Length of the basis function in the nurbs algorithm
+          Length of the basis function in the NURBS algorithm
         nurbs_order: Optional, int
-          Order of the nurbs curve
+          Order of the NURBS curve
 
     Returns:
     -------
@@ -103,11 +103,11 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     # ==============
     if len(tstamps) > 1:
         # Case 1: ETAs specified 
-        # Check if speeds have been defined and warn user if so:
+        # Check if speeds have also been defined and warn user if so:
         if parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None:
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed etas if want to use desired speeds values.
+                                etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed ETAs if want to use desired speeds values.
                                 vehicle_max_speed = parameters['vehicle_max_speed'],
                                 parameters = parameters)
     else: 
@@ -121,11 +121,11 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Generate trajectory
     # =====================
-    ref_traj = trajectory.Trajectory(route=route_) # Generate trajectory object and pass the route (waypoints, eta) to it
-    weight_vector=np.array([parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each way-point. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
+    ref_traj = trajectory.Trajectory(route=route_) # Generate trajectory object and pass the route (waypoints, ETA) to it
+    weight_vector=np.array([parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each waypoint. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
     ref_traj.generate(
                     dt=parameters['dt'],                                 # assign delta t for simulation
-                    nurbs_order=parameters['nurbs_order'],               # nurbs order, higher the order, smoother the derivatiges of trajectory's position profile
+                    nurbs_order=parameters['nurbs_order'],               # NURBS order, higher the order, smoother the derivatiges of trajectory's position profile
                     gravity=parameters['gravity'],                       # m/s^2, gravity magnitude
                     weight_vector=weight_vector,                              # weight of waypoints, defined ealier from 'waypoint_weights'
                     nurbs_basis_length=parameters['nurbs_basis_length'], # how long each basis polynomial should be. Used to avoid numerical issues. This is rarely changed.

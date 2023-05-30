@@ -17,10 +17,10 @@ def TAROT18(payload=0.0, gravity=9.81):
     """
     Tarot T18 Octocopter
     """
-    mass = dict(body_empty=3.2,             # kg, total empty mass. I believe including kit to install battery, motors, etc. but no actual motor, battery etc.
+    mass = dict(body_empty=3.2,             # kg, total empty mass
                 max_payload=5.0,            # kg, admissible payload
                 max_tow=11.2,               # kg, maximum takeoff weight
-                arm=0.23+0.11+0.0373+0.03,  # kg, arm (comprehensive of motors). 230g motor, 110g ESC, 37.3g propeller. Couldn't find any boom weight, so added 30g just because.
+                arm=0.23+0.11+0.0373+0.03,  # kg, arm (comprehensive of motors). 230g motor, 110g ESC, 37.3g propeller. 
                 total=None,                 # kg, total mass (to be calculated using payload, num rotors and weight of all arms)
                 body=None,                  # kg, mass of central body
                 payload=payload,            # kg, payload mass
@@ -28,7 +28,7 @@ def TAROT18(payload=0.0, gravity=9.81):
                 Iyy=None,                   # kg*m^2, inertia moments along local axis
                 Izz=None)                   # kg*m^2, interia moments along local axis
     
-    geom = dict(num_rotors=8,           # #, number of rotors
+    geom = dict(num_rotors=8,              #, number of rotors
                 body_type='thickdisk',     # -, should be either sphere, flatdisk, thickdisk.
                 body_radius=((0.301+0.209)/2.0)/2.0, # m, body radius. Internal plate is kind of oval, took average of main axes
                 body_height=0.025*2.0,        # m, height of the body
@@ -40,15 +40,15 @@ def TAROT18(payload=0.0, gravity=9.81):
                     C = None,               # observation matrix (constant)
                     thrust2weight=(45.0/gravity * geom['num_rotors']) / (mass['body_empty'] + mass['arm']*geom['num_rotors']),  # -, thrust over weight ratio. Tarot 18: 50 N per motor divided by weight
                     max_speed=15.0,         # m/s, max speed, see: https://www.nasa.gov/offices/amd/nasa_aircraft/small_unmanned_aircraft_systems/larc
-                    max_wind_speed=8.0,     # m/s, max wind speed for safe flight. took from DJIS1000 forum
+                    max_wind_speed=8.0,     # m/s, max wind speed for safe flight (from DJIS1000 forum)
                     max_acceleration=None,  # m/s^2, max acceleration to be calculated using thrust2weight ratio
                     max_thrust=None,        # N, max thrust the power system can deliver
-                    min_thrust=0.0,        # N, min thrust associated with rotors at minimum speed (25% throttle for KDE motors). Default is 0 but assigned after the propulsion system is assigned to AircraftModel.
+                    min_thrust=0.0,         # N, min thrust associated with rotors at minimum speed (25% throttle for KDE motors). Default is 0 but assigned after the propulsion system is assigned to AircraftModel.
                     state_vars=['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz'],
                     max_roll=45/180.0*np.pi,      # rad, maximum roll during flight
                     max_pitch=45/180.0*np.pi,     # rad, maximum pitch during flight
                     aero = dict(cd=1.0,   # drag coefficient of airframe (including rotors), not reliable
-                                ad=0.25,  # apparent face of the rotorcraft facing air for drag force (guess using the "rule of thumb" found on another paper)
+                                ad=0.25,  # apparent face of the rotorcraft facing air for drag force
                                 ),
                     kt=5.25e-5,    # Approximation derived from: max omega of motor+rotor couple and max thrust for each rotor
                     kq=5e-5,       # Rotor torque constant
@@ -111,7 +111,7 @@ def DJIS1000(payload=0.0, gravity=9.81):
                     max_roll=45 / 180.0 * np.pi,  # rad, maximum roll during flight
                     max_pitch=45 / 180.0 * np.pi,  # rad, maximum pitch during flight
                     aero=dict(cd=1.0,  # drag coefficient of airframe (including rotors), not reliable
-                              ad=0.25, # apparent face of the rotorcraft facing air for drag force (guess using the "rule of thumb" found on another paper)
+                              ad=0.25, # apparent face of the rotorcraft facing air for drag force
                               ),
                     kt = 5.41e-5,       # Approximation derived from: max omega of motor+rotor couple and max thrust for each rotor
                     kq=5e-5,            # Rotor torque constant

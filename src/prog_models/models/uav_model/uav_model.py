@@ -269,13 +269,13 @@ class SmallRotorcraft(PrognosticsModel):
         elif 'dt' not in kwargs:
           kwargs['dt'] = self.parameters['dt']
 
-        # Simulate to threshold at DMD time step
+        # Simulate to threshold
         sim_res = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs)
 
         return sim_res
 
     def linear_model(self, phi, theta, psi, p, q, r, T):
-        """ The linear model ignores gyroscopic effect and wind rate of change"""
+        """ The linear model ignores gyroscopic effect and wind rate of change (if wind included)"""
         m         = self.mass['total']
         Ixx       = self.mass['Ixx']
         Iyy       = self.mass['Iyy']
