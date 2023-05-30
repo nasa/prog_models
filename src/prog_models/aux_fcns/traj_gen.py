@@ -10,7 +10,27 @@ from .traj_gen_utils import route, trajectory
 
 def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     """
-    Function to generate a flyable trajectory from coarse waypoints using the NURBS algorithm 
+    Function to generate a flyable trajectory from coarse waypoints using the NURBS algorithm.
+    The function uses the way-points as anchor points and generates a smooth, time-parametrized position profile in cartesian coordinates, 
+    px, py, and pz.
+    Then, the position profile is derived to obtain velocity and acceleration profiles, and the latter is used to compute the Euler's angles
+    to fly the desired trajectory.
+
+    These time-parameterized profiles work as reference state the vehicle needs to follow to complete the trajectory.
+    Non-uniform rational B-splines (NURBS) are parametric composite curves with convex hull and continuity up to the k-1 derivative 
+    for a curve of degree k. The NURBS is a clamped B-spline, ensuring that the position profiles pass for the first and last waypoints.
+    Given a set of n + 1 way-points, a NURBS curve is defined as a piecewise curve described by parameter 
+    u ∈ IR+ : 0 ≤ u ≤ n-k+2, where each section of the curve {[0,1],[1,2],...,[(n-k+1),(n-k+2)]} is of degree k.
+    Way-point importance is deined by "weights," which controls the distance of curve from that way-point. However, the importance is not
+    defined by the absolute value of the weights, but by the relative weight of a way-point w.r.t. the weights of the surrounding way-points.
+    This may be a problem when many or all way-points are important and should be passed by very closely by the vehicle.
+
+    Therefore, the NURBS algorithm used here introduces some "fictitious" way-points, in-between the real ones, with lower weights.
+    These fictitious way-points allow the NURBS to maintain high relative weight for the real waypoints, allowing the curve to pass
+    close-by without sacrificing the surrounding way-points.
+
+    The NURBS algorithm does not automatically produce a constrained trajectory based on vehicle performance (maximum speed, acceleration, attitude rates, etc).
+    The feasibility of the trajectory is checked after it has been generated. If the check fails, the trajectory is corrected by lowering speed and acceleration profiles.
 
     Required arguments:
     ------------------

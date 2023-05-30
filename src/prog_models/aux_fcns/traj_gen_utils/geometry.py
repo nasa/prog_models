@@ -11,8 +11,18 @@ from prog_models.exceptions import ProgModelInputException
 
 # EARTH-RELATED DISTANCE FUNCTIONS
 # ================================
-def greatcircle_distance(lat1, lat2, lon1, lon2):
-    R       = 6371e3 # meters
+def greatcircle_distance(lat1, lat2, lon1, lon2, R=6371e3):
+    """
+    Compute distance between two points on a sphere, using a circle passing for those two points given the sphere's radius.
+    Typically used to approximate the distance between two points on Earth, ignoring Earth's ellipsoid shape.
+
+    :param lat1:        scalar, rad, latitude of first point
+    :param lat2:        scalar, rad, latitude of second point
+    :param lon1:        scalar, rad, longitude of first point
+    :param lon2:        scalar, rad, longitude of second point
+    :param R:           scalar, m radius of the sphere, default is Earth's radius: 6371e3 m
+    :return:            scalar, m, distance between the two points.
+    """
     phi1    = lat1
     phi2    = lat2
     dphi    = (lat2 - lat1) 
@@ -29,7 +39,10 @@ def greatcircle_distance(lat1, lat2, lon1, lon2):
 def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
     """ 
     Compute distance between two geodetic coordinates p1=(lat1, lon1), p2=(lat2, lon2) using ellipsoid equations from Vincenty, 1975.
-        T. Vincenty, 1975. Direct and inverse solution of geodesics on the ellipsoid with application of nested equations. Survey Review 23(176), 88-93. 
+    T. Vincenty, 1975. Direct and inverse solution of geodesics on the ellipsoid with application of nested equations. Survey Review 23(176), 88-93. 
+
+    This algorithm provides a more accurate estimate of the distance between two points on Earth compared to the Great Circle distance, since
+    it accounts for the ellipsoid shape. 
 
     The algorithm does not converge for two nearly antipodal points, for example: (0.0, 0.0), (0.5, 179.5).
 
@@ -108,6 +121,7 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
         s      = b * A * (sigma - dsigma)
     return np.round(s, 6)
 
+
 def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=False):
     """
     Compute geodetic distance between two points defined by latitude, longitude, and altitude
@@ -144,11 +158,35 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
 # REFERENCE FRAMES
 # ================
 def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
+    """
+    Return the rotation matrix R to transform coordinates from a Earth-fixed (inertial) reference frame to a body reference frame.
+    The function is called "fast" because takes the pre-computed since, cosine, and other trigonomentric functions of Euler's angles.
+
+    :param sphi:            scalar, sine of phi
+    :param cphi:            scalar, cosine of phi
+    :param stheta:          scalar, sine of theta
+    :param ctheta:          scalar, cosine of theta
+    :param spsi:            scalar, sine of psi
+    :param cpsi:            scalar, cosine of psi
+    :return:                rotation matrix to transform coordinates from Earth-fixed frame to body frame
+    """
     return np.array([[                        ctheta*cpsi,                       ctheta * spsi,          - stheta],
                      [-cphi * spsi + sphi * stheta * cpsi,  cphi * cpsi + sphi * stheta * spsi,     sphi * ctheta],
                      [ sphi * spsi + cphi * stheta * cpsi, -sphi * cpsi + cphi * stheta * spsi,     cphi * ctheta]])
 
 def rot_body2earth_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
+    """
+    Return the rotation matrix R to transform coordinates from a body (non-inertial) reference frame to a Earth-fixed (inertial) reference frame.
+    The function is called "fast" because takes the pre-computed since, cosine, and other trigonomentric functions of Euler's angles.
+
+    :param sphi:            scalar, sine of phi
+    :param cphi:            scalar, cosine of phi
+    :param stheta:          scalar, sine of theta
+    :param ctheta:          scalar, cosine of theta
+    :param spsi:            scalar, sine of psi
+    :param cpsi:            scalar, cosine of psi
+    :return:                rotation matrix to transform coordinates from Earth-fixed frame to body frame
+    """
     return np.array([[      cpsi * ctheta,          cpsi * stheta * sphi - spsi * cphi,         cpsi * stheta * cphi + spsi * sphi],
                      [      spsi * ctheta,          spsi * stheta * sphi + cpsi * cphi,         spsi * stheta * cphi - cpsi * sphi],
                      [           - stheta,                               ctheta * sphi,                              ctheta * cphi]])                    
@@ -172,7 +210,15 @@ def body_ang_vel_from_eulers(phi, theta, psi, phidot, thetadot, psidot):
 # COORDINATE TRANSFORMATION
 # ==========================
 def gen_heading_angle(lat, lon, alt):
-    
+    """
+    Function to generate heading angle to follow a set of points defined by latitude lat, longitude lon, and altitude alt.
+    The function returns the heading from North, positive clock-wise/
+
+    :param lat:             rad, n x 1, latitude points
+    :param lon:             rad, n x 1, longitude points
+    :param alt:             ft or m, n x 1, altitude points
+    :return:                rad, n x 1, heading angle to follow the input points
+    """
     print('Generating heading angle ', end=" ")
     # Compute heading using lat-lon coordinates
     # -----------------------------------------
@@ -181,6 +227,7 @@ def gen_heading_angle(lat, lon, alt):
     head = heading_compute_geodetic(lat, lon)
     # Adjust first heading based on altitude (avoid issues with fictitious waypoints later on)
     head = heading_adjust_first_nonzero(head, alt)
+
     # Adjust heading based on minimum rotation between current and next heading.
     # ---------------------------------------------------------------------------
     # Select the sign of the angle based on the shortest rotation the UAV is supposed to move
@@ -190,6 +237,11 @@ def gen_heading_angle(lat, lon, alt):
     return head
 
 def heading_adjust_first_nonzero(heading, altitude):
+    """
+    Adjust first non-zero heading angle based on altitude.
+    :param heading:     rad, n x 1, heading angles
+    :param altitude:    m, n x 1, altitude points
+    """
     n = len(heading)
     for jj in range(n):
         if altitude[jj] > 1.0 and heading[jj] == 0 and heading[jj + 1] != 0:
@@ -198,6 +250,16 @@ def heading_adjust_first_nonzero(heading, altitude):
     return heading
 
 def heading_adjust_rotation(heading):
+    """
+    Adjust heading w.r.t. direction of travel. The sign of the heading should be decided based on the shortest rotation the UAV is supposed to move.
+    Example:
+        heading at i -th point = 60 deg
+        heading at i+1 -th point = -270 deg
+        change heading at i+1 -th point to 90 deg, so the vehicle will rotate only 30 deg from 60 to 90, instead of 60 to -270.
+    
+    :param heading:     rad, n x 1, heading angles.
+    :return:            rad, n x 1, heading angles with the shorter rotation distance between point i and i+1
+    """
     n = len(heading)
     for idx in range(n-1):
         curr_p = heading[idx]
@@ -213,24 +275,41 @@ def heading_adjust_rotation(heading):
     return heading
 
 def heading_compute_geodetic(lat, lon):
-    n = len(lat)
+    """
+    Compute heading angle to follow a set of points defined by geodetic coordinates lat, lon.
+
+    :param lat:         rad, n x 1, latitude points
+    :param lon:         rad, n x 1, longitude points
+    :return:            rad, n x 1, heading angle
+    """
+    n = len(lat)    
     heading = np.zeros((n,))
-    for jj in range(1, n):
-        dlon_ = lon[jj] - lon[jj - 1]
-        dlat_ = lat[jj] - lat[jj - 1]
-        X = np.cos(lat[jj]) * np.sin(dlon_)
-        Y = np.cos(lat[jj - 1]) * np.sin(lat[jj]) - np.sin(lat[jj - 1]) * np.cos(lat[jj]) * np.cos(dlon_)
-        head_temp = np.arctan2(X, Y)
-        if Y != 0:
+    for jj in range(1, n):  
+        dlon_ = lon[jj] - lon[jj - 1]   # compute difference in longitude
+        dlat_ = lat[jj] - lat[jj - 1]   # compute difference in latitude
+        X = np.cos(lat[jj]) * np.sin(dlon_) # compute cartesian coordinate
+        Y = np.cos(lat[jj - 1]) * np.sin(lat[jj]) - np.sin(lat[jj - 1]) * np.cos(lat[jj]) * np.cos(dlon_)   # compute cartesian coordinate
+        head_temp = np.arctan2(X, Y)    # heading as arc-tangent of cartesian coordinates
+        if Y != 0:  # adjust for 360 degrees
             head_temp -= np.pi / 2.0
             head_temp *= -1.0
-        if jj < n - 1 and ((dlat_ != 0 or dlon_ != 0) and head_temp == 0):
+        if jj < n - 1 and ((dlat_ != 0 or dlon_ != 0) and head_temp == 0):  # if calculated heading is 0, keep the old one.
             head_temp = heading[jj - 2]
         heading[jj - 1] = head_temp
     heading[-1] = heading[-2]
     return heading
 
 def transform_from_cart_to_geo(cartesian_matrix, lat0, lon0, alt0):
+    """
+    Transform coordinates from cartesian reference frame to geodetic reference frame.
+    The transformation requires a first point on the sphere defined by lat0, lon0, alt0.
+
+    :param cartesian_matrix:        n x 3 matrix including x, y, and z, coordinates in ENU reference frame, organized by columns
+    :param lat0:                    rad, latitude of initial point 
+    :param lon0:                    rad, longitude of initial point 
+    :param alt0:                    rad, altitude of initial point 
+    :return:                        n x 3 matrix including lat, lon, and alt organized by columns.
+    """
     coord = Coord(lat0=lat0, lon0=lon0, alt0=alt0)
     geodetic_matrix = np.zeros((len(cartesian_matrix[:,0]), 3))
     geodetic_matrix[:, 0], geodetic_matrix[:, 1], geodetic_matrix[:, 2] = coord.enu2geodetic(cartesian_matrix[:,0],
@@ -242,8 +321,18 @@ def transform_from_cart_to_geo(cartesian_matrix, lat0, lon0, alt0):
 # Coordinate class
 # ===============
 class Coord():
-
+    """
+    Coordinate class:
+    transform coordinate values between geodetic frame and cartesian frames, and vice versa.
+    """
     def __init__(self, lat0, lon0, alt0):
+        """
+        Initialize Coordinate frame class.
+
+        :param lat0:            latitude of origin of reference frame
+        :param lon0:            longitude of origin of reference frame
+        :param alt0:            altitude of origin of reference frame
+        """
         self.a = 6378137.0                      # [m], equatorial radius
         self.f = 1.0 / 298.257223563            # [-], ellipsoid flatness
         self.b = self.a * (1.0 - self.f)        # [m], polar radius
@@ -254,7 +343,16 @@ class Coord():
         self.N0   = self.a / np.sqrt(1 - self.e**2.0 * np.sin(self.lat0)**2.0) # [m], Radius of curvature on the Earth
 
     def ecef2enu(self, xecef, yecef, zecef):
+        """
+        Coversion of Earth-centered, Earth-fixed (ECEF) reference frame coordinates to East-North-UP (ENU) reference frame.
 
+        :param xecef:           m, n x 1, X-coordinate in ECEF reference frame
+        :param yecef:           m, n x 1, Y-coordinate in ECEF reference frame
+        :param zecef:           m, n x 1, Z-coordinate in ECEF reference frame
+        :return x:              m, n x 1, x-coordainte (East) in ENU reference frame
+        :return y:              m, n x 1, y-coordainte (North) in ENU reference frame
+        :return z:              m, n x 1, z-coordainte (Up) in ENU reference frame
+        """
         # Compute location of the origin of ENU reference frame in the ECEF reference frame
         x0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.cos(self.lon0)
         y0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.sin(self.lon0)
@@ -273,6 +371,16 @@ class Coord():
         return x, y, z
 
     def enu2ecef(self, xenu, yenu, zenu):
+        """
+        Coversion of East-North-UP (ENU) reference frame coordinates into Earth-centered, Earth-fixed (ECEF) reference frame.
+
+        :param xenu:             m, n x 1, x-coordainte (East) in ENU reference frame
+        :param yenu:             m, n x 1, y-coordainte (North) in ENU reference frame
+        :param zenu:             m, n x 1, z-coordainte (Up) in ENU reference frame
+        :return xecef:           m, n x 1, X-coordinate in ECEF reference frame
+        :return yecef:           m, n x 1, Y-coordinate in ECEF reference frame
+        :return zecef:           m, n x 1, Z-coordinate in ECEF reference frame
+        """
 
         # Compute coordinates of origin of ENU in the ECEF reference frame
         x0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.cos(self.lon0)
@@ -329,6 +437,16 @@ class Coord():
 
 
     def geodetic2ecef(self, lat, lon, alt):
+        """
+        Coversion of geodetic reference frame coordinates into Earth-centered, Earth-fixed (ECEF) reference frame.
+
+        :param lat:     rad, n x 1, latitude 
+        :param lon:     rad, n x 1, longitude
+        :param alt:     m, n x 1, altitude
+        :return X:      m, n x 1, X-coordinate in ECEF reference frame
+        :return Y:      m, n x 1, Y-coordinate in ECEF reference frame
+        :return Z:      m, n x 1, Z-coordinate in ECEF reference frame
+        """
         N = self.a / np.sqrt(1.0 - self.e**2.0 * np.sin(lat)**2.0)  # [m], Radius of curvature on the Earth, phi = latitude
         X = (N + alt) * np.cos(lat) * np.cos(lon)
         Y = (N + alt) * np.cos(lat) * np.sin(lon)
@@ -338,12 +456,31 @@ class Coord():
 
     def enu2geodetic(self, x, y, z):
         """
-        Return lat, lon, alt
+        Conversion of East-North-UP (ENU) reference frame coordinates into geodetic coordinates.
+        This method calls first method ENU2ECEF, and then ECEF2GEODETIC.
+
+        :param x:              m, n x 1, x-coordainte (East) in ENU reference frame
+        :param y:              m, n x 1, y-coordainte (North) in ENU reference frame
+        :param z:              m, n x 1, z-coordainte (Up) in ENU reference frame
+        :return lat:           rad, n x 1, latitude in geodetic coordinates
+        :return lon:           rad, n x 1, longitude in geodetic coordinates
+        :return alt:           m, n x 1, altitude in geodetic coordinates
         """
         xecef_tmp, yecef_tmp, zecef_tmp = self.enu2ecef(x, y, z)
         return self.ecef2geodetic(xecef_tmp, yecef_tmp, zecef_tmp )
 
 
     def geodetic2enu(self, lat, lon, alt):
+        """
+        Conversion of coordinates (lat, lon, alt) in geodetic reference frame into East-North-UP (ENU) reference frame.
+        This method calls first method GEODETIC2ECEF, and then ECEF2ENU.
+
+        :param lat:           rad, n x 1, latitude in geodetic coordinates
+        :param lon:           rad, n x 1, longitude in geodetic coordinates
+        :param alt:           m, n x 1, altitude in geodetic coordinates
+        :return x:            m, n x 1, x-coordainte (East) in ENU reference frame
+        :return y:            m, n x 1, y-coordainte (North) in ENU reference frame
+        :return z:            m, n x 1, z-coordainte (Up) in ENU reference frame
+        """
         X, Y, Z = self.geodetic2ecef(lat, lon, alt)
         return self.ecef2enu(X, Y, Z)

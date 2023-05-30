@@ -15,7 +15,10 @@ from .control import allocation_functions as caf
 # ==============
 def TAROT18(payload=0.0, gravity=9.81):
     """
-    Tarot T18 Octocopter
+    Tarot T18 Octocopter mass, geometry and dynamic properties.
+    :param payload:         float, payload for the flight.
+    :param gravity:         float, gravity value according to location
+    :return:                dictionaries containing mass, geometry and dynamic properties of the vehicle
     """
     mass = dict(body_empty=3.2,             # kg, total empty mass
                 max_payload=5.0,            # kg, admissible payload
@@ -189,18 +192,40 @@ def rotorcraft_inertia(m, g):
 
 
 def rotorcraft_masses(mass_dict, geom_dict):
+    """
+    Compute mass of a small rotorcraft given the mass and geometry dictionary defined by the vehicle
+    :param mass_dict:           dictionary of mass properties of the vehicle
+    :param geom_dict:           dictionary of geometry properties of the vehicle
+    :return:                    updated dictionary of mass properties of the vehicle
+    """
     mass_dict['body']  = mass_dict['body_empty'] + geom_dict['num_rotors'] * mass_dict['arm']
     mass_dict['total'] = mass_dict['body'] + mass_dict['payload'] 
     return mass_dict
 
 
 def rotorcraft_performance(dyn_dict, mass_dict, g):
+    """
+    Update dynamic performance dictionary of vehicle with maximum thrust and acceleration.
+
+    :param dyn_dict:            dictionary of dynamic properties of the vehicle
+    :param mass_dict:           dictionary of mass properties of the vehicle
+    :param g:                   m/s^2, double, scalar, gravity magnitude
+    :return:                    updated dictionary of dynamic properties of the vehicle
+    """
     dyn_dict['max_thrust']       = dyn_dict['thrust2weight'] * (mass_dict['body'] * g)
     dyn_dict['max_acceleration'] = dyn_dict['max_thrust'] / mass_dict['total']
     return dyn_dict
 
 
 def observation_matrix(num_states, num_outputs):
+    """
+    Build observation matrix C of a dynamic system following:
+
+    dx/dt = f_{\theta}(x, u)
+    y = C x
+
+    where x is the state vector, u is the input vector, \theta is the vector of model parameters, and y is the output vector.
+    """
     c = np.zeros((num_outputs, num_states))
     for ii in range(num_outputs):   c[ii, ii] = 1.0
     return c

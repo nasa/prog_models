@@ -14,6 +14,20 @@ from prog_models.exceptions import ProgModelInputException
 # FUNCTIONS
 # ==========
 def check_and_adjust_eta_feasibility(lat, lon, alt, eta, vehicle_max_speed, vehicle_max_speed_vert, distance_method='greatcircle'):
+    """
+    Check that ETAs are feasible by verifying that the average speed necessary to 
+    reach the way-point is not beyond the maximum speed of the vehicle.
+    If so, the ETA for each way-point is increased progressively until the criterion is met.
+
+    :param lat:                         rad, n x 1, latitude of way-points
+    :param lon:                         rad, n x 1, longitude of way-points
+    :param alt:                         m, n x 1, altitude of way-points
+    :param eta:                         s, n x 1, ETAs of way-points
+    :param vehicle_max_speed:           m/s, scalar, vehicle max horizontal speed 
+    :param vehicle_max_speed_vert:      m/s, scalar, vehicle max speed ascending or descending
+    :param distance_method:             string, method to calculate the distance between two points, either greatcircle (default), or vicenti.
+    :return:                            s, n x 1, ETAs of way-points corrected to ensure feasibility.
+    """
     # Check if the speeds required for ETAs are beyond the max vehicle speeds.
     n = len(lat)-1
     d_eta = np.diff(eta)
@@ -27,7 +41,8 @@ def check_and_adjust_eta_feasibility(lat, lon, alt, eta, vehicle_max_speed, vehi
         while dh / d_eta[point] > vehicle_max_speed or dv / d_eta[point] > vehicle_max_speed_vert:
             d_eta[point] += 1.0
     return np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
-    
+
+
 def build(lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, vehicle_max_speed=None):
     """
     Generate route given waypoints (lat, lon, alt), departure time, 
@@ -86,6 +101,14 @@ def build(lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, v
 
 
 def reshape_route_attribute(x, dim=None, msk=None):
+    """
+    Reshape route attribute to ensure right length
+
+    :param x:           attribute to reshape
+    :param dim:         scalar, int or None, desired length of attribute. Used only if x has no attribute "len"
+    :param msk:         list or array of int, or None, mask to reshape attribute x. The function return x by repeating x[msk] at msk points.
+    :return:            reshaped attribute
+    """
     if not hasattr(x, "__len__"):   
         x = x * np.ones((dim, ))
     elif msk:
@@ -95,6 +118,9 @@ def reshape_route_attribute(x, dim=None, msk=None):
 # ROUTE CLASS
 # ============    
 class Route():
+    """
+    This class is used to generate a route with waypoints, corresponding etas, and the desired speed in between way-points.
+    """
     def __init__(self, 
                  departure_time=None, 
                  cruise_speed=None, 
@@ -102,6 +128,16 @@ class Route():
                  descent_speed=None, 
                  landing_speed=None, 
                  landing_alt=10.5):
+        """
+        Initialize class
+
+        :param departure_time:      dt.datetime object, departure time according to plan.
+        :param cruise_speed:        m/s, scalar, cruise speed in between waypoints
+        :param ascent_speed:        m/s, scalar, ascent speed in between waypoints
+        :param descent_speed:        m/s, scalar, descent speed in between waypoints
+        :param landing_speed:        m/s, scalar, landing speed, either ascending or descending speed when altitude is lower than landing_altitude
+        :param landing_alt:          m, scalar, landing altitude. Below this altitude, the vertical speed of the vehicle is set to landing_speed, regardless if ascending or descending
+        """
         if type(departure_time) != dt.datetime:
             departure_time = departure_time.to_pydatetime()
         self.departure_time   = departure_time
@@ -119,15 +155,37 @@ class Route():
         self.eta              = []
 
     def __call__(self):
+        """
+        Route calling function returns the flight plan in latitude, longitude, altitude, ETA.
+        """
         return self.lat, self.lon, self.alt, self.eta
     
     def adjust_eta(self, hours_=0., seconds_=0.0):
+        """
+        Adjust departure time and corresponding ETAs according to hours_ and seconds_ from now.
+        For example:
+        
+        route = Route()
+        route.adjust_eta(hours_=1, seconds=_=4600)
+        
+        will defined a route with departure time set to 1 hour and 4600 seconds after the method "route.adjust_eta()" was called.
+
+        :param hours_:          scalar, double, number of hours ahead of "now" the route should start
+        :param seconds_:        scalar, double, number of seconds ahead of "now" the route should start
+        """
         self.departure_time = dt.datetime.now() + dt.timedelta(hours=hours_, seconds=seconds_) 
         timedelta            = self.departure_time - self.eta[0]
         self.eta            = [item + timedelta  for item in self.eta]
         return
     
     def add_point(self, lat, lon, alt, eta=None):
+        """
+        Append a way-point composed of lat, lon, alt to the route. If eta is not None, the eta is also added to the etas.
+        :param lat:     rad, scalar, latitude coordinate of point
+        :param lon:     rad, scalar, longitude coordinate of point
+        :param alt:     rad, scalar, altitude coordinate of point
+        :param eta:     s, scalar, ETAs of point
+        """
         self.lat.append(lat)
         self.lon.append(lon)
         self.alt.append(alt)
@@ -135,6 +193,14 @@ class Route():
             self.eta.append(eta)
 
     def set_waypoints(self, lat, lon, alt, eta=None):
+        """
+        Set waypoints as a series of coordinates contained in input lat, lon, alt, and eta (optional, default = None)
+
+        :param lat:     rad, n x 1, latitude coordinates
+        :param lon:     rad, n x 1, longitude coordinates
+        :param alt:     rad, n x 1, altitude coordinates
+        :param eta:     s, n x 1, ETAs. Optional, default = None.
+        """
         self.lat = lat
         self.lon = lon
         self.alt = alt
@@ -143,26 +209,42 @@ class Route():
         return
         
     def set_waypoints_as_array(self):
+        """
+        Set way-points as arrays, in case they're passed as lists or other types
+        """
         self.lat = np.asarray(self.lat)
         self.lon = np.asarray(self.lon)
         self.alt = np.asarray(self.alt)
         return
         
     def set_landing_waypoints(self, set_landing_eta=False):
-        if type(self.alt) == list:
+        """
+        Set waypoints at altitude defined by landing_altitude.
+        By so doing, the trajectory can split the ascending and descending phases into segments, and assign the landing_speed to all segments that
+        fall below the landing_alt mark.
+
+        :param set_landing_eta:         Bool, whether to set the landing ETAs as well. Otherwise, they will be calculated later.
+        :return:                        int, n x 1 array, indices of way-points that define the landing.
+        """
+        # if way-points are stored as list, define them as array
+        if type(self.alt) == list:  
             self.set_waypoints_as_array()
+        
+        # get boolean flag where altitude is below the landing altitude, and get the corresponding indices
         idx_land     = np.asarray(self.alt < self.landing_altitude)
-        idx_land_pos = np.where(idx_land)[0]
+        idx_land_pos = np.where(idx_land)[0]    
+        
+        # if there are waypoints below landing altitude: append a landing way-point (with altitude self.landing_altitude) accordingly.
         if idx_land_pos.size != 0:
             n_ = len(self.lat)
             counter = 0
             for item in idx_land_pos:
-                if item == 0:
+                if item == 0:   # if first element is below, just add a landing way-point
                     self.lat = np.insert(self.lat, item + 1, self.lat[item])
                     self.lon = np.insert(self.lon, item + 1, self.lon[item])
                     self.alt = np.insert(self.alt, item+1, self.landing_altitude*1.0)
                     counter += 1
-                elif item == n_-1:
+                elif item == n_-1: # if one before the last element, add landing way-points right before landing.
                     if self.alt[item+counter-1] > self.landing_altitude:
                         self.lat = np.insert(self.lat, -1, self.lat[item+counter-1])
                         self.lon = np.insert(self.lon, -1, self.lon[item+counter-1])
@@ -205,7 +287,17 @@ class Route():
         return idx_land_pos
 
     def set_eta(self, eta=None, hovering=0, add_takeoff_time=None, add_landing_time=None, same_wp_hovering_time=1.0,vehicle_max_speed=None):
-        
+        """
+        Assign ETAs to way-points.
+        If ETAS are provided (i.e., eta is not None), assign them. that's it.
+        If they are not provided, compute them from desired speed.
+
+        :param eta:                     s, n x 1 array or None. ETAs for all waypoints.
+        :param hovering:                s, scalar or n x 1 array. Default = 0. hovering condition to add to the way-points.
+        :param add_takeoff_time         s, scalar or None, add takeoff time
+        :param add_landing_time         s, scalar or None, add landing time
+        :param same_wp_hovering_time    s, scalar, ancillary variable to avoid spurious accelerations when the vehicle needs to hover on the same way-point. It adds time to the ETA, which lower accelerations.
+        """
         # Assign ETAS
         # ============
         if eta is not None: # if ETA is provided, assign to self.eta and that's it.
@@ -249,6 +341,8 @@ class Route():
 
     def compute_etas_from_speed(self, hovering, takeoff_time, landing_time, distance_method='greatcircle', cruise_speed=None, ascent_speed=None, descent_speed=None, same_wp_hovering_time=1.0, assign_eta=True):
         """
+        Compute the ETAs for all way-points given the desired cruise and vertical speed.
+
         :param cruise_speed:        m/s, cruise speed between waypoints
         :param ascent_speed:        m/s, ascent speed between waypoints
         :param descent_speed:       m/s, descent speed between waypoints
@@ -256,6 +350,7 @@ class Route():
         :param takeoff_time:        s, extra time needed to take off
         :param landing_time:        s, extra time needed to land
         :param distance_method:     string, method used to compute the distance between two points, either 'greatcircle' or 'vincenty'. default = 'greatcircle'
+        :return:                    s, n x 1, ETAs for all way-points.
         """
         if len(self.lat) <= 2:
             raise ProgModelInputException("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))

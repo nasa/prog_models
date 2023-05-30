@@ -114,9 +114,7 @@ class SmallRotorcraft(PrognosticsModel):
 
     References 
     ----------
-        References 
-    -------------
-     .. [0] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
+    [0] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
     """
 
     events = ['TrajectoryComplete']
@@ -130,7 +128,6 @@ class SmallRotorcraft(PrognosticsModel):
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
-
         # Simulation parameters:
         'dt': 0.1, 
         'gravity': 9.81,
@@ -275,7 +272,7 @@ class SmallRotorcraft(PrognosticsModel):
         return sim_res
 
     def linear_model(self, phi, theta, psi, p, q, r, T):
-        """ The linear model ignores gyroscopic effect and wind rate of change (if wind included)"""
+        """ The linear model ignores gyroscopic effect and wind rate of change"""
         m         = self.mass['total']
         Ixx       = self.mass['Ixx']
         Iyy       = self.mass['Iyy']

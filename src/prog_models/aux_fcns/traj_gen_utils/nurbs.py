@@ -11,20 +11,44 @@ import scipy.interpolate as interp
 # NURBS Functions
 # ================
 def normalize_t_1(t, a, b):
-    """ Normalization Function 1: normalize t in (a,b) range"""
+    """ 
+    Normalization Function 1: normalize t in (a,b) range as:
+            
+            (t - a) / (b - a)
+    
+    Variable t can be a scalar or 1D array / vector.
+    Values a, b can be scalars or 1D arrays or vectors with same length of t.
+
+    :param t:       scalar or n x 1, value to be normalized
+    :param a:       scalar or n x 1, first normalization parameter
+    :param b:       scalar or n x 1, second normalization parameter
+    :return:        scalar or n x 1, normalized t value
+    """
     with np.errstate(divide="ignore"):  # ignore 0/0 warnings
         return (t-a) / (b - a)
 
 
 def normalize_t_2(t, a, b):
-    """ Normalization Function 2: normalize -t in (a,b) range"""
+    """ 
+    Normalization Function 2: normalize -t in (a,b) range as:
+            
+            (b - t) / (b - a)
+    
+    Variable t can be a scalar or 1D array / vector.
+    Values a, b can be scalars or 1D arrays or vectors with same length of t.
+
+    :param t:       scalar or n x 1, value to be normalized
+    :param a:       scalar or n x 1, first normalization parameter
+    :param b:       scalar or n x 1, second normalization parameter
+    :return:        scalar or n x 1, normalized t value
+    """
     with np.errstate(divide="ignore"):  # ignore 0/0 warnings
         return (b-t) / (b-a)
 
 
 def knot_vector(n, k):
     """
-    Generate knot vector of k-th order for a trajectory with n-points
+    Generate knot vector of k-th order for a NURBS with n-points.
 
     :param n:       number of points in the trajectory
     :param k:       order of the NURBS
@@ -41,8 +65,11 @@ def knot_vector(n, k):
 
 def basisfunction(order, u, t):
     """
-    :param order:
-    :param u:           independent variable u used to generate basis function N(u)
+    Basis function used to generate a smooth NURBS given order and knot vector t.
+    Variable u is the independent variable of the basis function.
+
+    :param order:       scalar, int, order of the nurb
+    :param u:           scalar, double, independent variable u used to generate basis function N(u)
     :param t:           knot vector defining the control points
     :return:            basis function of order 'order', N_order(u)
     """
@@ -123,7 +150,13 @@ def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
     :param yaw:            (n,) array, yaw angle in between waypoints (ini yaw=0), [rad]
     :param eta:            (n,) array, estimated time of arrival at each waypoint, [s]
     :param weight_vector:  (n,) array, weights assigned to each waypoint, [-] (default=None)
-    :return:
+
+    :return px_new:                  (n,) array, x-coordinate including intermediate points, [m]
+    :return py_new:                  (n,) array, y-coordinate including intermediate points, [m]
+    :return pz_new:                  (n,) array, z-coordinate including intermediate points, [m]
+    :return yaw_new:                 (n,) array, yaw values including intermediate points, [rad]
+    :return eta_new:                 (n,) array, ETA at points, including intermediate points, [s]
+    :return weight_vector_new:       (n,) array, weights assigned to each point, including intermediate points, [-]
     """
 
     # ------- Weight Vector -------- #
