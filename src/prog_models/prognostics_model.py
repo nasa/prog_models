@@ -1076,6 +1076,11 @@ class PrognosticsModel(ABC):
         return getsizeof(self)
 
     def check_iterable(self, iter, name, loc = False):
+        """
+        Helper Function to determine if passed in iterable has consistent typings for each index.
+
+        Used to primarily avoid erroneous parameters and for a more descriptive error message than Python's Interpreter.
+        """
         count = sum(isinstance(element, Iterable) and not isinstance(element, (str, bytes)) for element in iter)
         if 0 < count < len(iter):
             if loc is not False:
