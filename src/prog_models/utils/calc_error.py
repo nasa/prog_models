@@ -376,11 +376,9 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
 def DTW(m, times, inputs, outputs, **kwargs):
     """
-    Independent Dynamic Time Warping Algorithm 
-
-    ** WRITE DESCRIPTION BASED AROUND DIFFERENCE BETWEEN INDEPENDENT VS DEPENDENT DTW 
-
-    -> https://dtaidistance.readthedocs.io/en/latest/usage/dtw.html#multi-dimensionsal-dtw **
+    Dynamic Time Warping Algorithm using FastDTW's package.
+    How DTW Works: https://cs.fit.edu/~pkc/papers/tdm04.pdf
+    FastDTW Documentation: https://pypi.org/project/fastdtw/
 
     Args:
         m (PrognosticsModel): Model to use for comparison
