@@ -160,6 +160,76 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x_default['v'], x_rk4['v'])
         self.assertEqual(x_default['x'], x_rk4['x'])
 
+    def test_integration_type_scipy(self):
+        # SciPy Integrator test. 
+        # Here we will set the integrator to various scipy integration methods and make sure that it works
+        from scipy.integrate import RK45, RK23, DOP853, Radau, BDF, LSODA
+
+        m_default_integration = LinearThrownObject(process_noise=0, measurement_noise=0)
+        x_default = m_default_integration.initialize()
+        u_default = m_default_integration.InputContainer({})
+        x_default = m_default_integration.next_state(x_default, u_default, 0.1)
+
+        # RK45
+        m = LinearThrownObject(integration_method=RK45, process_noise=0, measurement_noise=0)
+        x = m.initialize()
+        u = m.InputContainer({})
+        x = m.next_state(x, u, 0.1)
+        self.assertAlmostEqual(x['v'], x_default['v'], delta=0.1)
+        self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
+        self.assertNotEqual(x['v'], x_default['v'])
+        self.assertNotEqual(x['x'], x_default['x'])
+
+        # RK23
+        m = LinearThrownObject(integration_method=RK23, process_noise=0, measurement_noise=0)
+        x = m.initialize()
+        u = m.InputContainer({})
+        x = m.next_state(x, u, 0.1)
+        # V is equal because it's linear
+        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['x'], x_default['x'], delta = 0.1)
+        self.assertNotEqual(x['x'], x_default['x'])
+
+        # DOP853
+        m = LinearThrownObject(integration_method=DOP853, process_noise=0, measurement_noise=0)
+        x = m.initialize()
+        u = m.InputContainer({})
+        x = m.next_state(x, u, 0.1)
+        # V is equal because it's linear
+        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
+        self.assertNotEqual(x['x'], x_default['x'])
+
+        # Radau
+        m = LinearThrownObject(integration_method=Radau, process_noise=0, measurement_noise=0)
+        x = m.initialize()
+        u = m.InputContainer({})
+        x = m.next_state(x, u, 0.1)
+        # V is equal because it's linear
+        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
+        self.assertNotEqual(x['x'], x_default['x'])
+
+        # BDF
+        m = LinearThrownObject(integration_method=BDF, process_noise=0, measurement_noise=0)
+        x = m.initialize()
+        u = m.InputContainer({})
+        x = m.next_state(x, u, 0.1)
+        # V is equal because it's linear
+        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
+        self.assertNotEqual(x['x'], x_default['x'])
+
+        # LSODA
+        m = LinearThrownObject(integration_method=LSODA, process_noise=0, measurement_noise=0)
+        x = m.initialize()
+        u = m.InputContainer({})
+        x = m.next_state(x, u, 0.1)
+        # V is equal because it's linear
+        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
+        self.assertNotEqual(x['x'], x_default['x'])
+
     def test_integration_type_error(self):
         with self.assertRaises(ProgModelTypeError):
             # unsupported integration type
