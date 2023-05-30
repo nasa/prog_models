@@ -39,29 +39,34 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
     Returns:
         float: Maximum error between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [MAX_E(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return max(error)
+    _runs = kwargs.get('_runs', None)
 
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
+
+    types = {type(times), type(inputs), type(outputs)}
+    if not all(t in acceptable_types for t in types):
+        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
+
+    if len(times) != len(inputs) or len(inputs) != len(outputs):
+        if _runs is not None:
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
-    counter = 0 
+    counter = 0
     t_last = times[0]
     err_max = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -78,7 +83,7 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
                 else:
@@ -147,20 +152,18 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     Returns:
         float: Total error
     """
-    
     _runs = kwargs.get('_runs', None)
-    
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     types = {type(times), type(inputs), type(outputs)}
-    if not all(t in acceptable_types for t in types):
-        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
+    # if not all(t in acceptable_types for t in types):
+    #     raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
 
-    if len(times) != len(inputs) or len(inputs) != len(outputs):
-        if _runs is not None:
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
+    # if len(times) != len(inputs) or len(inputs) != len(outputs):
+    #     if _runs is not None:
+    #         raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
@@ -228,21 +231,26 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     Returns:
         float: MAE between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [MAE(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-
+    _runs = kwargs.get('_runs', None)
+    
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
+
+    types = {type(times), type(inputs), type(outputs)}
+    if not all(t in acceptable_types for t in types):
+        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
+
+    if len(times) != len(inputs) or len(inputs) != len(outputs):
+        if _runs is not None:
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
@@ -250,7 +258,7 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     t_last = times[0]
     err_total = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -267,7 +275,7 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")       
                 else:
@@ -303,29 +311,33 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
     Returns:
         float: MAPE between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [MAPE(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-
+    _runs = kwargs.get('_runs', None)
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e99)
+    dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
+
+    types = {type(times), type(inputs), type(outputs)}
+    if not all(t in acceptable_types for t in types):
+        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
+
+    if len(times) != len(inputs) or len(inputs) != len(outputs):
+        if _runs is not None:
+            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
-    z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    z_obs = m.output(x)
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -342,7 +354,7 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
