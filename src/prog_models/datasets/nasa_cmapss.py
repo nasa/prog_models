@@ -10,7 +10,7 @@ cache = None
 URL = "https://data.nasa.gov/download/ff5v-kuh6/application%2Fzip"
 
 
-def load_data(dataset_id : int) -> tuple:
+def load_data(dataset_id: int) -> tuple:
     """
     .. versionadded:: 1.3.0
     
@@ -103,7 +103,7 @@ def load_data(dataset_id : int) -> tuple:
     with cache.open(f'train_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
             train = np.loadtxt(f2)
-            train = pd.DataFrame(train, columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1,22)])
+            train = pd.DataFrame(train, columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1, 22)])
 
     with cache.open(f'RUL_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:

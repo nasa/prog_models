@@ -31,7 +31,7 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+            before the model goes unstable in order to produce a valid estimate of mean squared error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
@@ -80,8 +80,8 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
             if any(np.isnan(z_obs.matrix)):
                 if counter < cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
-                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                 
-                else: 
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
+                else:
                     warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
             err_max = max(err_max, np.max(
@@ -112,7 +112,7 @@ def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+            before the model goes unstable in order to produce a valid estimate of mean squared error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
@@ -139,7 +139,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+            before the model goes unstable in order to produce a valid estimate of mean squared error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
@@ -220,7 +220,7 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+            before the model goes unstable in order to produce a valid estimate of mean squared error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
@@ -295,7 +295,7 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+            before the model goes unstable in order to produce a valid estimate of mean squared error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
             Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.

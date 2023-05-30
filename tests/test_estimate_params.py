@@ -905,6 +905,151 @@ class TestEstimateParams(unittest.TestCase):
         # with self.assertRaises(ValueError)
             # m.estimate_params(times=[[times]], inputs=[[inputs]], outputs=[[outputs]])
 
+    def test_tolerance(self):
+        """
+        Test which specifically targets adding tolerance as a keyword argument.
+        """
+        m = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        gt = m.parameters.copy()
+        keys = ['thrower_height', 'throwing_speed', 'g']
+        bound = ((-15, 15), (24, 42), (-20, 10))
+
+        # Testing that high tolerance results in high error
+        # Now lets reset some parameters
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+
+        # High tolerance would result in a higher calc_error
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
+                          bounds=bound, keys = keys, tol = 10)
+        if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
+            raise ValueError("m.parameter shouldn't be too close to the original parameters")
+
+        # Note that tolerance does not convert here.
+        with self.assertRaises(TypeError):
+            m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
+                              bounds=bound, keys = keys , tol = "12")    
+
+        # When tolerance is empty list
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [])
+        hold1 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Tolerance works as intended as long as it is within a sequence of length 1
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10  
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [15])
+        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
+        # Making sure that it has a different value.
+        self.assertNotEqual(hold1, hold2)
+
+        # Confirming that passing tolerance as a sequence of length 1 outputs the same error as setting tolerance to the value in the original sequence.
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 15)
+        hold1 = m.calc_error(results.times, results.inputs, results.outputs)
+        self.assertEqual(hold1, hold2)
+
+        # Now testing with a different type of sequence
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (15))
+        hold2 = m.calc_error(results.times, results.inputs, results.outputs)
+        self.assertEqual(hold1, hold2)
+
+        # Cannot pass Sets into tolerance
+        with self.assertRaises(TypeError):
+            m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = {1})
+
+        # Works when tolerance is a floating point value.
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1.123543297)
+        if not all(abs(m.parameters[key] - gt[key]) > 0.02 for key in keys):
+            self.fail("m.parameter shouldn't be too close to the original parameters")
+
+        # When tolerance is a list of many integers
+        with self.assertRaises(ValueError):
+            m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [1, 2, 3])
+
+        # When tolerance is a list of mixed values (integers and strings)
+        with self.assertRaises(TypeError):
+            m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [1, '2', '3'])
+        
+        # When tolerance is a tuple
+        with self.assertRaises(ValueError):
+            m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = (1, 2, 3))
+        
+        # Passing Tolerance and Method together should work
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, method = 'TNC', tol = 1e-9)
+        track1 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Using different methods should result in different errors.
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = 1e-9)
+        track2 = m.calc_error(results.times, results.inputs, results.outputs)
+        self.assertNotAlmostEqual(track1, track2)
+
+        # Tests checking very small tolerance values
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
+                          bounds=bound, keys=keys, method = 'TNC', tol = 1e-14)
+        track1 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Now testing what occurs with even smaller tolerance
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
+                            bounds=bound, keys=keys, method='TNC', tol=1e-20)
+        track2 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Note that at some point, estimate_params will converge to some number regardless of how small the tol is.
+        self.assertEqual(track1, track2)
+
+        # Tests to check how tolerance and options work together.
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
+                           bounds=bound, keys=keys, tol = 1e-2)
+        override1 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
+                            bounds=bound, keys=keys, tol = 1e-5)
+        override2 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        self.assertNotEqual(override1, override2)
+
+        m.parameters['thrower_height'] = 3.1
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
+                           bounds = bound, keys=keys, tol = 1e-2, options={'xatol': 1e-5})
+        override3 = m.calc_error(results.times, results.inputs, results.outputs)
+
+        # Passed in options properly overrides the tolerance that is placed. 
+        self.assertNotEqual(override1, override3)
+        self.assertEqual(override2, override3)
+
 def run_tests():
     unittest.main()
     
@@ -919,4 +1064,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

@@ -14,6 +14,7 @@ from tests.test_surrogates import main as surrogates_main
 from tests.test_data_model import main as lstm_main
 from tests.test_direct import main as direct_main
 from tests.test_linear_model import main as linear_main
+from tests.test_battery import main as battery_main
 from tests.test_composite import main as composite_main
 from tests.test_serialization import main as serialization_main
 from tests.test_estimate_params import main as estimate_params_main
@@ -44,12 +45,11 @@ if __name__ == '__main__':
         examples_main()
     except Exception:
         was_successful = False
-    
+
     try:
         battery_main()
     except Exception:
         was_successful = False
-
     try:
         centrifugal_pump_main()
     except Exception:
@@ -114,7 +114,6 @@ if __name__ == '__main__':
         estimate_params_main()
     except Exception:
         was_successful = False
-
 
     if not was_successful:
         raise Exception("Failed test")

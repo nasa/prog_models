@@ -18,8 +18,8 @@ def object_handler(o):
     return chain.from_iterable(o.__dict__.items())
 
 
-# Set of handlers that describe how to estimate the size of the payload of an object of a given type
-# in format {type: handler}
+# Set of handlers that describe how to estimate the size of the payload of an
+# object of a given type in format {type: handler}
 all_handlers = {tuple: iter,
                 list: iter,
                 np.ndarray: lambda a: iter(list(a.flat)),
