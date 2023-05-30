@@ -1085,15 +1085,15 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def check_iterable(self, iter, name, run = False):
+    def check_iterable(self, iter, name, loc = False):
         count = sum(isinstance(element, Iterable) and not isinstance(element, (str, bytes)) for element in iter)
         if 0 < count < len(iter):
-            if run is not False:
-                raise ValueError(f"Some, but not all elements, are iterable for parameter {name} and run {run}")
+            if loc is not False:
+                raise ValueError(f"Some, but not all elements, are iterable for parameter {name} at data location {loc}")
             else:
-                raise ValueError(f'Some, but not all, elements are iterable for parameter {name}')
+                raise ValueError(f'Some, but not all elements, are iterable for parameter {name}')
 
-    def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], **kwargs) -> float:
+    def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], _loc = None, **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
 
         Args:
@@ -1145,13 +1145,8 @@ class PrognosticsModel(ABC):
             # If we get here, method is not supported
             raise ProgModelInputException(f"Error method '{method}' not supported")
         
-        acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
+        acceptable_types = {dict, tuple, np.ndarray, list, SimResult, LazySimResult}
         types = {type(times), type(inputs), type(outputs)}
-
-        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-        dt = kwargs.get('dt', 1e-99)
-        stability_tol = kwargs.get('stability_tol', 0.95)
-        _loc = kwargs.get('_loc', None)
 
         if not all(t in acceptable_types for t in types):
             type_error = f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types"
@@ -1160,19 +1155,23 @@ class PrognosticsModel(ABC):
             raise TypeError(type_error)
         if len(times) != len(inputs) or len(inputs) != len(outputs):
             len_error = "Times, inputs, and outputs must all be the same length. Current lengths"
-            len_error += f" at data location {_loc}" if _loc is not None else ""
+            len_error += f" at data location ({_loc})" if _loc is not None else ""
             len_error += f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
             raise ValueError(len_error)
         if len(times) < 2:
             # raise ValueError(f"Must Provide at least 2 data points. Currently only passing in {len(times)}")
             less_2_error = "Must provide at least 2 data points for times, inputs, and outputs"
-            less_2_error += " at data location {_loc}}." if _loc is not None else ""
+            less_2_error += f" at data location ({_loc})." if _loc is not None else ""
             raise ValueError(less_2_error)
+    
+        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
+        dt = kwargs.get('dt', 1e-99)
+        stability_tol = kwargs.get('stability_tol', 0.95)
 
         # Determines if all values of parameters are iterables
-        self.check_iterable(times, 'times')
-        self.check_iterable(inputs, 'inputs')
-        self.check_iterable(outputs, 'outputs')
+        self.check_iterable(times, 'times', loc=_loc) if _loc is not None else self.check_iterable(times, 'times')
+        self.check_iterable(inputs, 'inputs', loc=_loc) if _loc is not None else self.check_iterable(inputs, 'inputs')
+        self.check_iterable(outputs, 'outputs', loc=_loc) if _loc is not None else self.check_iterable(outputs, 'outputs')
 
         if isinstance(times[0], str):
             raise TypeError("Times values cannot be strings")

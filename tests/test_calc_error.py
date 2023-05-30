@@ -293,7 +293,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current lengths at data location 0: times = 8, inputs = 9, outputs = 9",
+            "Times, inputs, and outputs must all be the same length. Current lengths at data location (0): times = 8, inputs = 9, outputs = 9",
             str(cm.exception)
         )
 
@@ -302,23 +302,40 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
-            "Times, inputs, and outputs must all be the same length. Current lengths at data location 1: times = 3, inputs = 4, outputs = 4",
+            "Times, inputs, and outputs must all be the same length. Current lengths at data location (1): times = 3, inputs = 4, outputs = 4",
             str(cm.exception)
         )
 
-        # times = [[[1, 2], [1, 2]], [[1, 2], [1, 2]]]
-        # inputs = [[{} for _ in range(2)] for _ in range(2)]
-        # outputs = [
-        #     [{'x': 1.83}, {'x': 36.95}],
-        #     [{'x': 62.36}, {'x': 77.81}]
-        # ]
+        # More complicated example
+        times = [[[1, 2], [1, 2]], [[1, 2], [1, 2]]]
+        inputs = [[ [{},{}] for _ in range(2)], [[{}, {}] for _ in range(2)]]
+        outputs = [[[{'x': 36.95}, {'x': 62.36}], [{'x': 36.95}, {'x': 62.36}]], 
+                   [[{'x': 36.95}, {'x': 62.36}], [{'x': 36.95}, {'x': 62.36}]]]
+        
+        m.calc_error(times, inputs, outputs)
 
-        # m.calc_error(times, inputs, outputs)
+        incorrectTimes = [[[1, 2], [1]], [[1, 2], [1, 2]]]
+
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(incorrectTimes, inputs, outputs)
+        self.assertEqual(
+            "Times, inputs, and outputs must all be the same length. Current lengths at data location (0, 1): times = 1, inputs = 2, outputs = 2",
+            str(cm.exception)
+        )
+
+        incorrectInputs = [[[{}, {}], [{}]], [[{}, {}], [{}, {}]]]
+        incorrectOutputs = [[[{'x': 36.95}, {'x': 62.36}], [{'x': 36.95}]], 
+                            [[{'x': 36.95}, {'x': 62.36}], [{'x': 36.95}, {'x': 62.36}]]]
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(incorrectTimes, incorrectInputs, incorrectOutputs)
+        self.assertEqual(
+            "Must provide at least 2 data points for times, inputs, and outputs at data location (0, 1).",
+            str(cm.exception)
+        )
 
     def test_errors(self):
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
-        gt = m.parameters.copy()
 
         with self.assertRaises(TypeError):
             m.calc_error()
@@ -389,9 +406,30 @@ class TestCalcError(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
+        self.assertEqual(
+            "Some, but not all elements, are iterable for parameter times",
+            str(cm.exception)
+        )
 
-        # Expecting this to pass
-        m.calc_error((1, 2, 3), ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
+        times = [[0, [1], 2, 3], [0, 1, 2, 3]]
+        inputs = [[{}]*4, [{}]*4]
+        outputs = [[{'x': 1.83},
+                {'x': 36.95},
+                {'x': 62.36},
+                {'x': 77.81}],
+            [
+                {'x': 1.83},
+                {'x': 36.95},
+                {'x': 62.36},
+                {'x': 77.81},
+            ]]
+
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(times, inputs, outputs)
+        self.assertEqual(
+            "Some, but not all elements, are iterable for parameter times at data location 0",
+            str(cm.exception)
+        )
 
         with self.assertRaises(ProgModelInputException) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, method = "Test")
@@ -400,19 +438,10 @@ class TestCalcError(unittest.TestCase):
             str(cm.exception)
         )
 
-
-        
-    def test_RMSE(self):
-        return
-
-    def test_MAX_E(self):
-        return
-
-    def test_MAE(self):
-        return
-
-    def test_MAPE(self):
-        return
+        # Test other valid methods do not raise an exception
+        methods = ["max_e", "rmse", "mae", "mape"]
+        for method in methods:
+            m.calc_error(results.times, results.inputs, results.outputs, method=method)
 
 def run_tests():
     unittest.main()
