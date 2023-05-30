@@ -1,18 +1,13 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from prog_models.sim_result import SimResult, LazySimResult
 """
 This file contains functions for calculating error given a model and some data (times, inputs, outputs). This is used by the PrognosticsModel.calc_error() method.
 """
 
-from collections.abc import Iterable
 from typing import List
 from warnings import warn
-import math
 import numpy as np
-
-acceptable_types = {int, float, tuple, np.ndarray, list, SimResult, LazySimResult}
 
 def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
@@ -39,19 +34,9 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
     Returns:
         float: Maximum error between model and data
     """
-    _runs = kwargs.get('_runs', None)
-
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
-
-    types = {type(times), type(inputs), type(outputs)}
-    if not all(t in acceptable_types for t in types):
-        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
-
-    if len(times) != len(inputs) or len(inputs) != len(outputs):
-        if _runs is not None:
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
@@ -152,18 +137,9 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     Returns:
         float: Total error
     """
-    _runs = kwargs.get('_runs', None)
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
-
-    types = {type(times), type(inputs), type(outputs)}
-    # if not all(t in acceptable_types for t in types):
-    #     raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
-
-    # if len(times) != len(inputs) or len(inputs) != len(outputs):
-    #     if _runs is not None:
-    #         raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
@@ -231,19 +207,9 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     Returns:
         float: MAE between model and data
     """
-    _runs = kwargs.get('_runs', None)
-    
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
-
-    types = {type(times), type(inputs), type(outputs)}
-    if not all(t in acceptable_types for t in types):
-        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
-
-    if len(times) != len(inputs) or len(inputs) != len(outputs):
-        if _runs is not None:
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
@@ -311,18 +277,9 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
     Returns:
         float: MAPE between model and data
     """
-    _runs = kwargs.get('_runs', None)
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 10)
     stability_tol = kwargs.get('stability_tol', 0.95)
-
-    types = {type(times), type(inputs), type(outputs)}
-    if not all(t in acceptable_types for t in types):
-        raise TypeError(f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types are: times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}")
-
-    if len(times) != len(inputs) or len(inputs) != len(outputs):
-        if _runs is not None:
-            raise ValueError(f"Times, inputs, and outputs must all be the same length. At run {_runs}, current lengths are times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}")
 
     if not isinstance(x, m.StateContainer):
         x = m.StateContainer(x)
