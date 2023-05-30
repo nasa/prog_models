@@ -51,7 +51,7 @@ class PrognosticsModel(ABC):
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException 
+        ProgModelTypeError, ProgModelInputException, ProgModelException
 
     Example
     -------
@@ -362,7 +362,6 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
         return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
@@ -729,12 +728,9 @@ class PrognosticsModel(ABC):
         if not isinstance(time, Number) or time < 0:
             raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
 
-        # Configure
-        config = { # Defaults
-            'thresholds_met_eqn': (lambda x: False), # Override threshold
-            'horizon': time
-        }
-        kwargs.update(config) # Config should override kwargs
+        # Override threshold_met_eqn and horizon
+        kwargs['thresholds_met_eqn'] = lambda x: False
+        kwargs['horizon'] = time
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
@@ -832,12 +828,12 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("threshold_keys must be event names")
 
         # Configure
-        config = { # Defaults
+        config = {  # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
             'save_pts': [],
             'save_freq': 10.0,
-            'horizon': 1e100, # Default horizon (in s), essentially inf
+            'horizon': 1e100,  # Default horizon (in s), essentially inf
             'print': False,
             'x': None,
             'progress': False
@@ -1147,14 +1143,19 @@ class PrognosticsModel(ABC):
                 Array of output containers where output[x] corresponds to time[x]
             method (str, optional):
                 Optimization method- see scipy.optimize.minimize for options
+            tol (int, optional):
+                Tolerance for termination. Depending on the provided minimization method, specifying tolerance sets solver-specific options to tol
             error_method (str, optional):
                 Method to use in calculating error. See calc_error for options
-            bounds (tuple or dict, optional): 
+            bounds (tuple or dict, optional):
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
             options (dict, optional):
                 Options passed to optimizer. see scipy.optimize.minimize for options
             runs (list[tuple], depreciated):
                 data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
+
+        Returns:
+            OptimizeResult: Scipy minimize Optimization Result from estimating parameters. See scipy's scipy.optimize.OptimizeResult documentation for details. 
 
         See: examples.param_est
         """
@@ -1174,7 +1175,8 @@ class PrognosticsModel(ABC):
         config = {
             'error_method': 'MSE',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8}
+            'options': None,
+            'tol': None
         }
         config.update(kwargs)
 
@@ -1219,7 +1221,10 @@ class PrognosticsModel(ABC):
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
-            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys] 
+            for key in config['bounds'].keys():
+                if key not in self.parameters:
+                    warn(f"{key} is not a valid parameter (i.e., it is not a parameter present in this model) and should not be passed in to the bounds") 
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
@@ -1268,13 +1273,19 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=method, bounds = config['bounds'], options=config['options'])
+        res = minimize(optimization_fcn, params, method=method, bounds=config['bounds'], options=config['options'], tol=config['tol'])
+
+        if not res.success:
+            warn(f"Parameter Estimation did not converge: {res.message}")
+
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
-
+        
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
-        self.parameters['process_noise'] = p_noise   
+        self.parameters['process_noise'] = p_noise
+
+        return res   
 
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
@@ -1314,10 +1325,10 @@ class PrognosticsModel(ABC):
         -------
         See examples/generate_surrogate
         """
-        from .data_models import SURROAGATE_METHOD_LOOKUP
+        from prog_models.data_models import SURROGATE_METHOD_LOOKUP
 
-        if method not in SURROAGATE_METHOD_LOOKUP.keys():
-            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
+        if method not in SURROGATE_METHOD_LOOKUP.keys():
+            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROGATE_METHOD_LOOKUP.keys()))
 
         # Configure
         config = { # Defaults
@@ -1377,7 +1388,7 @@ class PrognosticsModel(ABC):
         if not all([x in self.events for x in config['event_keys']]):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
-        return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
+        return SURROGATE_METHOD_LOOKUP[method](self, load_functions, **config)
     
     def to_json(self):
         """
