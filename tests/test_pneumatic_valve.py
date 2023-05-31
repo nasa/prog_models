@@ -58,7 +58,7 @@ class TestPneumaticValve(unittest.TestCase):
             'wt': array([0]*4)
         }
 
-        x = m.next_state(x0, future_loading(0), 0.1)
+        m.next_state(x0, future_loading(0), 0.1)
 
     def test_pneumatic_valve_with_wear(self):
         # Test using PneumaticValveWithWear

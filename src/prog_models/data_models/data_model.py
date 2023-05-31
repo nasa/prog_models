@@ -5,14 +5,14 @@ from abc import ABC, abstractclassmethod
 import numpy as np
 import sys
 
-from .. import PrognosticsModel
+from prog_models import PrognosticsModel
 
 
 class DataModel(PrognosticsModel, ABC):
     """
     .. versionadded:: 1.4.0
 
-    Abstract Base Class for all Data Models (e.g., :py:class:`LSTMStateTransitionModel`). Defines the interface and all common tools. To create a new Data-Driven model, first subclass this, then define the abstract methods from this class and :py:class:`prog_models.PrognosticsModel`. 
+    Abstract Base Class for all Data Models (e.g., :py:class:`LSTMStateTransitionModel`). Defines the interface and all common tools. To create a new Data-Driven model, first subclass this, then define the abstract methods from this class and :py:class:`prog_models.PrognosticsModel`.
 
     See Also:
         PrognosticsModel
@@ -24,27 +24,26 @@ class DataModel(PrognosticsModel, ABC):
         Create a Data Model from data. This class is overwritten by specific data-driven classes (e.g., :py:class:`LSTMStateTransitionModel`)
 
         Keyword Arguments:
-            times (list[list]): 
+            times (list[list]):
                 list of input data for use in data. Each element is the times for a single run of size (n_times)
-            inputs (list[np.array]): 
+            inputs (list[np.array]):
                 list of :term:`input` data for use in data. Each element is the inputs for a single run of size (n_times, n_inputs)
-            states (list[np.array]): 
+            states (list[np.array]):
                 list of :term:`state` data for use in data. Each element is the states for a single run of size (n_times, n_states)
-            outputs (list[np.array]): 
+            outputs (list[np.array]):
                 list of :term:`output` data for use in data. Each element is the outputs for a single run of size (n_times, n_outputs)
-            event_states (list[np.array]): 
+            event_states (list[np.array]):
                 list of :term:`event state` data for use in data. Each element is the event states for a single run of size (n_times, n_event_states)
             time_of_event (np.array):
                 Array of time of event data for use in data. Each element is the time of event for a single run of size (n_samples, n_events)
-            input_keys (list[str]): 
+            input_keys (list[str]):
                 List of :term:`input` keys
-            state_keys (list[str]): 
+            state_keys (list[str]):
                 List of :term:`state` keys
-            output_keys (list[str]): 
+            output_keys (list[str]):
                 List of :term:`output` keys
-            event_keys (list[str]): 
+            event_keys (list[str]):
                 List of :term:`event` keys
-            frame -- List[pd.DataFrame] of all data
         
         See specific data class for more additional keyword arguments
 
@@ -65,17 +64,17 @@ class DataModel(PrognosticsModel, ABC):
 
     def __getstate__(self):
         # This is necessary to support pickling
-        # Override this, replacing the [] with any arguments from the constructor
+        # Override this, replacing the [] with any arguments from constructor
         return ([], self.parameters.data)
     
-    def summary(self, file = sys.stdout):
+    def summary(self, file=sys.stdout):
         """
         Print a summary of the model
         """
         print(self.__class__.__name__, file=file)
 
     @staticmethod
-    def check_data_format(inputs, outputs, states = None, event_states = None, t_mets = None):
+    def check_data_format(inputs, outputs, states=None, event_states=None, t_mets=None):
         if len(inputs) == 0:
             raise ValueError("No data provided. inputs must be in format [run1_inputs, ...] and have at least one element")
         if len(inputs) != len(outputs):
@@ -93,9 +92,9 @@ class DataModel(PrognosticsModel, ABC):
         Create a Data Model from an existing PrognosticsModel (i.e., a :term:`surrogate` model). Generates data through simulation with supplied load functions. Then calls :py:func:`from_data` to generate the model.
 
         Args:
-            m (PrognosticsModel): 
+            m (PrognosticsModel):
                 Model to generate data from
-            load_functions (list[function]): 
+            load_functions (list[function]):
                 Each index is a callable loading function of (t, x = None) -> z used to predict :term:`future load` at a given time (t) and :term:`state` (x)
 
         Keyword Args:
@@ -107,8 +106,8 @@ class DataModel(PrognosticsModel, ABC):
         Returns:
             DataModel: Trained PrognosticsModel
         """
-         # Configure
-        config = { # Defaults
+        # Configure
+        config = {  # Defaults
             'add_dt': True,
             'input_keys': m.inputs.copy(),
             'output_keys': m.outputs.copy(),
@@ -140,12 +139,14 @@ class DataModel(PrognosticsModel, ABC):
 
         # Create sim config for each element
         sim_cfg = [{
-            cfg : config[cfg][i]
-               for cfg in sim_cfg_params if cfg in config
+            cfg: config[cfg][i]
+            for cfg in sim_cfg_params if cfg in config
         } for i in range(len(load_functions))]
 
-        # Simulate            
-        data = [m.simulate_to_threshold(load, **sim_cfg[i]) for (i, load) in enumerate(load_functions)]
+        # Simulate
+        data = [
+            m.simulate_to_threshold(load, **sim_cfg[i])
+            for (i, load) in enumerate(load_functions)]
 
         # Prepare data
         times = [d.times for d in data]
@@ -153,15 +154,33 @@ class DataModel(PrognosticsModel, ABC):
             config['input_keys'].append('dt')
             if len(data[0].inputs) > 0 and len(data[0].inputs[0]) == 0:
                 # No inputs
-                inputs = [np.array([[config['dt'][i]] for _ in data[i].inputs], dtype=float) for i in range(len(data))]
+                inputs = [
+                    np.array(
+                        [[config['dt'][i]] for _ in data[i].inputs],
+                        dtype=float)
+                    for i in range(len(data))]
             else:
-                inputs = [np.array([np.hstack((u_i.matrix[:][0].T, [config['dt'][i]])) for u_i in d.inputs], dtype=float) for i, d in enumerate(data)]
+                inputs = [
+                    np.array(
+                        [
+                            np.hstack((u_i.matrix[:][0].T, [config['dt'][i]]))
+                            for u_i in d.inputs],
+                        dtype=float)
+                    for i, d in enumerate(data)]
         else:
             inputs = [d.inputs for d in data]
         outputs = [d.outputs for d in data]
         states = [d.states for d in data]
         event_states = [d.event_states for d in data]
+        t_met = [
+            [list(m.threshold_met(x).values()) for x in state]
+            for state in states]
 
-        t_met = [[list(m.threshold_met(x).values()) for x in state] for state in states]
-
-        return cls.from_data(times = times, inputs = inputs, states = states, outputs = outputs, event_states = event_states, t_met= t_met, **config)
+        return cls.from_data(
+            times=times,
+            inputs=inputs,
+            states=states,
+            outputs=outputs,
+            event_states=event_states,
+            t_met=t_met,
+            **config)

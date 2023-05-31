@@ -2,14 +2,11 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from copy import deepcopy
-from typing import Union
-
 import numpy as np
 from scipy.optimize import fsolve
 import warnings
 
 from prog_models import PrognosticsModel
-from prog_models.utils.containers import StateContainer
 
 # Constants of nature
 R = 8.3144621  # universal gas constant, J/K/mol
@@ -98,7 +95,7 @@ def update_qnSBmax(params: dict) -> dict:
     }
 
 def update_v0(params: dict) -> dict:
-    # update the initial voltage 
+    # update the initial voltage
 
     if 'qnS' not in params['x0']:
         # qnS not yet set
@@ -645,13 +642,14 @@ class BatteryElectroChemEOL(PrognosticsModel):
 
     def dx(self, _, u: dict):
         params = self.parameters
+
         return self.StateContainer(np.array([
             np.atleast_1d(params['wq'] * abs(u['i'])),
             np.atleast_1d(params['wr'] * abs(u['i'])),
             np.atleast_1d(params['wd'] * abs(u['i']))
         ]))
 
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
         return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
 
@@ -661,7 +659,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
     def output(self, _):
         return self.OutputContainer(np.array([]))
 
-def merge_dicts(a : dict, b : dict) -> None:
+def merge_dicts(a: dict, b: dict) -> None:
     """Merge dict b into a"""
     for key in b:
         if key in a and isinstance(a[key], dict) and isinstance(b[key], dict):
@@ -731,7 +729,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
 
-    def dx(self, x: StateContainer, u : dict):
+    def dx(self, x: dict, u: dict):
         # Set EOD Parameters (corresponding to health)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -742,9 +740,8 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         # Calculate 
         x_dot = BatteryElectroChemEOD.dx(self, x, u)
         x_dot2 = BatteryElectroChemEOL.dx(self, x, u)
-        np_state_matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
-        # updating StateContainer object
-        return self.StateContainer(np_state_matrix)
+        x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
+        return x_dot
 
     def output(self, x: dict) -> dict:
         with warnings.catch_warnings():
@@ -752,12 +749,12 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
             self.parameters['qMobile'] = x['qMax']
         return BatteryElectroChemEOD.output(self, x)
 
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
         e_state = BatteryElectroChemEOD.event_state(self, x)
         e_state.update(BatteryElectroChemEOL.event_state(self, x))
         return e_state
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         t_met = BatteryElectroChemEOD.threshold_met(self, x)
         t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
         return t_met

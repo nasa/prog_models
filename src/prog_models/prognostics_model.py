@@ -16,7 +16,7 @@ from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar
 from prog_models.utils import calc_error
 from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
-from prog_models.utils.next_state import euler_next_state, rk4_next_state, euler_next_state_wrapper, rk4_next_state_wrapper
+from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.parameters import PrognosticsModelParameters
 from prog_models.utils.serialization import CustomEncoder, custom_decoder
 from prog_models.utils.size import getsizeof
@@ -44,12 +44,14 @@ class PrognosticsModel(ABC):
           output (e.g., {'z1': 0.2, 'z2': 0.3}), or a function (z) -> z
         measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
+        integration_method: Optional, str
+          Integration method used by next state in continuous models, e.g. 'rk4' or 'euler' (default: 'euler'). If the model is discrete, this parameter will return an error.
 
     Additional parameters specific to the model
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException 
+        ProgModelTypeError, ProgModelInputException, ProgModelException
 
     Example
     -------
@@ -360,14 +362,8 @@ class PrognosticsModel(ABC):
         ----
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models, and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        # Note: Default is to use the dx method (continuous model) - overwrite next_state for continuous
         dx = self.dx(x, u)
-        if isinstance(x, DictLikeMatrixWrapper) and isinstance(dx, DictLikeMatrixWrapper):
-            return self.StateContainer(x.matrix + dx.matrix * dt)
-        elif isinstance(dx, dict) or isinstance(x, dict):
-            return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
-        else:
-            raise ValueError(f"ValueError: dx return must be of type StateContainer, was {type(dx)}")
+        return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
     @property
     def is_continuous(self):
@@ -584,7 +580,9 @@ class PrognosticsModel(ABC):
         Returns:
             bool: if the model is a state transition model
         """
-        has_overridden_transition = type(self).next_state != PrognosticsModel.next_state or type(self).dx != PrognosticsModel.dx
+        has_default_next_state = type(self).next_state == PrognosticsModel.next_state
+        has_integrator_next_state = type(self).next_state in next_state_functions.values()
+        has_overridden_transition = not (has_default_next_state or has_integrator_next_state) or type(self).dx != PrognosticsModel.dx
         return has_overridden_transition and len(self.states) > 0
 
     @property
@@ -730,12 +728,9 @@ class PrognosticsModel(ABC):
         if not isinstance(time, Number) or time < 0:
             raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
 
-        # Configure
-        config = { # Defaults
-            'thresholds_met_eqn': (lambda x: False), # Override threshold
-            'horizon': time
-        }
-        kwargs.update(config) # Config should override kwargs
+        # Override threshold_met_eqn and horizon
+        kwargs['thresholds_met_eqn'] = lambda x: False
+        kwargs['horizon'] = time
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
@@ -833,13 +828,12 @@ class PrognosticsModel(ABC):
             raise ProgModelInputException("threshold_keys must be event names")
 
         # Configure
-        config = { # Defaults
+        config = {  # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
-            'integration_method': 'euler',
             'save_pts': [],
             'save_freq': 10.0,
-            'horizon': 1e100, # Default horizon (in s), essentially inf
+            'horizon': 1e100,  # Default horizon (in s), essentially inf
             'print': False,
             'x': None,
             'progress': False
@@ -887,6 +881,9 @@ class PrognosticsModel(ABC):
         threshold_met_eqn = self.threshold_met
         event_state = self.event_state
         load_eqn = future_loading_eqn
+        next_state = self.next_state
+        apply_noise = self.apply_process_noise
+        apply_limits = self.apply_limits
         progress = config['progress']
 
         # Threshold Met Equations
@@ -986,6 +983,12 @@ class PrognosticsModel(ABC):
                 u = future_loading_eqn(t, x)
                 return self.InputContainer(u)
 
+        if not isinstance(next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
+            # Wrapper around the next state equation
+            def next_state(x, u, dt):
+                x = self.next_state(x, u, dt)
+                return self.StateContainer(x)
+
         if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
             def output(x):
@@ -1002,29 +1005,10 @@ class PrognosticsModel(ABC):
             simulate_progress = ProgressBar(100, "Progress")
             last_percentage = 0
 
-        if config['integration_method'].lower() == 'rk4':
-            # Using RK4 Method
-            dx = self.dx
-
-            try:
-                dx(x, load_eqn(t, x))
-            except ProgModelException:
-                raise ProgModelException("dx(x, u) must be defined to use RK4 method")
-
-            apply_limits = self.apply_limits
-            apply_process_noise = self.apply_process_noise
-            StateContainer = self.StateContainer
-            if not isinstance(self.dx(x.copy(), u), DictLikeMatrixWrapper):
-                next_state = rk4_next_state
-            else:
-                next_state = rk4_next_state_wrapper
-        elif config['integration_method'].lower() == 'euler':
-            if not isinstance(self.next_state(x.copy(), u, dt0), DictLikeMatrixWrapper):
-                next_state = euler_next_state_wrapper
-            else:
-                next_state = euler_next_state
-        else:
-            raise ProgModelInputException(f"'integration_method' mode {config['integration_method']} not supported. Must be 'euler' or 'rk4'")
+        if 'integration_method' in config:
+            # Update integration method for the duration of the simulation
+            old_integration_method = self.parameters.get('integration_method', 'euler')
+            self.parameters['integration_method'] = config['integration_method']
        
         while t < horizon:
             dt = next_time(t, x)
@@ -1033,7 +1017,9 @@ class PrognosticsModel(ABC):
             # This is sometimes referred to as 'leapfrog integration'
             u = load_eqn(t, x)
             t = t + dt/2
-            x = next_state(self, x, u, dt)
+            x = next_state(x, u, dt)
+            x = apply_noise(x, dt)
+            x = apply_limits(x)
 
             # Save if at appropriate time
             if (t >= next_save):
@@ -1073,6 +1059,10 @@ class PrognosticsModel(ABC):
         else:
             saved_outputs = SimResult(saved_times, saved_outputs, _copy=False)
             saved_event_states = SimResult(saved_times, saved_event_states, _copy=False)
+
+        if 'integration_method' in config:
+            # Reset integration method
+            self.parameters['integration_method'] = old_integration_method
         
         return self.SimulationResults(
             saved_times, 
@@ -1153,14 +1143,19 @@ class PrognosticsModel(ABC):
                 Array of output containers where output[x] corresponds to time[x]
             method (str, optional):
                 Optimization method- see scipy.optimize.minimize for options
+            tol (int, optional):
+                Tolerance for termination. Depending on the provided minimization method, specifying tolerance sets solver-specific options to tol
             error_method (str, optional):
                 Method to use in calculating error. See calc_error for options
-            bounds (tuple or dict, optional): 
+            bounds (tuple or dict, optional):
                 Bounds for optimization in format ((lower1, upper1), (lower2, upper2), ...) or {key1: (lower1, upper1), key2: (lower2, upper2), ...}
             options (dict, optional):
                 Options passed to optimizer. see scipy.optimize.minimize for options
             runs (list[tuple], depreciated):
                 data from all runs, where runs[0] is the data from run 0. Each run consists of a tuple of arrays of times, input dicts, and output dicts. Use inputs, outputs, states, times, etc. instead
+
+        Returns:
+            OptimizeResult: Scipy minimize Optimization Result from estimating parameters. See scipy's scipy.optimize.OptimizeResult documentation for details. 
 
         See: examples.param_est
         """
@@ -1180,7 +1175,8 @@ class PrognosticsModel(ABC):
         config = {
             'error_method': 'MSE',
             'bounds': tuple((-np.inf, np.inf) for _ in keys),
-            'options': {'xatol': 1e-8}
+            'options': None,
+            'tol': None
         }
         config.update(kwargs)
 
@@ -1225,7 +1221,10 @@ class PrognosticsModel(ABC):
         # Convert bounds
         if isinstance(config['bounds'], dict):
             # Allows for partial bounds definition, and definition by key name
-            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys] 
+            for key in config['bounds'].keys():
+                if key not in self.parameters:
+                    warn(f"{key} is not a valid parameter (i.e., it is not a parameter present in this model) and should not be passed in to the bounds") 
+            config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
             if not isinstance(config['bounds'], Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
@@ -1274,13 +1273,19 @@ class PrognosticsModel(ABC):
         
         params = np.array([self.parameters[key] for key in keys])
 
-        res = minimize(optimization_fcn, params, method=method, bounds = config['bounds'], options=config['options'])
+        res = minimize(optimization_fcn, params, method=method, bounds=config['bounds'], options=config['options'], tol=config['tol'])
+
+        if not res.success:
+            warn(f"Parameter Estimation did not converge: {res.message}")
+
         for x, key in zip(res.x, keys):
             self.parameters[key] = x
-
+        
         # Reset noise
         self.parameters['measurement_noise'] = m_noise
-        self.parameters['process_noise'] = p_noise   
+        self.parameters['process_noise'] = p_noise
+
+        return res   
 
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
@@ -1320,10 +1325,10 @@ class PrognosticsModel(ABC):
         -------
         See examples/generate_surrogate
         """
-        from .data_models import SURROAGATE_METHOD_LOOKUP
+        from prog_models.data_models import SURROGATE_METHOD_LOOKUP
 
-        if method not in SURROAGATE_METHOD_LOOKUP.keys():
-            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROAGATE_METHOD_LOOKUP.keys()))
+        if method not in SURROGATE_METHOD_LOOKUP.keys():
+            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROGATE_METHOD_LOOKUP.keys()))
 
         # Configure
         config = { # Defaults
@@ -1383,7 +1388,7 @@ class PrognosticsModel(ABC):
         if not all([x in self.events for x in config['event_keys']]):
             raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
-        return SURROAGATE_METHOD_LOOKUP[method](self, load_functions, **config)
+        return SURROGATE_METHOD_LOOKUP[method](self, load_functions, **config)
     
     def to_json(self):
         """

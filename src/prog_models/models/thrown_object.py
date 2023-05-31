@@ -31,7 +31,7 @@ class ThrownObject(PrognosticsModel):
     ------------
         process_noise : Optional, float or dict[str, float]
           :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
@@ -58,17 +58,9 @@ class ThrownObject(PrognosticsModel):
     """
 
     inputs = []
-    states = [
-        'x',
-        'v'
-        ]
-    outputs = [
-        'x'
-    ]
-    events = [
-        'falling',
-        'impact'
-    ]
+    states = ['x', 'v']
+    outputs = ['x']
+    events = ['falling', 'impact']
 
     is_vectorized = True
 
@@ -125,7 +117,7 @@ class ThrownObject(PrognosticsModel):
         }
 
 class LinearThrownObject(LinearModel):
-    inputs = [] 
+    inputs = []
     states = ['x', 'v']
     outputs = ['x']
     events = ['impact']
@@ -134,7 +126,7 @@ class LinearThrownObject(LinearModel):
     D = np.array([[1]])
     E = np.array([[0], [-9.81]])
     C = np.array([[1, 0]])
-    F = None # Will override method
+    F = None  # Will override method
     
 
     default_parameters = {
@@ -155,9 +147,9 @@ class LinearThrownObject(LinearModel):
             'impact': x['x'] <= 0
         }
 
-    def event_state(self, x): 
-        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2) # Use speed and position to estimate maximum height
+    def event_state(self, x):
+        x_max = x['x'] + np.square(x['v'])/(-self.parameters['g']*2)  # Use speed and position to estimate maximum height
         return {
-            'falling': np.maximum(x['v']/self.parameters['throwing_speed'],0),  # Throwing speed is max speed
-            'impact': np.maximum(x['x']/x_max,0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
+            'falling': np.maximum(x['v']/self.parameters['throwing_speed'], 0),  # Throwing speed is max speed
+            'impact': np.maximum(x['x']/x_max, 0) if x['v'] < 0 else 1  # 1 until falling begins, then it's fraction of height
         }
