@@ -45,12 +45,6 @@ class SimResult(UserList):
             'data by element.',
             DeprecationWarning, stacklevel=2)
         return super().__getitem__(item)
-
-    def iloc(self, item):
-        """
-        created for transition to pandas. This will eventually be used through pandas
-        """
-        return super().__getitem__(item)
     
     def __iter__(self):
         """
@@ -85,8 +79,16 @@ class SimResult(UserList):
             self._frame.reindex()
         return self._frame
 
+    @property
+    def iloc(self):
+        """
+        returns the iloc indexer
+        """
+        return self.frame.iloc
+
     def equals(self, other: "SimResult") -> bool:
-        """Compare 2 SimResults
+        """
+        Compare 2 SimResults
 
         Args:
             other (SimResult)
@@ -392,7 +394,8 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         return self.fcn(x)
 
     def remove(self, d: float = None, t: float = None, s=None) -> None:
-        """Remove an element
+        """
+        Remove an element
 
         Args:
             d: Data value to be removed
@@ -424,3 +427,5 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         if self.__data is None:
             self.__data = [self.fcn(x) for x in self.states]
         return self.__data
+
+
