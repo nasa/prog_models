@@ -6,10 +6,11 @@ from copy import deepcopy
 import json
 from numbers import Number
 import numpy as np
+from scipy.integrate import OdeSolver
 import types
 from typing import Callable
 
-from prog_models.utils.next_state import next_state_functions
+from prog_models.utils.next_state import next_state_functions, SciPyIntegrateNextState
 from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
 from prog_models.utils.serialization import *
 from prog_models.utils.size import getsizeof
@@ -100,12 +101,21 @@ class PrognosticsModelParameters(UserDict):
             if self._m.is_discrete and self._m.is_state_transition_model:
                 raise ProgModelTypeError(
                     "Cannot set integration method for discrete model (where next_state is overridden)")
-            if value.lower() not in next_state_functions.keys():
-                raise ProgModelTypeError(
-                    f"Unsupported integration method {value.lower()}")
-            self._m.next_state = types.MethodType(
-                next_state_functions[value.lower()],
-                self._m)
+            if isinstance(value, type) and issubclass(value, OdeSolver):
+                # the integration_method is a SciPy Integrator
+                fcn = SciPyIntegrateNextState(self._m, value)
+                self._m.next_state = types.MethodType(
+                    fcn,
+                    self._m)
+                return
+            method = value.lower()
+            if method in next_state_functions.keys():
+                self._m.next_state = types.MethodType(
+                    next_state_functions[method],
+                    self._m)
+                return
+            raise ProgModelTypeError(
+                    f"Unsupported integration method {method}")
         
         if key == 'process_noise' or key == 'process_noise_dist':
             if callable(self['process_noise']):  # Provided a function
