@@ -11,7 +11,7 @@ import numpy as np
 
 # LQR general function
 # ====================
-def lqr_fn(A, B, Q, R):
+def lqr_calc_k(A, B, Q, R):
     """
     Calculate control matrix K using LQR
 
@@ -64,7 +64,11 @@ def lqr_fn(A, B, Q, R):
 # # CONTROLLERS: FULL STATE VECTOR CONTROL  (i.e., no powertrain)
 # # ==============================================================
 class LQR():
-    """ Linear Quadratic Regulator"""
+    """ 
+    Linear Quadratic Regulator UAV Controller
+
+    A Controller that calculates the vehicle control inputs for a UAV model (prog_models.models.uav_model).
+    """
     def __init__(self, x_ref, vehicle, **kwargs):
 
         # Check correct arguments:
@@ -135,7 +139,7 @@ class LQR():
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
-        self.K, self.E = lqr_fn(A, B, self.parameters['Q'], self.parameters['R'])
+        self.K, self.E = lqr_calc_k(A, B, self.parameters['Q'], self.parameters['R'])
         return self.K, self.E
 
     def compute_input(self, gain, state_error):
@@ -208,7 +212,7 @@ class LQR_I(LQR):
         """ Compute controller gain given state of the system described by linear model A, B"""
         self.Ai[:self.n_states, :self.n_states] = A
         self.Bi[:self.n_states,              :] = B
-        self.K, self.E = lqr_fn(self.Ai, self.Bi, self.parameters['Qi'], self.parameters['Ri'])
+        self.K, self.E = lqr_calc_k(self.Ai, self.Bi, self.parameters['Qi'], self.parameters['Ri'])
         return self.K, self.E
 
     def compute_input(self, gain, error):

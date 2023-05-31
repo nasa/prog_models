@@ -5,10 +5,9 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
-from prog_models.prognostics_model import PrognosticsModel
-from .traj_gen_utils import route, trajectory
+from prog_models.utils.traj_gen_utils import route, trajectory
 
-def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
+def trajectory_gen(waypoints=None, vehicle=None, **params):
     """
     Function to generate a flyable trajectory from coarse waypoints using the NURBS algorithm.
     The function uses the waypoints as anchor points and generates a smooth, time-parametrized position profile in cartesian coordinates, 
@@ -32,43 +31,31 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     The NURBS algorithm does not automatically produce a constrained trajectory based on vehicle performance (maximum speed, acceleration, attitude rates, etc.).
     The feasibility of the trajectory is checked after it has been generated. If the check fails, the trajectory is corrected by lowering speed and acceleration profiles.
 
-    Required arguments:
-    ------------------
-        waypoints: pandas dataframe 
-            This argument specifies coarse waypoints.  
+    Args:
+        waypoints (pandas dataframe): specifies coarse waypoints 
             Columns must have the following headers: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
+        vehicle (PrognosticsModel): an instance of a vehicle PrognosticsModel 
+            Currently, only prog_model.models.uav_model.SmallRotorcraft is supported
 
-        vehicle: 
-            This argument must be an instance of a vehicle PrognosticsModel (currently, only prog_model.models.uav_model.uav_model.SmallRotorcraft is supported)
-
-    Keyword arguments:
-    -----------------
-        cruise_speed : float
-          m/s, avg speed between waypoints; required only if ETAs are not specified
-        ascent_speed : float
-          m/s, vertical speed (up); required only if ETAs are not specified
-        descent_speed : float
-          m/s, vertical speed (down); required only if ETAs are not specified
-        landing_speed : float
-          m/s, landing speed when altitude < 10m
-        hovering_time : Optional, float
-          s, time to hover between waypoints
-        takeoff_time : Optional, float
-          s, additional takeoff time 
-        landing_time: Optional, float
-          s, additional landing time 
-        waypoint_weights: Optional, float
-          weights of the waypoints in NURBS calculation 
-        adjust_eta: Optional, dict 
-          Dictionary with keys ['hours', 'seconds'], to adjust route time
-        nurbs_basis_length: Optional, float
-          Length of the basis function in the NURBS algorithm
-        nurbs_order: Optional, int
-          Order of the NURBS curve
+    Keyword args:
+        cruise_speed (float, optional): m/s, avg speed between waypoints
+            Required only if ETAs are not specified
+        ascent_speed (float, optional): m/s, vertical speed (up)
+            Required only if ETAs are not specified
+        descent_speed (float, optional): m/s, vertical speed (down)
+            Required only if ETAs are not specified
+        landing_speed (float, optional): m/s, landing speed when altitude < 10m
+        hovering_time (float, optional): s, time to hover between waypoints
+        takeoff_time (float, optional): s, additional takeoff time 
+        landing_time (float, optional): s, additional landing time 
+        waypoint_weights (float, optional): weights of the waypoints in NURBS calculation 
+        adjust_eta: (dict, optional): specification to adjust route time 
+          Dictionary with keys ['hours', 'seconds']
+        nurbs_basis_length (float, optional): Length of the basis function in the NURBS algorithm
+        nurbs_order (int, optional): Order of the NURBS curve
 
     Returns:
-    -------
-        ref_traj: dict[str, np.array]
+        ref_traj (dict[str, np.array]) 
             Reference state vector as a function of time 
     """
 
@@ -101,7 +88,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Check if user has erroneously defined dt and provide warning 
     if 'dt' in params.keys():
-        warn("Reference trajectory is generated with vehicle-defined dt value. dt = {} will used, and any user-define value will be ignored.".format(vehicle.parameters['dt']))
+        warn("Reference trajectory is generated with vehicle-defined dt value. dt = {} will used, and any user-defined value will be ignored.".format(vehicle.parameters['dt']))
 
     # Add vehicle-specific parameters 
     parameters['dt'] = vehicle.parameters['dt']
@@ -113,7 +100,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Get Flight Plan
     # ================
-    flightplan = trajectory.load.convert_df_inputs(waypoints)
+    flightplan = trajectory.convert_df_inputs(waypoints)
     lat = flightplan['lat_rad']
     lon = flightplan['lon_rad']
     alt = flightplan['alt_m']
@@ -124,7 +111,8 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     if len(tstamps) > 1:
         # Case 1: ETAs specified 
         # Check if speeds have also been defined and warn user if so:
-        if parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None:
+        has_speed = (parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None)
+        if has_speed:
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed ETAs if want to use desired speeds values.
@@ -133,8 +121,9 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     else: 
         # Case 2: ETAs not specified; speeds must be provided  
         # Check that speeds have been provided:
-        if parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None:
-            raise TypeError("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
+        has_all_speed = (parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None)
+        if has_all_speed:
+            raise TypeError("ETAs or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
         # Build route (set of waypoints with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = parameters) 

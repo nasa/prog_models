@@ -30,7 +30,6 @@ class DragModel():
         self.area = bodyarea
         self.cd = Cd
         self.rho = air_density
-        return
 
     def __call__(self, air_v):
         """
