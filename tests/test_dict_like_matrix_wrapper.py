@@ -96,6 +96,11 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         c1_dot_c2 = c1.dot(c2.matrix)  # should be, (1*4) + (2*5) = 14
         self.assertTrue((c1_dot_c2[0] == 14).all())
 
+    def test_matrix(self):
+        c1 = DictLikeMatrixWrapper(['a', 'b'], {'a': 1, 'b': 2})
+        self.assertTrue((c1.matrix == np.array([[1], [2]])).all())
+
+
 # This allows the module to be executed directly
 def run_tests():
     unittest.main()

@@ -45,6 +45,12 @@ class SimResult(UserList):
             'data by element.',
             DeprecationWarning, stacklevel=2)
         return super().__getitem__(item)
+
+    def iloc(self, item):
+        """
+        created for transition to pandas. This will eventually be used through pandas
+        """
+        return super().__getitem__(item)
     
     def __iter__(self):
         """
