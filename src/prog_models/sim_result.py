@@ -41,7 +41,7 @@ class SimResult(UserList):
         created for deprecation warning. [] continues to be handled by parent
         """
         warn(
-            '[] will be deprecated after version 1.5 of ProgPy. Users may use pandas Dataframe \'iloc\'  to access '
+            '[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data['state1']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
             'data by element.',
             DeprecationWarning, stacklevel=2)
         return super().__getitem__(item)
