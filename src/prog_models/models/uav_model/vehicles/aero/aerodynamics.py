@@ -16,7 +16,7 @@ class DragModel():
             F_D = 1/2 * rho * A * Cd * V^2
 
     where rho is the air density, typically 1.225 kg/m^3, A is the apparent face of the body, depending on geometry.
-    Cd is the the drag coefficient, also dependent on geometry.
+    Cd is the drag coefficient, also dependent on geometry.
     V is the body or fluid speed, and F_D is the drag force opposing motion wrt the direction of V.
     """
     def __init__(self, bodyarea=None, Cd=None, air_density=None):

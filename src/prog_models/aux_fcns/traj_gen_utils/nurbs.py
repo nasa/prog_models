@@ -68,7 +68,7 @@ def basisfunction(order, u, t):
     Basis function used to generate a smooth NURBS given order and knot vector t.
     Variable u is the independent variable of the basis function.
 
-    :param order:       scalar, int, order of the nurb
+    :param order:       scalar, int, order of the NURB
     :param u:           scalar, double, independent variable u used to generate basis function N(u)
     :param t:           knot vector defining the control points
     :return:            basis function of order 'order', N_order(u)
@@ -189,7 +189,7 @@ def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
             weight_vector_new[jj] = weight_vector[counter_1]      # Assign pre-defined weight to the waypoint
             counter_1 += 1
         else:
-            weight_vector_new[jj] = 1                            # Assign standard weight of 1 to the fititious waypoint
+            weight_vector_new[jj] = 1                            # Assign standard weight of 1 to the fictitious waypoint
 
     # -------- Generate new ETA vector ------------- #
     fictitiousETA = np.zeros((weight_vector.shape[0] - 1,))      # initialize fictitious ETA vector

@@ -10,7 +10,7 @@ import pandas as pd
 
 from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
 from prog_models.models.uav_model import SmallRotorcraft
-from prog_models.loading_fcns.controllers import LQR_I, LQR
+from prog_models.loading.controllers import LQR_I, LQR
 
 def run_example(): 
 

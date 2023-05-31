@@ -29,7 +29,7 @@ def TAROT18(payload=0.0, gravity=9.81):
                 payload=payload,            # kg, payload mass
                 Ixx=None,                   # kg*m^2, inertia moments along local axis
                 Iyy=None,                   # kg*m^2, inertia moments along local axis
-                Izz=None)                   # kg*m^2, interia moments along local axis
+                Izz=None)                   # kg*m^2, inertia moments along local axis
     
     geom = dict(num_rotors=8,              #, number of rotors
                 body_type='thickdisk',     # -, should be either sphere, flatdisk, thickdisk.

@@ -41,14 +41,14 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
 def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
     """
     Generate time-parameterized trajectory velocity, acceleration, Euler's angles, and body angular rates given the position profiles,
-    the waypoints etas, the yaw angle in-between waypoints. First two Euler's angles are limited to 45 degrees.
+    the waypoints ETAs, and the yaw angle between waypoints. First two Euler's angles are limited to 45 degrees.
 
     :param px:          m, double, n x 1, x-position profile as a function of time
     :param py:          m, double, n x 1, y-position profile as a function of time
     :param pz:          m, double, n x 1, z-position profile as a function of time
     :param t:           s, double, n x 1, time vector
     :param wp_etas:     s, double, m x 1, ETAs at waypoints
-    :param wp_yaw:      rad, double, m x 1, yaw angle in-between waypoints
+    :param wp_yaw:      rad, double, m x 1, yaw angle between waypoints
     :param gravity:     m/s^2, double, scalar, gravity magnitude
     :param max_phi:     rad, double, scalar, maximum phi allowed. Default is 45 deg.
     :param max_theta:   rad, double, scalar, maximum theta allowed. Default is 45 deg.
@@ -102,14 +102,14 @@ def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=4
 
 def generate_smooth_yaw(etas, yaw_points, time):
     """
-    Generate smooth yaw angle as a function of time given ETAs and yaw in-between way-points.
-    The function first generate a step-wise yaw vector for each point in the time vector.
-    Then, it takes the step-wise yaw curve and use a NURBS with order 6 to generate a smooth transition at the waypoints.
-    By so doing, the yaw as a function of time remains constant when in-between waypoints. When the next way-point is approaching, 
+    Generate smooth yaw angle as a function of time given ETAs and yaw between waypoints.
+    The function first generates a step-wise yaw vector for each point in the time vector.
+    Then, it takes the step-wise yaw curve and uses a NURBS with order 6 to generate a smooth transition at the waypoints.
+    By so doing, the yaw as a function of time remains constant when between waypoints. When the next waypoint is approaching, 
     the yaw changes with a slow rate to avoid sharp acceleration.
 
-    :param etas:            double, n x 1, ETAs at way-points
-    :param yaw_points:      double, n x 1, yaw in-between waypoints
+    :param etas:            double, n x 1, ETAs at waypoints
+    :param yaw_points:      double, n x 1, yaw between waypoints
     :param time:            double, m x 1, time vector to parameterize yaw curve.
     :return:                yaw curve as a function of time.
     """
@@ -133,7 +133,7 @@ class Trajectory():
     """
     Trajectory class.
 
-    This class generate a trajectory object that is used to create a smooth profile including
+    This class generates a trajectory object that is used to create a smooth profile including
     position, velocity, acceleration, Euler's angles, and attitude rates.
     The profiles are used to generate the desired state of a vehicle that needs to be followed to complete the trajectory.
     """
@@ -163,10 +163,10 @@ class Trajectory():
 
     def gen_cartesian_coordinates(self):
         """
-        Generate way-points cartesian coordinates in East-North-UP (ENU) reference frame given the 
-        way-points in geodetic coordinates (latitude, longitude, altitude).
+        Generate waypoints cartesian coordinates in East-North-UP (ENU) reference frame given the 
+        waypoints in geodetic coordinates (latitude, longitude, altitude).
 
-        :return:        way-point coordinates x, y, z (ENU), and ETAs in unix time.
+        :return:        waypoint coordinates x, y, z (ENU), and ETAs in unix time.
         """
         coord = geom.Coord(self.route.lat[0], self.route.lon[0], self.route.alt[0])
         x, y, z = coord.geodetic2enu(self.route.lat, self.route.lon, self.route.alt)
@@ -175,12 +175,12 @@ class Trajectory():
 
     def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
         """
-        Generate trajectory given the way-points and desired velocity or ETAs.
+        Generate trajectory given the waypoints and desired velocity or ETAs.
         
         :param dt:                      s, double, scalar, time step size
         :param nurbs_order:             -, int, scalar, order of the NURBS curve
-        :param weight_vector:           -, int, n x 1, weights to assign to way-points. If None (as default), a fixed value will be assigned.
-        :param gravity:                 m/s^2, double, scalar, gravity magnitude. If None (as default), the gravity magnitude used when initialized the trajectory will be used.
+        :param weight_vector:           -, int, n x 1, weights to assign to waypoints. If None (as default), a fixed value will be assigned.
+        :param gravity:                 m/s^2, double, scalar, gravity magnitude. If None (as default), the gravity magnitude used when the trajectory was initialized will be used. 
         :param nurbs_basis_length:      -, int, scalar, length of each basis function of the NURBS. Default=1000.
         :param max_phi:                 rad, double, scalar, maximum phi allowed. Default is 45 deg.
         :param max_theta:               rad, double, scalar, maximum theta allowed. Default is 45 deg.
