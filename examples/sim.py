@@ -20,13 +20,13 @@ def run_example():
     # Step 2: Define future loading function - here we're using a piecewise scheme
     future_loading = Piecewise(
         batt.InputContainer,
-        [600, 900, 1755, 3599, float('inf')],
+        [600, 900, 1800, 3600, float('inf')],
         {'i': [2, 1, 4, 2, 3]})
 
     # simulate for 200 seconds
     print('\n\n------------------------------------------------')
     print('Simulating for 200 seconds\n\n')
-    simulated_results = batt.simulate_to(200, future_loading, print = True, progress = True, stop_pts=[3.5], dt=('auto', 2))
+    simulated_results = batt.simulate_to(200, future_loading, print = True, progress = True)
     # The result of the simulation is now stored in simulated_results.
     # You can access the results by accessing the individual variables:
     #   times, inputs, states, outputs, event_states
