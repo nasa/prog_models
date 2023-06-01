@@ -762,7 +762,7 @@ class PrognosticsModel(ABC):
         save_pts : list[float], optional
             Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
         stop_pts : list[float], optional
-            Additional ordered list of custom times where simulation is stopped when dt is auto (s), e.g., stop_pts= [50, 75] \n
+            Additional ordered list of custom times where simulation is paused and evaluated (though results are not saved, as with save_pts) when dt is auto (s), e.g., stop_pts= [50, 75] \n
         horizon : float, optional
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : OutputContainer, optional
@@ -1047,7 +1047,7 @@ class PrognosticsModel(ABC):
                 update_all()
             elif (stop_pt_index < len(stop_pts)) and (t >= stop_pts[stop_pt_index]):
                 # (stop_pt_index < len(stop_pts)) covers when t is past the last stoppoint
-                # Otherwise save_pt_index would be out of range
+                # Otherwise stop_pt_index would be out of range
                 stop_pt_index += 1
 
             # Update progress bar
