@@ -761,8 +761,8 @@ class PrognosticsModel(ABC):
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : list[float], optional
             Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
-        stop_pts : list[float], optional
-            Additional ordered list of custom times where simulation is paused and evaluated (though results are not saved, as with save_pts) when dt is auto (s), e.g., stop_pts= [50, 75] \n
+        eval_pts : list[float], optional
+            Additional ordered list of custom times where simulation is guarenteed to be evaluated (though results are not saved, as with save_pts) when dt is auto (s), e.g., eval_pts= [50, 75] \n
         horizon : float, optional
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : OutputContainer, optional
@@ -836,7 +836,7 @@ class PrognosticsModel(ABC):
         config = {  # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
-            'stop_pts': [],
+            'eval_pts': [],
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100,  # Default horizon (in s), essentially inf
@@ -932,8 +932,8 @@ class PrognosticsModel(ABC):
         next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
-        stop_pt_index = 0
-        stop_pts = config['stop_pts'].copy()  # Copy because we may change it
+        eval_pt_index = 0
+        eval_pts = config['eval_pts'].copy()  # Copy because we may change it
 
         # configure optional intermediate printing
         if config['print']:
@@ -978,12 +978,12 @@ class PrognosticsModel(ABC):
                 return dt
         elif dt_mode == 'auto':
             if isinstance(future_loading_eqn, Piecewise):
-                stop_pts.extend(future_loading_eqn.times)
-                stop_pts = sorted(stop_pts)
+                eval_pts.extend(future_loading_eqn.times)
+                eval_pts = sorted(eval_pts)
             def next_time(t, x=None):
                 next_save_pt = save_pts[save_pt_index] if save_pt_index < len(save_pts) else float('inf')
-                next_stop_pt = stop_pts[stop_pt_index] if stop_pt_index < len(stop_pts) else float('inf')
-                return min(dt, next_save-t, next_save_pt-t, next_stop_pt-t)
+                next_eval_pt = eval_pts[eval_pt_index] if eval_pt_index < len(eval_pts) else float('inf')
+                return min(dt, next_save-t, next_save_pt-t, next_eval_pt-t)
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
@@ -1045,10 +1045,10 @@ class PrognosticsModel(ABC):
                 # Otherwise save_pt_index would be out of range
                 save_pt_index += 1
                 update_all()
-            elif (stop_pt_index < len(stop_pts)) and (t >= stop_pts[stop_pt_index]):
-                # (stop_pt_index < len(stop_pts)) covers when t is past the last stoppoint
-                # Otherwise stop_pt_index would be out of range
-                stop_pt_index += 1
+            elif (eval_pt_index < len(eval_pts)) and (t >= eval_pts[eval_pt_index]):
+                # (eval_pt_index < len(eval_pts)) covers when t is past the last evaluation point
+                # Otherwise eval_pt_index would be out of range
+                eval_pt_index += 1
 
             # Update progress bar
             if config['progress']:
