@@ -51,6 +51,25 @@ class TestSimResult(unittest.TestCase):
         result2 = pickle.load(open('model_test.pkl', 'rb'))
         self.assertEqual(result, result2)
 
+    def test_frame(self):
+        # Variables
+        time = list(range(5))  # list of int from 0 to 4
+        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
+        result = SimResult(time, state)
+        time_df = pd.DataFrame(data=time, columns=['time'])
+        data = pd.concat([time_df, pd.DataFrame(data=state)], axis=1)
+        self.assertTrue(result.frame.equals(data))
+
+    def test_iloc(self):
+        # Variables
+        time = list(range(5))  # list of int from 0 to 4
+        state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
+        result = SimResult(time, state)
+        time_df = pd.DataFrame(data=time, columns=['time'])
+        data = pd.concat([time_df, pd.DataFrame(data=state)], axis=1)
+        for i in list(range(5)):
+            self.assertTrue(result.iloc[i].equals(data.iloc[i]))
+
     def test_extend(self):
         # Variables
         time = list(range(5))  # list of int from 0 to 4
