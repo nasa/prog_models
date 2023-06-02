@@ -347,7 +347,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.times = []
         self.__data = None
-        self.__frame = None
         self.states = []
 
     def extend(self, other: "LazySimResult", _copy=True) -> None:
