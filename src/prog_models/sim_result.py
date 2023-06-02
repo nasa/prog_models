@@ -198,7 +198,7 @@ class SimResult(UserList):
             target_index = self.times.index(t)
         else:
             target_index = self.data.index(d)
-        self.pop(target_index)
+        self.pop_by_index(target_index)
 
     def clear(self) -> None:
         """Clear the SimResult"""
