@@ -177,8 +177,8 @@ def euclidean_distance_point_vector(point, vector):
 # ================
 def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     """
-    Return the rotation matrix R to transform coordinates from a Earth-fixed (inertial) reference frame to a body reference frame.
-    The function is called "fast" because takes the pre-computed since, cosine, and other trigonomentric functions of Euler's angles.
+    Return the rotation matrix R to transform coordinates from an Earth-fixed (inertial) reference frame to a body reference frame.
+    The function is called "fast" because takes the pre-computed sine, cosine, and other trigonometric functions of Euler's angles.
 
     :param sphi:            scalar, sine of phi
     :param cphi:            scalar, cosine of phi
@@ -194,8 +194,8 @@ def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
 
 def rot_body2earth_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     """
-    Return the rotation matrix R to transform coordinates from a body (non-inertial) reference frame to a Earth-fixed (inertial) reference frame.
-    The function is called "fast" because takes the pre-computed since, cosine, and other trigonomentric functions of Euler's angles.
+    Return the rotation matrix R to transform coordinates from a body (non-inertial) reference frame to an Earth-fixed (inertial) reference frame.
+    The function is called "fast" because takes the pre-computed sine, cosine, and other trigonometric functions of Euler's angles.
 
     :param sphi:            scalar, sine of phi
     :param cphi:            scalar, cosine of phi
@@ -229,8 +229,8 @@ def body_ang_vel_from_eulers(phi, theta, psi, phidot, thetadot, psidot):
 # ==========================
 def gen_heading_angle(lat, lon, alt):
     """
-    Function to generate heading angle to follow a set of points defined by latitude lat, longitude lon, and altitude alt.
-    The function returns the heading from North, positive clock-wise/
+    Function to generate heading angle to follow a set of points defined by latitude (lat), longitude (lon), and altitude (alt).
+    The function returns the heading from North, positive clock-wise
 
     :param lat:             rad, n x 1, latitude points
     :param lon:             rad, n x 1, longitude points
@@ -287,7 +287,7 @@ def heading_adjust_rotation(heading):
             continue
         else:
             next_p_2 = next_p - 2.0*np.pi   # angle in opposite direction
-            # Select angle based on mininum rotation necessary
+            # Select angle based on minimum rotation necessary
             if abs(curr_p - next_p) < abs(curr_p - next_p_2):   heading[idx+1] = next_p
             else:                                               heading[idx+1] = next_p_2
     return heading
@@ -362,14 +362,14 @@ class Coord():
 
     def ecef2enu(self, xecef, yecef, zecef):
         """
-        Coversion of Earth-centered, Earth-fixed (ECEF) reference frame coordinates to East-North-UP (ENU) reference frame.
+        Conversion of Earth-centered, Earth-fixed (ECEF) reference frame coordinates to East-North-UP (ENU) reference frame.
 
         :param xecef:           m, n x 1, X-coordinate in ECEF reference frame
         :param yecef:           m, n x 1, Y-coordinate in ECEF reference frame
         :param zecef:           m, n x 1, Z-coordinate in ECEF reference frame
-        :return x:              m, n x 1, x-coordainte (East) in ENU reference frame
-        :return y:              m, n x 1, y-coordainte (North) in ENU reference frame
-        :return z:              m, n x 1, z-coordainte (Up) in ENU reference frame
+        :return x:              m, n x 1, x-coordinate (East) in ENU reference frame
+        :return y:              m, n x 1, y-coordinate (North) in ENU reference frame
+        :return z:              m, n x 1, z-coordinate (Up) in ENU reference frame
         """
         # Compute location of the origin of ENU reference frame in the ECEF reference frame
         x0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.cos(self.lon0)
@@ -390,11 +390,11 @@ class Coord():
 
     def enu2ecef(self, xenu, yenu, zenu):
         """
-        Coversion of East-North-UP (ENU) reference frame coordinates into Earth-centered, Earth-fixed (ECEF) reference frame.
+        Conversion of East-North-UP (ENU) reference frame coordinates into Earth-centered, Earth-fixed (ECEF) reference frame.
 
-        :param xenu:             m, n x 1, x-coordainte (East) in ENU reference frame
-        :param yenu:             m, n x 1, y-coordainte (North) in ENU reference frame
-        :param zenu:             m, n x 1, z-coordainte (Up) in ENU reference frame
+        :param xenu:             m, n x 1, x-coordinate (East) in ENU reference frame
+        :param yenu:             m, n x 1, y-coordinate (North) in ENU reference frame
+        :param zenu:             m, n x 1, z-coordinate (Up) in ENU reference frame
         :return xecef:           m, n x 1, X-coordinate in ECEF reference frame
         :return yecef:           m, n x 1, Y-coordinate in ECEF reference frame
         :return zecef:           m, n x 1, Z-coordinate in ECEF reference frame
@@ -456,7 +456,7 @@ class Coord():
 
     def geodetic2ecef(self, lat, lon, alt):
         """
-        Coversion of geodetic reference frame coordinates into Earth-centered, Earth-fixed (ECEF) reference frame.
+        Conversion of geodetic reference frame coordinates into Earth-centered, Earth-fixed (ECEF) reference frame.
 
         :param lat:     rad, n x 1, latitude 
         :param lon:     rad, n x 1, longitude
@@ -477,9 +477,9 @@ class Coord():
         Conversion of East-North-UP (ENU) reference frame coordinates into geodetic coordinates.
         This method calls first method ENU2ECEF, and then ECEF2GEODETIC.
 
-        :param x:              m, n x 1, x-coordainte (East) in ENU reference frame
-        :param y:              m, n x 1, y-coordainte (North) in ENU reference frame
-        :param z:              m, n x 1, z-coordainte (Up) in ENU reference frame
+        :param x:              m, n x 1, x-coordinate (East) in ENU reference frame
+        :param y:              m, n x 1, y-coordinate (North) in ENU reference frame
+        :param z:              m, n x 1, z-coordinate (Up) in ENU reference frame
         :return lat:           rad, n x 1, latitude in geodetic coordinates
         :return lon:           rad, n x 1, longitude in geodetic coordinates
         :return alt:           m, n x 1, altitude in geodetic coordinates
@@ -496,9 +496,9 @@ class Coord():
         :param lat:           rad, n x 1, latitude in geodetic coordinates
         :param lon:           rad, n x 1, longitude in geodetic coordinates
         :param alt:           m, n x 1, altitude in geodetic coordinates
-        :return x:            m, n x 1, x-coordainte (East) in ENU reference frame
-        :return y:            m, n x 1, y-coordainte (North) in ENU reference frame
-        :return z:            m, n x 1, z-coordainte (Up) in ENU reference frame
+        :return x:            m, n x 1, x-coordinate (East) in ENU reference frame
+        :return y:            m, n x 1, y-coordinate (North) in ENU reference frame
+        :return z:            m, n x 1, z-coordinate (Up) in ENU reference frame
         """
         X, Y, Z = self.geodetic2ecef(lat, lon, alt)
         return self.ecef2enu(X, Y, Z)

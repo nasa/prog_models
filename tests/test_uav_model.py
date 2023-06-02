@@ -6,12 +6,13 @@ import unittest
 import numpy as np
 from scipy.interpolate import interp1d
 import pandas as pd
+import warnings
 
-from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
+from prog_models.utils.traj_gen import trajectory_gen as traj_gen
 from prog_models.models.uav_model import SmallRotorcraft 
-from prog_models.loading_fcns.controllers import LQR_I, LQR
+from prog_models.loading.controllers import LQR_I, LQR
 from prog_models.exceptions import ProgModelInputException, ProgModelException
-from prog_models.aux_fcns.traj_gen_utils import geometry as geom
+from prog_models.utils.traj_gen_utils import geometry as geom
 
 class TestUAVGen(unittest.TestCase):
     
@@ -23,6 +24,9 @@ class TestUAVGen(unittest.TestCase):
         sys.stdout = sys.__stdout__
 
     def test_reference_trajectory_generation(self):
+
+        # Set warnings to temporarily act as exceptions
+        warnings.simplefilter("error", category=UserWarning)
 
         # Define vehicle, necessary to pass to ref_traj
         vehicle = SmallRotorcraft()
@@ -39,7 +43,24 @@ class TestUAVGen(unittest.TestCase):
         waypoints_dict_no_time['lat_deg']   = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719])
         waypoints_dict_no_time['lon_deg']   = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628])
         waypoints_dict_no_time['alt_ft']    = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
-        waypoints_no_time = pd.DataFrame(waypoints_dict_no_time)       
+        waypoints_no_time = pd.DataFrame(waypoints_dict_no_time)    
+
+        waypoints_dict_small = {}
+        waypoints_dict_small['lat_deg']   = np.array([37.09776])
+        waypoints_dict_small['lon_deg']   = np.array([-76.38631])
+        waypoints_dict_small['alt_ft']    = np.array([-1.9682394])
+        waypoints_dict_small['time_unix'] = np.array([1544188336])
+        waypoints_small = pd.DataFrame(waypoints_dict_small)
+
+        # Should pass but doesn't 
+        # waypoints_dict_small = {}
+        # waypoints_dict_small['lat_deg']   = np.array([37.09776, 37.09776]) #, 37.09776, 37.09798])
+        # waypoints_dict_small['lon_deg']   = np.array([-76.38631, -76.38629]) #, -76.38629, -76.38589])
+        # waypoints_dict_small['alt_ft']    = np.array([-1.9682394, 164.01995]) #, 164.01995, 164.01995])
+        # waypoints_dict_small['time_unix'] = np.array([1544188336, 1544188358]) # , 1544188360, 1544188377])
+        # waypoints_small = pd.DataFrame(waypoints_dict_small)
+
+        # ref_traj = traj_gen(waypoints=waypoints_small, vehicle=vehicle)
 
         # Incorrect number of inputs to traj_gen
         with self.assertRaises(TypeError):
@@ -74,7 +95,9 @@ class TestUAVGen(unittest.TestCase):
         with self.assertRaises(TypeError):
             # Missing waypoint information 
             ref_traj = traj_gen(waypoints=pd.DataFrame({'lat_deg': np.array([1, 2, 3]), 'lon_deg': np.array([1, 2, 3]), 'time_unix': np.array([1, 2, 3])}), vehicle=vehicle)
-        
+        with self.assertRaises(TypeError):
+            # Only one waypoint defined, requires at least 2 
+            ref_traj = traj_gen(waypoints=waypoints_small, vehicle=vehicle)
         # Wrong units
         with self.assertRaises(TypeError):
             # Wrong units provided for waypoints
@@ -102,7 +125,27 @@ class TestUAVGen(unittest.TestCase):
         with self.assertRaises(TypeError):
             # Incomplete speeds provided
             ref_traj = traj_gen(waypoints=waypoints_no_time, vehicle=vehicle, **{'ascent_speed': 1, 'descent_speed': 1, 'cruise_speed': 1})
+        with self.assertRaises(UserWarning):
+            # Both ETAs and speeds provided; warning thrown 
+            ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'ascent_speed': 1, 'descent_speed': 1, 'cruise_speed': 1})
 
+        # Incorrect parameters
+        with self.assertRaises(UserWarning):
+            # dt is incorrectly provided as parameter to ref_traj
+            ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'dt': 2})
+        with self.assertRaises(TypeError):
+            # adjust_eta must be a dictionary with keys 'hours' and 'seconds'
+            ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'adjust_eta': 1})
+        with self.assertRaises(TypeError):
+            # adjust_eta must be a dictionary with keys 'hours' and 'seconds'
+            ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'adjust_eta': 'wronginput'})
+        with self.assertRaises(KeyError):
+            # adjust_eta must be a dictionary with keys 'hours' and 'seconds'
+            ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'adjust_eta': {'wrongkey': 1}})
+        with self.assertRaises(KeyError):
+            # adjust_eta must be a dictionary with keys 'hours' and 'seconds'
+            ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'adjust_eta': {'hours': 1, 'wrongkey': 2}})
+        
         # Test trajectory generation functionality is generating an accurate result
         # Convert waypoints to Cartesian 
         DEG2RAD = np.pi/180.0
@@ -119,15 +162,21 @@ class TestUAVGen(unittest.TestCase):
         for ind, val in enumerate(time_ref):
             # Since dt is 1, the time values in ref_traj_test['t'] correspond to their index number
             self.assertAlmostEqual(x_ref[ind], ref_traj_test['x'][val], delta=45)
-            self.assertAlmostEqual(x_ref[ind], ref_traj_test['x'][val], delta=45)
-            self.assertAlmostEqual(x_ref[ind], ref_traj_test['x'][val], delta=45)
+            self.assertAlmostEqual(y_ref[ind], ref_traj_test['y'][val], delta=45)
+            self.assertAlmostEqual(z_ref[ind], ref_traj_test['z'][val], delta=45)
+
+        # Reset warnings
+        warnings.simplefilter("default", category=UserWarning)
 
     def test_controllers_and_vehicle(self):
 
         # Controller and vehicle tests are combined so we only have to generate the reference trajectory once 
 
+        # Set warnings to temporarily act as exceptions
+        warnings.simplefilter("error", category=UserWarning)
+
         # Instantiate vehicle 
-        vehicle = SmallRotorcraft()
+        vehicle = SmallRotorcraft(**{'dt': 0.1})
 
         # Define waypoints 
         waypoints_dict = {}
@@ -175,6 +224,14 @@ class TestUAVGen(unittest.TestCase):
         # Testing appropriate input parameters: 
         with self.assertRaises(ProgModelInputException):
             vehicle_wrong = SmallRotorcraft(**{'vehicle_model': 'fakemodel'})
+
+        # Test simulation parameters:
+        with self.assertRaises(UserWarning):
+            # dt value for simulation must match dt provided to vehicle
+            sim = vehicle.simulate_to(100, ctrl, **{'dt': 2})
+
+        # Reset warnings
+        warnings.simplefilter("default", category=UserWarning)
 
 # This allows the module to be executed directly
 def run_tests():

@@ -68,7 +68,7 @@ def basisfunction(order, u, t):
     Basis function used to generate a smooth NURBS given order and knot vector t.
     Variable u is the independent variable of the basis function.
 
-    :param order:       scalar, int, order of the nurb
+    :param order:       scalar, int, order of the NURB
     :param u:           scalar, double, independent variable u used to generate basis function N(u)
     :param t:           knot vector defining the control points
     :return:            basis function of order 'order', N_order(u)
@@ -101,12 +101,10 @@ def evaluate(order, t, weights, waypoint_vector, basis_length=1000):
                                 2 x q, where the first row is time, second row is quantity x. q is the number of points len(U)
     """
     # Check validity of waypoint vector
+    # It should be a 2 x m array where m is the number of waypoints, the first row is the ETA vector and the second row is the actual waypoint vector.
     n, m = waypoint_vector.shape
     if n != 2:
         waypoint_vector = waypoint_vector.T
-    if waypoint_vector.shape[0] != 2:
-        raise Exception('The waypoint vector provided is not valid. It should be a 2 x m array where m is the number of waypoints, \
-                        the first row is the ETA vector and the second row is the actual waypoint vector.')
 
     # Define independent variable vector U (composed of all points of the independent variable u_0, u_1, ...)
     U = np.linspace(t[order-1], t[-1], int(round(abs(t[-1]-t[order-1])*basis_length)))
@@ -189,7 +187,7 @@ def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
             weight_vector_new[jj] = weight_vector[counter_1]      # Assign pre-defined weight to the waypoint
             counter_1 += 1
         else:
-            weight_vector_new[jj] = 1                            # Assign standard weight of 1 to the fititious waypoint
+            weight_vector_new[jj] = 1                            # Assign standard weight of 1 to the fictitious waypoint
 
     # -------- Generate new ETA vector ------------- #
     fictitiousETA = np.zeros((weight_vector.shape[0] - 1,))      # initialize fictitious ETA vector

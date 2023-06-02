@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd 
 
-from prog_models.aux_fcns.traj_gen import trajectory_gen_fcn as traj_gen
+from prog_models.utils.traj_gen import trajectory_gen as traj_gen
 from prog_models.models.uav_model import SmallRotorcraft
-from prog_models.loading_fcns.controllers import LQR_I, LQR
+from prog_models.loading.controllers import LQR_I, LQR
 
 def run_example(): 
 
@@ -43,13 +43,8 @@ def run_example():
     # Convert waypoints to pandas dataframe
     waypoints_pd = pd.DataFrame(waypoints)
 
-    # Define reference trajectory parameters, if desired
-    ref_params = {
-        'nurbs_order': 4
-    }
-
-    # Calculate reference trajectory 
-    ref_traj = traj_gen(waypoints=waypoints_pd, vehicle=vehicle, **ref_params)
+    # Calculate reference trajectory; include reference trajectory parameter definitions, if desired 
+    ref_traj = traj_gen(waypoints=waypoints_pd, vehicle=vehicle, nurbs_order=4)
 
     # Define controller and build scheduled control. The controller acts as a future_loading function when simulating
     ctrl = LQR(ref_traj, vehicle)

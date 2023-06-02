@@ -2,15 +2,13 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 import numpy as np
-import datetime
 from warnings import warn
-from typing import Callable
 
 from prog_models.prognostics_model import PrognosticsModel
 from .vehicles.aero import aerodynamics as aero
 from .vehicles import vehicles
-from prog_models.aux_fcns.traj_gen_utils import geometry as geom
-from prog_models.exceptions import ProgModelInputException, ProgModelException
+from prog_models.utils.traj_gen_utils import geometry as geom
+from prog_models.exceptions import ProgModelInputException
 
 # Small Rotorcraft Model
 # ======================

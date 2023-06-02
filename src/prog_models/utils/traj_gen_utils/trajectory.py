@@ -5,12 +5,14 @@
 Auxiliary functions for trajectories and aircraft routes
 """
 
+import datetime as dt
 import numpy as np
 import scipy.interpolate as interp
 import datetime as dt
 
-from prog_models.aux_fcns.traj_gen_utils import geometry as geom
+from prog_models.utils.traj_gen_utils import geometry as geom
 from .nurbs import generate_3dnurbs, generate_intermediate_points, evaluate, knot_vector
+<<<<<<< HEAD:src/prog_models/aux_fcns/traj_gen_utils/trajectory.py
 from prog_models.aux_fcns.traj_gen_utils import load_trajectories as load
 from prog_models.exceptions import ProgModelInputException
 
@@ -59,6 +61,8 @@ def reshape_route_attribute(x, dim=None, msk=None):
     elif msk:
         x = np.insert(x, msk, x[msk])
     return x
+=======
+>>>>>>> 4d9d8342d633ebdbff383c33d781a213bc6899c8:src/prog_models/utils/traj_gen_utils/trajectory.py
 
 
 def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
@@ -89,14 +93,14 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
 def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
     """
     Generate time-parameterized trajectory velocity, acceleration, Euler's angles, and body angular rates given the position profiles,
-    the waypoints etas, the yaw angle in-between waypoints. First two Euler's angles are limited to 45 degrees.
+    the waypoints ETAs, and the yaw angle between waypoints. First two Euler's angles are limited to 45 degrees.
 
     :param px:          m, double, n x 1, x-position profile as a function of time
     :param py:          m, double, n x 1, y-position profile as a function of time
     :param pz:          m, double, n x 1, z-position profile as a function of time
     :param t:           s, double, n x 1, time vector
     :param wp_etas:     s, double, m x 1, ETAs at waypoints
-    :param wp_yaw:      rad, double, m x 1, yaw angle in-between waypoints
+    :param wp_yaw:      rad, double, m x 1, yaw angle between waypoints
     :param gravity:     m/s^2, double, scalar, gravity magnitude
     :param max_phi:     rad, double, scalar, maximum phi allowed. Default is 45 deg.
     :param max_theta:   rad, double, scalar, maximum theta allowed. Default is 45 deg.
@@ -150,14 +154,14 @@ def gen_from_pos_profile(px, py, pz, t, wp_etas, wp_yaw, gravity=9.81, max_phi=4
 
 def generate_smooth_yaw(etas, yaw_points, time):
     """
-    Generate smooth yaw angle as a function of time given ETAs and yaw in-between way-points.
-    The function first generate a step-wise yaw vector for each point in the time vector.
-    Then, it takes the step-wise yaw curve and use a NURBS with order 6 to generate a smooth transition at the waypoints.
-    By so doing, the yaw as a function of time remains constant when in-between waypoints. When the next way-point is approaching, 
+    Generate smooth yaw angle as a function of time given ETAs and yaw between waypoints.
+    The function first generates a step-wise yaw vector for each point in the time vector.
+    Then, it takes the step-wise yaw curve and uses a NURBS with order 6 to generate a smooth transition at the waypoints.
+    By so doing, the yaw as a function of time remains constant when between waypoints. When the next waypoint is approaching, 
     the yaw changes with a slow rate to avoid sharp acceleration.
 
-    :param etas:            double, n x 1, ETAs at way-points
-    :param yaw_points:      double, n x 1, yaw in-between waypoints
+    :param etas:            double, n x 1, ETAs at waypoints
+    :param yaw_points:      double, n x 1, yaw between waypoints
     :param time:            double, m x 1, time vector to parameterize yaw curve.
     :return:                yaw curve as a function of time.
     """
@@ -176,12 +180,60 @@ def generate_smooth_yaw(etas, yaw_points, time):
     psi_smooth = interp.interp1d(psi_smooth[0,:], psi_smooth[1,:], kind='linear', fill_value='extrapolate')(time)
     return psi_smooth
 
+# Trajectory loading functions 
+# ----------------------------
+def convert_df_inputs(input_df):
+    """
+    Functions to extract user-defined waypoint information and convert to appropriate units for trajectory generation
+
+    Flight plan is input by user in pandas dataframe format. 
+    Column headers must contain: latitude ('lat_deg' or 'lat_rad'), longitude ('lon_deg' or 'lon_rad'), altitude ('alt_ft' or 'alt_m'), and (optional) time ('time_unix')
+    
+    :param input_df:      pandas dataframe with columns for waypoints latitude, longitude, altitude, and optional time        
+    :return:              flight plan dictionary with keys: lat (in rad), lon (in rad), alt (in m), time_unix, time_stamp.
+    """
+    # Conversion values 
+    DEG2RAD = np.pi/180.0
+    FEET2MET = 0.3048
+
+    # Check units and return exceptions if incorrect:
+    if 'lat_deg' not in input_df.columns and 'lat_rad' not in input_df.columns:
+        raise TypeError("Waypoints latitude must be defined in degrees (with lat_deg) or radians (with lat_rad).")
+    elif 'lon_deg' not in input_df.columns and 'lon_rad' not in input_df.columns:
+        raise TypeError("Waypoints longitude must be defined in degrees (with lon_deg) or radians (with lon_rad).")
+    elif 'alt_ft' not in input_df.columns and 'alt_m' not in input_df.columns:
+        raise TypeError("Waypoints altitude must be defined in feet (with alt_ft) or meters (with alt_m).")
+    if len(input_df.columns) > 3 and 'time_unix' not in input_df.columns:
+        raise TypeError("Waypoints input includes unrecognized values. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
+
+    # Convert units, if necessary
+    if 'lat_deg' in input_df.columns:
+        lat = (input_df['lat_deg'] * DEG2RAD).to_numpy()
+        lon = (input_df['lon_deg'] * DEG2RAD).to_numpy()
+    else: 
+        lat = (input_df['lat_rad']).to_numpy()
+        lon = (input_df['lon_rad']).to_numpy()
+    if 'alt_ft' in input_df.columns:
+        alt = (input_df['alt_ft'] * FEET2MET).to_numpy()
+    else: 
+        alt = (input_df['alt_m']).to_numpy()
+        
+    if 'time_unix' in input_df.columns:
+        time_unix = (input_df['time_unix']).to_numpy()
+        timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
+    else: 
+        # If no time stamp was available from file, add current time stamp and corresponding unix time.
+        timestamps = [dt.datetime.now()]
+        time_unix  = [timestamps[0].timestamp()]
+
+    return {'lat_rad': lat, 'lon_rad': lon, 'alt_m': alt, 'timestamp': timestamps, 'time_unix': time_unix}
+   
 
 class Trajectory():
     """
     Trajectory class.
 
-    This class generate a trajectory object that is used to create a smooth profile including
+    This class generates a trajectory object that is used to create a smooth profile including
     position, velocity, acceleration, Euler's angles, and attitude rates.
     The profiles are used to generate the desired state of a vehicle that needs to be followed to complete the trajectory.
     """
@@ -241,10 +293,10 @@ class Trajectory():
 
     def gen_cartesian_coordinates(self):
         """
-        Generate way-points cartesian coordinates in East-North-UP (ENU) reference frame given the 
-        way-points in geodetic coordinates (latitude, longitude, altitude).
+        Generate waypoints cartesian coordinates in East-North-UP (ENU) reference frame given the 
+        waypoints in geodetic coordinates (latitude, longitude, altitude).
 
-        :return:        way-point coordinates x, y, z (ENU), and ETAs in unix time.
+        :return:        waypoint coordinates x, y, z (ENU), and ETAs in unix time.
         """
         # coord = geom.Coord(self.route.lat[0], self.route.lon[0], self.route.alt[0])
         # x, y, z = coord.geodetic2enu(self.route.lat, self.route.lon, self.route.alt)
@@ -260,12 +312,12 @@ class Trajectory():
 
     def generate(self, dt, nurbs_order, weight_vector=None, gravity=None, nurbs_basis_length=1000, max_phi=45/180.0*np.pi, max_theta=45/180.0*np.pi):
         """
-        Generate trajectory given the way-points and desired velocity or ETAs.
+        Generate trajectory given the waypoints and desired velocity or ETAs.
         
         :param dt:                      s, double, scalar, time step size
         :param nurbs_order:             -, int, scalar, order of the NURBS curve
-        :param weight_vector:           -, int, n x 1, weights to assign to way-points. If None (as default), a fixed value will be assigned.
-        :param gravity:                 m/s^2, double, scalar, gravity magnitude. If None (as default), the gravity magnitude used when initialized the trajectory will be used.
+        :param weight_vector:           -, int, n x 1, weights to assign to waypoints. If None (as default), a fixed value will be assigned.
+        :param gravity:                 m/s^2, double, scalar, gravity magnitude. If None (as default), the gravity magnitude used when the trajectory was initialized will be used. 
         :param nurbs_basis_length:      -, int, scalar, length of each basis function of the NURBS. Default=1000.
         :param max_phi:                 rad, double, scalar, maximum phi allowed. Default is 45 deg.
         :param max_theta:               rad, double, scalar, maximum theta allowed. Default is 45 deg.

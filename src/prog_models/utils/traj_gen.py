@@ -5,13 +5,12 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
-from prog_models.prognostics_model import PrognosticsModel
-from .traj_gen_utils import route, trajectory
+from prog_models.utils.traj_gen_utils import route, trajectory
 
-def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
+def trajectory_gen(waypoints=None, vehicle=None, **params):
     """
     Function to generate a flyable trajectory from coarse waypoints using the NURBS algorithm.
-    The function uses the way-points as anchor points and generates a smooth, time-parametrized position profile in cartesian coordinates, 
+    The function uses the waypoints as anchor points and generates a smooth, time-parametrized position profile in cartesian coordinates, 
     px, py, and pz.
     Then, the position profile is derived to obtain velocity and acceleration profiles, and the latter is used to compute the Euler's angles
     to fly the desired trajectory.
@@ -19,56 +18,44 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     These time-parameterized profiles work as reference state the vehicle needs to follow to complete the trajectory.
     Non-uniform rational B-splines (NURBS) are parametric composite curves with convex hull and continuity up to the k-1 derivative 
     for a curve of degree k. The NURBS is a clamped B-spline, ensuring that the position profiles pass for the first and last waypoints.
-    Given a set of n + 1 way-points, a NURBS curve is defined as a piecewise curve described by parameter 
+    Given a set of n + 1 waypoints, a NURBS curve is defined as a piecewise curve described by parameter 
     u ∈ IR+ : 0 ≤ u ≤ n-k+2, where each section of the curve {[0,1],[1,2],...,[(n-k+1),(n-k+2)]} is of degree k.
-    Way-point importance is deined by "weights," which controls the distance of curve from that way-point. However, the importance is not
-    defined by the absolute value of the weights, but by the relative weight of a way-point w.r.t. the weights of the surrounding way-points.
-    This may be a problem when many or all way-points are important and should be passed by very closely by the vehicle.
+    Waypoint importance is defined by "weights," which controls the distance of curve from that waypoint. However, the importance is not
+    defined by the absolute value of the weights, but by the relative weight of a waypoint w.r.t. the weights of the surrounding waypoints.
+    This may be a problem when many or all waypoints are important and should be passed by very closely by the vehicle.
 
-    Therefore, the NURBS algorithm used here introduces some "fictitious" way-points, in-between the real ones, with lower weights.
-    These fictitious way-points allow the NURBS to maintain high relative weight for the real waypoints, allowing the curve to pass
-    close-by without sacrificing the surrounding way-points.
+    Therefore, the NURBS algorithm used here introduces some "fictitious" waypoints, in between the real ones, with lower weights.
+    These fictitious waypoints allow the NURBS to maintain high relative weight for the real waypoints, allowing the curve to pass
+    close by without sacrificing the surrounding waypoints.
 
-    The NURBS algorithm does not automatically produce a constrained trajectory based on vehicle performance (maximum speed, acceleration, attitude rates, etc).
+    The NURBS algorithm does not automatically produce a constrained trajectory based on vehicle performance (maximum speed, acceleration, attitude rates, etc.).
     The feasibility of the trajectory is checked after it has been generated. If the check fails, the trajectory is corrected by lowering speed and acceleration profiles.
 
-    Required arguments:
-    ------------------
-        waypoints: pandas dataframe 
-            This argument specifies coarse waypoints.  
+    Args:
+        waypoints (pandas dataframe): specifies coarse waypoints 
             Columns must have the following headers: 1) 'lat_deg' or 'lat_rad', 2) 'lon_deg' or 'lon_rad', 3) 'alt_m' or 'alt_ft', and optionally can include 4) 'time_unix'
+        vehicle (PrognosticsModel): an instance of a vehicle PrognosticsModel 
+            Currently, only prog_model.models.uav_model.SmallRotorcraft is supported
 
-        vehicle: 
-            This argument must be an instance of a vehicle PrognosticsModel (currently, only prog_model.models.uav_model.uav_model.SmallRotorcraft is supported)
-
-    Keyword arguments:
-    -----------------
-        cruise_speed : float
-          m/s, avg speed between waypoints; required only if ETAs are not specified
-        ascent_speed : float
-          m/s, vertical speed (up); required only if ETAs are not specified
-        descent_speed : float
-          m/s, vertical speed (down); required only if ETAs are not specified
-        landing_speed : float
-          m/s, landing speed when altitude < 10m
-        hovering_time : Optional, float
-          s, time to hover between waypoints
-        takeoff_time : Optional, float
-          s, additional takeoff time 
-        landing_time: Optional, float
-          s, additional landing time 
-        waypoint_weights: Optional, float
-          weights of the waypoints in NURBS calculation 
-        adjust_eta: Optional, dict 
-          Dictionary with keys ['hours', 'seconds'], to adjust route time
-        nurbs_basis_length: Optional, float
-          Length of the basis function in the NURBS algorithm
-        nurbs_order: Optional, int
-          Order of the NURBS curve
+    Keyword args:
+        cruise_speed (float, optional): m/s, avg speed between waypoints
+            Required only if ETAs are not specified
+        ascent_speed (float, optional): m/s, vertical speed (up)
+            Required only if ETAs are not specified
+        descent_speed (float, optional): m/s, vertical speed (down)
+            Required only if ETAs are not specified
+        landing_speed (float, optional): m/s, landing speed when altitude < 10m
+        hovering_time (float, optional): s, time to hover between waypoints
+        takeoff_time (float, optional): s, additional takeoff time 
+        landing_time (float, optional): s, additional landing time 
+        waypoint_weights (float, optional): weights of the waypoints in NURBS calculation 
+        adjust_eta: (dict, optional): specification to adjust route time 
+          Dictionary with keys ['hours', 'seconds']
+        nurbs_basis_length (float, optional): Length of the basis function in the NURBS algorithm
+        nurbs_order (int, optional): Order of the NURBS curve
 
     Returns:
-    -------
-        ref_traj: dict[str, np.array]
+        ref_traj (dict[str, np.array]) 
             Reference state vector as a function of time 
     """
 
@@ -79,6 +66,10 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
         raise TypeError("Waypoints must be provided using Pandas DataFrame.")
     if vehicle is None:
         raise TypeError("No vehicle model was provided to generate reference trajectory.")
+
+    # Waypoints must include at least two points
+    if len(waypoints.index) <= 1:
+        raise TypeError("The waypoint dataframe provided is not valid. Two or more waypoints must be provided.")
 
     parameters = {  # Set to defaults
 
@@ -101,7 +92,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Check if user has erroneously defined dt and provide warning 
     if 'dt' in params.keys():
-        warn("Reference trajectory is generated with vehicle-defined dt value. dt = {} will used, and any user-define value will be ignored.".format(vehicle.parameters['dt']))
+        warn("Reference trajectory is generated with vehicle-defined dt value. dt = {} will used, and any user-defined value will be ignored.".format(vehicle.parameters['dt']))
 
     # Add vehicle-specific parameters 
     parameters['dt'] = vehicle.parameters['dt']
@@ -113,7 +104,7 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Get Flight Plan
     # ================
-    flightplan = trajectory.load.convert_df_inputs(waypoints)
+    flightplan = trajectory.convert_df_inputs(waypoints)
     lat = flightplan['lat_rad']
     lon = flightplan['lon_rad']
     alt = flightplan['alt_m']
@@ -124,7 +115,8 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     if len(tstamps) > 1:
         # Case 1: ETAs specified 
         # Check if speeds have also been defined and warn user if so:
-        if parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None:
+        has_speed = (parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None)
+        if has_speed:
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed ETAs if want to use desired speeds values.
@@ -133,8 +125,9 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
     else: 
         # Case 2: ETAs not specified; speeds must be provided  
         # Check that speeds have been provided:
-        if parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None:
-            raise TypeError("ETA or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
+        has_all_speed = (parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None)
+        if has_all_speed:
+            raise TypeError("ETAs or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
         # Build route (set of waypoints with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
         route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
                                 parameters = parameters) 
