@@ -320,7 +320,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.fcn = fcn
         self.__data = None
-        self.__frame = None
         if times is None or states is None:
             self.times = []
             self.states = []
