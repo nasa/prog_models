@@ -101,12 +101,10 @@ def evaluate(order, t, weights, waypoint_vector, basis_length=1000):
                                 2 x q, where the first row is time, second row is quantity x. q is the number of points len(U)
     """
     # Check validity of waypoint vector
+    # It should be a 2 x m array where m is the number of waypoints, the first row is the ETA vector and the second row is the actual waypoint vector.
     n, m = waypoint_vector.shape
     if n != 2:
         waypoint_vector = waypoint_vector.T
-    if waypoint_vector.shape[0] != 2:
-        raise Exception('The waypoint vector provided is not valid. It should be a 2 x m array where m is the number of waypoints, \
-                        the first row is the ETA vector and the second row is the actual waypoint vector.')
 
     # Define independent variable vector U (composed of all points of the independent variable u_0, u_1, ...)
     U = np.linspace(t[order-1], t[-1], int(round(abs(t[-1]-t[order-1])*basis_length)))

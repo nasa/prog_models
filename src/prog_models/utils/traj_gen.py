@@ -67,6 +67,10 @@ def trajectory_gen(waypoints=None, vehicle=None, **params):
     if vehicle is None:
         raise TypeError("No vehicle model was provided to generate reference trajectory.")
 
+    # Waypoints must include at least two points
+    if len(waypoints.index) <= 1:
+        raise TypeError("The waypoint dataframe provided is not valid. Two or more waypoints must be provided.")
+
     parameters = {  # Set to defaults
 
         # Simulation parameters:

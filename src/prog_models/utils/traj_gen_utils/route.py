@@ -9,7 +9,6 @@ import numpy as np
 import datetime as dt
 
 from prog_models.utils.traj_gen_utils import geometry as geom
-from prog_models.exceptions import ProgModelInputException
 
 # FUNCTIONS
 # ==========
@@ -95,7 +94,7 @@ def build(lat, lon, alt, departure_time, parameters: dict = dict(), etas=None, v
                   vehicle_max_speed=vehicle_max_speed)
     if params['adjust_eta'] is not None:
         if isinstance(params['adjust_eta'], dict) == False:
-            raise ProgModelInputException("adjust_eta parameter must be a dictionary with keys: 'hours' and 'seconds'.")
+            raise TypeError("adjust_eta parameter must be a dictionary with keys: 'hours' and 'seconds'.")
         route.adjust_eta(hours_=params['adjust_eta']['hours'], seconds_=params['adjust_eta']['seconds'])
     return route
 
@@ -302,7 +301,7 @@ class Route():
         # ============
         if eta is not None: # if ETA is provided, assign to self.eta
             if hasattr(eta, "__len__") is False or len(eta)!=len(self.lat):
-                raise ProgModelInputException("ETA must be vector array with same length as lat, lon and alt.")
+                raise TypeError("ETA must be vector array with same length as lat, lon and alt.")
                 
             eta_unix = np.zeros_like(eta, dtype=np.float64)
             for i, eta_i in enumerate(eta):
@@ -318,7 +317,7 @@ class Route():
 
         else:   # if ETA is not provided, compute it from desired cruise speed and other speeds
             if self.cruise_speed == None:
-                raise ProgModelInputException("If ETA is not provided, desired speed (cruise, ascent, descent) must be provided.")
+                raise TypeError("If ETA is not provided, desired speed (cruise, ascent, descent) must be provided.")
 
             idx_land_pos = self.set_landing_waypoints(set_landing_eta=False)
 
@@ -353,7 +352,7 @@ class Route():
         :return:                    s, n x 1, ETAs for all waypoints.
         """
         if len(self.lat) <= 2:
-            raise ProgModelInputException("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
+            raise TypeError("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
         
         # define margin on cruise speed
         # ----------------------------
