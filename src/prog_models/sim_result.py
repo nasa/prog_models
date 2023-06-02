@@ -198,7 +198,7 @@ class SimResult(UserList):
             target_index = self.times.index(t)
         else:
             target_index = self.data.index(d)
-        self.pop(target_index)
+        self.pop_by_index(target_index)
 
     def clear(self) -> None:
         """Clear the SimResult"""
@@ -320,7 +320,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.fcn = fcn
         self.__data = None
-        self.__frame = None
         if times is None or states is None:
             self.times = []
             self.states = []
@@ -347,7 +346,6 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.times = []
         self.__data = None
-        self.__frame = None
         self.states = []
 
     def extend(self, other: "LazySimResult", _copy=True) -> None:
