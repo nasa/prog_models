@@ -141,7 +141,8 @@ def trajectory_gen_fcn(waypoints=None, vehicle=None, **params):
 
     # Generate trajectory
     # =====================
-    ref_traj = trajectory.Trajectory(route=route_) # Generate trajectory object and pass the route (waypoints, ETA) to it
+    # ref_traj = trajectory.Trajectory(route=route_) # Generate trajectory object and pass the route (waypoints, ETA) to it
+    ref_traj = trajectory.Trajectory(route=route_, lat=lat, lon=lon, alt=alt, takeoff_time=tstamps[0], etas=tstamps) # Generate trajectory object and pass the route (waypoints, ETA) to it
     weight_vector=np.array([parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each waypoint. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
     ref_traj.generate(
                     dt=parameters['dt'],                                 # assign delta t for simulation

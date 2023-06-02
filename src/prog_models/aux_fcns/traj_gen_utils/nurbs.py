@@ -223,7 +223,7 @@ def generate_intermediate_points(px, py, pz, yaw, eta, weight_vector=None):
     return px_new, py_new, pz_new, yaw_new, eta_new, weight_vector_new
 
 
-def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_length=1000):
+def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_length=1000, verbose=False):
     """
     Generate NURBS curve defining the trajectory along x, y and z-axis using the waypoints wpx, wpy, and wpz.
     The additional information necessary to generate the curves are:
@@ -238,9 +238,11 @@ def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_le
     :param order:           scalar, int, order of the NURBS curve
     :param weight_vector:   n x 1, weights to be assigned to each way-point when generating the curve
     :param basis_length:    length of the basis function, number of points used to define independent variable u. Default is 1000
+    :param verbose:         Boolean, whether to print messages during the generation
     :return:                dictionary with the 3D position profile of the NURBS curve: {'px', 'py', 'pz', 'time'}
     """
-    print('Generating position profile (NURBS)', end=" ")
+    if verbose:
+        print('Generating position profile (NURBS)', end=" ")
     # --------- get some useful dimensions ----------- #
     n = len(wpx)-1              # Define number of waypoints-1
     k = order                   # Define order of NURBS
@@ -271,5 +273,6 @@ def generate_3dnurbs(wpx, wpy, wpz, eta, delta_t, order, weight_vector, basis_le
     py = interp.interp1d(traj_y[0, :], traj_y[1, :], kind='cubic', fill_value='extrapolate')(time)
     pz = interp.interp1d(traj_z[0, :], traj_z[1, :], kind='cubic', fill_value='extrapolate')(time)
 
-    print('complete.')
+    if verbose:
+        print('complete.')
     return {'px': px, 'py': py, 'pz': pz, 'time': time}

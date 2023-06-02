@@ -155,6 +155,24 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
     else:                           return np.sqrt(surface_dist**2.0 + vert_dist**2.0)
     
 
+def euclidean_distance_point_vector(point, vector):
+    """
+    Return the euclidean distance between multi-dimensional point and vector, the vector should be organized by column, i.e., 
+    each row is a value in the vector, and each column corresponds to a dimension.
+    Number of dimensions must match for point and vector:
+    
+    point : n x 1 array
+    vector: m x n array
+
+    :param point:   n x 1 array
+    :param vector:  m x n array
+    """
+    d = 0.0
+    for i in range(len(point)):
+        d += abs(point[i] - vector[:, i])**2.0
+    return np.sqrt(d)
+
+    
 # REFERENCE FRAMES
 # ================
 def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
