@@ -1084,9 +1084,9 @@ class PrognosticsModel(ABC):
         count = sum(isinstance(element, Sequence) for element in iter)
         if 0 < count < len(iter):
             if loc is not False:
-                raise ValueError(f"Some, but not all elements, are iterable for parameter {name} at data location {loc}")
+                raise ValueError(f"Some, but not all elements, are iterable for argument {name} at data location {loc}")
             else:
-                raise ValueError(f'Some, but not all elements, are iterable for parameter {name}')
+                raise ValueError(f'Some, but not all elements, are iterable for argument {name}')
 
     def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], _loc = None, **kwargs) -> float:
         """Calculate Mean Squared Error (MSE) between simulated and observed
@@ -1191,7 +1191,7 @@ class PrognosticsModel(ABC):
         if dt <= 0:
             raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
         
-        if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
+        if 'x0' in kwargs.keys() and not isinstance(x, (self.StateContainer, dict)):
             raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
         
         return method(self, times, inputs, outputs, **kwargs)

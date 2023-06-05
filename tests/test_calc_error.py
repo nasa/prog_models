@@ -407,7 +407,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
         self.assertEqual(
-            "Some, but not all elements, are iterable for parameter times",
+            "Some, but not all elements, are iterable for argument times",
             str(cm.exception)
         )
 
@@ -427,7 +427,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
         self.assertEqual(
-            "Some, but not all elements, are iterable for parameter times at data location 0",
+            "Some, but not all elements, are iterable for argument times at data location 0",
             str(cm.exception)
         )
 
