@@ -7,7 +7,6 @@ This file contains functions for calculating error given a model and some data (
 
 from collections.abc import Iterable
 from typing import List
-from fastdtw import *
 from warnings import warn
 import math
 import numpy as np
@@ -458,6 +457,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
             simulated.append(z_obs)
             counter += 1
 
+    from fastdtw import fastdtw
     from scipy.spatial.distance import euclidean
     
     def dtw_helper(x):
