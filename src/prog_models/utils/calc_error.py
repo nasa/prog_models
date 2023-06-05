@@ -85,8 +85,8 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
             if any(np.isnan(z_obs.matrix)):
                 if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
-                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")                 
-                else: 
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
+                else:
                     warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
             err_max = max(err_max, np.max(
@@ -197,7 +197,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             # For example, in LSTM models, the first few inputs will not 
             # produce an output until the model has received enough data
             # This is true for any window-based model
-            if any (np.isnan(z_obs.matrix)):
+            if any(np.isnan(z_obs.matrix)):
                 if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
@@ -206,7 +206,6 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
                     break
             err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
             counter += 1
-    
     return err_total/counter
 
 def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
@@ -387,18 +386,18 @@ def DTW(m, times, inputs, outputs, **kwargs):
 
     Keyword Args:
         x0 (StateContainer): Current State of the model
-        dt (float, optional): Minimum time step in simulation. Defaults to 1e99.
+        dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error. 
+            before the model goes unstable in order to produce a valid estimate of error. 
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
 
     Returns:
-        float: DTW between model and data
+        float: DTW distance between model and data
     """
     if isinstance(times[0], Iterable):
         # Calculate error for each
@@ -420,7 +419,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
 
     # Checks stability_tol is within bounds
     # Throwing a default after the warning.
-    if stability_tol >= 1 or stability_tol < 0:
+    if stability_tol > 1 or stability_tol <= 0:
         warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "  
              f"Received {stability_tol}. Resetting value to 0.95")
         stability_tol = 0.95
@@ -445,11 +444,8 @@ def DTW(m, times, inputs, outputs, **kwargs):
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
                     warn("Model unstable- NaN reached in simulation (t={})".format(t))
-                    # Worth checking if this is needed for the scope of our algorithm.
                     # When model goes unstable after cutoffThreshold, we want to match the last stable observed value with the 
                         # equivalent user-provided output by truncating our user-provided series to match the length of our observed series.
-                    # outputs = list(outputs)
-                    # outputs = outputs[:counter]
                     percent = counter / len(outputs)
                     index = math.floor(percent * len(outputs))
                     outputs = list(outputs)[:index]
