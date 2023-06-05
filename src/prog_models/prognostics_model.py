@@ -1081,7 +1081,7 @@ class PrognosticsModel(ABC):
 
         Used to primarily avoid erroneous parameters and for a more descriptive error message than Python's Interpreter.
         """
-        count = sum(isinstance(element, Iterable) and not isinstance(element, (str, bytes)) for element in iter)
+        count = sum(isinstance(element, Sequence) for element in iter)
         if 0 < count < len(iter):
             if loc is not False:
                 raise ValueError(f"Some, but not all elements, are iterable for parameter {name} at data location {loc}")
@@ -1140,9 +1140,17 @@ class PrognosticsModel(ABC):
             # If we get here, method is not supported
             raise ProgModelInputException(f"Error method '{method}' not supported")
         
-        acceptable_types = {dict, tuple, np.ndarray, list, SimResult, LazySimResult}
+        # use isinstance rather than equality, then replace list and np.ndarray with Sequence
+        # times can only be sequence or np.ndarray, whereas inputs and outputs can be any of the acceptable_types.
+
+        # Ensure error methods provide correct results via hand-calculating each one and equating each one.
+
+        acceptable_types = {list, np.ndarray, np.ndarray, SimResult, LazySimResult}
         types = {type(times), type(inputs), type(outputs)}
 
+        # s = 'https://ja.wikipedia.org/wiki/'\
+        # '%E3%83%97%E3%83%AD%E3%82%B0%E3%83'\
+        # '%A9%E3%83%9F%E3%83%B3%E3%82%B0%E8%A8%80%E8%AA%9E'
         if not all(t in acceptable_types for t in types):
             type_error = f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types"
             type_error += f" at data location {_loc}" if _loc is not None else ""
