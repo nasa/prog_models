@@ -456,9 +456,12 @@ def DTW(m, times, inputs, outputs, **kwargs):
     from fastdtw import fastdtw
     from scipy.spatial.distance import euclidean
     
-    def dtw_helper(x):
+    def dtw_helper(data):
+        """
+        Helper function to take in given data (simulated and observed), and then transform it such that the function fastdtw can use it.
+        """
         transform = []
-        for index in x:
+        for index in data:
             inner_list = []
             for key in index.keys():
                 inner_list.append(index.get(key))
