@@ -1089,8 +1089,8 @@ class PrognosticsModel(ABC):
                 raise ValueError(f'Some, but not all elements, are iterable for argument {name}')
 
     def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], _loc = None, **kwargs) -> float:
-        """Calculate Mean Squared Error (MSE) between simulated and observed
-
+        """Calculate Error between simulated and observed data using selected Error Calculation Method
+        
         Args:
             times (list[float]): array of times for each sample
             inputs (list[InputContainer]): array of input dictionaries where input[x] corresponds to time[x]
