@@ -198,7 +198,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             # For example, in LSTM models, the first few inputs will not 
             # produce an output until the model has received enough data
             # This is true for any window-based model
-            if any (np.isnan(z_obs.matrix)):
+            if any(np.isnan(z_obs.matrix)):
                 if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
