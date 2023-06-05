@@ -55,7 +55,7 @@ def run_example():
     plt.plot(results_ensemble.times, [z['v'] for z in results_ensemble.outputs], color='red', label='ensemble')
     plt.legend()
 
-    # Note: This is a very poor preforming model
+    # Note: This is a very poor performing model
     # there was an outlier model (m_circuit_3), which effected the quality of the model prediction
     # This can be resolved by using a different aggregation_method. For example, median
     # In a real scenario, you would likely remove this model, this is just to illustrate outlier elimination

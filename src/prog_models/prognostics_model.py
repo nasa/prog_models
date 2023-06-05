@@ -1079,7 +1079,7 @@ class PrognosticsModel(ABC):
         """
         Helper Function to determine if passed in iterable has consistent typings for each index.
 
-        Used to primarily avoid erroneous parameters and for a more descriptive error message than Python's Interpreter.
+        Used to primarily avoid erroneous arguments and for a more descriptive error message than Python's Interpreter.
         """
         count = sum(isinstance(element, Sequence) for element in iter)
         if 0 < count < len(iter):
@@ -1154,7 +1154,6 @@ class PrognosticsModel(ABC):
                         f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
             raise ValueError(len_error)
         if len(times) < 2:
-            # raise ValueError(f"Must Provide at least 2 data points. Currently only passing in {len(times)}")
             less_2_error = f"Must provide at least 2 data points for times, inputs, and outputs" \
                            f"{(' at data location (' + str(_loc) + ').' if _loc is not None else '')}"
             raise ValueError(less_2_error)
@@ -1163,7 +1162,7 @@ class PrognosticsModel(ABC):
         dt = kwargs.get('dt', 1e99)
         stability_tol = kwargs.get('stability_tol', 0.95)
 
-        # Determines if all values of parameters are iterables
+        # Determines if all values of arguments are iterables
         self.check_iterable(times, 'times', loc=_loc) if _loc is not None else self.check_iterable(times, 'times')
         self.check_iterable(inputs, 'inputs', loc=_loc) if _loc is not None else self.check_iterable(inputs, 'inputs')
         self.check_iterable(outputs, 'outputs', loc=_loc) if _loc is not None else self.check_iterable(outputs, 'outputs')
@@ -1182,7 +1181,7 @@ class PrognosticsModel(ABC):
         # Throwing a default after the warning.
         if not isinstance(stability_tol, Number):
             raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
-        if stability_tol >= 1 or stability_tol < 0:
+        if stability_tol > 1 or stability_tol <= 0:
             warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
             stability_tol = 0.95
 
