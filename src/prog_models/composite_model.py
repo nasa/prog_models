@@ -196,7 +196,7 @@ class CompositeModel(PrognosticsModel):
             # Prepare state
             x_i = m.StateContainer({key: x[name + '.' + key] for key in m.states})
 
-            # Propogate state
+            # Propagate state
             x_next_i = m.next_state(x_i, u_i, dt)
 
             # Save to super state
