@@ -67,7 +67,7 @@ def run_example():
 
     # Variable (piece-wise) future loading scheme 
     # For a battery, future loading is in term of current 'i' in amps. 
-    Piecewise(
+    future_loading = Piecewise(
         m.InputContainer,
         [600, 900, 1800, 3000, float('inf')],
         {'i': [2, 1, 4, 2, 3]})
