@@ -367,7 +367,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             m.calc_error({1, 2, 3}, ({'1': 1}, {'2': 2}, {'3': 3}), ({'1': 1}, {'2': 2}, {'3': 3}))
         self.assertEqual(
-            "Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types: times = set, inputs = tuple, and outputs = tuple",
+            "Types passed in must be from the following: np.ndarray, list, SimResult, or LazySimResult. Current types: times = set, inputs = tuple, and outputs = tuple",
             str(cm.exception)
         )
 

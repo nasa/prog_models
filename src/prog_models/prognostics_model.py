@@ -1140,35 +1140,27 @@ class PrognosticsModel(ABC):
             # If we get here, method is not supported
             raise ProgModelInputException(f"Error method '{method}' not supported")
         
-        # use isinstance rather than equality, then replace list and np.ndarray with Sequence
-        # times can only be sequence or np.ndarray, whereas inputs and outputs can be any of the acceptable_types.
-
         # Ensure error methods provide correct results via hand-calculating each one and equating each one.
+        acceptable_types = {Sequence, np.ndarray, SimResult, LazySimResult}
 
-        acceptable_types = {list, np.ndarray, np.ndarray, SimResult, LazySimResult}
-        types = {type(times), type(inputs), type(outputs)}
-
-        # s = 'https://ja.wikipedia.org/wiki/'\
-        # '%E3%83%97%E3%83%AD%E3%82%B0%E3%83'\
-        # '%A9%E3%83%9F%E3%83%B3%E3%82%B0%E8%A8%80%E8%AA%9E'
-        if not all(t in acceptable_types for t in types):
-            type_error = f"Types passed in must be from the following list: np.ndarray, list, SimResult, or LazySimResult. Current types"
-            type_error += f" at data location {_loc}" if _loc is not None else ""
-            type_error += f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}"
+        if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
+            type_error = f"Types passed in must be from the following: np.ndarray, list, SimResult, or LazySimResult. Current types" \
+                         f"{(' at run ' + str(_loc) if _loc is not None else '')}" \
+                         f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}"
             raise TypeError(type_error)
         if len(times) != len(inputs) or len(inputs) != len(outputs):
-            len_error = "Times, inputs, and outputs must all be the same length. Current lengths"
-            len_error += f" at data location ({_loc})" if _loc is not None else ""
-            len_error += f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
+            len_error = f"Times, inputs, and outputs must all be the same length. Current lengths" \
+                        f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
+                        f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
             raise ValueError(len_error)
         if len(times) < 2:
             # raise ValueError(f"Must Provide at least 2 data points. Currently only passing in {len(times)}")
-            less_2_error = "Must provide at least 2 data points for times, inputs, and outputs"
-            less_2_error += f" at data location ({_loc})." if _loc is not None else ""
+            less_2_error = f"Must provide at least 2 data points for times, inputs, and outputs" \
+                           f"{(' at data location (' + str(_loc) + ').' if _loc is not None else '')}"
             raise ValueError(less_2_error)
     
         x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-        dt = kwargs.get('dt', 1e-99)
+        dt = kwargs.get('dt', 1e99)
         stability_tol = kwargs.get('stability_tol', 0.95)
 
         # Determines if all values of parameters are iterables

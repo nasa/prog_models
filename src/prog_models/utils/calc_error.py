@@ -35,7 +35,7 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
         float: Maximum error between model and data
     """
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e-99)
+    dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
@@ -138,7 +138,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
         float: Total error
     """
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e-99)
+    dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
@@ -208,7 +208,7 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
         float: MAE between model and data
     """
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e-99)
+    dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
@@ -278,7 +278,7 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
         float: MAPE between model and data
     """
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
-    dt = kwargs.get('dt', 1e-99)
+    dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
 
     if not isinstance(x, m.StateContainer):
