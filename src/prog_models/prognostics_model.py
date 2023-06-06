@@ -110,7 +110,7 @@ class PrognosticsModel(ABC):
     param_callbacks = {}  # Callbacks for derived parameters
 
     SimulationResults = namedtuple(
-        'SimulationResults', 
+        'SimulationResults',
         ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
@@ -118,7 +118,7 @@ class PrognosticsModel(ABC):
         params = PrognosticsModel.default_parameters.copy()
 
         # Add params specific to the model
-        params.update(self.__class__.default_parameters) 
+        params.update(self.__class__.default_parameters)
 
         # Add params specific passed via command line arguments
         params.update(kwargs)
@@ -138,7 +138,8 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, params: dict) -> None:
-        # This method is called when de-pickling and in construction. It builds the model from the parameters
+        # This method is called when de-pickling and in construction.
+        # It builds the model from the parameters
         
         if not hasattr(self, 'inputs'):
             self.inputs = []
@@ -215,10 +216,11 @@ class PrognosticsModel(ABC):
         Example
         -------
             :
-                m = PrognosticsModel() # Replace with specific model being simulated
-                u = {'u1': 3.2}
-                z = {'z1': 2.2}
-                x = m.initialize(u, z) # Initialize first state
+                m = PrognosticsModel()
+                # ^ Replace above with specific model being simulated ^
+                u = m.InputContainer({'u1': 3.2})
+                z = m.OutputContainer({'z1': 2.2})
+                x = m.initialize(u, z)  # Initialize first state
         """
         return self.StateContainer(self.parameters['x0'])
 
@@ -364,7 +366,7 @@ class PrognosticsModel(ABC):
         return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
     @property
-    def is_continuous(self):
+    def is_continuous(self) -> bool:
         """
         Returns
         -------
@@ -374,7 +376,7 @@ class PrognosticsModel(ABC):
         return type(self).dx != PrognosticsModel.dx
 
     @property
-    def is_discrete(self):
+    def is_discrete(self) -> bool:
         """
         Returns
         -------
@@ -398,6 +400,14 @@ class PrognosticsModel(ABC):
         x : StateContainer or dict
             Bounded state, with keys defined by model.states
             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = m.InputContainer({'u1': 3.2})
+        | z = m.OutputContainer({'z1': 2.2})
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.apply_limits(x) # Returns bounded state
         """
         for (key, limit) in self.state_limits.items():
             if np.any(np.array(x[key]) < limit[0]):
@@ -1342,8 +1352,8 @@ class PrognosticsModel(ABC):
             raise ValueError("Method {} not supported. Supported methods: {}".format(method, SURROGATE_METHOD_LOOKUP.keys()))
 
         # Configure
-        config = { # Defaults
-            'save_freq': 1.0, 
+        config = {  # Defaults
+            'save_freq': 1.0,
             'state_keys': self.states.copy(),
             'input_keys': self.inputs.copy(),
             'output_keys': self.outputs.copy(),
@@ -1417,12 +1427,12 @@ class PrognosticsModel(ABC):
         return json.dumps(self.parameters.data, cls=CustomEncoder)
     
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data: str):
         """
         Create a new prognostics model from a previously generated model that was serialized as a JSON object
 
         Args:
-            data: 
+            data (str): 
                 JSON serialized parameters necessary to build a model 
                 See to_json method 
 

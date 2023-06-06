@@ -232,9 +232,6 @@ class TestCompositeModel(unittest.TestCase):
         self.assertAlmostEqual(x['OneInputOneOutputOneEventLM.x1'], 3)  # extra 1 from pm
         self.assertAlmostEqual(x['OneInputOneOutputOneEventLM_2.x1'], 2)
 
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

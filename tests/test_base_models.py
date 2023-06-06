@@ -1325,9 +1325,6 @@ class TestModels(unittest.TestCase):
         self.assertTrue(m2.parameters == m1.parameters) 
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

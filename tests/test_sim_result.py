@@ -583,9 +583,6 @@ class TestSimResult(unittest.TestCase):
         self.assertDictEqual(result.monotonicity(), {'a': 0.0, 'b': 0.0})
         
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

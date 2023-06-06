@@ -32,16 +32,12 @@ class TestExamples(unittest.TestCase):
         sys.stdout = sys.__stdout__
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     # Create tests for each example
     for _, name, _ in pkgutil.iter_modules(['examples']):
         if name not in EXAMPLES_SKIPPED:
             test_func = make_test_function(name)
             setattr(TestExamples, 'test_{0}'.format(name), test_func)   
-
 
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

@@ -25,13 +25,13 @@ class MovingAverage():
     >>>     future_load.add_load(load)
     >>> m.simulate_to_threshold(future_load)
     """
-    def __init__(self, InputContainer, window=10):
+    def __init__(self, InputContainer: type, window: int = 10):
         self.window = window
         self.InputContainer = InputContainer
         self.values = {}
         self.index = 0
 
-    def add_load(self, input):
+    def add_load(self, input: InputContainer):
         """
         Add a load to the moving average
 
@@ -44,7 +44,7 @@ class MovingAverage():
             self.values[key][self.index] = value
         self.index = (self.index + 1) % self.window
 
-    def __call__(self, t, x=None):
+    def __call__(self, t: float, x: StateContainer = None):
         """
         Return the average of the values in the window
 
@@ -64,7 +64,7 @@ class GuassianNoiseLoadWrapper():
 
     Parameters
     ----------
-    fcn : function
+    fcn : Callable
         The future loading function to wrap
     std : float
         The standard deviation of the gaussian noise to add
@@ -80,13 +80,13 @@ class GuassianNoiseLoadWrapper():
         self.fcn = fcn
         self.std = std
 
-    def __call__(self, t, x=None):
+    def __call__(self, t: float, x: StateContainer = None) -> InputContainer:
         """
         Return the load with noise added
 
         Args:
             t (float): Time (s)
-            x (StateContaienr, optional): Current state. Defaults to None.
+            x (StateContainer, optional): Current state. Defaults to None.
 
         Returns:
             InputContainer: The load with noise added

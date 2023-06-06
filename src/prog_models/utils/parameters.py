@@ -12,11 +12,12 @@ from typing import Callable
 
 from prog_models.utils.next_state import next_state_functions, SciPyIntegrateNextState
 from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
-from prog_models.utils.serialization import *
+from prog_models.utils.serialization import CustomEncoder, custom_decoder
 from prog_models.utils.size import getsizeof
 
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:  # Fix circular import issue in PrognosticsModelParameters init
+if TYPE_CHECKING:
+    # Fix circular import issue in PrognosticsModelParameters init
     from prog_models.prognostics_model import PrognosticsModel
 
 
@@ -208,7 +209,7 @@ class PrognosticsModelParameters(UserDict):
 
     def to_json(self):
         """
-        Serialize parameters as JSON objects 
+        Serialize parameters as JSON objects
         """
         return json.dumps(self.data, cls=CustomEncoder)
     
@@ -218,14 +219,14 @@ class PrognosticsModelParameters(UserDict):
         Create a new parameters object from parameters that were serialized as a JSON object
 
         Args:
-            data: 
-                JSON serialized parameters necessary to build parameters 
-                See to_json method 
+            data:
+                JSON serialized parameters necessary to build parameters
+                See to_json method
 
         Returns:
-            Parameters: Parameters generated from serialized parameters 
+            Parameters: Parameters generated from serialized parameters
         """
 
-        extract_parameters = json.loads(data, object_hook = custom_decoder)
+        extract_parameters = json.loads(data, object_hook=custom_decoder)
  
         return cls(**extract_parameters)
