@@ -7,7 +7,7 @@ Example demonstrating ways to use future loading.
 
 import matplotlib.pyplot as plt
 from numpy.random import normal
-from prog_models.loading import Piecewise, GuassianNoiseLoadWrapper
+from prog_models.loading import Piecewise, GaussianNoiseLoadWrapper
 from prog_models.models import BatteryCircuit
 from statistics import mean
 
@@ -65,7 +65,7 @@ def run_example():
         m.InputContainer,
         [600, 900, 1800, 3000, float('inf')],
         {'i': [2, 1, 4, 2, 3]})
-    future_loading_with_noise = GuassianNoiseLoadWrapper(future_loading, 0.2)
+    future_loading_with_noise = GaussianNoiseLoadWrapper(future_loading, 0.2)
 
     # Simulate to threshold
     simulated_results = m.simulate_to_threshold(future_loading_with_noise, **options)
