@@ -230,6 +230,55 @@ class TestUAVGen(unittest.TestCase):
             # dt value for simulation must match dt provided to vehicle
             sim = vehicle.simulate_to(100, ctrl, **{'dt': 2})
 
+        # Run simulation and verify accuracy of simulated trajectory:
+        # Case 1: ETAs provided 
+        # Use above ref_traj, ctrl
+        # Simulate and compare
+        sim = vehicle.simulate_to(ref_traj['t'][-1], ctrl, **{'save_freq': vehicle.parameters['dt']})
+        x_temp = [sim.outputs[iter]['x'] for iter in range(len(sim.times))]
+        y_temp = [sim.outputs[iter]['y'] for iter in range(len(sim.times))]
+        z_temp = [sim.outputs[iter]['z'] for iter in range(len(sim.times))]
+        x_sim_interp = interp1d(sim.times, x_temp)(ref_traj['t'])
+        y_sim_interp = interp1d(sim.times, y_temp)(ref_traj['t'])
+        z_sim_interp = interp1d(sim.times, z_temp)(ref_traj['t'])
+        for iter in range(min(len(sim.times), len(ref_traj['t']))):
+            self.assertAlmostEqual(ref_traj['x'][iter], sim.outputs[iter]['x'], delta=5)
+            self.assertAlmostEqual(ref_traj['y'][iter], sim.outputs[iter]['y'], delta=5)
+            self.assertAlmostEqual(ref_traj['z'][iter], sim.outputs[iter]['z'], delta=5)
+
+        # Case 2: Speeds provided
+        del waypoints_dict['time_unix']
+        waypoints_speeds = pd.DataFrame(waypoints_dict)
+
+        # Define speeds:
+        ref_params = {
+            'nurbs_order': 4,
+            'cruise_speed': 8.0,
+            'ascent_speed': 2.0,
+            'descent_speed': 3.0,
+            'landing_speed': 2
+        }
+
+        # Generate reference trajectory
+        ref_traj_speeds = traj_gen(waypoints=waypoints_speeds, vehicle=vehicle, **ref_params)
+
+        # Build controller
+        ctrl_speeds = LQR(x_ref=ref_traj_speeds, vehicle=vehicle)
+        ctrl_speeds.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
+
+        # Simulate and compare:
+        sim_speeds = vehicle.simulate_to(ref_traj_speeds['t'][-1], ctrl_speeds, **{'save_freq': vehicle.parameters['dt']})
+        x_speeds_temp = [sim_speeds.outputs[iter]['x'] for iter in range(len(sim_speeds.times))]
+        y_speeds_temp = [sim_speeds.outputs[iter]['y'] for iter in range(len(sim_speeds.times))]
+        z_speeds_temp = [sim_speeds.outputs[iter]['z'] for iter in range(len(sim_speeds.times))]
+        x_speeds_sim_interp = interp1d(sim_speeds.times, x_speeds_temp)(ref_traj_speeds['t'])
+        y_speeds_sim_interp = interp1d(sim_speeds.times, y_speeds_temp)(ref_traj_speeds['t'])
+        z_speeds_sim_interp = interp1d(sim_speeds.times, z_speeds_temp)(ref_traj_speeds['t'])
+        for iter in range(len(sim_speeds.times)):
+            self.assertAlmostEqual(ref_traj_speeds['x'][iter], sim_speeds.outputs[iter]['x'], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['y'][iter], sim_speeds.outputs[iter]['y'], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['z'][iter], sim_speeds.outputs[iter]['z'], delta=8)
+
         # Reset warnings
         warnings.simplefilter("default", category=UserWarning)
 
