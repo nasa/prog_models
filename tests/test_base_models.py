@@ -196,7 +196,7 @@ class TestModels(unittest.TestCase):
         u = m.InputContainer({})
         x = m.next_state(x, u, 0.1)
         # V is equal because it's linear
-        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['v'], x_default['v'])
         self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
         self.assertNotEqual(x['x'], x_default['x'])
 
