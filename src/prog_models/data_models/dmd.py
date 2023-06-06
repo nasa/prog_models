@@ -7,7 +7,6 @@ from scipy.interpolate import interp1d
 import types
 from warnings import warn
 
-from prog_models.exceptions import ProgModelInputException
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models import LinearModel, PrognosticsModel
 from prog_models.data_models import DataModel
@@ -190,11 +189,11 @@ class DMDModel(LinearModel, DataModel):
 
         # Input validation
         if not isinstance(config['trim_data_to'], Number) or config['trim_data_to'] > 1 or config['trim_data_to'] <= 0:
-            raise ProgModelInputException("Invalid 'trim_data_to' input value, must be between 0 and 1.")
+            raise ValueError("Invalid 'trim_data_to' input value, must be between 0 and 1.")
         if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
-            raise ProgModelInputException(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
+            raise ValueError(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
         if not isinstance(config['training_noise'], Number) or config['training_noise'] < 0:
-            raise ProgModelInputException(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")
+            raise ValueError(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")
         DataModel.check_data_format(inputs, outputs, states, event_states)
         if isinstance(config['dt'], list):
             # This means one dt for each run
@@ -282,9 +281,9 @@ class DMDModel(LinearModel, DataModel):
             z = outputs[run]
 
             if len(u) != len(z):
-                raise ProgModelInputException(f"Must have same number of steps for inputs and outputs in a single run. Not true for run {run}")
+                raise ValueError(f"Must have same number of steps for inputs and outputs in a single run. Not true for run {run}")
             if len(u) == 0:
-                raise ProgModelInputException(f"Each run must have at least one timestep, not true for Run {run}")
+                raise ValueError(f"Each run must have at least one timestep, not true for Run {run}")
 
             if isinstance(u, SimResult):
                 u = u.to_numpy(config['input_keys'])
@@ -292,7 +291,7 @@ class DMDModel(LinearModel, DataModel):
             if states != None:
                 x = states[run]
                 if len(x) != len(u):
-                    raise ProgModelInputException(f"Must have same number of steps for inputs, states, and outputs in a single run. Not true for states in run {run}")
+                    raise ValueError(f"Must have same number of steps for inputs, states, and outputs in a single run. Not true for states in run {run}")
                 if isinstance(x, SimResult):
                     x = x.to_numpy(config['state_keys'])
             else:
@@ -301,10 +300,10 @@ class DMDModel(LinearModel, DataModel):
             if isinstance(z, SimResult):
                 z = z.to_numpy(config['output_keys'])
 
-            if event_states != None:
+            if event_states is not None:
                 es = event_states[run]
                 if len(es) != len(u):
-                    raise ProgModelInputException(f"Must have same number of steps for inputs, event_states, and outputs in a single run. Not true for event_states in run {run}")
+                    raise ValueError(f"Must have same number of steps for inputs, event_states, and outputs in a single run. Not true for event_states in run {run}")
                 if isinstance(es, SimResult):
                     es = es.to_numpy(config['event_keys'])
             else:

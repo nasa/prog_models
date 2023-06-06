@@ -14,7 +14,6 @@ from prog_models.utils.next_state import next_state_functions, SciPyIntegrateNex
 from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
 from prog_models.utils.serialization import *
 from prog_models.utils.size import getsizeof
-from prog_models.exceptions import ProgModelTypeError
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Fix circular import issue in PrognosticsModelParameters init
@@ -82,7 +81,7 @@ class PrognosticsModelParameters(UserDict):
             value: value to set that configuration value to
 
         Raises:
-            ProgModelTypeError: Improper configuration for a model
+            TypeError: Improper configuration for a model
         """
         # Deepcopy is needed here to force copying when value is an object (e.g., dict)
         if _copy:
@@ -99,7 +98,7 @@ class PrognosticsModelParameters(UserDict):
         # This will override the next_state method
         if key == 'integration_method':
             if self._m.is_discrete and self._m.is_state_transition_model:
-                raise ProgModelTypeError(
+                raise TypeError(
                     "Cannot set integration method for discrete model (where next_state is overridden)")
             if isinstance(value, type) and issubclass(value, OdeSolver):
                 # the integration_method is a SciPy Integrator
@@ -114,7 +113,7 @@ class PrognosticsModelParameters(UserDict):
                     next_state_functions[method],
                     self._m)
                 return
-            raise ProgModelTypeError(
+            raise TypeError(
                     f"Unsupported integration method {method}")
         
         if key == 'process_noise' or key == 'process_noise_dist':
@@ -135,7 +134,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
-                    raise ProgModelTypeError("Unsupported process noise distribution")
+                    raise TypeError("Unsupported process noise distribution")
                 
                 if all(value == 0 for value in self['process_noise'].values()):
                     # No noise, use none function
@@ -152,7 +151,7 @@ class PrognosticsModelParameters(UserDict):
                 # Make sure every key is present
                 # (single value already handled above)
                 if not all([key in self['process_noise'] for key in self._m.states]):
-                    raise ProgModelTypeError("Process noise must have every key in model.states")
+                    raise TypeError("Process noise must have every key in model.states")
 
         elif key == 'measurement_noise' or key == 'measurement_noise_dist':
             if callable(self['measurement_noise']):
@@ -171,7 +170,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:
-                    raise ProgModelTypeError("Unsupported measurement noise distribution")
+                    raise TypeError("Unsupported measurement noise distribution")
 
                 if all(value == 0 for value in self['measurement_noise'].values()):
                     # No noise, use none function
@@ -188,7 +187,7 @@ class PrognosticsModelParameters(UserDict):
                 # Make sure every key is present
                 # (single value already handled above)
                 if not all([key in self['measurement_noise'] for key in self._m.outputs]):
-                    raise ProgModelTypeError("Measurement noise must have ever key in model.outputs")
+                    raise TypeError("Measurement noise must have ever key in model.outputs")
 
     def register_derived_callback(self, key : str, callback : Callable) -> None:
         """Register a new callback for derived parameters
