@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from numbers import Number
 import numpy as np
 import sys
-from tensorflow import keras
 from warnings import warn
 
 from prog_models.data_models import DataModel
@@ -531,7 +530,10 @@ class LSTMStateTransitionModel(DataModel):
             # u_mean and u_std act on the column vector form (from inputcontainer)
             # so we need to transpose them to a column vector
             params['normalization'] = (z_mean, z_std)
-        
+
+        # Tensorflow is imported here to avoid importing it if not needed
+        from tensorflow import keras
+
         # Build model
         callbacks = [
             keras.callbacks.ModelCheckpoint("best_model.keras", save_best_only=True)
