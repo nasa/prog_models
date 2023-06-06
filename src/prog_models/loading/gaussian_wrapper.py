@@ -16,9 +16,9 @@ class GaussianNoiseLoadWrapper():
 
     Example
     -------
-    >>> from prog_models.loading import GuassianNoiseLoadWrapper
+    >>> from prog_models.loading import GaussianNoiseLoadWrapper
     >>> m = SomeModel()
-    >>> future_load = GuassianNoiseLoadWrapper(future_load, STANDARD_DEV)
+    >>> future_load = GaussianNoiseLoadWrapper(future_load, STANDARD_DEV)
     >>> m.simulate_to_threshold(future_load)
     """
     def __init__(self, fcn, std):
