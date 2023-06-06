@@ -231,7 +231,7 @@ class TestModels(unittest.TestCase):
         self.assertNotEqual(x['x'], x_default['x'])
 
     def test_integration_type_error(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             # unsupported integration type
             m = LinearThrownObject(integration_method='invalid')
 
@@ -241,7 +241,7 @@ class TestModels(unittest.TestCase):
 
         # Repeat with setting in params
         m = LinearThrownObject()
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             # unsupported integration type
             m.parameters['integration_method'] = 'invalid'
 
@@ -454,7 +454,7 @@ class TestModels(unittest.TestCase):
 
         with self.assertRaises(Exception):
             noise = []
-            m = MockProgModel(**{noise_key: noise})         
+            m = MockProgModel(**{noise_key: noise})
 
         # Test that it ignores process_noise_dist in case where process_noise is a function
         m = MockProgModel(**{noise_key: add_one, dist_key: 'invalid one'})
@@ -462,12 +462,12 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x[keys[0]], 2)
 
         # Invalid dist
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             noise = {key: 0.0 for key in keys}
             m = MockProgModel(**{noise_key: noise, dist_key: 'invalid one'})
 
         # Invalid dist
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             m = MockProgModel(**{noise_key: 0, dist_key: 'invalid one'})
 
         # Valid distributions
@@ -633,13 +633,13 @@ class TestModels(unittest.TestCase):
             return True
         linear_load = lambda t, x=None: m_noevents.InputContainer({'u1': 1})
         (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
-        self.assertListEqual(times, [0, 0.5]) # Only one step
+        self.assertListEqual(times, [0, 0.5])  # Only one step
 
         with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
 
     def test_sim_past_thresh(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
@@ -859,7 +859,7 @@ class TestModels(unittest.TestCase):
         
         ## Check inputs
         config = {'dt': [1, 2]}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'dt': -1}
@@ -867,7 +867,7 @@ class TestModels(unittest.TestCase):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'save_freq': [1, 2]}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'save_freq': -1}
@@ -875,7 +875,7 @@ class TestModels(unittest.TestCase):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'horizon': [1, 2]}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
 
         config = {'horizon': -1}
@@ -883,7 +883,7 @@ class TestModels(unittest.TestCase):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
         
         config = {'thresholds_met_eqn': -1}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
 
         # incorrect number of arguments

@@ -113,7 +113,7 @@ class PrognosticsModelParameters(UserDict):
                     next_state_functions[method],
                     self._m)
                 return
-            raise TypeError(
+            raise ValueError(
                     f"Unsupported integration method {method}")
         
         if key == 'process_noise' or key == 'process_noise_dist':
@@ -134,7 +134,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'process_noise_dist' in self and self['process_noise_dist'].lower() not in process_noise_functions:
-                    raise TypeError("Unsupported process noise distribution")
+                    raise ValueError(f"Unsupported process noise distribution {self['process_noise_dist']}")
                 
                 if all(value == 0 for value in self['process_noise'].values()):
                     # No noise, use none function
@@ -151,7 +151,7 @@ class PrognosticsModelParameters(UserDict):
                 # Make sure every key is present
                 # (single value already handled above)
                 if not all([key in self['process_noise'] for key in self._m.states]):
-                    raise TypeError("Process noise must have every key in model.states")
+                    raise ValueError("Process noise must have every key in model.states")
 
         elif key == 'measurement_noise' or key == 'measurement_noise_dist':
             if callable(self['measurement_noise']):
@@ -170,7 +170,7 @@ class PrognosticsModelParameters(UserDict):
                 
                 # Process distribution type
                 if 'measurement_noise_dist' in self and self['measurement_noise_dist'].lower() not in measurement_noise_functions:
-                    raise TypeError("Unsupported measurement noise distribution")
+                    raise ValueError(f"Unsupported measurement noise distribution {self['measurement_noise_dist']}")
 
                 if all(value == 0 for value in self['measurement_noise'].values()):
                     # No noise, use none function
@@ -187,7 +187,7 @@ class PrognosticsModelParameters(UserDict):
                 # Make sure every key is present
                 # (single value already handled above)
                 if not all([key in self['measurement_noise'] for key in self._m.outputs]):
-                    raise TypeError("Measurement noise must have ever key in model.outputs")
+                    raise ValueError("Measurement noise must have ever key in model.outputs")
 
     def register_derived_callback(self, key : str, callback : Callable) -> None:
         """Register a new callback for derived parameters

@@ -843,28 +843,28 @@ class PrognosticsModel(ABC):
         
         # Configuration validation
         if not isinstance(config['dt'], (Number, tuple, str)) and not callable(config['dt']):
-            raise ValueError("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+            raise TypeError("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
             raise ValueError("'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number) and not isinstance(config['save_freq'], tuple):
-            raise ValueError("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+            raise TypeError("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if (isinstance(config['save_freq'], Number) and config['save_freq'] <= 0) or \
             (isinstance(config['save_freq'], tuple) and config['save_freq'][1] <= 0):
             raise ValueError("'save_freq' must be positive, was {}".format(config['save_freq']))
         if not isinstance(config['save_pts'], abc.Iterable):
-            raise ValueError("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
+            raise TypeError("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
         if not isinstance(config['horizon'], Number):
-            raise ValueError("'horizon' must be a number, was a {}".format(type(config['horizon'])))
+            raise TypeError("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
             raise ValueError("'horizon' must be positive, was {}".format(config['horizon']))
         if config['x'] is not None and not all([state in config['x'] for state in self.states]):
             raise ValueError("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
-            raise ValueError("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
+            raise TypeError("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
         if 'thresholds_met_eqn' in config and config['thresholds_met_eqn'].__code__.co_argcount != 1:
             raise ValueError("'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
         if not isinstance(config['print'], bool):
-            raise ValueError("'print' must be a bool, was a {}".format(type(config['print'])))
+            raise TypeError("'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
         t = config['t0']
@@ -1370,7 +1370,7 @@ class PrognosticsModel(ABC):
 
         # Validate user inputs
         if not isinstance(load_functions, abc.Iterable):
-            raise ValueError(f"load_functions must be a list or list-like object, was {type(load_functions)}")
+            raise TypeError(f"load_functions must be a list or list-like object, was {type(load_functions)}")
 
         if len(load_functions) <= 0:
             raise ValueError("load_functions must contain at least one element")
