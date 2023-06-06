@@ -25,7 +25,7 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.generate_surrogate(None)
         with self.assertRaises(ValueError):
             m.generate_surrogate([])
@@ -64,6 +64,7 @@ class TestSurrogate(unittest.TestCase):
     
     def test_surrogate_basic_thrown_object(self):
         m = ThrownObject(process_noise=0, measurement_noise=0)
+
         def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
