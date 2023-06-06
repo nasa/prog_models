@@ -31,7 +31,7 @@ class MovingAverage():
         self.values = {}
         self.index = 0
 
-    def add_load(self, input: InputContainer):
+    def add_load(self, input):
         """
         Add a load to the moving average
 
@@ -44,7 +44,7 @@ class MovingAverage():
             self.values[key][self.index] = value
         self.index = (self.index + 1) % self.window
 
-    def __call__(self, t: float, x: StateContainer = None):
+    def __call__(self, t: float, x=None):
         """
         Return the average of the values in the window
 
@@ -80,7 +80,7 @@ class GuassianNoiseLoadWrapper():
         self.fcn = fcn
         self.std = std
 
-    def __call__(self, t: float, x: StateContainer = None) -> InputContainer:
+    def __call__(self, t: float, x=None):
         """
         Return the load with noise added
 
