@@ -167,9 +167,8 @@ def euclidean_distance_point_vector(point, vector):
     :param point:   n x 1 array
     :param vector:  m x n array
     """
-    d = 0.0
-    for i in range(len(point)):
-        d += abs(point[i] - vector[:, i])**2.0
+    point_rep = np.repeat(point.reshape((1,-1)), repeats=vector.shape[0], axis=0)
+    d         = np.sum(abs(point_rep - vector)**2.0, axis=1)
     return np.sqrt(d)
 
     
@@ -237,7 +236,6 @@ def gen_heading_angle(lat, lon, alt):
     :param alt:             ft or m, n x 1, altitude points
     :return:                rad, n x 1, heading angle to follow the input points
     """
-    print('Generating heading angle ', end=" ")
     # Compute heading using lat-lon coordinates
     # -----------------------------------------
     # This heading is calculated from North, while reference frame is ENU (East-North-Up), therefore, the first direction is EAST, not NORTH.
@@ -250,8 +248,6 @@ def gen_heading_angle(lat, lon, alt):
     # ---------------------------------------------------------------------------
     # Select the sign of the angle based on the shortest rotation the UAV is supposed to move
     head = heading_adjust_rotation(head)
-
-    print('complete.')
     return head
 
 def heading_adjust_first_nonzero(heading, altitude):
@@ -316,24 +312,6 @@ def heading_compute_geodetic(lat, lon):
         heading[jj - 1] = head_temp
     heading[-1] = heading[-2]
     return heading
-
-def transform_from_cart_to_geo(cartesian_matrix, lat0, lon0, alt0):
-    """
-    Transform coordinates from cartesian reference frame to geodetic reference frame.
-    The transformation requires a first point on the sphere defined by lat0, lon0, alt0.
-
-    :param cartesian_matrix:        n x 3 matrix including x, y, and z, coordinates in ENU reference frame, organized by columns
-    :param lat0:                    rad, latitude of initial point 
-    :param lon0:                    rad, longitude of initial point 
-    :param alt0:                    rad, altitude of initial point 
-    :return:                        n x 3 matrix including lat, lon, and alt organized by columns.
-    """
-    coord = Coord(lat0=lat0, lon0=lon0, alt0=alt0)
-    geodetic_matrix = np.zeros((len(cartesian_matrix[:,0]), 3))
-    geodetic_matrix[:, 0], geodetic_matrix[:, 1], geodetic_matrix[:, 2] = coord.enu2geodetic(cartesian_matrix[:,0],
-                                                                                             cartesian_matrix[:,1],
-                                                                                             cartesian_matrix[:,2])
-    return geodetic_matrix
 
 
 # Coordinate class

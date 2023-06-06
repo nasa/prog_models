@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd 
 
-from prog_models.utils.traj_gen import trajectory_gen as traj_gen
+# from prog_models.utils.traj_gen import trajectory_gen as traj_gen
+from prog_models.utils.traj_gen_utils import trajectory
 from prog_models.models.uav_model import SmallRotorcraft
 from prog_models.loading.controllers import LQR_I, LQR
 
@@ -16,7 +17,7 @@ def run_example():
 
     # Define vehicle information:
     vehicle_params = {
-        'dt': 0.1, 
+        'dt': 0.05, 
         'vehicle_model': 'tarot18', 
         'process_noise': 0,
         'measurement_noise': 0
@@ -35,24 +36,29 @@ def run_example():
         # Ex: generate a csv file with columns lat_deg, lon_deg, alt_ft, then use pd.read_csv(filename) to convert 
         # this to a dataframe for use in the trajectory generation 
     waypoints = {}
-    waypoints['lat_deg']   = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
-    waypoints['lon_deg']   = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
-    waypoints['alt_ft']    = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
+    waypoints['lat_deg'] = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
+    waypoints['lon_deg'] = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
+    waypoints['alt_ft']  = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
     waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
-
-    # Convert waypoints to pandas dataframe
-    waypoints_pd = pd.DataFrame(waypoints)
-
-    # Calculate reference trajectory; include reference trajectory parameter definitions, if desired 
-    ref_traj = traj_gen(waypoints=waypoints_pd, vehicle=vehicle, nurbs_order=4)
+    
+    # Generate trajectory
+    # =====================
+    import datetime as dt
+    # Generate trajectory object and pass the route (waypoints, ETA) to it
+    traj = trajectory.Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
+                                 lon=waypoints['lon_deg'] * np.pi/180.0, 
+                                 alt=waypoints['alt_ft'] * 0.3048, 
+                                 takeoff_time = dt.datetime.fromtimestamp(waypoints['time_unix'][0]), 
+                                 etas=[dt.datetime.fromtimestamp(waypoints['time_unix'][ii]) for ii in range(len(waypoints['time_unix']))],
+                                 vehicle_model=vehicle.parameters['vehicle_model']) 
+    ref_traj = traj.generate(dt = vehicle.parameters['dt'])
 
     # Define controller and build scheduled control. The controller acts as a future_loading function when simulating
     ctrl = LQR(ref_traj, vehicle)
-    ctrl.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
-
+    
     # Set simulation options 
     options = {
-        'dt': 0.1, 
+        'dt': vehicle_params['dt'], 
         'save_freq': vehicle_params['dt']
     }
 
@@ -65,29 +71,25 @@ def run_example():
     # EXAMPLE 2: 
     # In this example, we define another trajectory through the same waypoints but with speeds defined instead of ETAs
     del waypoints['time_unix'] # Delete ETAs for this example
-
-    # Convert dictionary to Pandas DataFrame
-    waypoints_pd_speeds = pd.DataFrame(waypoints)
-
-    # If ETAs are not provided, speeds must be defined in reference trajectory parameters 
-    ref_params = {
-        'nurbs_order': 4,
-        'cruise_speed': 8.0,
-        'ascent_speed': 2.0,
-        'descent_speed': 3.0,
-        'landing_speed': 2
-    }
-
-    # Re-calculate reference trajectory 
-    ref_traj_speeds = traj_gen(waypoints_pd_speeds, vehicle, **ref_params)
+    
+    # Generate trajectory object and pass the route (waypoints, ETA) to it
+    traj_speed = trajectory.Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
+                                       lon=waypoints['lon_deg'] * np.pi/180.0, 
+                                       alt=waypoints['alt_ft'] * 0.3048, 
+                                       takeoff_time = dt.datetime.now(),
+                                       cruise_speed=8.0,
+                                       ascent_speed=2.0,
+                                       descent_speed=3.0,
+                                       landing_speed=2.0,
+                                       vehicle_model=vehicle.parameters['vehicle_model']) 
+    ref_traj_speeds = traj_speed.generate(dt = vehicle.parameters['dt'])
 
     # Define controller and build scheduled control. This time we'll use LQR_I
     ctrl_speeds = LQR_I(ref_traj_speeds, vehicle)
-    ctrl_speeds.build_scheduled_control(vehicle.linear_model, input_vector=[vehicle.parameters['steadystate_input']])
-
+    
     # Set simulation options 
     options = {
-        'dt': 0.1, 
+        'dt': vehicle_params['dt'], 
         'save_freq': vehicle_params['dt']
     }
 
@@ -117,7 +119,7 @@ def run_example():
 
     # Define simulation parameters - note that we must define t0 as start_time since we are not starting at the default of t0 = 0
     options = {
-        'dt': 0.1, 
+        'dt': vehicle_params['dt'], 
         'save_freq': vehicle_params['dt'],
         't0': start_time
     }

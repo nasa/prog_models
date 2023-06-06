@@ -89,8 +89,7 @@ class LQR():
         
         # Default control parameters
         # --------------------------------
-        self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
-                               Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
+        self.parameters = dict(Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
                                R=np.diag([500, 4000, 4000, 4000]), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
                                scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
                                index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
@@ -106,6 +105,10 @@ class LQR():
         # Initialize control gain storage matrix:
         # ---------------------------------------
         self.control_gains = np.zeros((self.n_inputs, self.n_states, 1))
+
+        # Build and store control matrices for scheduling
+        # --------------------------------------------------
+        self.build_scheduled_control(vehicle.linear_model, input_vector=[self.ss_input])
 
     def __call__(self, t, x=None):
 
@@ -168,28 +171,52 @@ class LQR():
 
         print('Control gain matrices complete.')
 
+
 class LQR_I(LQR):
     """ Linear Quadratic Regulator with Integral Effect"""
 
     def __init__(self, x_ref, vehicle, **kwargs):
+        # Check correct arguments:
+        if not isinstance(x_ref, dict):
+            raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
+        for vals in x_ref.values():
+            if not isinstance(vals, np.ndarray):
+                raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
 
-        super().__init__(x_ref, vehicle, **kwargs)
-
+        
         self.type      = 'LQR_I'                # type of controller
+        self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
+        self.n_states  = len(self.states) - 2   # number of states (minus two to remove time and mission_complete)
+        self.inputs    = vehicle.inputs         # input variables of the system to be controlled
+        self.n_inputs  = len(self.inputs) - 1   # number of inputs (minus one to remove mission_complete)
+        self.ref_traj  = x_ref                  # reference state to follow during simulation (x_ref, y_ref, z_ref, phi_ref, theta_ref, psi_ref, ...)
+        self.ss_input  = vehicle.parameters['steadystate_input']
+        self.vehicle_max_thrust = vehicle.dynamics['max_thrust']
+
         self.outputs   = vehicle.outputs[:3]    # output variables of the system to be controlled (x, y, z only)
         self.n_outputs = 3                      # number of outputs
         self.err_hist  = []                     # error history (integral)
 
         # Default control parameters
         # --------------------------------
-        self.parameters = dict(int_lag=100,             # error integral length: how far back in time to compute integral error
-                               Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
-                               R=np.diag([500, 4000, 4000, 4000]), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
-                               qi=np.array([100, 100, 1000]),   # integral error penalty: how much the error history is contributing to the overall error
+        self.parameters = dict(Q = np.diag([1.e3, 1.e3, 1.e6,  # x, y, z
+                                            5.e5, 5.e5, 15.e3,  # phi, theta, psi,
+                                            2.e2, 2.e2, 1.e2,  # vx, vy, vz,
+                                            5.e4, 5.e4, 1.e4]),  # p, q, r
+                               R = np.diag([200, 4e3, 4e3, 4e3]), # T, Mx, My, Mz
+                               qi = np.array([100, 100, 500]),
+                               int_lag = 200,
                                scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
                                index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
         self.parameters.update(kwargs)                  # update control parameters according to user
 
+        # Get scheduled variable index 
+        self.parameters['index_scheduled_var'] = self.states.index(self.parameters['scheduled_var'])
+
+        # Initialize other controller-related variables
+        # ---------------------------------------------
+        self.dt = vehicle.parameters['dt']
+        
         # Initialize other controller-related variables
         # ---------------------------------------------
         self.C = np.zeros((self.n_outputs, self.n_states))
@@ -207,6 +234,10 @@ class LQR_I(LQR):
         # Control gain storage matrix:
         # -----------------------------
         self.control_gains = np.zeros((self.n_inputs, self.n_states + self.n_outputs, 1))
+
+        # Build and store control matrices for scheduling
+        # --------------------------------------------------
+        self.build_scheduled_control(vehicle.linear_model, input_vector=[self.ss_input])
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""

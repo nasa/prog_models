@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
-from prog_models.utils.traj_gen_utils import route, trajectory
+from prog_models.utils.traj_gen_utils import trajectory
 
 def trajectory_gen(waypoints=None, vehicle=None, **params):
     """
@@ -110,57 +110,37 @@ def trajectory_gen(waypoints=None, vehicle=None, **params):
     alt = flightplan['alt_m']
     tstamps = flightplan['timestamp']
 
-    # Generate route
-    # ==============
-    if len(tstamps) > 1:
-        # Case 1: ETAs specified 
-        # Check if speeds have also been defined and warn user if so:
-        has_speed = (parameters['cruise_speed'] is not None or parameters['ascent_speed'] is not None or parameters['descent_speed'] is not None)
-        if has_speed:
-            warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent) instead, do not specify ETAs.")
-        route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                etas=tstamps,  # ETAs override any cruise/ascent/descent speed requirements. Do not feed ETAs if want to use desired speeds values.
-                                vehicle_max_speed = parameters['vehicle_max_speed'],
-                                parameters = parameters)
-    else: 
-        # Case 2: ETAs not specified; speeds must be provided  
-        # Check that speeds have been provided:
-        has_all_speed = (parameters['cruise_speed'] is None or parameters['ascent_speed'] is None or parameters['descent_speed'] is None or parameters['landing_speed'] is None)
-        if has_all_speed:
-            raise TypeError("ETAs or speeds must be provided. If ETAs are not defined, desired speed (cruise, ascent, descent, landing) must be provided.")  
-        # Build route (set of waypoints with associated time) using latitude, longitude, altitude, initial time stamp (takeoff time), and desired speed.
-        route_ = route.build(lat=lat, lon=lon, alt=alt, departure_time=tstamps[0],
-                                parameters = parameters) 
-
     # Generate trajectory
     # =====================
-    # ref_traj = trajectory.Trajectory(route=route_) # Generate trajectory object and pass the route (waypoints, ETA) to it
-    ref_traj = trajectory.Trajectory(route=route_, lat=lat, lon=lon, alt=alt, takeoff_time=tstamps[0], etas=tstamps) # Generate trajectory object and pass the route (waypoints, ETA) to it
-    weight_vector=np.array([parameters['waypoint_weights'],]*len(route_.lat))      # Assign weights to each waypoint. Increase value of 'waypoint_weights' to generate a sharper-corner trajectory
-    ref_traj.generate(
-                    dt=parameters['dt'],                                 # assign delta t for simulation
-                    nurbs_order=parameters['nurbs_order'],               # NURBS order, higher the order, smoother the derivatiges of trajectory's position profile
-                    gravity=parameters['gravity'],                       # m/s^2, gravity magnitude
-                    weight_vector=weight_vector,                              # weight of waypoints, defined ealier from 'waypoint_weights'
-                    nurbs_basis_length=parameters['nurbs_basis_length'], # how long each basis polynomial should be. Used to avoid numerical issues. This is rarely changed.
-                    max_phi=parameters['vehicle_max_roll'],                   # rad, allowable roll for the aircraft
-                    max_theta=parameters['vehicle_max_pitch'])                # rad, allowable pitch for the aircraft
-    
+    ref_traj = trajectory.Trajectory(gravity=parameters['gravity'],                       # m/s^2, gravity magnitude
+                                     lat=lat, 
+                                     lon=lon, 
+                                     alt=alt, 
+                                     takeoff_time=tstamps[0], 
+                                     etas=tstamps) # Generate trajectory object and pass the route (waypoints, ETA) to it
+
+    traj_profile = ref_traj.generate(dt=parameters['dt'],                                 # assign delta t for simulation
+                                     nurbs_order=parameters['nurbs_order'],               # NURBS order, higher the order, smoother the derivatiges of trajectory's position profile
+                                     nurbs_basis_length=parameters['nurbs_basis_length'], # how long each basis polynomial should be. Used to avoid numerical issues. This is rarely changed.
+                                     max_phi=parameters['vehicle_max_roll'],                   # rad, allowable roll for the aircraft
+                                     max_theta=parameters['vehicle_max_pitch'])                # rad, allowable pitch for the aircraft
+
+    x_ref = ref_traj.return_state(parameters['vehicle_model'])
     if parameters['vehicle_model'] == 'tarot18' or parameters['vehicle_model'] == 'djis1000':
         x_ref = {}
-        x_ref['x'] = ref_traj.cartesian_pos[:,0]
-        x_ref['y'] = ref_traj.cartesian_pos[:,1]
-        x_ref['z'] = ref_traj.cartesian_pos[:,2]
-        x_ref['phi'] = ref_traj.attitude[:,0]
-        x_ref['theta'] = ref_traj.attitude[:,1]
-        x_ref['psi'] = ref_traj.attitude[:,2]
-        x_ref['vx'] = ref_traj.velocity[:,0]
-        x_ref['vy'] = ref_traj.velocity[:,1]
-        x_ref['vz'] = ref_traj.velocity[:,2]
-        x_ref['p'] = ref_traj.angular_velocity[:,0]
-        x_ref['q'] = ref_traj.angular_velocity[:,1]
-        x_ref['r'] = ref_traj.angular_velocity[:,2]
-        x_ref['t'] = ref_traj.time
+        x_ref['x'] = traj_profile['position'][:,0]
+        x_ref['y'] = traj_profile['position'][:,1]
+        x_ref['z'] = traj_profile['position'][:,2]
+        x_ref['phi'] = traj_profile['attitude'][:,0]
+        x_ref['theta'] = traj_profile['attitude'][:,1]
+        x_ref['psi'] = traj_profile['attitude'][:,2]
+        x_ref['vx'] = traj_profile['velocity'][:,0]
+        x_ref['vy'] = traj_profile['velocity'][:,1]
+        x_ref['vz'] = traj_profile['velocity'][:,2]
+        x_ref['p'] = traj_profile['angVel'][:,0]
+        x_ref['q'] = traj_profile['angVel'][:,1]
+        x_ref['r'] = traj_profile['angVel'][:,2]
+        x_ref['t'] = traj_profile['time']
     else: 
         raise TypeError("Reference trajectory format is not yet configured for this vehicle type.")
 
