@@ -12,6 +12,7 @@ from typing import Callable, Iterable, List, Sequence
 from warnings import warn
 
 from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
+from prog_models.loading import Piecewise
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar
 from prog_models.utils import calc_error
@@ -760,6 +761,8 @@ class PrognosticsModel(ABC):
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : list[float], optional
             Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
+        eval_pts : list[float], optional
+            Additional ordered list of custom times where simulation is guarenteed to be evaluated (though results are not saved, as with save_pts) when dt is auto (s), e.g., eval_pts= [50, 75] \n
         horizon : float, optional
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : OutputContainer, optional
@@ -833,6 +836,7 @@ class PrognosticsModel(ABC):
         config = {  # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
+            'eval_pts': [],
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100,  # Default horizon (in s), essentially inf
@@ -928,6 +932,8 @@ class PrognosticsModel(ABC):
         next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
+        eval_pt_index = 0
+        eval_pts = config['eval_pts'].copy()  # Copy because we may change it
 
         # configure optional intermediate printing
         if config['print']:
@@ -971,9 +977,13 @@ class PrognosticsModel(ABC):
             def next_time(t, x):
                 return dt
         elif dt_mode == 'auto':
-            def next_time(t, x):
+            if isinstance(future_loading_eqn, Piecewise):
+                eval_pts.extend(future_loading_eqn.times)
+                eval_pts = sorted(eval_pts)
+            def next_time(t, x=None):
                 next_save_pt = save_pts[save_pt_index] if save_pt_index < len(save_pts) else float('inf')
-                return min(dt, next_save-t, next_save_pt-t)
+                next_eval_pt = eval_pts[eval_pt_index] if eval_pt_index < len(eval_pts) else float('inf')
+                return min(dt, next_save-t, next_save_pt-t, next_eval_pt-t)
         elif dt_mode != 'function':
             raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
@@ -1013,14 +1023,14 @@ class PrognosticsModel(ABC):
             self.parameters['integration_method'] = config['integration_method']
        
         while t < horizon:
-            dt = next_time(t, x)
-            t = t + dt/2
+            dt_i = next_time(t, x)
+            t = t + dt_i/2
             # Use state at midpoint of step to best represent the load during the duration of the step
             # This is sometimes referred to as 'leapfrog integration'
             u = load_eqn(t, x)
-            t = t + dt/2
-            x = next_state(x, u, dt)
-            x = apply_noise(x, dt)
+            t = t + dt_i/2
+            x = next_state(x, u, dt_i)
+            x = apply_noise(x, dt_i)
             x = apply_limits(x)
 
             # Save if at appropriate time
@@ -1035,6 +1045,10 @@ class PrognosticsModel(ABC):
                 # Otherwise save_pt_index would be out of range
                 save_pt_index += 1
                 update_all()
+            elif (eval_pt_index < len(eval_pts)) and (t >= eval_pts[eval_pt_index]):
+                # (eval_pt_index < len(eval_pts)) covers when t is past the last evaluation point
+                # Otherwise eval_pt_index would be out of range
+                eval_pt_index += 1
 
             # Update progress bar
             if config['progress']:
