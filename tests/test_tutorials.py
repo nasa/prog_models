@@ -21,7 +21,7 @@ def main():
     result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
 
     if not result:
-        raise Exception("Failed test") 
+        raise Exception("Failed test")
 
 if __name__ == '__main__':
     main()

@@ -7,7 +7,6 @@ import sys
 import unittest
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
-from prog_models import ProgModelTypeError
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
@@ -88,7 +87,7 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self._checks(c1)
 
     def test_broken_init(self):
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(TypeError):
             DictLikeMatrixWrapper(['a', 'b'], [1, 2])
 
     def test_pickle(self):
@@ -97,9 +96,6 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
         self.assertTrue((c2.matrix == np.array([[1], [2]])).all())
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
