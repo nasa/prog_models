@@ -1,14 +1,13 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections import UserDict
+from collections import UserDict, abc
 from copy import deepcopy
 import json
 from numbers import Number
 import numpy as np
 from scipy.integrate import OdeSolver
 import types
-from typing import Callable
 
 from prog_models.utils.next_state import next_state_functions, SciPyIntegrateNextState
 from prog_models.utils.noise_functions import measurement_noise_functions, process_noise_functions
@@ -190,7 +189,7 @@ class PrognosticsModelParameters(UserDict):
                 if not all([key in self['measurement_noise'] for key in self._m.outputs]):
                     raise ValueError("Measurement noise must have ever key in model.outputs")
 
-    def register_derived_callback(self, key : str, callback : Callable) -> None:
+    def register_derived_callback(self, key: str, callback: abc.Callable) -> None:
         """Register a new callback for derived parameters
 
         Args:
