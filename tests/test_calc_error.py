@@ -29,8 +29,9 @@ class TestCalcError(unittest.TestCase):
                    {'x': 94.31711597903195}, {'x': 92.22337598299377}, {'x': 87.67210201789473}, {'x': 80.62858869729064}, {'x': 71.10796509926787}, 
                    {'x': 59.19579056829866}, {'x': 44.79567793740186}, {'x': 27.97245305860176}, {'x': 8.736607826437163}, {'x': -12.879687324031048}]
 
-        # Compare calc_error DTW method to another validated DTW algorithm 
-        self.assertEqual(m.calc_error(times, inputs, outputs, method = 'dtw'), 4.8146507570483195)
+        # Compare calc_error DTW method to another validated DTW algorithm
+        value = m.calc_error(times, inputs, outputs, method = 'dtw')
+        self.assertEqual(value, 4.8146507570483195)
 
         # Testing case of inconsistent simulation of data (values from times and outputs have been deleted to substantially increase error)
         times = [0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.5, 7.5, 8.0, 8.5, 9.0]

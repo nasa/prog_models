@@ -459,6 +459,9 @@ def DTW(m, times, inputs, outputs, **kwargs):
     def dtw_helper(data):
         """
         Helper function to take in given data (simulated and observed), and then transform it such that the function fastdtw can use it.
+
+        Describe the format of transform:
+        
         """
         transform = []
         for index in data:
