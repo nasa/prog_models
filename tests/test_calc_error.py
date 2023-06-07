@@ -14,7 +14,7 @@ class TestCalcError(unittest.TestCase):
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
     def test_calc_error(self):
-        # Note, lowering time steps or increasing simulate threshold may cause this model to not run (takes too long)
+        # Note: decreasing dt or increasing the time to simulate to will increase computation time
         m = BatteryElectroChemEOD()
 
         options = {
@@ -122,11 +122,6 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
                      dt = 1, stability_tol=70)
-        # self.assertEqual(
-        #     'Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. '
-        #     'Cutoff threshold is 1900.0, or roughly 95.0% of the data',
-        #     str(cm.exception)
-        # )
         # Rerunning params estimate would not change the results
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')
