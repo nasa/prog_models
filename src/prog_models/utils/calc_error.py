@@ -465,8 +465,8 @@ def DTW(m, times, inputs, outputs, **kwargs):
         Then would be transformed to something like:
             [[2.83, 0.0], [22.83, 0.5], [40.3775, 1.0], [55.4725, 1.5], [68.115, 2.0], ...]
         
-        Note that the helper function also adds 'time' to each of the indices to account for any data that may not necessarily be recorded
-        at a consistent rate.
+        Note that the helper function also adds 'time' to each of the indices to account for any data that may not necessarily be 
+        recorded at a consistent rate.
         """
         transform = []
         for index in data:
