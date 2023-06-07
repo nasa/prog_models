@@ -460,8 +460,13 @@ def DTW(m, times, inputs, outputs, **kwargs):
         """
         Helper function to take in given data (simulated and observed), and then transform it such that the function fastdtw can use it.
 
-        Describe the format of transform:
+        The data would start by looking like:
+            [{'x': 2.83}, {'x': 22.83}, {'x': 40.3775}, {'x': 55.4725}, {'x': 68.115}, ...]
+        Then would be transformed to something like:
+            [[2.83, 0.0], [22.83, 0.5], [40.3775, 1.0], [55.4725, 1.5], [68.115, 2.0], ...]
         
+        Note that the helper function also adds 'time' to each of the indices to account for any data that may not necessarily be recorded
+        at a consistent rate.
         """
         transform = []
         for index in data:
@@ -469,6 +474,8 @@ def DTW(m, times, inputs, outputs, **kwargs):
             for key in index.keys():
                 inner_list.append(index.get(key))
             transform.append(inner_list)
+        for i, t in enumerate(times):
+            transform[i].append(t)
         return transform
     simulated, observed = dtw_helper(simulated), dtw_helper(outputs)
     distance, path = fastdtw(simulated, observed, dist=euclidean)
