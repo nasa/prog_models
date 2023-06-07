@@ -75,6 +75,7 @@ class TestEstimateParams(unittest.TestCase):
         """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
         # Reset some parameters
@@ -513,6 +514,7 @@ class TestEstimateParams(unittest.TestCase):
         """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
         m.parameters['thrower_height'] = 1.5
@@ -589,6 +591,7 @@ class TestEstimateParams(unittest.TestCase):
 
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
+        data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
         # Now lets reset some parameters with a method call
@@ -1047,9 +1050,6 @@ class TestEstimateParams(unittest.TestCase):
         self.assertNotEqual(override1, override3)
         self.assertEqual(override2, override3)
 
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

@@ -311,28 +311,15 @@ class TestDataModel(unittest.TestCase):
             LSTMStateTransitionModel.from_data([1], [2], validation_split = 1.0)    
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-
 def main():
-    import cProfile, pstats
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
-    profiler = cProfile.Profile()
+    print("\n\nTesting Data Models")
 
-    profiler.enable()
-    result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
-    profiler.disable()
-
-    with open("output_time.txt", 'w') as f:
-        p = pstats.Stats(profiler, stream=f)
-        p.sort_stats("time").print_stats()
-
-    with open("output_calls.txt", 'w') as f:
-        p = pstats.Stats(profiler, stream=f)
-        p.sort_stats("calls").print_stats()
-
+    with patch('matplotlib.pyplot.show'):
+        result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
+    plt.close('all')
+    
     if not result:
         raise Exception("Failed test")
 

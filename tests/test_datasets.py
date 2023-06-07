@@ -37,27 +37,11 @@ class TestDatasets(unittest.TestCase):
     # Testing for successful download located in manual testing files; test_manual.py
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-
 def main():
-    import cProfile, pstats
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Base Models")
-    profiler = cProfile.Profile()
-
-    profiler.enable()
+    print("\n\nTesting Datasets")
     result = runner.run(l.loadTestsFromTestCase(TestDatasets)).wasSuccessful()
-    profiler.disable()
-
-    with open("output_time.txt", 'w') as f:
-        p = pstats.Stats(profiler, stream=f)
-        p.sort_stats("time").print_stats()
-
-    with open("output_calls.txt", 'w') as f:
-        p = pstats.Stats(profiler, stream=f)
-        p.sort_stats("calls").print_stats()
 
     if not result:
         raise Exception("Failed test")
