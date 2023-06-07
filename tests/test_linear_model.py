@@ -481,9 +481,6 @@ class TestLinearModel(unittest.TestCase):
                 }
         # Needs more development; test coverage needs testing of event_state not overridden
 
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
