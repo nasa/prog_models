@@ -1285,7 +1285,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise
 
-        return res   
+        return res
 
 
     def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
