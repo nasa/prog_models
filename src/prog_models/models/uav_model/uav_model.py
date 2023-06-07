@@ -5,9 +5,9 @@ import numpy as np
 from warnings import warn
 
 from prog_models.prognostics_model import PrognosticsModel
-from .vehicles.aero import aerodynamics as aero
-from .vehicles import vehicles
-from prog_models.utils.traj_gen_utils import geometry as geom
+from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
+from prog_models.models.uav_model.vehicles import vehicles
+from prog_models.utils.traj_gen import geometry as geom
 from prog_models.exceptions import ProgModelInputException
 
 # Small Rotorcraft Model
@@ -153,7 +153,7 @@ class SmallRotorcraft(PrognosticsModel):
         elif self.parameters['vehicle_model'].lower() == 'tarot18':   
             self.mass, self.geom, self.dynamics = vehicles.TAROT18(self.parameters['vehicle_payload'], self.parameters['gravity'])
         else:                                                         
-            raise ProgModelInputException("Specified vehicle type is not supported. Only 'tarot18' and 'djis1000' are currently supported.")
+            raise ValueError("Specified vehicle type is not supported. Only 'tarot18' and 'djis1000' are currently supported.")
         
         # Steady-state input value: hover, [weight, 0, 0, 0]
         if self.parameters['steadystate_input'] is None:
@@ -236,7 +236,7 @@ class SmallRotorcraft(PrognosticsModel):
 
         # Based on percentage of reference trajectory completed 
         return {
-                x['mission_complete']
+                'TrajectoryComplete': x['mission_complete']
         }
  
     def output(self, x : dict):
@@ -246,14 +246,8 @@ class SmallRotorcraft(PrognosticsModel):
     def threshold_met(self, x : dict) -> dict:
         
         # Progress through the reference trajectory is saved in the state 'mission_complete' 
-        if x['mission_complete'] >= 1:
-            return {
-                'TrajectoryComplete': True
-            }
-        else:
-            return {
-                'TrajectoryComplete': False 
-            }
+        return {
+            'TrajectoryComplete': x['mission_complete'] >= 1}
 
     def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
 
@@ -270,7 +264,26 @@ class SmallRotorcraft(PrognosticsModel):
         return sim_res
 
     def linear_model(self, phi, theta, psi, p, q, r, T):
-        """ The linear model ignores gyroscopic effect and wind rate of change"""
+        """ 
+        Linearized model of the small rotorcraft 6-dof.
+        The function returns the state-transition matrix A and the input matrix B that forms the linearized model as:
+
+        dx/dt = A x + B u
+
+        where x is the state vector in state-space form (namely x, \dot{x}), u is the input vector containing the thrust and three moments around the vehicle's main body axes.
+        
+        To generate the linearized matrices, only the attitude angles, angular velocities, and thrust are necessary,
+        since the model model ignores gyroscopic effect and wind rate of change. 
+        
+        :param phi:       rad, scalar, dobule, first Euler's angle
+        :param theta:     rad, scalar, dobule, second Euler's angle
+        :param psi:       rad, scalar, dobule, third Euler's angle
+        :param p:         rad/s, scalar, double, roll rate of change
+        :param q:         rad/s, scalar, double, pitch rate of change
+        :param r:         rad/s, scalar, double, yaw rate of change
+        :param T:         N, scalar, double, thrust
+        :return:          Linearized state transition matrix A, n_states x n_states, and linearized input matrix B, n_states x n_inputs
+        """
         m         = self.mass['total']
         Ixx       = self.mass['Ixx']
         Iyy       = self.mass['Iyy']
@@ -333,15 +346,9 @@ class SmallRotorcraft(PrognosticsModel):
 
         import matplotlib.pyplot as plt
 
-        # Conversions
-        # -----------
-        deg2rad = np.pi/180.0
-        rad2deg = 180.0/np.pi
-        
         # Extract reference trajectory information
         # ----------------------------------------
         time        = ref['t'].tolist() 
-        depart_time = time[0]
         ref_x       = ref['x'].tolist() 
         ref_y       = ref['y'].tolist() 
         ref_z       = ref['z'].tolist()

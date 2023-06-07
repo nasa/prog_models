@@ -12,7 +12,7 @@ from prog_models.utils.traj_gen import trajectory_gen as traj_gen
 from prog_models.models.uav_model import SmallRotorcraft 
 from prog_models.loading.controllers import LQR_I, LQR
 from prog_models.exceptions import ProgModelInputException, ProgModelException
-from prog_models.utils.traj_gen_utils import geometry as geom
+from prog_models.utils.traj_gen import geometry as geom
 
 class TestUAVGen(unittest.TestCase):
     

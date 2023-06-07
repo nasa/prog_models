@@ -7,15 +7,22 @@ Auxiliary functions for trajectories and aircraft routes
 
 import datetime as dt
 import numpy as np
-import scipy.interpolate as interp
 import datetime as dt
 
-from prog_models.utils.traj_gen_utils import geometry as geom
+from prog_models.utils.traj_gen import geometry as geom
 from .nurbs import NURBS
 from prog_models.exceptions import ProgModelInputException
 
 
 def linearinterp_t(t0, x0, t1, x1, xp):
+    """
+    Linear interpolation of input xp given two points (t0, x0), (t1, x1)
+    :param t0:          independent variable of first point
+    :param x0:          dependent variable of first point
+    :param t1:          independent variable of second point
+    :param x1:          dependent variable of first point
+    :param xp:          independent variable of query point
+    """
     dx     = x1 - x0
     dt     = t1 - t0
     der    = dx / dt
@@ -154,6 +161,31 @@ class Trajectory():
     This class generates a trajectory object that is used to create a smooth profile including
     position, velocity, acceleration, Euler's angles, and attitude rates.
     The profiles are used to generate the desired state of a vehicle that needs to be followed to complete the trajectory.
+    
+    Input variables:
+            lat                 rad, n x 1 array, doubles, latitude coordinates of waypoints
+            lon                 rad, n x 1 array, doubles, longitude coordinates of waypoints
+            alt                 m, n x 1 array, doubles, altitude coordinates of waypoints
+            takeoff_time        datetime object, scalar, take off time of the trajectory. Default is None.
+            etas                datetime objects, n x 1 array, ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed in-between waypoints.
+
+    Additional kwargs and default values:
+            'gravity': 9.81                     m/s^2, gravity magnitude
+            'vehicle_model': None               -, vehicle model, necessary to generate the correct Euler's angles
+            'max_phi' : 45/180.0*np.pi,         rad, maximum Euler's angle phi
+            'max_theta' : 45/180.0*np.pi        rad, maximum Euler's angle theta
+            'max_iter': 10                      -, maximum number of iterations to adjust the trajectory according to the maximum average jerk
+            'max_avgjerk': 20.0                 m/s^3, maximum average Jerk allowed, if the generated trajectory has a higher value, new, more forgiving ETAs are generated to satisfy this constraint
+            'nurbs_order': 4                    -, order of the NURBS used to generate the position profile
+            'waypoint_weight': 20               -, default weight value associated to all the waypoints. 
+            'weight_vector': None               -, waypoint weight vector. Default is None (all waypoints will have same value from 'waypoint_weight'). If passed, the user can define different weight for each waypoints, such that some waypoints will be approached more closely and some will be approached more smoothly.
+            'nurbs_basis_length': 1000          -, default length of basis funciton used to generate the position profile with the NURBS.
+            
+            'cruise_speed': 6.0                 m/s, desired cruise speed in-between waypoints. If ETAs are provided, this value is ignored.
+            'ascent_speed': 3.0                 m/s, desired ascent speed in-between waypoints. If ETAs are provided, this value is ignored.
+            'descent_speed': 3.0                m/s, desired descent speed in-between waypoints. If ETAs are provided, this value is ignored.
+            'landing_speed': 1.5                m/s, desired landing speed in-between waypoints. This speed is used when the vehicle's altitude is lower than 'landing_altitude' parameter. If ETAs are provided, this value is ignored.
+            'landing_altitude': 10.5            m, landing altitude below which the vehicle is supposed to move at 'landing_speed'
     """
     def __init__(self, 
                  lat, 
@@ -162,10 +194,6 @@ class Trajectory():
                  takeoff_time = None, 
                  etas = None, 
                  **kwargs):
-        """
-        Initialization of trajectory class.
-        """
-
         # Trajectory dictionary to store output
         # -----------------------------------
         self.trajectory = {}
@@ -182,10 +210,13 @@ class Trajectory():
                           'z': None,
                           'eta_unix': None,
                           'heading': None}
-
+        
+        # Assign takeoff time
         if self.waypoints['takeoff_time'] is None:
-            assert self.waypoints['eta'] is not None, "To generate a trajectory, either takeoff_time or a vector of ETAs for each waypoints must be specified."
-            self.waypoints['takeoff_time'] = self.waypoints['eta'][0]
+            if self.waypoints['eta'] is not None:
+                self.waypoints['takeoff_time'] = self.waypoints['eta'][0]
+            else:
+                self.waypoints['takeoff_time'] = dt.datetime.now()
 
         # Generate Heading
         self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
@@ -236,8 +267,8 @@ class Trajectory():
             self.parameters['weight_vector'] = np.asarray([self.parameters['waypoint_weight'],] * len(self.waypoints['x']))
 
 
-    def return_state(self,):
-        
+    @property
+    def ref_traj(self,):
         x_ref = {}
         vehicle_model = self.parameters['vehicle_model'].lower().replace(" ", "")
 
@@ -261,7 +292,7 @@ class Trajectory():
             x_ref['t']     = self.trajectory['time']
 
         else:
-            raise Exception("Variable vehicle_model not recognized.")
+            raise ValueError(f"Unable to generate reference, trajectory. Model type {self.parameters['vehicle_model']} not recognized.")
 
         return x_ref
         
@@ -363,7 +394,7 @@ class Trajectory():
                 self.trajectory['geodetic_pos'][:, 2] = self.coordinate_system.enu2geodetic(self.trajectory['position'][:, 0],
                                                                                             self.trajectory['position'][:, 1],
                                                                                             self.trajectory['position'][:, 2])
-        return self.return_state()
+        return self.ref_traj
 
 
     def __adjust_eta_given_max_acceleration(self, dt):

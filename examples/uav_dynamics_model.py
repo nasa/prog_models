@@ -2,14 +2,12 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Example of generating a trajectory for a small rotorcraft through a set of coarse waypoints 
+Example of generating a trajectory for a small rotorcraft through a set of coarse waypoints, and simulate the rotorcraft flight using a 6-dof model.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd 
 
-# from prog_models.utils.traj_gen import trajectory_gen as traj_gen
-from prog_models.utils.traj_gen_utils import trajectory
+from prog_models.utils.traj_gen import Trajectory
 from prog_models.models.uav_model import SmallRotorcraft
 from prog_models.loading.controllers import LQR_I, LQR
 
@@ -45,15 +43,19 @@ def run_example():
     # =====================
     import datetime as dt
     # Generate trajectory object and pass the route (waypoints, ETA) to it
-    traj = trajectory.Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
-                                 lon=waypoints['lon_deg'] * np.pi/180.0, 
-                                 alt=waypoints['alt_ft'] * 0.3048, 
-                                 takeoff_time = dt.datetime.fromtimestamp(waypoints['time_unix'][0]), 
-                                 etas=[dt.datetime.fromtimestamp(waypoints['time_unix'][ii]) for ii in range(len(waypoints['time_unix']))],
-                                 vehicle_model=vehicle.parameters['vehicle_model']) 
+    traj = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
+                      lon=waypoints['lon_deg'] * np.pi/180.0, 
+                      alt=waypoints['alt_ft'] * 0.3048, 
+                      takeoff_time = dt.datetime.fromtimestamp(waypoints['time_unix'][0]), 
+                      etas=[dt.datetime.fromtimestamp(waypoints['time_unix'][ii]) for ii in range(len(waypoints['time_unix']))],
+                      vehicle_model=vehicle.parameters['vehicle_model']) 
     ref_traj = traj.generate(dt = vehicle.parameters['dt'])
 
     # Define controller and build scheduled control. The controller acts as a future_loading function when simulating
+    # We use a linear quadratic regulator (LQR), which tries to minimize the cost function defined by:
+    # J = \int{ x^T Q x + u^T R u \mathrm{d}t }
+    # Where x is the state vector, u is the input vector, t is time, Q is the state error penalty matrix, and R is the input generation penalty matrix.
+    # The LQR uses a linearized version of the dynamic system (i.e., dxdt = A x + Bu) to find the gain matrix K that minimizes the cost J. 
     ctrl = LQR(ref_traj, vehicle)
     
     # Set simulation options 
@@ -73,18 +75,20 @@ def run_example():
     del waypoints['time_unix'] # Delete ETAs for this example
     
     # Generate trajectory object and pass the route (waypoints, ETA) to it
-    traj_speed = trajectory.Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
-                                       lon=waypoints['lon_deg'] * np.pi/180.0, 
-                                       alt=waypoints['alt_ft'] * 0.3048, 
-                                       takeoff_time = dt.datetime.now(),
-                                       cruise_speed=8.0,
-                                       ascent_speed=2.0,
-                                       descent_speed=3.0,
-                                       landing_speed=2.0,
-                                       vehicle_model=vehicle.parameters['vehicle_model']) 
+    traj_speed = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
+                            lon=waypoints['lon_deg'] * np.pi/180.0, 
+                            alt=waypoints['alt_ft'] * 0.3048, 
+                            takeoff_time = dt.datetime.now(),
+                            cruise_speed=8.0,
+                            ascent_speed=2.0,
+                            descent_speed=3.0,
+                            landing_speed=2.0,
+                            vehicle_model=vehicle.parameters['vehicle_model']) 
     ref_traj_speeds = traj_speed.generate(dt = vehicle.parameters['dt'])
 
-    # Define controller and build scheduled control. This time we'll use LQR_I
+    # Define controller and build scheduled control. This time we'll use LQR_I, which is a linear quadratic regulator with integral action.
+    # The integral action has the same purpose of "I" in PI or PID controllers, which is to minimize offset errors in the variable of interests.
+    # This version of LQR_I compensate for integral errors in the position of the vehicle, i.e., x, y, z variables of the state vector.
     ctrl_speeds = LQR_I(ref_traj_speeds, vehicle)
     
     # Set simulation options 
@@ -134,6 +138,8 @@ def run_example():
     fig, ax = plt.subplots()
     ax.plot(traj_results.times, z_1, '-b', label='Example 1')
     ax.plot(traj_results_interval.times, z_4, '--r', label='Example 3')
+    ax.set_xlabel('time, s', fontsize=14)
+    ax.set_ylabel('altitude, m', fontsize=14)
     ax.legend()
 
 # This allows the module to be executed directly 
