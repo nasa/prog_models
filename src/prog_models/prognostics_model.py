@@ -1157,10 +1157,6 @@ class PrognosticsModel(ABC):
             less_2_error = f"Must provide at least 2 data points for times, inputs, and outputs" \
                            f"{(' at data location (' + str(_loc) + ').' if _loc is not None else '')}"
             raise ValueError(less_2_error)
-    
-        x = kwargs.get('x0', self.initialize(inputs[0], outputs[0]))
-        dt = kwargs.get('dt', 1e99)
-        stability_tol = kwargs.get('stability_tol', 0.95)
 
         # Determines if all values of arguments are iterables
         self.check_iterable(times, 'times', loc=_loc) if _loc is not None else self.check_iterable(times, 'times')
@@ -1176,7 +1172,10 @@ class PrognosticsModel(ABC):
                 run_updated = str(r) if _loc is None else _loc + f', {str(r)}'
                 error.append(self.calc_error(t, i, z, _loc=run_updated, **kwargs))
             return sum(error)/len(error)
-        
+            
+        dt = kwargs.get('dt', 1e99)
+        stability_tol = kwargs.get('stability_tol', 0.95)
+
         # Checks stability_tol is within bounds
         # Throwing a default after the warning.
         if not isinstance(stability_tol, Number):
@@ -1191,8 +1190,8 @@ class PrognosticsModel(ABC):
         if dt <= 0:
             raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
         
-        if 'x0' in kwargs.keys() and not isinstance(x, (self.StateContainer, dict)):
-            raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(x).__name__}.")
+        if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
+            raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(kwargs['x0']).__name__}.")
         
         return method(self, times, inputs, outputs, **kwargs)
 

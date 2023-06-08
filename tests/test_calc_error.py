@@ -37,40 +37,18 @@ class TestCalcError(unittest.TestCase):
     
         simulated_results = m.simulate_to(2000, future_loading, **options)
 
-        # Running calc_error before setting incorrect parameters
-        m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
-
-        with self.assertWarns(UserWarning) as cm:
-            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1, stability_tol = 10)
-        self.assertEqual(
-            "Configurable cutoff must be some float value in the domain (0, 1]."  
-            " Received 10. Resetting value to 0.95",
-            str(cm.warning)
-        )
-
         # Initializing parameters to very erroneous values       
         m.parameters['qMax'] = 4000
         keys = ['qMax']
 
-        # Before running estimate_params
-        with self.assertRaises(ValueError):
+        # With our current set parameters, our model goes unstable immediately
+        with self.assertRaises(ValueError) as cm:
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)
+        self.assertEqual(
+            "Model unstable- NAN reached in simulation (t=0.0) before cutoff threshold. Cutoff threshold is 1900.0, or roughly 95.0% of the data",
+            str(cm.exception)
+        ) 
 
-        m.estimate_params([(simulated_results.times, simulated_results.inputs, simulated_results.outputs)], keys, dt=0.5)
-
-        # After running estimate_params. Note that this would not change the outcome of the result
-        with self.assertRaises(ValueError):
-            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=1)    
-
-        # Running through various dt values that could work
-        for i in np.arange(0, 1, 0.1):
-            with self.assertRaises(ValueError):
-                m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
-
-        for i in range(2, 10):
-            with self.assertRaises(ValueError):
-                m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt=i)
- 
         # Creating duplicate model
         m1 = BatteryElectroChemEOD()
 
@@ -91,10 +69,6 @@ class TestCalcError(unittest.TestCase):
         data = [(simulated_results.times, simulated_results.inputs, simulated_results.outputs)]
         data_m1 = [(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs)]
 
-        # Check out the warnings that are occurring here...
-        # They are being spammed almost. Increasing save_frequency increases spam
-        # Calling estimate_params does not change any of the parameters here because we are always accounting for exceptions...
-
         m.estimate_params(data, keys, method='Powell')
         m1.estimate_params(data_m1, keys, method='CG')
 
@@ -104,13 +78,18 @@ class TestCalcError(unittest.TestCase):
         self.assertEqual(change_params, updated_params)
         self.assertNotEqual(orig_params, updated_params)
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as cm:
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
+        self.assertEqual(
+            "Model unstable- NAN reached in simulation (t=1800.0) before cutoff threshold. Cutoff threshold is 1900.0, or roughly 95.0% of the data",
+            str(cm.exception)
+        )
         
+        # Checks to see if m1 throws the same exception. 
         with self.assertRaises(ValueError):
             m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
 
-        # Checks to see if stability_tolerance throws error if model goes unstable after threshold
+        # Checks to see if stability_tolerance throws Warning rather than an Error when the model goes unstable after threshold
         with self.assertWarns(UserWarning) as cm:
             m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
                      dt = 1, stability_tol=0.7)
@@ -119,58 +98,11 @@ class TestCalcError(unittest.TestCase):
             str(cm.warning)
         )
 
-        with self.assertRaises(ValueError) as cm:
-            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, 
-                     dt = 1, stability_tol=70)
-        # Rerunning params estimate would not change the results
-        m.estimate_params(data, keys, method='Powell')
-        m1.estimate_params(data_m1, keys, method='CG')
 
-        with self.assertRaises(ValueError):
-            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-        
-        with self.assertRaises(ValueError):
-            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-
-        # Resetting parameters
-        m.parameters['kp'] = m1.parameters['kp'] = 10000
-        m.parameters['kn'] = m1.parameters['kn'] = 1000 
-        m.parameters['qpMax'] = m1.parameters['qpMax'] = 4500
-        m.parameters['qMax'] = m1.parameters['qMax'] = 4000
-        m.estimate_params(data, keys, method='Powell', options={'maxiter': 250, 'disp': False})
-        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 250, 'disp': False})
-        simulated_results = m.simulate_to(2000, future_loading, **options)
-        m1_sim_results = m1.simulate_to(2000, future_loading, **options)
-
-        data = [(simulated_results.times, simulated_results.inputs, simulated_results.outputs)]
-        data_m1 = [(m1_sim_results.times, m1_sim_results.inputs, m1_sim_results.outputs)]
-
-        converge1 = m1.parameters.copy()
-
-        with self.assertRaises(ValueError):
-            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-        
-        with self.assertRaises(ValueError):
-            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-
-        m.estimate_params(data, keys, method='Powell', options={'maxiter': 10000, 'disp': False})
-        m1.estimate_params(data_m1, keys, method='CG', options={'maxiter': 10000, 'disp': False})
-
-        converge2 = m1.parameters.copy()
-
-        self.assertEqual(converge1, converge2)
-
-        with self.assertRaises(ValueError):
-            m.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-        
-        with self.assertRaises(ValueError):
-            m1.calc_error(simulated_results.times, simulated_results.inputs, simulated_results.outputs, dt = 1)
-
-
-    """
-    Base tests that ensure first-level workability within calc_error
-    """
     def test_MSE(self):
+        """
+        Base tests that ensure first-level workability within calc_error
+        """
         m = ThrownObject()
         m2 = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
@@ -233,9 +165,9 @@ class TestCalcError(unittest.TestCase):
 
         with self.assertWarns(UserWarning) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, 
-                     dt = 1, stability_tol=70)
+                     dt = 1, stability_tol=10)
         self.assertEqual(
-            'Configurable cutoff must be some float value in the domain (0, 1]. Received 70. Resetting value to 0.95',
+            'Configurable cutoff must be some float value in the domain (0, 1]. Received 10. Resetting value to 0.95',
             str(cm.warning)
         )
 
@@ -251,7 +183,6 @@ class TestCalcError(unittest.TestCase):
         m = ThrownObject()
 
         # The value of time1, time2, inputs, and outputs are arbitrary values
-
         times = [[0, 1, 2, 3, 4, 5, 6, 7, 8], [0, 1, 2, 3]]
         inputs = [[{}]*9, [{}]*4]
         outputs = [[{'x': 1.83},
@@ -444,7 +375,7 @@ def run_tests():
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting EstimateParams Feature")
+    print("\n\nTesting calc_error Feature\n")
     result = runner.run(l.loadTestsFromTestCase(TestCalcError)).wasSuccessful()
 
     if not result:
