@@ -1084,9 +1084,9 @@ class PrognosticsModel(ABC):
         count = sum(isinstance(element, Sequence) for element in iter)
         if 0 < count < len(iter):
             if loc is not False:
-                raise ValueError(f"Some, but not all elements, are iterable for argument {name} at data location {loc}")
+                raise ValueError(f"Some, but not all elements, are iterable for argument {name} at data location {loc}.")
             else:
-                raise ValueError(f'Some, but not all elements, are iterable for argument {name}')
+                raise ValueError(f'Some, but not all elements, are iterable for argument {name}.')
 
     def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], _loc = None, **kwargs) -> float:
         """Calculate Error between simulated and observed data using selected Error Calculation Method
@@ -1145,17 +1145,17 @@ class PrognosticsModel(ABC):
 
         if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
             type_error = f"Types passed in must be from the following: np.ndarray, list, SimResult, or LazySimResult. Current types" \
-                         f"{(' at run ' + str(_loc) if _loc is not None else '')}" \
-                         f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}"
+                         f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
+                         f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}."
             raise TypeError(type_error)
         if len(times) != len(inputs) or len(inputs) != len(outputs):
             len_error = f"Times, inputs, and outputs must all be the same length. Current lengths" \
                         f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
-                        f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}"
+                        f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}."
             raise ValueError(len_error)
         if len(times) < 2:
             less_2_error = f"Must provide at least 2 data points for times, inputs, and outputs" \
-                           f"{(' at data location (' + str(_loc) + ').' if _loc is not None else '')}"
+                           f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}."
             raise ValueError(less_2_error)
 
         # Determines if all values of arguments are iterables
@@ -1181,14 +1181,14 @@ class PrognosticsModel(ABC):
         if not isinstance(stability_tol, Number):
             raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
         if stability_tol > 1 or stability_tol <= 0:
-            warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95")
+            warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95.")
             stability_tol = 0.95
 
         # Type and Value checking dt to make sure it has correctly passed in values.
         if not isinstance(dt, Number):
             raise TypeError(f"Keyword argument 'dt' must be either a int, float, or double.")
         if dt <= 0:
-            raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}")
+            raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}.")
         
         if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
             raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(kwargs['x0']).__name__}.")
