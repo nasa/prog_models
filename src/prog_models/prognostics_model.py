@@ -1144,7 +1144,7 @@ class PrognosticsModel(ABC):
         acceptable_types = {Sequence, np.ndarray, SimResult, LazySimResult}
 
         if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
-            type_error = f"Types passed in must be from the following: np.ndarray, list, SimResult, or LazySimResult. Current types" \
+            type_error = f"Types passed in must be from the following: np.ndarray, Sequence, SimResult, or LazySimResult. Current types" \
                          f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
                          f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}."
             raise TypeError(type_error)
@@ -1174,15 +1174,15 @@ class PrognosticsModel(ABC):
             return sum(error)/len(error)
             
         dt = kwargs.get('dt', 1e99)
-        stability_tol = kwargs.get('stability_tol', 0.95)
+        kwargs['stability_tol'] = kwargs.get('stability_tol', 0.95)
 
         # Checks stability_tol is within bounds
         # Throwing a default after the warning.
-        if not isinstance(stability_tol, Number):
+        if not isinstance(kwargs['stability_tol'], Number):
             raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
-        if stability_tol > 1 or stability_tol <= 0:
-            warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {stability_tol}. Resetting value to 0.95.")
-            stability_tol = 0.95
+        if kwargs['stability_tol'] > 1 or kwargs['stability_tol'] <= 0:
+            warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {kwargs['stability_tol']}. Resetting value to 0.95.")
+            kwargs['stability_tol'] = 0.95
 
         # Type and Value checking dt to make sure it has correctly passed in values.
         if not isinstance(dt, Number):
