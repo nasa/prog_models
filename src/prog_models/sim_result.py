@@ -26,6 +26,7 @@ class SimResult(UserList):
     __slots__ = ['times', 'data']  # Optimization
 
     def __init__(self, times: list = None, data: list = None, _copy=True):
+        self._frame = None
         if times is None or data is None:
             self.times = []
             self.data = []
@@ -76,6 +77,23 @@ class SimResult(UserList):
             self._frame.insert(0, "time", self.times)
             self._frame.reindex()
         return self._frame
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        if self._frame is not None:
+            for col in value:
+                self._frame.at[key, col] = value[col]
+
+    def __delitem__(self, key):
+        super().__delitem__(self, key)
+        if self._frame is not None:
+            self._frame = self._frame.drop([key])
+
+    def insert(self, i: int, item) -> None:
+        self.insert(i, item)
+        if self._frame is not None:
+            for value in item:
+                self._frame.insert(i, column=[value], value=item[value])
 
     @property
     def iloc(self):
@@ -155,6 +173,9 @@ class SimResult(UserList):
             self.data.extend(other.data)
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
+        if self._frame is not None:
+            self._frame = None
+            self._frame = self.frame
 
     def pop_by_index(self, index: int = -1) -> dict:
         """Remove and return an element
@@ -166,6 +187,8 @@ class SimResult(UserList):
             dict: Element Removed
         """
         self.times.pop(index)
+        if self._frame is not None:
+            self._frame = self._frame.drop([index])
         return self.data.pop(index)
 
     def pop(self, index: int = -1) -> dict:
@@ -180,6 +203,8 @@ class SimResult(UserList):
         warn(
             'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
+        if self._frame is not None:
+            self._frame = self._frame.drop([index])
 
         return self.pop_by_index(index)
 
