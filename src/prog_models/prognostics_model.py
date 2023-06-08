@@ -1144,7 +1144,7 @@ class PrognosticsModel(ABC):
         acceptable_types = {Sequence, np.ndarray, SimResult, LazySimResult}
 
         if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
-            type_error = f"Types passed in must be from the following: np.ndarray, Sequence, SimResult, or LazySimResult. Current types" \
+            type_error = f"Types passed in must be from the following: Sequence, np.ndarray, SimResult, or LazySimResult. Current types" \
                          f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
                          f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}."
             raise TypeError(type_error)
