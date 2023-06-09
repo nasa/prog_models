@@ -8,7 +8,7 @@ import itertools
 import json
 from numbers import Number
 import numpy as np
-from typing import Callable, Iterable, List, Sequence
+from typing import List  # Still needed until v3.9
 from warnings import warn
 
 from prog_models.exceptions import ProgModelStateLimitWarning
@@ -611,7 +611,7 @@ class PrognosticsModel(ABC):
             x (StateContainer):
                 state, with keys defined by model.states \n
                 e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-            future_loading_eqn (callable, optional):
+            future_loading_eqn (abc.Callable, optional):
                 Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
 
         Returns:
@@ -651,7 +651,7 @@ class PrognosticsModel(ABC):
             x (StateContainer):
                 state, with keys defined by model.states \n
                 e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-            future_loading_eqn (callable, optional)
+            future_loading_eqn (abc.Callable, optional)
                 Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
 
         Returns:
@@ -683,7 +683,7 @@ class PrognosticsModel(ABC):
             t = result.times[-1]
         return time_of_event
 
-    def simulate_to(self, time : float, future_loading_eqn: Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
+    def simulate_to(self, time : float, future_loading_eqn: abc.Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -692,7 +692,7 @@ class PrognosticsModel(ABC):
         time : float
             Time to which the model will be simulated in seconds (≥ 0.0) \n
             e.g., time = 200
-        future_loading_eqn : callable
+        future_loading_eqn : abc.Callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : OutputContainer, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
@@ -742,13 +742,13 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn: Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn: abc.Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
         Parameters
         ----------
-        future_loading_eqn : callable
+        future_loading_eqn : abc.Callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
 
         Keyword Arguments
@@ -772,12 +772,12 @@ class PrognosticsModel(ABC):
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : OutputContainer, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
-        threshold_keys: list[str] or str, optional
+        threshold_keys: abc.Sequence[str] or str, optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
         x : StateContainer, optional
             initial state dict, e.g., x= m.StateContainer({'x1': 10, 'x2': -5.3})\n
-        thresholds_met_eqn : function/lambda, optional
+        thresholds_met_eqn : abc.Callable, optional
             custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
         print : bool, optional
             toggle intermediate printing, e.g., print = True\n
@@ -1215,11 +1215,11 @@ class PrognosticsModel(ABC):
         if isinstance(outputs, np.ndarray):
             outputs = outputs.tolist()
         if not runs and times and inputs and outputs:
-            if not isinstance(times[0], (Sequence, np.ndarray)):
+            if not isinstance(times[0], (abc.Sequence, np.ndarray)):
                 times = [times]
-            if not isinstance(inputs[0], (Sequence, np.ndarray)):
+            if not isinstance(inputs[0], (abc.Sequence, np.ndarray)):
                 inputs = [inputs]
-            if not isinstance(outputs[0], (Sequence, np.ndarray)):
+            if not isinstance(outputs[0], (abc.Sequence, np.ndarray)):
                 outputs = [outputs]
 
         # If depreciated feature runs is not provided (will be removed in future version)
@@ -1250,14 +1250,14 @@ class PrognosticsModel(ABC):
                     warn(f"{key} is not a valid parameter (i.e., it is not a parameter present in this model) and should not be passed in to the bounds") 
             config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
-            if not isinstance(config['bounds'], Iterable):
+            if not isinstance(config['bounds'], abc.Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
             if len(config['bounds']) != len(keys):
                 raise ValueError(f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})")
         for bound in config['bounds']:
             if (isinstance(bound, set)):
                 raise TypeError(f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
-            if (not isinstance(bound, Iterable)) or (len(bound) != 2):
+            if (not isinstance(bound, abc.Iterable)) or (len(bound) != 2):
                 raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
@@ -1312,30 +1312,30 @@ class PrognosticsModel(ABC):
         return res
 
 
-    def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
+    def generate_surrogate(self, load_functions: List[abc.Callable], method: str = 'dmd', **kwargs):
         """
         Generate a surrogate model to approximate the higher-fidelity model 
 
         Parameters
         ----------
-        load_functions : list of callable functions
+        load_functions : List[abc.Callable]
             Each index is a callable loading function of (t, x = None) -> z used to predict future loading (output) at a given time (t) and state (x)
         method : str, optional
             list[ indicating surrogate modeling method to be used 
 
         Keyword Arguments
         -----------------
-        dt : float or function, optional
+        dt : float or abc.Callable, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
         save_freq : float, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
-        state_keys: list, optional
+        state_keys: List[str], optional
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        input_keys: list, optional
+        input_keys: List[str], optional
             List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        output_keys: list, optional
+        output_keys: List[str], optional
             List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        event_keys: list, optional
+        event_keys: List[str], optional
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n   
         ...: optional
             Keyword arguments from simulate_to_threshold (except save_pts)
