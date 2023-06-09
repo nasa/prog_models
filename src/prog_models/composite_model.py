@@ -10,11 +10,11 @@ DIVIDER = '.'
 
 class CompositeModel(PrognosticsModel):
     """
-    A CompositeModel is a PrognosticsModel that is composed of multiple PrognosticsModels. This is a tool for modeling system-of-systems. I.e., interconnected systems, where the behavior and state of one system effects the state of another system. The composite prognostics models are connected using defined connections between the output or state of one model, and the input of another model. The resulting CompositeModel behaves as a single model. 
+    A CompositeModel is a PrognosticsModel that is composed of multiple PrognosticsModels. This is a tool for modeling system-of-systems. I.e., interconnected systems, where the behavior and state of one system effects the state of another system. The composite prognostics models are connected using defined connections between the output or state of one model, and the input of another model. The resulting CompositeModel behaves as a single model.
 
     Args:
-        models (list[PrognosticsModel] or list[tuple[str, PrognosticsModel]]): 
-            A list of PrognosticsModels to be combined into a single model. 
+        models (list[PrognosticsModel] or list[tuple[str, PrognosticsModel]]):
+            A list of PrognosticsModels to be combined into a single model.
             Provided in one of two forms:
 
             1. A list of PrognosticsModels. The name of each model will be the class name. A number will be added for duplicates
@@ -23,8 +23,8 @@ class CompositeModel(PrognosticsModel):
 
             Note: Order provided will be the order that models are executed
         connections (list[tuple[str, str]], optional):
-            A list of tuples where the first element is the name of the output or state of one model and the second element is the name of the input of another model. 
-            The first element of the tuple must be of the form "model_name.output_name" or "model_name.state_name".
+            A list of tuples where the first element is the name of the output, state, or performance metrics of one model and the second element is the name of the input of another model.
+            The first element of the tuple must be of the form "model_name.output_name", "model_name.state_name", or "model_name.performance_metric_key".
             The second element of the tuple must be of the form "model_name.input_name".
             For example, if you have two models, "Batt1" and "Batt2", and you want to connect the output of "Batt1" to the input of "Batt2", you would use the following connection: ("Batt1.output", "Batt2.input")
 
@@ -33,7 +33,7 @@ class CompositeModel(PrognosticsModel):
             Model outputs in format "model_name.output_name". Must be subset of all outputs from models. If not provided, all outputs will be included.
     """
 
-    def __init__(self, models, connections=[], **kwargs):
+    def __init__(self, models: list, connections: list = [], **kwargs):
         # General Input Validation
         if not isinstance(models, Iterable):
             raise ValueError('The models argument must be a list')
@@ -97,6 +97,7 @@ class CompositeModel(PrognosticsModel):
         kwargs['connections'] = []
         self.__to_input_connections = {m_name: [] for m_name in self.model_names}
         self.__to_state_connections = {m_name: [] for m_name in self.model_names}
+        self.__to_state_from_pm_connections = {m_name: [] for m_name in self.model_names}
 
         for connection in connections:
             # Input validation
@@ -137,6 +138,13 @@ class CompositeModel(PrognosticsModel):
                 # Add to state (to preserve last between runs)
                 self.__to_state_connections[in_model].append((in_key_part, in_key))
                 self.states.add(in_key)
+            elif in_key in self.performance_metric_keys:
+                # In performance metric
+                self.__to_input_connections[out_model].append((in_key, out_key_part))
+
+                # Add to state (to preserve last between runs)
+                self.__to_state_from_pm_connections[out_model].append((in_key_part, in_key))
+                self.states.add(in_key)
             else:
                 raise ValueError('The input key must be an output or state of one of the composite models')
         
@@ -166,6 +174,11 @@ class CompositeModel(PrognosticsModel):
                 else:  # Missing from z, so estimate using initial state
                     z_ii = m.output(x_i)
                     x_0[in_key] = z_ii.get(in_key_part, None)
+
+            # This initializes the states that are connected to performance metrics
+            for (in_key_part, in_key) in self.__to_state_from_pm_connections[name]:
+                pm = m.performance_metrics(x_i)
+                x_0[in_key] = pm.get(in_key_part, None)
                 
         return self.StateContainer(x_0)
 
@@ -177,12 +190,13 @@ class CompositeModel(PrognosticsModel):
             # This updates the inputs that are connected to states/outputs
             for (in_key, out_key_part) in self.__to_input_connections[name]:
                 u_i[out_key_part] = x[in_key]
+
             u_i = m.InputContainer(u_i)
             
             # Prepare state
             x_i = m.StateContainer({key: x[name + '.' + key] for key in m.states})
 
-            # Propogate state
+            # Propagate state
             x_next_i = m.next_state(x_i, u_i, dt)
 
             # Save to super state
@@ -192,9 +206,16 @@ class CompositeModel(PrognosticsModel):
             # Process connections
             # This updates the states that are connected to outputs
             if len(self.__to_state_connections[name]) > 0:
+                # From Outputs
                 z_i = m.output(x_next_i)
                 for (in_key_part, in_key) in self.__to_state_connections[name]:
                     x[in_key] = z_i.get(in_key_part, None)
+
+            if len(self.__to_state_from_pm_connections) > 0:
+                # From Performance Metrics
+                pm_i = m.performance_metrics(x_next_i)
+                for (in_key_part, in_key) in self.__to_state_from_pm_connections[name]:
+                    x[in_key] = pm_i.get(in_key_part, None)
 
         return x
 

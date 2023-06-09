@@ -8,10 +8,11 @@ import itertools
 import json
 from numbers import Number
 import numpy as np
-from typing import Callable, Iterable, List, Sequence
+from typing import List  # Still needed until v3.9
 from warnings import warn
 
-from prog_models.exceptions import ProgModelInputException, ProgModelTypeError, ProgModelException, ProgModelStateLimitWarning
+from prog_models.exceptions import ProgModelStateLimitWarning
+from prog_models.loading import Piecewise
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar
 from prog_models.utils import calc_error
@@ -51,7 +52,7 @@ class PrognosticsModel(ABC):
 
     Raises
     ------
-        ProgModelTypeError, ProgModelInputException, ProgModelException
+        TypeError
 
     Example
     -------
@@ -109,7 +110,7 @@ class PrognosticsModel(ABC):
     param_callbacks = {}  # Callbacks for derived parameters
 
     SimulationResults = namedtuple(
-        'SimulationResults', 
+        'SimulationResults',
         ['times', 'inputs', 'states', 'outputs', 'event_states'])
 
     def __init__(self, **kwargs):
@@ -117,13 +118,10 @@ class PrognosticsModel(ABC):
         params = PrognosticsModel.default_parameters.copy()
 
         # Add params specific to the model
-        params.update(self.__class__.default_parameters) 
+        params.update(self.__class__.default_parameters)
 
         # Add params specific passed via command line arguments
-        try:
-            params.update(kwargs)
-        except TypeError:
-            raise ProgModelTypeError("couldn't update parameters. Check that all parameters are valid")
+        params.update(kwargs)
 
         PrognosticsModel.__setstate__(self, params)
 
@@ -140,30 +138,29 @@ class PrognosticsModel(ABC):
         return self.parameters.data
 
     def __setstate__(self, params: dict) -> None:
-        # This method is called when de-pickling and in construction. It builds the model from the parameters
+        # This method is called when de-pickling and in construction.
+        # It builds the model from the parameters
         
         if not hasattr(self, 'inputs'):
             self.inputs = []
         self.n_inputs = len(self.inputs)
 
         if not hasattr(self, 'states'):
-            raise ProgModelTypeError('Must have `states` attribute')
-        try:
-            iter(self.states)
-        except TypeError:
-            raise ProgModelTypeError('model.states must be a list')
+            raise TypeError('Must have `states` attribute')
+        if not isinstance(self.states, abc.Iterable):
+            raise TypeError(f'model.states must be a list or set, was {type(self.states)}')
         self.n_states = len(self.states)
 
         if not hasattr(self, 'events'):
             self.events = []
+        if not isinstance(self.events, abc.Iterable):
+            raise TypeError(f'model.events must be a list or set, was {type(self.events)}')
         self.n_events = len(self.events)
 
         if not hasattr(self, 'outputs'):
             self.outputs = []
-        try:
-            iter(self.outputs)
-        except TypeError:
-            raise ProgModelTypeError('model.outputs must be a list')
+        if not isinstance(self.outputs, abc.Iterable):
+            raise TypeError(f'model.outputs must be a list or set, was {type(self.outputs)}')
         self.n_outputs = len(self.outputs)
 
         if not hasattr(self, 'performance_metric_keys'):
@@ -219,10 +216,11 @@ class PrognosticsModel(ABC):
         Example
         -------
             :
-                m = PrognosticsModel() # Replace with specific model being simulated
-                u = {'u1': 3.2}
-                z = {'z1': 2.2}
-                x = m.initialize(u, z) # Initialize first state
+                m = PrognosticsModel()
+                # ^ Replace above with specific model being simulated ^
+                u = m.InputContainer({'u1': 3.2})
+                z = m.OutputContainer({'z1': 2.2})
+                x = m.initialize(u, z)  # Initialize first state
         """
         return self.StateContainer(self.parameters['x0'])
 
@@ -324,7 +322,7 @@ class PrognosticsModel(ABC):
         A model should overwrite either `next_state` or `dx`. Override `dx` for continuous models,
         and `next_state` for discrete, where the behavior cannot be described by the first derivative
         """
-        raise ProgModelException('dx not defined - please use next_state()')
+        raise NotImplementedError('dx not defined - please use next_state()')
 
     def next_state(self, x, u, dt: float):
         """
@@ -368,7 +366,7 @@ class PrognosticsModel(ABC):
         return self.StateContainer({key: x[key] + dx[key]*dt for key in dx.keys()})
 
     @property
-    def is_continuous(self):
+    def is_continuous(self) -> bool:
         """
         Returns
         -------
@@ -378,7 +376,7 @@ class PrognosticsModel(ABC):
         return type(self).dx != PrognosticsModel.dx
 
     @property
-    def is_discrete(self):
+    def is_discrete(self) -> bool:
         """
         Returns
         -------
@@ -402,6 +400,14 @@ class PrognosticsModel(ABC):
         x : StateContainer or dict
             Bounded state, with keys defined by model.states
             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = m.InputContainer({'u1': 3.2})
+        | z = m.OutputContainer({'z1': 2.2})
+        | x = m.initialize(u, z) # Initialize first state
+        | x = m.apply_limits(x) # Returns bounded state
         """
         for (key, limit) in self.state_limits.items():
             if np.any(np.array(x[key]) < limit[0]):
@@ -605,7 +611,7 @@ class PrognosticsModel(ABC):
             x (StateContainer):
                 state, with keys defined by model.states \n
                 e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-            future_loading_eqn (callable, optional):
+            future_loading_eqn (abc.Callable, optional):
                 Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
 
         Returns:
@@ -645,7 +651,7 @@ class PrognosticsModel(ABC):
             x (StateContainer):
                 state, with keys defined by model.states \n
                 e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
-            future_loading_eqn (callable, optional)
+            future_loading_eqn (abc.Callable, optional)
                 Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
 
         Returns:
@@ -677,7 +683,7 @@ class PrognosticsModel(ABC):
             t = result.times[-1]
         return time_of_event
 
-    def simulate_to(self, time : float, future_loading_eqn: Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
+    def simulate_to(self, time : float, future_loading_eqn: abc.Callable = lambda t,x=None: {}, first_output=None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model for a given number of seconds
 
@@ -686,7 +692,7 @@ class PrognosticsModel(ABC):
         time : float
             Time to which the model will be simulated in seconds (≥ 0.0) \n
             e.g., time = 200
-        future_loading_eqn : callable
+        future_loading_eqn : abc.Callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
         first_output : OutputContainer, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
@@ -728,7 +734,7 @@ class PrognosticsModel(ABC):
         """
         # Input Validation
         if not isinstance(time, Number) or time < 0:
-            raise ProgModelInputException("'time' must be positive, was {} (type: {})".format(time, type(time)))
+            raise ValueError("'time' must be positive, was {} (type: {})".format(time, type(time)))
 
         # Override threshold_met_eqn and horizon
         kwargs['thresholds_met_eqn'] = lambda x: False
@@ -736,13 +742,13 @@ class PrognosticsModel(ABC):
 
         return self.simulate_to_threshold(future_loading_eqn, first_output, **kwargs)
  
-    def simulate_to_threshold(self, future_loading_eqn: Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
+    def simulate_to_threshold(self, future_loading_eqn: abc.Callable = None, first_output = None, threshold_keys: list = None, **kwargs) -> namedtuple:
         """
         Simulate prognostics model until any or specified threshold(s) have been met
 
         Parameters
         ----------
-        future_loading_eqn : callable
+        future_loading_eqn : abc.Callable
             Function of (t) -> z used to predict future loading (output) at a given time (t)
 
         Keyword Arguments
@@ -760,16 +766,18 @@ class PrognosticsModel(ABC):
             Frequency at which output is saved (s), e.g., save_freq = 10 \n
         save_pts : list[float], optional
             Additional ordered list of custom times where output is saved (s), e.g., save_pts= [50, 75] \n
+        eval_pts : list[float], optional
+            Additional ordered list of custom times where simulation is guarenteed to be evaluated (though results are not saved, as with save_pts) when dt is auto (s), e.g., eval_pts= [50, 75] \n
         horizon : float, optional
             maximum time that the model will be simulated forward (s), e.g., horizon = 1000 \n
         first_output : OutputContainer, optional
             First measured output, needed to initialize state for some classes. Can be omitted for classes that don't use this
-        threshold_keys: list[str] or str, optional
+        threshold_keys: abc.Sequence[str] or str, optional
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
         x : StateContainer, optional
             initial state dict, e.g., x= m.StateContainer({'x1': 10, 'x2': -5.3})\n
-        thresholds_met_eqn : function/lambda, optional
+        thresholds_met_eqn : abc.Callable, optional
             custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
         print : bool, optional
             toggle intermediate printing, e.g., print = True\n
@@ -792,7 +800,7 @@ class PrognosticsModel(ABC):
         
         Raises
         ------
-        ProgModelInputException
+        ValueError
 
         See Also
         --------
@@ -815,24 +823,25 @@ class PrognosticsModel(ABC):
         """
         # Input Validation
         if first_output and not all(key in first_output for key in self.outputs):
-            raise ProgModelInputException("Missing key in 'first_output', must have every key in model.outputs")
+            raise ValueError("Missing key in 'first_output', must have every key in model.outputs")
 
         if future_loading_eqn is None:
             future_loading_eqn = lambda t,x=None: self.InputContainer({})
         elif not (callable(future_loading_eqn)):
-            raise ProgModelInputException("'future_loading_eqn' must be callable f(t)")
+            raise ValueError("'future_loading_eqn' must be callable f(t)")
         
         if isinstance(threshold_keys, str):
             # A single threshold key
             threshold_keys = [threshold_keys]
 
         if threshold_keys and not all([key in self.events for key in threshold_keys]):
-            raise ProgModelInputException("threshold_keys must be event names")
+            raise ValueError("threshold_keys must be event names")
 
         # Configure
         config = {  # Defaults
             't0': 0.0,
             'dt': ('auto', 1.0),
+            'eval_pts': [],
             'save_pts': [],
             'save_freq': 10.0,
             'horizon': 1e100,  # Default horizon (in s), essentially inf
@@ -844,28 +853,28 @@ class PrognosticsModel(ABC):
         
         # Configuration validation
         if not isinstance(config['dt'], (Number, tuple, str)) and not callable(config['dt']):
-            raise ProgModelInputException("'dt' must be a number or function, was a {}".format(type(config['dt'])))
+            raise TypeError("'dt' must be a number or function, was a {}".format(type(config['dt'])))
         if isinstance(config['dt'], Number) and config['dt'] < 0:
-            raise ProgModelInputException("'dt' must be positive, was {}".format(config['dt']))
+            raise ValueError("'dt' must be positive, was {}".format(config['dt']))
         if not isinstance(config['save_freq'], Number) and not isinstance(config['save_freq'], tuple):
-            raise ProgModelInputException("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
+            raise TypeError("'save_freq' must be a number, was a {}".format(type(config['save_freq'])))
         if (isinstance(config['save_freq'], Number) and config['save_freq'] <= 0) or \
             (isinstance(config['save_freq'], tuple) and config['save_freq'][1] <= 0):
-            raise ProgModelInputException("'save_freq' must be positive, was {}".format(config['save_freq']))
+            raise ValueError("'save_freq' must be positive, was {}".format(config['save_freq']))
         if not isinstance(config['save_pts'], abc.Iterable):
-            raise ProgModelInputException("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
+            raise TypeError("'save_pts' must be list or array, was a {}".format(type(config['save_pts'])))
         if not isinstance(config['horizon'], Number):
-            raise ProgModelInputException("'horizon' must be a number, was a {}".format(type(config['horizon'])))
+            raise TypeError("'horizon' must be a number, was a {}".format(type(config['horizon'])))
         if config['horizon'] < 0:
-            raise ProgModelInputException("'horizon' must be positive, was {}".format(config['horizon']))
+            raise ValueError("'horizon' must be positive, was {}".format(config['horizon']))
         if config['x'] is not None and not all([state in config['x'] for state in self.states]):
-            raise ProgModelInputException("'x' must contain every state in model.states")
+            raise ValueError("'x' must contain every state in model.states")
         if 'thresholds_met_eqn' in config and not callable(config['thresholds_met_eqn']):
-            raise ProgModelInputException("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
+            raise TypeError("'thresholds_met_eqn' must be callable (e.g., function or lambda)")
         if 'thresholds_met_eqn' in config and config['thresholds_met_eqn'].__code__.co_argcount != 1:
-            raise ProgModelInputException("'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
+            raise ValueError("'thresholds_met_eqn' must accept one argument (thresholds)-> bool")
         if not isinstance(config['print'], bool):
-            raise ProgModelInputException("'print' must be a bool, was a {}".format(type(config['print'])))
+            raise TypeError("'print' must be a bool, was a {}".format(type(config['print'])))
 
         # Setup
         t = config['t0']
@@ -904,7 +913,7 @@ class PrognosticsModel(ABC):
             check_thresholds = lambda _: False
 
         if len(threshold_keys) == 0 and config.get('thresholds_met_eqn', None) is None and 'horizon' not in kwargs:
-            raise ProgModelInputException("Running simulate to threshold for a model with no events requires a horizon to be set. Otherwise simulation would never end.")
+            raise ValueError("Running simulate to threshold for a model with no events requires a horizon to be set. Otherwise simulation would never end.")
 
         # Initialization of save arrays
         saved_times = []
@@ -928,6 +937,8 @@ class PrognosticsModel(ABC):
         next_save = next(iterator)
         save_pt_index = 0
         save_pts = config['save_pts']
+        eval_pt_index = 0
+        eval_pts = config['eval_pts'].copy()  # Copy because we may change it
 
         # configure optional intermediate printing
         if config['print']:
@@ -971,11 +982,15 @@ class PrognosticsModel(ABC):
             def next_time(t, x):
                 return dt
         elif dt_mode == 'auto':
-            def next_time(t, x):
+            if isinstance(future_loading_eqn, Piecewise):
+                eval_pts.extend(future_loading_eqn.times)
+                eval_pts = sorted(eval_pts)
+            def next_time(t, x=None):
                 next_save_pt = save_pts[save_pt_index] if save_pt_index < len(save_pts) else float('inf')
-                return min(dt, next_save-t, next_save_pt-t)
+                next_eval_pt = eval_pts[eval_pt_index] if eval_pt_index < len(eval_pts) else float('inf')
+                return min(dt, next_save-t, next_save_pt-t, next_eval_pt-t)
         elif dt_mode != 'function':
-            raise ProgModelInputException(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
+            raise ValueError(f"'dt' mode {dt_mode} not supported. Must be 'constant', 'auto', or a function")
         
         # Auto Container wrapping
         dt0 = next_time(t, x) - t
@@ -1013,14 +1028,14 @@ class PrognosticsModel(ABC):
             self.parameters['integration_method'] = config['integration_method']
        
         while t < horizon:
-            dt = next_time(t, x)
-            t = t + dt/2
+            dt_i = next_time(t, x)
+            t = t + dt_i/2
             # Use state at midpoint of step to best represent the load during the duration of the step
             # This is sometimes referred to as 'leapfrog integration'
             u = load_eqn(t, x)
-            t = t + dt/2
-            x = next_state(x, u, dt)
-            x = apply_noise(x, dt)
+            t = t + dt_i/2
+            x = next_state(x, u, dt_i)
+            x = apply_noise(x, dt_i)
             x = apply_limits(x)
 
             # Save if at appropriate time
@@ -1035,6 +1050,10 @@ class PrognosticsModel(ABC):
                 # Otherwise save_pt_index would be out of range
                 save_pt_index += 1
                 update_all()
+            elif (eval_pt_index < len(eval_pts)) and (t >= eval_pts[eval_pt_index]):
+                # (eval_pt_index < len(eval_pts)) covers when t is past the last evaluation point
+                # Otherwise eval_pt_index would be out of range
+                eval_pt_index += 1
 
             # Update progress bar
             if config['progress']:
@@ -1128,7 +1147,7 @@ class PrognosticsModel(ABC):
             return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
 
         # If we get here, method is not supported
-        raise ProgModelInputException(f"Error method '{method}' not supported")
+        raise ValueError(f"Error method '{method}' not supported")
     
     def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times: List[float] = None, inputs: List[InputContainer] = None,
                         outputs: List[OutputContainer] = None, method: str = 'nelder-mead', **kwargs) -> None:
@@ -1193,11 +1212,11 @@ class PrognosticsModel(ABC):
         if isinstance(outputs, np.ndarray):
             outputs = outputs.tolist()
         if not runs and times and inputs and outputs:
-            if not isinstance(times[0], (Sequence, np.ndarray)):
+            if not isinstance(times[0], (abc.Sequence, np.ndarray)):
                 times = [times]
-            if not isinstance(inputs[0], (Sequence, np.ndarray)):
+            if not isinstance(inputs[0], (abc.Sequence, np.ndarray)):
                 inputs = [inputs]
-            if not isinstance(outputs[0], (Sequence, np.ndarray)):
+            if not isinstance(outputs[0], (abc.Sequence, np.ndarray)):
                 outputs = [outputs]
 
         # If depreciated feature runs is not provided (will be removed in future version)
@@ -1228,14 +1247,14 @@ class PrognosticsModel(ABC):
                     warn(f"{key} is not a valid parameter (i.e., it is not a parameter present in this model) and should not be passed in to the bounds") 
             config['bounds'] = [config['bounds'].get(key, (-np.inf, np.inf)) for key in keys]
         else:
-            if not isinstance(config['bounds'], Iterable):
+            if not isinstance(config['bounds'], abc.Iterable):
                 raise ValueError("Bounds must be a tuple of tuples or a dict, was {}".format(type(config['bounds'])))
             if len(config['bounds']) != len(keys):
                 raise ValueError(f"Bounds must be same length as keys. There were {len(config['bounds'])} Bounds given whereas there are {len(keys)} Keys. To define partial bounds, use a dict (e.g., {{'param1': {(0, 5)}, 'param3': {(-5.5, 10)}}})")
         for bound in config['bounds']:
             if (isinstance(bound, set)):
                 raise TypeError(f"The Bound {bound} cannot be a Set. Sets are unordered by construction, so bounds may be out of order.")
-            if (not isinstance(bound, Iterable)) or (len(bound) != 2):
+            if (not isinstance(bound, abc.Iterable)) or (len(bound) != 2):
                 raise ValueError("Each bound must be a tuple of format (lower, upper), was {}".format(type(config['bounds'])))
 
         if 'x0' in kwargs and not isinstance(kwargs['x0'], self.StateContainer):
@@ -1290,30 +1309,30 @@ class PrognosticsModel(ABC):
         return res   
 
 
-    def generate_surrogate(self, load_functions, method = 'dmd', **kwargs):
+    def generate_surrogate(self, load_functions: List[abc.Callable], method: str = 'dmd', **kwargs):
         """
         Generate a surrogate model to approximate the higher-fidelity model 
 
         Parameters
         ----------
-        load_functions : list of callable functions
+        load_functions : List[abc.Callable]
             Each index is a callable loading function of (t, x = None) -> z used to predict future loading (output) at a given time (t) and state (x)
         method : str, optional
             list[ indicating surrogate modeling method to be used 
 
         Keyword Arguments
         -----------------
-        dt : float or function, optional
+        dt : float or abc.Callable, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step of the training data\n
         save_freq : float, optional
             Same as in simulate_to_threshold; for DMD, this value is the time step with which the surrogate model is generated  \n
-        state_keys: list, optional
+        state_keys: List[str], optional
             List of state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        input_keys: list, optional
+        input_keys: List[str], optional
             List of input keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        output_keys: list, optional
+        output_keys: List[str], optional
             List of output keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n
-        event_keys: list, optional
+        event_keys: List[str], optional
             List of event_state keys to be included in the surrogate model generation. keys must be a subset of those defined in the PrognosticsModel  \n   
         ...: optional
             Keyword arguments from simulate_to_threshold (except save_pts)
@@ -1330,11 +1349,11 @@ class PrognosticsModel(ABC):
         from prog_models.data_models import SURROGATE_METHOD_LOOKUP
 
         if method not in SURROGATE_METHOD_LOOKUP.keys():
-            raise ProgModelInputException("Method {} not supported. Supported methods: {}".format(method, SURROGATE_METHOD_LOOKUP.keys()))
+            raise ValueError("Method {} not supported. Supported methods: {}".format(method, SURROGATE_METHOD_LOOKUP.keys()))
 
         # Configure
-        config = { # Defaults
-            'save_freq': 1.0, 
+        config = {  # Defaults
+            'save_freq': 1.0,
             'state_keys': self.states.copy(),
             'input_keys': self.inputs.copy(),
             'output_keys': self.outputs.copy(),
@@ -1359,45 +1378,43 @@ class PrognosticsModel(ABC):
             config['event_keys'] = config['events']
             del config['events']
 
-        # Validate user inputs 
-        try:
-            # Check if load_functions is list-like (i.e., iterable)
-            iter(load_functions)
-        except TypeError:
-            raise ProgModelInputException(f"load_functions must be a list or list-like object, was {type(load_functions)}")
+        # Validate user inputs
+        if not isinstance(load_functions, abc.Iterable):
+            raise TypeError(f"load_functions must be a list or list-like object, was {type(load_functions)}")
+
         if len(load_functions) <= 0:
-            raise ProgModelInputException("load_functions must contain at least one element")
+            raise ValueError("load_functions must contain at least one element")
         if 'save_pts' in config.keys():
-            raise ProgModelInputException("'save_pts' is not a valid input for DMD Surrogate Model.")
+            raise ValueError("'save_pts' is not a valid input for DMD Surrogate Model.")
 
         if isinstance(config['input_keys'], str):
             config['input_keys'] = [config['input_keys']]
         if not all([x in self.inputs for x in config['input_keys']]):
-            raise ProgModelInputException(f"Invalid 'input_keys' value ({config['input_keys']}), must be a subset of the model's inputs ({self.inputs}).")
+            raise ValueError(f"Invalid 'input_keys' value ({config['input_keys']}), must be a subset of the model's inputs ({self.inputs}).")
         
         if isinstance(config['state_keys'], str):
             config['state_keys'] = [config['state_keys']]
         if not all([x in self.states for x in config['state_keys']]):
-            raise ProgModelInputException(f"Invalid 'state_keys' input value ({config['state_keys']}), must be a subset of the model's states ({self.states}).")
+            raise ValueError(f"Invalid 'state_keys' input value ({config['state_keys']}), must be a subset of the model's states ({self.states}).")
 
         if isinstance(config['output_keys'], str):
             config['output_keys'] = [config['output_keys']]
         if not all([x in self.outputs for x in config['output_keys']]):
-            raise ProgModelInputException(f"Invalid 'output_keys' input value ({config['output_keys']}), must be a subset of the model's outputs ({self.outputs}).")
+            raise ValueError(f"Invalid 'output_keys' input value ({config['output_keys']}), must be a subset of the model's outputs ({self.outputs}).")
 
         if isinstance(config['event_keys'], str):
             config['event_keys'] = [config['event_keys']]
         if not all([x in self.events for x in config['event_keys']]):
-            raise ProgModelInputException(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
+            raise ValueError(f"Invalid 'event_keys' input value ({config['event_keys']}), must be a subset of the model's events ({self.events}).")
 
         return SURROGATE_METHOD_LOOKUP[method](self, load_functions, **config)
     
-    def to_json(self):
+    def to_json(self) -> str:
         """
         Serialize parameters as JSON objects 
 
         Returns:
-            JSON: Serialized PrognosticsModel parameters as JSON object
+            str: Serialized PrognosticsModel parameters as string
 
         See Also
         --------
@@ -1410,12 +1427,12 @@ class PrognosticsModel(ABC):
         return json.dumps(self.parameters.data, cls=CustomEncoder)
     
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data: str):
         """
         Create a new prognostics model from a previously generated model that was serialized as a JSON object
 
         Args:
-            data: 
+            data (str): 
                 JSON serialized parameters necessary to build a model 
                 See to_json method 
 

@@ -148,7 +148,7 @@ class PolynomialChaosExpansion(DataModel):
         if len(m.inputs) < 1:
             raise ValueError('Model must have at least one input')
 
-        # ChaosPy doesn't support copying distributions. 
+        # ChaosPy doesn't support copying distributions.
         # As a workaround we create a new UserDistribution for each timepoint for each input
         # The UserDistribution is functionally the same as the original distribution
         input_dists = [cp.UserDistribution(

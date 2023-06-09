@@ -98,9 +98,6 @@ class TestSerialization(unittest.TestCase):
                 self.assertAlmostEqual(surrogate_results.event_states[i][key], new_results.event_states[i][key], delta = 3e-01)
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

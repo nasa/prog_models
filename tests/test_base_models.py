@@ -11,7 +11,7 @@ import unittest
 # This ensures that the directory containing ProgModelTemplate is in the python search directory
 sys.path.append(join(dirname(__file__), ".."))
 
-from prog_models import ProgModelTypeError, ProgModelInputException, ProgModelException, PrognosticsModel, CompositeModel
+from prog_models import PrognosticsModel, CompositeModel
 from prog_models.models import ThrownObject, BatteryElectroChemEOD
 from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
 from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParams)
@@ -196,7 +196,7 @@ class TestModels(unittest.TestCase):
         u = m.InputContainer({})
         x = m.next_state(x, u, 0.1)
         # V is equal because it's linear
-        self.assertEqual(x['v'], x_default['v'])
+        self.assertAlmostEqual(x['v'], x_default['v'])
         self.assertAlmostEqual(x['x'], x_default['x'], delta=0.1)
         self.assertNotEqual(x['x'], x_default['x'])
 
@@ -231,22 +231,22 @@ class TestModels(unittest.TestCase):
         self.assertNotEqual(x['x'], x_default['x'])
 
     def test_integration_type_error(self):
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(ValueError):
             # unsupported integration type
             m = LinearThrownObject(integration_method='invalid')
 
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(TypeError):
             # change integration type for a discrete model
             m = ThrownObject(integration_method='rk4')
 
         # Repeat with setting in params
         m = LinearThrownObject()
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(ValueError):
             # unsupported integration type
             m.parameters['integration_method'] = 'invalid'
 
         m = ThrownObject()
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(TypeError):
             # change integration type for a discrete model
             m.parameters['integration_method'] = 'rk4'
 
@@ -412,7 +412,7 @@ class TestModels(unittest.TestCase):
             def next_state(self, x, u, dt):
                 pass
 
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(TypeError):
             m = missing_states()
 
         m = empty_states()
@@ -454,7 +454,7 @@ class TestModels(unittest.TestCase):
 
         with self.assertRaises(Exception):
             noise = []
-            m = MockProgModel(**{noise_key: noise})         
+            m = MockProgModel(**{noise_key: noise})
 
         # Test that it ignores process_noise_dist in case where process_noise is a function
         m = MockProgModel(**{noise_key: add_one, dist_key: 'invalid one'})
@@ -462,12 +462,12 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x[keys[0]], 2)
 
         # Invalid dist
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(ValueError):
             noise = {key: 0.0 for key in keys}
             m = MockProgModel(**{noise_key: noise, dist_key: 'invalid one'})
 
         # Invalid dist
-        with self.assertRaises(ProgModelTypeError):
+        with self.assertRaises(ValueError):
             m = MockProgModel(**{noise_key: 0, dist_key: 'invalid one'})
 
         # Valid distributions
@@ -612,12 +612,12 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(times[-1], 20.0, 5)
 
         # No thresholds and no horizon
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=[])
 
         # No events and no horizon
         m_noevents = OneInputNoOutputNoEventLM()
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
 
         # Custom thresholds met eqn- both keys
@@ -633,13 +633,13 @@ class TestModels(unittest.TestCase):
             return True
         linear_load = lambda t, x=None: m_noevents.InputContainer({'u1': 1})
         (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
-        self.assertListEqual(times, [0, 0.5]) # Only one step
+        self.assertListEqual(times, [0, 0.5])  # Only one step
 
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
 
     def test_sim_past_thresh(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
@@ -759,16 +759,16 @@ class TestModels(unittest.TestCase):
         (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8})
         self.assertEqual(len(times), 1)
 
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.simulate_to(-30, load, {'o1': 0.8})
 
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.simulate_to([12], load, {'o1': 0.8})
 
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.simulate_to(12, load, {'o2': 0.9})
 
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.simulate_to(12, 132, {'o1': 0.8})
 
         ## Simulate
@@ -859,36 +859,36 @@ class TestModels(unittest.TestCase):
         
         ## Check inputs
         config = {'dt': [1, 2]}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'dt': -1}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'save_freq': [1, 2]}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'save_freq': -1}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
 
         config = {'horizon': [1, 2]}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
 
         config = {'horizon': -1}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
         
         config = {'thresholds_met_eqn': -1}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(TypeError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
 
         # incorrect number of arguments
         config = {'thresholds_met_eqn': lambda a, b: print(a, b)}
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
 
     def test_sim_modes(self):
@@ -925,7 +925,7 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return m.InputContainer({})
         
-        with self.assertRaises(ProgModelException):
+        with self.assertRaises(TypeError):
             m.simulate_to_threshold(load, integration_method='rk4')
 
         # With linear model
@@ -1325,9 +1325,6 @@ class TestModels(unittest.TestCase):
         self.assertTrue(m2.parameters == m1.parameters) 
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

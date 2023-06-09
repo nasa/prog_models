@@ -37,9 +37,6 @@ class TestDatasets(unittest.TestCase):
     # Testing for successful download located in manual testing files; test_manual.py
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

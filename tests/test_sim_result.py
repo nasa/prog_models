@@ -699,10 +699,6 @@ class TestSimResult(unittest.TestCase):
 
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-
-
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

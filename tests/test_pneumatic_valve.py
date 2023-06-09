@@ -452,9 +452,6 @@ class TestPneumaticValve(unittest.TestCase):
         event_states = named_results.event_states
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

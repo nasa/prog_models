@@ -197,9 +197,6 @@ class TestEnsemble(unittest.TestCase):
         self.assertTrue(em.threshold_met(x2)['x1 == 10'])
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

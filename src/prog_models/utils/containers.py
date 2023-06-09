@@ -6,8 +6,6 @@ import pandas as pd
 from typing import Union
 from warnings import warn
 
-from prog_models.exceptions import ProgModelTypeError
-
 
 class DictLikeMatrixWrapper():
     """
@@ -37,7 +35,7 @@ class DictLikeMatrixWrapper():
                     np.ravel([data[key]]) if key in data else [None] for key in keys
                 ], dtype=np.float64)
         else:
-            raise ProgModelTypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
+            raise TypeError(f"Data must be a dictionary or numpy array, not {type(data)}")
 
     @property
     def matrix(self) -> np.array:
