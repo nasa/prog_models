@@ -8,10 +8,10 @@ Auxiliary functions for trajectories and aircraft routes
 import datetime as dt
 import numpy as np
 import datetime as dt
+from warnings import warn
 
 from prog_models.utils.traj_gen import geometry as geom
 from .nurbs import NURBS
-from prog_models.exceptions import ProgModelInputException
 
 
 def linearinterp_t(t0, x0, t1, x1, xp):
@@ -167,7 +167,7 @@ class Trajectory():
             lon                 rad, n x 1 array, doubles, longitude coordinates of waypoints
             alt                 m, n x 1 array, doubles, altitude coordinates of waypoints
             takeoff_time        datetime object, scalar, take off time of the trajectory. Default is None.
-            etas                datetime objects, n x 1 array, ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed in-between waypoints.
+            etas                list of datetime objects, ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
 
     Additional kwargs and default values:
             'gravity': 9.81                     m/s^2, gravity magnitude
@@ -194,6 +194,28 @@ class Trajectory():
                  takeoff_time = None, 
                  etas = None, 
                  **kwargs):
+
+        # Check waypoint types:
+        # ---------------------
+        if not isinstance(lat,np.ndarray) or not isinstance(lon,np.ndarray) or not isinstance(alt,np.ndarray):
+            raise TypeError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays.")
+        if lat.shape != lon.shape or lon.shape != alt.shape:
+            raise ValueError("Provided latitude, longitude, and altitude arrays must be the same length.")
+        if lat.shape[0] <= 1 or lon.shape[0] <= 1 or alt.shape[0] <= 1:
+            raise ValueError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays, with n > 1.")
+        if isinstance(etas,np.ndarray):
+            raise TypeError("ETAs must be provided as a list of datetime objects.")
+        if etas != None:
+            if not isinstance(etas,list):
+                raise TypeError("ETAs must be provided as a list of datetime objects.")
+            if len(etas) != 1 and len(etas) != lat.shape[0]:
+                raise ValueError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
+            for iter in range(len(etas)):
+                if not isinstance(etas[iter],dt.datetime):
+                    raise TypeError("ETAs must be provided as a list of datetime objects.")
+        if takeoff_time != None and not isinstance(takeoff_time, dt.datetime):
+            raise TypeError("Takeoff time must be provided as a datetime object.")
+
         # Trajectory dictionary to store output
         # -----------------------------------
         self.trajectory = {}
@@ -225,15 +247,19 @@ class Trajectory():
         # -----------------------------------------------------------------------------------------------------------------------
         self.coordinate_system = geom.Coord(self.waypoints['lat'][0], self.waypoints['lon'][0], self.waypoints['alt'][0])
 
-        # Define speed parameters
+        # Define speed parameters - only necessary if ETAs are not defined 
         # ---------------------
+        if etas != None and ('cruise_speed' in kwargs or 'ascent_speed' in kwargs or 'descent_speed' in kwargs or 'landing_speed' in kwargs):
+            warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent, landing) instead, do not specify ETAs.")
+        if etas is None and ('cruise_speed' not in kwargs or 'ascent_speed' not in kwargs or 'descent_speed' not in kwargs or 'landing_speed' not in kwargs):
+            warn("Neither ETAs nor speeds were defined. Default speeds will be used.")
         self.speed_parameters = {'cruise_speed': 6.0,
                                  'ascent_speed': 3.0,
                                  'descent_speed': 3.0,
                                  'landing_speed': 1.5,
                                  'landing_altitude': 10.5}
         self.speed_parameters.update(**kwargs)
-        
+
         # Set landing waypoints dimensions
         idx_land_pos = self.set_landing_waypoints()
 
@@ -265,6 +291,11 @@ class Trajectory():
         self.parameters.update(**kwargs)
         if self.parameters['weight_vector'] is None:
             self.parameters['weight_vector'] = np.asarray([self.parameters['waypoint_weight'],] * len(self.waypoints['x']))
+
+        if self.parameters['vehicle_model'] is None:
+            raise ValueError("Vehicle model is not defined. Must specify a string for 'vehicle_model' in keyword arguments.")
+        if not isinstance(self.parameters['vehicle_model'], str):
+            raise TypeError("Vehicle model must be defined as a string.")
 
 
     @property
@@ -557,7 +588,7 @@ class Trajectory():
             etas = None
         else:
             if len(self.waypoints['eta']) != len(self.waypoints['lat']):
-                raise ProgModelInputException("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
+                raise TypeError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
 
             etas = np.zeros_like(self.waypoints['eta'], dtype=np.float64)
             for i, eta_i in enumerate(self.waypoints['eta']):
@@ -578,7 +609,7 @@ class Trajectory():
         :return:                    s, n x 1, ETAs for all way-points.
         """
         if len(self.waypoints['alt']) <= 2:
-            raise ProgModelInputException("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
+            raise ValueError("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
         
         # define margin on cruise speed
         # ----------------------------

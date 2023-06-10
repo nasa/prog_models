@@ -8,7 +8,6 @@ from prog_models.prognostics_model import PrognosticsModel
 from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 from prog_models.models.uav_model.vehicles import vehicles
 from prog_models.utils.traj_gen import geometry as geom
-from prog_models.exceptions import ProgModelInputException
 
 # Small Rotorcraft Model
 # ======================
@@ -148,6 +147,8 @@ class SmallRotorcraft(PrognosticsModel):
 
         # Select model
         # ------------
+        if not isinstance(self.parameters['vehicle_model'], str):
+          raise TypeError("Vehicle model must be defined as a string.")
         if self.parameters['vehicle_model'].lower() == 'djis1000':
             self.mass, self.geom, self.dynamics = vehicles.DJIS1000(self.parameters['vehicle_payload'], self.parameters['gravity'])
         elif self.parameters['vehicle_model'].lower() == 'tarot18':   

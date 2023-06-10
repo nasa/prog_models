@@ -7,8 +7,6 @@ Geometric functions
 
 import numpy as np
 
-from prog_models.exceptions import ProgModelInputException
-
 # EARTH-RELATED DISTANCE FUNCTIONS
 # ================================
 def greatcircle_distance(lat1, lat2, lon1, lon2, R=6371e3):
@@ -139,10 +137,10 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
     :return:                        distance between two points in meters. Tuple of values (surface and alt distance) if return_surf_vert==True; absolute distance otherwise 
     """
     if len(lats) != 2 or len(lons) != 2 or len(alts) != 2:
-        raise ProgModelInputException("Latitudes, longitudes and altitude values must be 2-element lists or arrays.")
+        raise ValueError()("Latitudes, longitudes and altitude values must be 2-element lists or arrays.")
     if type(alts[0])==np.ndarray:   # if altitudes are vectors, compute point-wise difference (must be same length)
         if len(alts[0]) != len(alts[1]):
-            raise ProgModelInputException("If altitudes are vectors, their length must coincide.")
+            raise ValueError()("If altitudes are vectors, their length must coincide.")
         vert_dist = alts[1]-alts[0]
     else:   # if alts are two points, compute difference between them
         vert_dist = np.diff(alts)   # compute difference in altitude

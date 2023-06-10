@@ -4,6 +4,7 @@
 """
 Example of generating a trajectory for a small rotorcraft through a set of coarse waypoints, and simulate the rotorcraft flight using a 6-dof model.
 """
+import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -25,14 +26,13 @@ def run_example():
     vehicle = SmallRotorcraft(**vehicle_params)
 
     # EXAMPLE 1: 
-    # Define coarse waypoints: waypoints must be defined as a Pandas DataFrame
-    # See documentation for specific information on defining waypoints 
-    # Latitude, longitude, and altitude values are required; ETAs are optional (see Example 3)
+    # Define coarse waypoints: latitudes, longitudes, and altitudes are required, ETAs are optional 
+    # Latitudes and longitudes must be defined as numpy arrays of size n x 1 and with units of radians
+    # Altitudes must be defined as numpy arrays of size n x 1 with units of meters
+    # ETAs (if included) must be defined as a list of datetime objects
+    # If ETAs are not included, speeds must be defined (see Example 2)
 
-    # Here, we specify waypoints in a dictionary and then convert it to a Pandas DataFrame
-        # Note: waypoints can be specified in a variety of ways and then converted to a Pandas DataFrame for use 
-        # Ex: generate a csv file with columns lat_deg, lon_deg, alt_ft, then use pd.read_csv(filename) to convert 
-        # this to a dataframe for use in the trajectory generation 
+    # Here, we specify waypoints in a dictionary and then pass lat/lon/alt/ETAs into the trajectory class 
     waypoints = {}
     waypoints['lat_deg'] = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
     waypoints['lon_deg'] = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
@@ -41,7 +41,6 @@ def run_example():
     
     # Generate trajectory
     # =====================
-    import datetime as dt
     # Generate trajectory object and pass the route (waypoints, ETA) to it
     traj = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
                       lon=waypoints['lon_deg'] * np.pi/180.0, 
@@ -72,9 +71,8 @@ def run_example():
 
     # EXAMPLE 2: 
     # In this example, we define another trajectory through the same waypoints but with speeds defined instead of ETAs
-    del waypoints['time_unix'] # Delete ETAs for this example
     
-    # Generate trajectory object and pass the route (waypoints, ETA) to it
+    # Generate trajectory object and pass the route (lat/lon/alt, no ETAs) and speed information to it
     traj_speed = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
                             lon=waypoints['lon_deg'] * np.pi/180.0, 
                             alt=waypoints['alt_ft'] * 0.3048, 
@@ -87,8 +85,8 @@ def run_example():
     ref_traj_speeds = traj_speed.generate(dt = vehicle.parameters['dt'])
 
     # Define controller and build scheduled control. This time we'll use LQR_I, which is a linear quadratic regulator with integral action.
-    # The integral action has the same purpose of "I" in PI or PID controllers, which is to minimize offset errors in the variable of interests.
-    # This version of LQR_I compensate for integral errors in the position of the vehicle, i.e., x, y, z variables of the state vector.
+    # The integral action has the same purpose of "I" in PI or PID controllers, which is to minimize offset errors in the variable of interest.
+    # This version of LQR_I compensates for integral errors in the position of the vehicle, i.e., x, y, z variables of the state vector.
     ctrl_speeds = LQR_I(ref_traj_speeds, vehicle)
     
     # Set simulation options 
