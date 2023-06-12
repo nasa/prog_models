@@ -10,6 +10,4 @@ from prog_models.models.dcmotor_singlephase import DCMotorSP
 from prog_models.models.esc import ESC
 from prog_models.models.powertrain import Powertrain
 from prog_models.models.propeller_load import PropellerLoad
-from prog_models.models.thrown_object import ThrownObject
-from prog_models.models.experimental.paris_law import ParisLawCrackGrowth
-from prog_models.models.thrown_object import LinearThrownObject
+from prog_models.models.thrown_object import LinearThrownObject, ThrownObject

@@ -5,7 +5,10 @@ import unittest
 from prog_models import *
 from prog_models.models import *
 from prog_models.models.test_models.linear_models import (
-    OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
+    OneInputOneOutputNoEventLM,
+    OneInputNoOutputOneEventLM,
+    OneInputOneOutputNoEventLMPM,
+    OneInputOneOutputOneEventLM)
 
 class TestCompositeModel(unittest.TestCase):
     def test_composite_broken(self):
@@ -217,9 +220,18 @@ class TestCompositeModel(unittest.TestCase):
         self.assertSetEqual(m_composite.outputs, {'m1.z1', })
         self.assertSetEqual(m_composite.events, {'m2.x1 == 10', })
 
-def run_tests():
-    unittest.main()
-    
+    def test_composite_pm(self):
+        m = OneInputOneOutputOneEventLM()
+        m_composite = CompositeModel([m, m], connections=[('OneInputOneOutputOneEventLM_2.pm1', 'OneInputOneOutputOneEventLM.u1')])
+        self.assertSetEqual(m_composite.states, {'OneInputOneOutputOneEventLM_2.pm1', 'OneInputOneOutputOneEventLM.x1', 'OneInputOneOutputOneEventLM_2.x1'})
+        self.assertSetEqual(m_composite.inputs, {'OneInputOneOutputOneEventLM_2.u1',})
+        x0 = m_composite.initialize()
+        u = m_composite.InputContainer({'OneInputOneOutputOneEventLM_2.u1': 1})
+        x = m_composite.next_state(x0, u, 1)
+        x = m_composite.next_state(x0, u, 1)
+        self.assertAlmostEqual(x['OneInputOneOutputOneEventLM.x1'], 3)  # extra 1 from pm
+        self.assertAlmostEqual(x['OneInputOneOutputOneEventLM_2.x1'], 2)
+
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
