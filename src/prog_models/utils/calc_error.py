@@ -4,7 +4,7 @@
 """
 This file contains functions for calculating error given a model and some data (times, inputs, outputs). This is used by the PrognosticsModel.calc_error() method.
 """
-
+import math
 from typing import List
 from warnings import warn
 import numpy as np
@@ -15,12 +15,12 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -91,12 +91,12 @@ def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -179,7 +179,6 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
                     break
             err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
             counter += 1
-    
     return err_total/counter
 
 def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
@@ -188,12 +187,12 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -258,12 +257,12 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
@@ -293,7 +292,7 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
-    z_obs = m.output(x)  # Initialize
+    z_obs = m.output(x)
     cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
@@ -330,30 +329,25 @@ def DTW(m, times, inputs, outputs, **kwargs):
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of error. 
+            before the model goes unstable in order to produce a valid estimate of mean squared error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
 
     Returns:
         float: DTW distance between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [DTW(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
@@ -366,13 +360,6 @@ def DTW(m, times, inputs, outputs, **kwargs):
 
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
-
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if stability_tol > 1 or stability_tol <= 0:
-        warn(f"Configurable cutoff must be some float value in the domain (0, 1]. "  
-             f"Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]

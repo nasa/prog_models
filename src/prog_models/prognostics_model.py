@@ -14,8 +14,7 @@ from warnings import warn
 from prog_models.exceptions import ProgModelStateLimitWarning
 from prog_models.loading import Piecewise
 from prog_models.sim_result import SimResult, LazySimResult
-from prog_models.utils import ProgressBar
-from prog_models.utils import calc_error
+from prog_models.utils import ProgressBar, calc_error, input_validation
 from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.parameters import PrognosticsModelParameters
@@ -1096,19 +1095,6 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def check_iterable(self, iter, name, loc = False):
-        """
-        Helper Function to determine if passed in iterable has consistent typings for each index.
-
-        Used to primarily avoid erroneous arguments and for a more descriptive error message than Python's Interpreter.
-        """
-        count = sum(isinstance(element, Sequence) for element in iter)
-        if 0 < count < len(iter):
-            if loc is not False:
-                raise ValueError(f"Some, but not all elements, are iterable for argument {name} at data location {loc}.")
-            else:
-                raise ValueError(f'Some, but not all elements, are iterable for argument {name}.')
-
     def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], _loc = None, **kwargs) -> float:
         """Calculate Error between simulated and observed data using selected Error Calculation Method
         
@@ -1135,6 +1121,7 @@ class PrognosticsModel(ABC):
 
                 If the model goes unstable before stability_tol is met, a ValueError is raised.
                 Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            aggr_method (func, optional): When multiple runs are provided, users can state how to aggregate the results of the errors. Defaults to taking the mean.
 
         Returns:
             float: error
@@ -1145,6 +1132,7 @@ class PrognosticsModel(ABC):
             :func:`calc_error.MAX_E`
             :func:`calc_error.MAPE`
             :func:`calc_error.MAE`
+            :func:'calc_error.DTW'
         """
         method = kwargs.get('method', 'MSE')
 
@@ -1153,17 +1141,18 @@ class PrognosticsModel(ABC):
             'max_e': calc_error.MAX_E,
             'rmse': calc_error.RMSE,
             'mae': calc_error.MAE,
-            'mape': calc_error.MAPE
+            'mape': calc_error.MAPE,
+            'dtw': calc_error.DTW,
         }
 
         try:
             method = method_map[method.lower()]
         except KeyError:
             # If we get here, method is not supported
-            raise ProgModelInputException(f"Error method '{method}' not supported")
+            raise KeyError(f"Error method '{method}' not supported")
         
         # Ensure error methods provide correct results via hand-calculating each one and equating each one.
-        acceptable_types = {Sequence, np.ndarray, SimResult, LazySimResult}
+        acceptable_types = {abc.Sequence, np.ndarray, SimResult, LazySimResult}
 
         if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
             type_error = f"Types passed in must be from the following: Sequence, np.ndarray, SimResult, or LazySimResult. Current types" \
@@ -1181,30 +1170,30 @@ class PrognosticsModel(ABC):
             raise ValueError(less_2_error)
 
         # Determines if all values of arguments are iterables
-        self.check_iterable(times, 'times', loc=_loc) if _loc is not None else self.check_iterable(times, 'times')
-        self.check_iterable(inputs, 'inputs', loc=_loc) if _loc is not None else self.check_iterable(inputs, 'inputs')
-        self.check_iterable(outputs, 'outputs', loc=_loc) if _loc is not None else self.check_iterable(outputs, 'outputs')
+        input_validation.all_none_iterable(times, 'times', loc=_loc) if _loc is not None else input_validation.all_none_iterable(times, 'times')
+        input_validation.all_none_iterable(inputs, 'inputs', loc=_loc) if _loc is not None else input_validation.all_none_iterable(inputs, 'inputs')
+        input_validation.all_none_iterable(outputs, 'outputs', loc=_loc) if _loc is not None else input_validation.all_none_iterable(outputs, 'outputs')
+
+        dt = kwargs.get('dt', 1e99)
+        aggr_method = kwargs.get('aggr_method', lambda x: sum(x)/len(x))
+        kwargs['stability_tol'] = kwargs.get('stability_tol', 0.95)
 
         if isinstance(times[0], str):
             raise TypeError("Times values cannot be strings")
-        if isinstance(times[0], Iterable):
+        if isinstance(times[0], abc.Iterable):
             # Calculate error for each
             error = []
             for r, (t, i, z) in enumerate(zip(times, inputs, outputs)):
                 run_updated = str(r) if _loc is None else _loc + f', {str(r)}'
                 error.append(self.calc_error(t, i, z, _loc=run_updated, **kwargs))
-            return sum(error)/len(error)
-            
-        dt = kwargs.get('dt', 1e99)
-        kwargs['stability_tol'] = kwargs.get('stability_tol', 0.95)
-
+            return aggr_method(error)
+                
         # Checks stability_tol is within bounds
         # Throwing a default after the warning.
         if not isinstance(kwargs['stability_tol'], Number):
             raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
         if kwargs['stability_tol'] > 1 or kwargs['stability_tol'] <= 0:
-            warn(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {kwargs['stability_tol']}. Resetting value to 0.95.")
-            kwargs['stability_tol'] = 0.95
+            raise ValueError(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {kwargs['stability_tol']}.")
 
         # Type and Value checking dt to make sure it has correctly passed in values.
         if not isinstance(dt, Number):

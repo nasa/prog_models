@@ -3,7 +3,6 @@
 
 import numpy as np
 import unittest
-
 from prog_models import *
 from prog_models.models import *
 
@@ -14,8 +13,83 @@ class TestCalcError(unittest.TestCase):
 
     Validating that values are correctly being passed into the new calc_error calls and that we are receiving expected results!
     """
-    def test_calc_error(self):
-        # Note: decreasing dt or increasing the time to simulate to will increase computation time
+    def test_base_case(self):
+        m = ThrownObject()
+        m2 = ThrownObject()
+        results = m.simulate_to_threshold(save_freq=0.5)
+        gt = m.parameters.copy()
+
+        # Arbitrary Test to ensure that both models are behaving the same way
+        self.assertEqual(m.calc_error(results.times, results.inputs, results.outputs),
+                            m2.calc_error(results.times, results.inputs, results.outputs))
+        
+        resultsm2 = m2.simulate_to_threshold(save_freq = 0.5)
+        m2.parameters['throwing_speed'] = 35
+        key = ['throwing_speed']
+
+        previous = m2.calc_error(resultsm2.times, resultsm2.inputs, resultsm2.outputs)
+
+        self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs),
+                            previous)
+        
+        m2.estimate_params(times = resultsm2.times, inputs = resultsm2.inputs, outputs = resultsm2.outputs, keys = key, dt = 1)
+
+        for i in key:
+            # We can compare with gt because m and m2 originally were the same, and gt was a copy of m.
+            self.assertAlmostEqual(m2.parameters[i], gt[i], 2)
+        
+        self.assertLess(m2.calc_error(resultsm2.times, resultsm2.inputs, resultsm2.outputs), previous)
+
+        # Ensures calc_error works with various dt values
+        for i in np.arange(0.1, 1, 0.1):
+            m.calc_error(results.times, results.inputs, results.outputs, dt=i)
+
+        for i in range(2, 10):
+            m.calc_error(results.times, results.inputs, results.outputs, dt=i)
+
+        # Unique Tests for calc_error
+        m.parameters['throwing_speed'] = 41
+        
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(results.times, results.inputs, results.outputs, dt = 0)
+        self.assertEqual(
+            'Keyword argument \'dt\' must a initialized to a value greater than 0. Currently passed in 0.',
+            str(cm.exception)
+        )
+
+        with self.assertRaises(TypeError) as cm:
+            m.calc_error(results.times, results.inputs, results.outputs, dt = {1})
+        self.assertEqual(
+            'Keyword argument \'dt\' must be either a int, float, or double.',
+            str(cm.exception)
+        )
+
+        with self.assertRaises(TypeError) as cm:
+            m.calc_error(results.times, results.inputs, results.outputs, x0 = 1)
+        self.assertEqual(
+            "Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a int.",
+            str(cm.exception)
+        )
+
+        with self.assertRaises(ValueError) as cm:
+            m.calc_error(results.times, results.inputs, results.outputs, 
+                     dt = 1, stability_tol=10)
+        self.assertEqual(
+            'Configurable cutoff must be some float value in the domain (0, 1]. Received 10.',
+            str(cm.exception)
+        )
+
+        with self.assertRaises(TypeError) as cm:
+            m.calc_error(results.times, results.inputs, results.outputs, stability_tol = {1})
+        self.assertEqual(
+            "Keyword argument 'stability_tol' must be either a int, float, or double.",
+            str(cm.exception)
+        )
+
+    def test_instability(self):
+        """
+        Unstable Model Tests
+        """
         m = BatteryElectroChemEOD()
 
         options = {
@@ -86,84 +160,6 @@ class TestCalcError(unittest.TestCase):
             str(cm.warning)
         )
 
-    def test_MSE(self):
-        """
-        Base tests that ensure first-level workability within calc_error
-        """
-        m = ThrownObject()
-        m2 = ThrownObject()
-        results = m.simulate_to_threshold(save_freq=0.5)
-        gt = m.parameters.copy()
-
-        # Arbitrary Test to ensure that both models are behaving the same way
-        self.assertEqual(m.calc_error(results.times, results.inputs, results.outputs),
-                            m2.calc_error(results.times, results.inputs, results.outputs))
-        
-        resultsm2 = m2.simulate_to_threshold(save_freq = 0.5)
-        m2.parameters['throwing_speed'] = 35
-        key = ['throwing_speed']
-
-        previous = m2.calc_error(resultsm2.times, resultsm2.inputs, resultsm2.outputs)
-
-        self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs),
-                            previous)
-        
-        m2.estimate_params(times = resultsm2.times, inputs = resultsm2.inputs, outputs = resultsm2.outputs, keys = key, dt = 1)
-
-        for i in key:
-            # We can compare with gt because m and m2 originally were the same, and gt was a copy of m.
-            self.assertAlmostEqual(m2.parameters[i], gt[i], 2)
-
-        self.assertNotEqual(m.calc_error(results.times, results.inputs, results.outputs),
-                    previous)
-        
-        self.assertLess(m2.calc_error(resultsm2.times, resultsm2.inputs, resultsm2.outputs), previous)
-
-        # By changing the 
-        for i in np.arange(0.1, 1, 0.1):
-            m.calc_error(results.times, results.inputs, results.outputs, dt=i)
-
-        for i in range(2, 10):
-            m.calc_error(results.times, results.inputs, results.outputs, dt=i)
-
-        # Unique Tests for calc_error
-        m.parameters['throwing_speed'] = 41
-        
-        with self.assertRaises(ValueError) as cm:
-            m.calc_error(results.times, results.inputs, results.outputs, dt = 0)
-        self.assertEqual(
-            'Keyword argument \'dt\' must a initialized to a value greater than 0. Currently passed in 0.',
-            str(cm.exception)
-        )
-
-        with self.assertRaises(TypeError) as cm:
-            m.calc_error(results.times, results.inputs, results.outputs, dt = {1})
-        self.assertEqual(
-            'Keyword argument \'dt\' must be either a int, float, or double.',
-            str(cm.exception)
-        )
-
-        with self.assertRaises(TypeError) as cm:
-            m.calc_error(results.times, results.inputs, results.outputs, x0 = 1)
-        self.assertEqual(
-            "Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a int.",
-            str(cm.exception)
-        )
-
-        with self.assertWarns(UserWarning) as cm:
-            m.calc_error(results.times, results.inputs, results.outputs, 
-                     dt = 1, stability_tol=10)
-        self.assertEqual(
-            'Configurable cutoff must be some float value in the domain (0, 1]. Received 10. Resetting value to 0.95.',
-            str(cm.warning)
-        )
-
-        with self.assertRaises(TypeError) as cm:
-            m.calc_error(results.times, results.inputs, results.outputs, stability_tol = {1})
-        self.assertEqual(
-            "Keyword argument 'stability_tol' must be either a int, float, or double.",
-            str(cm.exception)
-        )
 
     def test_multiple(self):
         m = ThrownObject()
@@ -201,7 +197,7 @@ class TestCalcError(unittest.TestCase):
 
         incorrectTimes = [[0, 1, 2, 4, 5, 6, 7, 8], [0, 1, 2, 3]]
 
-        # Testing when one of the _runs has a data point of different length
+        # Testing when one of the _runs has an argument of different length
         with self.assertRaises(ValueError) as cm:
             m.calc_error(incorrectTimes, inputs, outputs)
         self.assertEqual(
@@ -268,7 +264,7 @@ class TestCalcError(unittest.TestCase):
             str(cm.exception)
         )
 
-        # Passing in tuples where, where inputs and outputs do not contain dicts or StateContainers, rather contain ints
+        # Passing in tuples where inputs and outputs do not contain dicts or StateContainers, rather contain ints
         with self.assertRaises(TypeError) as cm:
             m.calc_error((1, 2, 3), (2, 3, 4), (3, 4, 5))
         self.assertEqual(
@@ -331,7 +327,7 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
         self.assertEqual(
-            "Some, but not all elements, are iterable for argument times.",
+            "Some, but not all elements, are iterables for argument times.",
             str(cm.exception)
         )
 
@@ -351,21 +347,22 @@ class TestCalcError(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             m.calc_error(times, inputs, outputs)
         self.assertEqual(
-            "Some, but not all elements, are iterable for argument times at data location 0.",
+            "Some, but not all elements, are iterables for argument times at data location 0.",
             str(cm.exception)
         )
 
         with self.assertRaises(KeyError) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, method = "Test")
         self.assertEqual(
-            "Error method 'Test' not supported",
+            '"Error method \'Test\' not supported"',
             str(cm.exception)
         )
 
         # Test other valid methods do not raise an exception
-        methods = ["max_e", "rmse", "mae", "mape"]
+        methods = ["max_e", "rmse", "mae", "mape", "dtw"]
         for method in methods:
             m.calc_error(results.times, results.inputs, results.outputs, method=method)
+
 
     def test_DTW(self):
         """
@@ -389,7 +386,7 @@ class TestCalcError(unittest.TestCase):
         # Given the same preselected data, we are now removing values from times, inputs, and outputs, to create 'shifts' in data.
         # Our default Mean Squared Error method would produce a high error given the newly transformed data, however, our DTW method would correctly match each time to its corresponding outputs.
         times = [0.0, 1.0, 1.5, 2.0, 2.5, 3.5, 4.0, 4.5, 5.0, 6.5, 7.5, 8.0, 8.5, 9.0]
-        inputs = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+        inputs = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
         outputs = [{'x': 2.83}, {'x': 40.422881456712254}, {'x': 55.51861687290881}, {'x': 68.06865643702567}, 
                    {'x': 78.16641111234323}, {'x': 85.89550327176332}, {'x': 91.18868647545982}, {'x': 94.01376508127296}, 
                    {'x': 94.31711597903195}, {'x': 87.67210201789473}, {'x': 44.79567793740186}, 
@@ -403,10 +400,6 @@ class TestCalcError(unittest.TestCase):
         MSE_err = m.calc_error(times, inputs, outputs)
         self.assertLess(DTW_err, MSE_err)
 
-
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
