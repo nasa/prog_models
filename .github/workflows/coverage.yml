@@ -23,7 +23,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ hashFiles('setup.py') }}-pip
+        key: pip-cache
     - name: Install additional dependencies
       run: |
         pip install coverage

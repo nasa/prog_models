@@ -26,7 +26,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ hashFiles('setup.py') }}-pip
+        key: pip-cache
     - name: Update
       run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Run tests
@@ -47,7 +47,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ hashFiles('setup.py') }}-pip
+        key: pip-cache
     - name: Update
       run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Run tests
@@ -100,7 +100,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ hashFiles('setup.py') }}-pip
+        key: pip-cache
     - name: Update
       run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Clone prog_algs
