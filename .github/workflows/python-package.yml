@@ -22,13 +22,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e .
-        python -m pip install notebook
-        python -m pip install testbook
-        python -m pip install requests
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ hashFiles('setup.py') }}-pip
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Run tests
       run: python -m tests
   # test_prog_algs_released:
@@ -75,13 +75,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e .
-        pip install notebook
-        pip install testbook
-        pip install requests
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ hashFiles('setup.py') }}-pip
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Clone prog_algs
       uses: actions/checkout@v3
       with:
@@ -122,15 +122,17 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ hashFiles('setup.py') }}-pip
+    - name: Install additional dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e .
         pip install coverage
-        pip install notebook
-        pip install testbook
-        pip install requests
         pip install importlib_metadata
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Run coverage
       run: |
         coverage run -m tests.test_base_models
