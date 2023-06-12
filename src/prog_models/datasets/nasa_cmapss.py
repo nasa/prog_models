@@ -26,7 +26,7 @@ def load_data(dataset_id: int) -> tuple:
     Data Set: 2
         | Train trajectories: 260
         | Test trajectories: 259
-        | Conditions: SIX 
+        | Conditions: SIX
         | Fault Modes: ONE (HPC Degradation)
 
     Data Set: 3
@@ -84,7 +84,8 @@ def load_data(dataset_id: int) -> tuple:
         # Download data
         try:
             response = requests.get(URL, allow_redirects=True)
-        except requests.exceptions.RequestException as e: # handle chain of errors
+        except requests.exceptions.RequestException: 
+            # handle chain of errors
             raise ConnectionError("Data download failed. This may be because of issues with your internet connection or the datasets may have moved. Please check your internet connection and make sure you're using the latest version of prog_models. If the problem persists, please submit an issue on the prog_models issue page (https://github.com/nasa/prog_models/issues) for further investigation.")
 
         # Unzip response
@@ -98,18 +99,22 @@ def load_data(dataset_id: int) -> tuple:
     with cache.open(f'test_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
             test = np.loadtxt(f2)
-            test = pd.DataFrame(test, columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1,22)])
+            test = pd.DataFrame(
+                test,
+                columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1, 22)])
 
     with cache.open(f'train_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
             train = np.loadtxt(f2)
-            train = pd.DataFrame(train, columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1, 22)])
+            train = pd.DataFrame(
+                train,
+                columns=['unit', 'cycle', 'setting1', 'setting2', 'setting3'] + [f'sensor{i}' for i in range(1, 22)])
 
     with cache.open(f'RUL_{dataset_id}.txt', mode='r') as f:
         with io.BufferedReader(f) as f2:
             rul = np.loadtxt(f2)
 
-    # Return results 
+    # Return results
     return (test, train, rul)
 
 def clear_cache() -> None:

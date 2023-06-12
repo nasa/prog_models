@@ -22,7 +22,6 @@ from tests.test_uav_model import main as uav_main
 
 if __name__ == '__main__':
     was_successful = True
-
     print("\n\nTesting individual execution of test files")
 
     # Run tests individually to test them and make sure they can be executed individually
