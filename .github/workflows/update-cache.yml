@@ -1,6 +1,7 @@
 name: Update cache 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+  
 jobs:
   cache-dependencies:
     timeout-minutes: 30
