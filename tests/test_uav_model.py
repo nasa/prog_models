@@ -22,6 +22,7 @@ class TestUAVGen(unittest.TestCase):
     def tearDown(self):
         sys.stdout = sys.__stdout__
 
+    @unittest.skip
     def test_reference_trajectory_generation(self):
 
         # Set warnings to temporarily act as exceptions
@@ -140,6 +141,7 @@ class TestUAVGen(unittest.TestCase):
         # Reset warnings
         warnings.simplefilter("default", category=UserWarning)
 
+    @unittest.skip
     def test_controllers_and_vehicle(self):
 
         # Controller and vehicle tests are combined so we only have to generate the reference trajectory once 

@@ -207,7 +207,10 @@ class LQR_I(LQR):
             Input penalty matrix, size num_inputs x num_inputs (where num_inputs only includes inputs that inform the system dynamics)
             Represents how 'hard' it is to produce the desired input (thrust and three moments along three axes)
         int_lag (int):
-            
+            Length of the time window, in number of simulation steps, to integrate the state position error. The time window is defined 
+            as the last int_lag discrete steps up until the current discrete time step. The integral of the state position error adds to 
+            the overall state error to compute the gain matrix, and helps compensate for constant offsets between the reference (desired) 
+            position and the actual position of the vehicle.
         scheduled_var (str):
             Variable used to create the scheduled controller gains; must correspond to a state key
         index_scheduled_var (int):
