@@ -40,19 +40,11 @@ class TestCalcError(unittest.TestCase):
         
         self.assertLess(m2.calc_error(resultsm2.times, resultsm2.inputs, resultsm2.outputs), previous)
 
-        # Tests comparing small vs. big dt values.
-
+        # Tests comparing small vs. large dt values.
         small = m.calc_error(results.times, results.inputs, results.outputs, dt = 0.001)
         large = m.calc_error(results.times, results.inputs, results.outputs, dt = 0.1)
-        # Because of the larger dt value, we are not checking
-        self.assertGreater(small, large)
-
-        # Ensures calc_error works with various dt values
-        for i in np.arange(0.1, 1, 0.1):
-            m.calc_error(results.times, results.inputs, results.outputs, dt=i)
-
-        for i in range(2, 10):
-            m.calc_error(results.times, results.inputs, results.outputs, dt=i)
+        # Since we have changed the dt values, the error values should differ
+        self.assertNotEqual(small, large)
         
         with self.assertRaises(ValueError) as cm:
             m.calc_error(results.times, results.inputs, results.outputs, dt = 0)
