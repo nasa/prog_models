@@ -9,7 +9,7 @@ The model is used in a simulation, and the state is printed every second
 
 import numpy as np
 from prog_models import LinearModel
-
+        
 class ThrownObject(LinearModel):
     """
     Model that simulates an object thrown into the air without air resistance

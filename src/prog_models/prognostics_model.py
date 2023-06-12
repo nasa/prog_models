@@ -1111,6 +1111,7 @@ class PrognosticsModel(ABC):
                 * MAX_E (Maximum Error)
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
+                * DTW (Dynamic Time Warping)
             x0 (dict, optional): Initial state
             dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to time between samples.
             stability_tol (double, optional): Configurable parameter.
@@ -1145,6 +1146,8 @@ class PrognosticsModel(ABC):
             return calc_error.MAE(self, times, inputs, outputs, **kwargs)
         if method.lower() == 'mape':
             return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
+        if method.lower() == 'dtw':
+            return calc_error.DTW(self, times, inputs, outputs, **kwargs)
 
         # If we get here, method is not supported
         raise ValueError(f"Error method '{method}' not supported")
@@ -1306,7 +1309,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise
 
-        return res   
+        return res
 
 
     def generate_surrogate(self, load_functions: List[abc.Callable], method: str = 'dmd', **kwargs):
