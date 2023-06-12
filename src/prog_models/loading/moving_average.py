@@ -25,7 +25,7 @@ class MovingAverage():
     >>>     future_load.add_load(load)
     >>> m.simulate_to_threshold(future_load)
     """
-    def __init__(self, InputContainer, window=10):
+    def __init__(self, InputContainer: type, window: int = 10):
         self.window = window
         self.InputContainer = InputContainer
         self.values = {}
@@ -44,7 +44,7 @@ class MovingAverage():
             self.values[key][self.index] = value
         self.index = (self.index + 1) % self.window
 
-    def __call__(self, t, x=None):
+    def __call__(self, t: float, x=None):
         """
         Return the average of the values in the window
 
@@ -56,42 +56,3 @@ class MovingAverage():
             InputContainer: The average of the values in the window
         """
         return self.InputContainer({key: np.mean(self.values[key]) for key in self.values})
-
-
-class GuassianNoiseLoadWrapper():
-    """
-    This is a simple wrapper for future loading functions that adds gaussian noise to the inputs. It takes a future loading function and a standard deviation and returns a new future loading function that adds gaussian noise to the inputs.
-
-    Parameters
-    ----------
-    fcn : function
-        The future loading function to wrap
-    std : float
-        The standard deviation of the gaussian noise to add
-
-    Example
-    -------
-    >>> from prog_models.loading import GuassianNoiseLoadWrapper
-    >>> m = SomeModel()
-    >>> future_load = GuassianNoiseLoadWrapper(future_load, STANDARD_DEV)
-    >>> m.simulate_to_threshold(future_load)
-    """
-    def __init__(self, fcn, std):
-        self.fcn = fcn
-        self.std = std
-
-    def __call__(self, t, x=None):
-        """
-        Return the load with noise added
-
-        Args:
-            t (float): Time (s)
-            x (StateContaienr, optional): Current state. Defaults to None.
-
-        Returns:
-            InputContainer: The load with noise added
-        """
-        input = self.fcn(t, x)
-        for key, value in input.items():
-            input[key] = np.random.normal(value, self.std)
-        return input

@@ -30,7 +30,7 @@ class EnsembleModel(PrognosticsModel):
         'aggregation_method': np.mean,
     }
 
-    def __init__(self, models, **kwargs):
+    def __init__(self, models: list, **kwargs):
         if not isinstance(models, Sequence):
             raise TypeError(f'EnsembleModel must be initialized with a list of models, got {type(models)}')
         if len(models) < 2:

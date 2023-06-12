@@ -7,7 +7,6 @@ import unittest
 import warnings
 
 from prog_models.data_models import PCE
-from prog_models.exceptions import ProgModelInputException
 from prog_models.models import ThrownObject, BatteryElectroChemEOD, DCMotorSP
 from prog_models.models.test_models.linear_models import OneInputNoOutputOneEventLM, OneInputNoOutputTwoEventLM, TwoInputNoOutputOneEventLM, TwoInputNoOutputTwoEventLM
 
@@ -26,45 +25,46 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(TypeError):
             m.generate_surrogate(None)
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], method='invalid')
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], save_pts=[10])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], trim_data_to=-1)
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], trim_data_to='invalid')
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], trim_data_to=1.5)
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], states=['invalid'])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], states=['x', 'invalid', 'v'])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], inputs=['invalid'])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], outputs=['invalid'])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], outputs=['invalid', 'x'])    
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], events=['invalid'])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], events=['falling', 'impact', 'invalid'])
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], stability_tol=-1)
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], stability_tol='invalid')
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], training_noise=-1)
-        with self.assertRaises(ProgModelInputException):
+        with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], training_noise=['invalid'])
     
     def test_surrogate_basic_thrown_object(self):
         m = ThrownObject(process_noise=0, measurement_noise=0)
+
         def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
@@ -586,9 +586,6 @@ class TestSurrogate(unittest.TestCase):
         self._pce_tests(m) 
             
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

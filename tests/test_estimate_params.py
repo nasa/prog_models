@@ -1050,9 +1050,6 @@ class TestEstimateParams(unittest.TestCase):
         self.assertNotEqual(override1, override3)
         self.assertEqual(override2, override3)
 
-def run_tests():
-    unittest.main()
-    
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

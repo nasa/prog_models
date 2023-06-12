@@ -7,6 +7,7 @@ from os.path import dirname, join
 import pkgutil
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.append(join(dirname(__file__), ".."))  # needed to access examples
 from examples import *
@@ -17,7 +18,7 @@ def make_test_function(example):
     def test(self):
         ex = import_module("examples." + example)
 
-        with unittest.mock.patch('matplotlib.pyplot.show'):
+        with patch('matplotlib.pyplot.show'):
             ex.run_example()
     return test
 
@@ -32,16 +33,12 @@ class TestExamples(unittest.TestCase):
         sys.stdout = sys.__stdout__
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
     # Create tests for each example
     for _, name, _ in pkgutil.iter_modules(['examples']):
         if name not in EXAMPLES_SKIPPED:
             test_func = make_test_function(name)
             setattr(TestExamples, 'test_{0}'.format(name), test_func)   
-
 
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()

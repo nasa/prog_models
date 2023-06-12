@@ -3,7 +3,6 @@
 
 from setuptools import setup, find_packages
 import pathlib
-import pkg_resources
 
 here = pathlib.Path(__file__).parent.resolve()
 
@@ -16,6 +15,7 @@ INSTALL_REQS = [
         'matplotlib',
         'requests',  # For data downloading features
         'chaospy',  # For PCE
+        'fastdtw', # For DTW error calculation
         "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'", 
         "tensorflow-macos; platform_system=='Darwin' and platform_machine=='arm64'",
     ]
