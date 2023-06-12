@@ -82,6 +82,263 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Run tests
       run: python -m tests.test_centrifugal_pump
+  test_data_model:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_data_model
+  test_datasets:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: |
+        pip install --upgrade --upgrade-strategy eager -e .
+        pip install --upgrade --upgrade-strategy requests
+    - name: Run tests
+      run: python -m tests.test_datasets
+  test_dict_like_matrix_wrapper:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_dict_like_matrix_wrapper
+  test_direct:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_direct
+  test_ensemble:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_ensemble
+  test_estimate_params:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_estimate_params
+  test_examples:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_examples
+  test_linear_model:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_linear_model
+  test_pneumatic_valve:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_pneumatic_valve
+  test_powertrain:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_powertrain
+  test_serialization:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_serialization
+  test_sim_result:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_sim_result
+  test_surrogates:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_surrogates
+  test_tutorials:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: |
+        pip install --upgrade --upgrade-strategy eager -e .
+        python -m pip install --upgrade --upgrade-strategy notebook
+        python -m pip install --upgrade --upgrade-strategy testbook
+    - name: Run tests
+      run: python -m tests.test_tutorials
   # test_prog_algs_released:
   #   timeout-minutes: 30
   #   runs-on: ubuntu-latest
