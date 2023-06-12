@@ -1,13 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections import UserList, defaultdict
+from collections import UserList, defaultdict, abc
 from copy import deepcopy
-from warnings import warn
-
 from matplotlib.pyplot import figure
 import numpy as np
 import pandas as pd
-from typing import Callable, Dict, List
+from typing import Dict, List
 from warnings import warn
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
@@ -27,6 +25,7 @@ class SimResult(UserList):
 
     def __init__(self, times: list = None, data: list = None, _copy=True):
         self._frame = None
+        self._has_changed = True
         if times is None or data is None:
             self.times = []
             self.data = []
@@ -57,50 +56,59 @@ class SimResult(UserList):
     
     def iterrows(self):
         """
-            Iterates -- through keys
+        Iterates through each row of the SimResult. Each row is a dictionary of the data at that time step.
         """
         return super().__iter__()
+
+    def _get_frame(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        # .frame, but without the warning
+        if self._frame is None or self._has_changed:
+            # The data has changed since the last time _frame was calculated
+            # Then recalculate _frame
+            if len(self.data) > 0:
+                self._frame = pd.concat([
+                    pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
+                ], ignore_index=True, axis=0)
+            else:
+                # No data
+                self._frame = pd.DataFrame()
+            self._frame.insert(0, "time", self.times)
+            self._frame.reindex()
+            self._has_changed = False
+        return self._frame
 
     @property
     def frame(self) -> pd.DataFrame:
         """
-            pd.DataFrame: A pandas DataFrame representing the SimResult data
+        pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
         warn('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
-        if len(self.data) > 0:  #
-            self._frame = pd.concat([
-                pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
-            ], ignore_index=True, axis=0)
-        else:
-            self._frame = pd.DataFrame()
-        if self.times is not None:
-            self._frame.insert(0, "time", self.times)
-            self._frame.reindex()
-        return self._frame
+        return self._get_frame()
 
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
-        if self._frame is not None:
-            for col in value:
-                self._frame.at[key, col] = value[col]
+        self._has_changed = True
 
     def __delitem__(self, key):
         super().__delitem__(self, key)
-        if self._frame is not None:
-            self._frame = self._frame.drop([key])
+        self._has_changed = True
 
     def insert(self, i: int, item) -> None:
         self.insert(i, item)
-        if self._frame is not None:
-            for value in item:
-                self._frame.insert(i, column=[value], value=item[value])
+        self._has_changed = True
 
     @property
     def iloc(self):
         """
         returns the iloc indexer
         """
-        return self.frame.iloc
+        # Use _get_frame() to avoid warning being raised
+        return self._get_frame().iloc
 
     def equals(self, other: "SimResult") -> bool:
         """
@@ -140,10 +148,8 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
-        warn('index will be deprecated after version 1.5 of ProgPy. The function will be renamed, indexofdata, and users may begin using it under this name now.',
-            DeprecationWarning, stacklevel=2)
-
         return self.data.index(other, *args, **kwargs)
+    
     def index(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
@@ -155,7 +161,7 @@ class SimResult(UserList):
             int: Index of first sample where other occurs
         """
         warn(
-            'index will be deprecated after version 1.5 of ProgPy. The function will be renamed, indexofdata, and users may begin using it under this name now.',
+            'index will be deprecated after version 1.5 of ProgPy. The function will be renamed, index_of_data, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
 
         return self.index_of_data(other, *args, **kwargs)
@@ -173,9 +179,7 @@ class SimResult(UserList):
             self.data.extend(other.data)
         else:
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
-        if self._frame is not None:
-            self._frame = None
-            self._frame = self.frame
+        self._has_changed = True
 
     def pop_by_index(self, index: int = -1) -> dict:
         """Remove and return an element
@@ -187,8 +191,7 @@ class SimResult(UserList):
             dict: Element Removed
         """
         self.times.pop(index)
-        if self._frame is not None:
-            self._frame = self._frame.drop([index])
+        self._has_changed = True
         return self.data.pop(index)
 
     def pop(self, index: int = -1) -> dict:
@@ -201,11 +204,8 @@ class SimResult(UserList):
             dict: Element Removed
         """
         warn(
-            'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
+            'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed to pop_by_index, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
-        if self._frame is not None:
-            self._frame = self._frame.drop([index])
-
         return self.pop_by_index(index)
 
 
@@ -229,6 +229,7 @@ class SimResult(UserList):
         """Clear the SimResult"""
         self.times = []
         self.data = []
+        self._has_changed = True
         self._frame = None
 
     def time(self, index: int) -> float:
@@ -261,6 +262,7 @@ class SimResult(UserList):
         if keys is None:
             keys = self.data[0].keys()
         return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
+
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
@@ -336,7 +338,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     Used to store the result of a simulation, which is only calculated on first request
     """
 
-    def __init__(self, fcn: Callable, times: list = None, states: list = None, _copy=True) -> None:
+    def __init__(self, fcn: abc.Callable, times: list = None, states: list = None, _copy=True) -> None:
         """
         Args:
             fcn (callable): function (x) -> z where x is the state and z is the data
@@ -371,6 +373,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         """
         self.times = []
         self.__data = None
+        self._has_changed = True
         self.states = []
 
     def extend(self, other: "LazySimResult", _copy=True) -> None:
@@ -393,6 +396,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
                 self.__data = None
             else:
                 self.__data.extend(other.data)
+            self._has_changed = True
         elif (isinstance(other, SimResult)):
             raise ValueError(
                 f"ValueError: {self.__class__} cannot be extended by SimResult. First convert to SimResult using to_simresult() method.")
@@ -412,6 +416,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         x = self.states.pop(index)
         if self.__data is not None:
             return self.__data.pop(index)
+        self._has_changed = True
         return self.fcn(x)
 
     def remove(self, d: float = None, t: float = None, s=None) -> None:
@@ -433,6 +438,7 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
         else:
             target_index = self.data.index(d)
         self.pop(target_index)
+        self._has_changed = True
 
     def to_simresult(self) -> SimResult:
         return SimResult(self.times, self.data)
