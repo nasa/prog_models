@@ -20,7 +20,7 @@ def linearinterp_t(t0, x0, t1, x1, xp):
     :param t0:          independent variable of first point
     :param x0:          dependent variable of first point
     :param t1:          independent variable of second point
-    :param x1:          dependent variable of first point
+    :param x1:          dependent variable of second point
     :param xp:          independent variable of query point
     """
     dx     = x1 - x0
@@ -32,7 +32,7 @@ def linearinterp_t(t0, x0, t1, x1, xp):
 
 def reshape_route_attribute(x, dim=None, msk=None):
     """
-    Reshape route attribute to ensure right length
+    Reshape route attribute to ensure correct length
 
     :param x:           attribute to reshape
     :param dim:         scalar, int or None, desired length of attribute. Used only if x has no attribute "len"
@@ -72,7 +72,7 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
 
 def derivate_position(p, dt):
     """
-    Given a position profile as a funciton of time, p = p(t), derivate it up to 3 times to obtain velocity, acceleration, and jerk
+    Given a position profile as a function of time, p = p(t), derivate it up to 3 times to obtain velocity, acceleration, and jerk
 
     For simplicity of computation as part of a trajectory profile, the derivatives are force to start at 0, e.g.,  velocity[0] = 0.0
 
@@ -103,57 +103,7 @@ def gen_attitude(psi, ax, ay, az, max_phi, max_theta, gravity):
     phi   = np.fmax(np.fmin(phi, max_phi), -max_phi)
     theta = np.fmax(np.fmin(theta, max_theta), -max_theta)
     return phi, theta, psi
-
-
-# Trajectory loading functions 
-# ----------------------------
-def convert_df_inputs(input_df):
-    """
-    Functions to extract user-defined waypoint information and convert to appropriate units for trajectory generation
-
-    Flight plan is input by user in pandas dataframe format. 
-    Column headers must contain: latitude ('lat_deg' or 'lat_rad'), longitude ('lon_deg' or 'lon_rad'), altitude ('alt_ft' or 'alt_m'), and (optional) time ('time_unix')
-    
-    :param input_df:      pandas dataframe with columns for waypoints latitude, longitude, altitude, and optional time        
-    :return:              flight plan dictionary with keys: lat (in rad), lon (in rad), alt (in m), time_unix, time_stamp.
-    """
-    # Conversion values 
-    DEG2RAD = np.pi/180.0
-    FEET2MET = 0.3048
-
-    # Check units and return exceptions if incorrect:
-    if 'lat_deg' not in input_df.columns and 'lat_rad' not in input_df.columns:
-        raise TypeError("Waypoints latitude must be defined in degrees (with lat_deg) or radians (with lat_rad).")
-    elif 'lon_deg' not in input_df.columns and 'lon_rad' not in input_df.columns:
-        raise TypeError("Waypoints longitude must be defined in degrees (with lon_deg) or radians (with lon_rad).")
-    elif 'alt_ft' not in input_df.columns and 'alt_m' not in input_df.columns:
-        raise TypeError("Waypoints altitude must be defined in feet (with alt_ft) or meters (with alt_m).")
-    if len(input_df.columns) > 3 and 'time_unix' not in input_df.columns:
-        raise TypeError("Waypoints input includes unrecognized values. Use lat_deg, lon_deg, alt_ft, and time_unix to specify.")
-
-    # Convert units, if necessary
-    if 'lat_deg' in input_df.columns:
-        lat = (input_df['lat_deg'] * DEG2RAD).to_numpy()
-        lon = (input_df['lon_deg'] * DEG2RAD).to_numpy()
-    else: 
-        lat = (input_df['lat_rad']).to_numpy()
-        lon = (input_df['lon_rad']).to_numpy()
-    if 'alt_ft' in input_df.columns:
-        alt = (input_df['alt_ft'] * FEET2MET).to_numpy()
-    else: 
-        alt = (input_df['alt_m']).to_numpy()
-        
-    if 'time_unix' in input_df.columns:
-        time_unix = (input_df['time_unix']).to_numpy()
-        timestamps = [dt.datetime.fromtimestamp(time_unix[ii]) for ii in range(len(time_unix))]
-    else: 
-        # If no time stamp was available from file, add current time stamp and corresponding unix time.
-        timestamps = [dt.datetime.now()]
-        time_unix  = [timestamps[0].timestamp()]
-
-    return {'lat_rad': lat, 'lon_rad': lon, 'alt_m': alt, 'timestamp': timestamps, 'time_unix': time_unix}
    
-
 class Trajectory():
     """
     Trajectory class.
@@ -179,12 +129,12 @@ class Trajectory():
             'nurbs_order': 4                    -, order of the NURBS used to generate the position profile
             'waypoint_weight': 20               -, default weight value associated to all the waypoints. 
             'weight_vector': None               -, waypoint weight vector. Default is None (all waypoints will have same value from 'waypoint_weight'). If passed, the user can define different weight for each waypoints, such that some waypoints will be approached more closely and some will be approached more smoothly.
-            'nurbs_basis_length': 1000          -, default length of basis funciton used to generate the position profile with the NURBS.
+            'nurbs_basis_length': 1000          -, default length of basis function used to generate the position profile with the NURBS.
             
-            'cruise_speed': 6.0                 m/s, desired cruise speed in-between waypoints. If ETAs are provided, this value is ignored.
-            'ascent_speed': 3.0                 m/s, desired ascent speed in-between waypoints. If ETAs are provided, this value is ignored.
-            'descent_speed': 3.0                m/s, desired descent speed in-between waypoints. If ETAs are provided, this value is ignored.
-            'landing_speed': 1.5                m/s, desired landing speed in-between waypoints. This speed is used when the vehicle's altitude is lower than 'landing_altitude' parameter. If ETAs are provided, this value is ignored.
+            'cruise_speed': 6.0                 m/s, desired cruise speed between waypoints. If ETAs are provided, this value is ignored.
+            'ascent_speed': 3.0                 m/s, desired ascent speed between waypoints. If ETAs are provided, this value is ignored.
+            'descent_speed': 3.0                m/s, desired descent speed between waypoints. If ETAs are provided, this value is ignored.
+            'landing_speed': 1.5                m/s, desired landing speed between waypoints. This speed is used when the vehicle's altitude is lower than 'landing_altitude' parameter. If ETAs are provided, this value is ignored.
             'landing_altitude': 10.5            m, landing altitude below which the vehicle is supposed to move at 'landing_speed'
     """
     def __init__(self, 
@@ -205,7 +155,7 @@ class Trajectory():
             raise ValueError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays, with n > 1.")
         if isinstance(etas,np.ndarray):
             raise TypeError("ETAs must be provided as a list of datetime objects.")
-        if etas != None:
+        if etas is not None:
             if not isinstance(etas,list):
                 raise TypeError("ETAs must be provided as a list of datetime objects.")
             if len(etas) != 1 and len(etas) != lat.shape[0]:
@@ -243,12 +193,12 @@ class Trajectory():
         # Generate Heading
         self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
 
-        # Set up coordinate system converstion between Geodetic, Earth-Centric Earth-Fixed (ECF), and Cartesian (East-North-Up, ENU)
+        # Set up coordinate system conversion between Geodetic, Earth-Centric Earth-Fixed (ECF), and Cartesian (East-North-Up, ENU)
         # -----------------------------------------------------------------------------------------------------------------------
         self.coordinate_system = geom.Coord(self.waypoints['lat'][0], self.waypoints['lon'][0], self.waypoints['alt'][0])
 
         # Define speed parameters - only necessary if ETAs are not defined 
-        # ---------------------
+        # ----------------------------------------------------------------
         if etas != None and ('cruise_speed' in kwargs or 'ascent_speed' in kwargs or 'descent_speed' in kwargs or 'landing_speed' in kwargs):
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent, landing) instead, do not specify ETAs.")
         if etas is None and ('cruise_speed' not in kwargs or 'ascent_speed' not in kwargs or 'descent_speed' not in kwargs or 'landing_speed' not in kwargs):
@@ -263,10 +213,10 @@ class Trajectory():
         # Set landing waypoints dimensions
         idx_land_pos = self.set_landing_waypoints()
 
-        # Set etas for way-points
+        # Set ETAs for waypoints
         self.set_eta(idx_land_pos=idx_land_pos) 
         
-        # Generate ETAs at waypoints in unix-time from dt
+        # Generate ETAs at waypoints in unix time from dt
         self.waypoints['eta_unix'] = np.asarray([self.waypoints['eta'][item].timestamp() for item in range(len(self.waypoints['eta']))])  # convert to unix time
 
         # Get waypoints in cartesian frame, unix time, and calculate heading angle for yaw
@@ -411,8 +361,8 @@ class Trajectory():
         :param dt:          s, scalar, time step size used to interpolate the waypoints and generate the trajectory
         :return:            dictionary of state variables describing the trajectory as a function of time
         """
-        self.parameters.update(**kwargs)    # Overide NURBS parameters
-        assert len(self.parameters['weight_vector']) == len(self.waypoints['x']), "Length of waypoint weight vector and number of way-points must coincide."
+        self.parameters.update(**kwargs)    # Override NURBS parameters
+        assert len(self.parameters['weight_vector']) == len(self.waypoints['x']), "Length of waypoint weight vector and number of waypoints must coincide."
 
         self.compute_trajectory_nurbs(dt)     # GENERATE NURBS-BASED TRAJECTORY
         self.__adjust_eta_given_max_acceleration(dt)    # Adjust profile according to max accelerations
@@ -483,14 +433,14 @@ class Trajectory():
         Set waypoints at altitude defined by landing_altitude.
         By so doing, the trajectory can split the ascending and descending phases into segments, and assign the landing_speed to all segments that
         fall below the landing_alt mark.
-        :return:                        int, n x 1 array, indices of way-points that define the landing.
+        :return:                        int, n x 1 array, indices of waypoints that define the landing.
         """
         
         # get boolean flag where altitude is below the landing altitude, and get the corresponding indices
         idx_land     = np.asarray(self.waypoints['alt'] < self.speed_parameters['landing_altitude'])
         idx_land_pos = np.where(idx_land)[0]    
         
-        # if there are waypoints below landing altitude: append a landing way-point (with altitude self.speed_parameters['landing_altitude']) accordingly.
+        # if there are waypoints below landing altitude: append a landing point (with altitude self.speed_parameters['landing_altitude']) accordingly.
         if idx_land_pos.size != 0:
             n_ = len(self.waypoints['lat'])
             if hasattr(self.waypoints['eta'], '__len__'):
@@ -499,7 +449,7 @@ class Trajectory():
                 m_ = 0
             counter = 0
             for item in idx_land_pos:
-                if item == 0:   # if first element is below, just add a landing way-point
+                if item == 0:   # if first element is below, just add a landing waypoint
                     self.waypoints['lat'] = np.insert(self.waypoints['lat'], item + 1, self.waypoints['lat'][item])
                     self.waypoints['lon'] = np.insert(self.waypoints['lon'], item + 1, self.waypoints['lon'][item])
                     if m_ > 1:
@@ -512,7 +462,7 @@ class Trajectory():
                     self.waypoints['alt'] = np.insert(self.waypoints['alt'], item + 1, self.speed_parameters['landing_altitude']*1.0)
                     counter += 1
 
-                elif item == n_-1: # if one before the last element, add landing way-points right before landing.
+                elif item == n_-1: # if one before the last element, add landing waypoints right before landing.
                     if self.waypoints['alt'][item+counter-1] > self.speed_parameters['landing_altitude']:
                         self.waypoints['lat'] = np.insert(self.waypoints['lat'], -1, self.waypoints['lat'][item+counter-1])
                         self.waypoints['lon'] = np.insert(self.waypoints['lon'], -1, self.waypoints['lon'][item+counter-1])
@@ -565,13 +515,13 @@ class Trajectory():
     
     def set_eta(self, idx_land_pos, hovering=0):
         """
-        Assign ETAs to way-points, according 
+        Assign ETAs to waypoints
         If ETAS are provided (i.e., eta is not None), assign them.
-        If they are not provided, compute them from desired speed.
+        If they are not provided, compute them from desired speeds.
         index of the landing waypoints is necessary to reshape speed values.
 
         :param idx_land_pos:            -, m x 1 array. Index of the added landing waypoints.
-        :param hovering:                s, scalar or n x 1 array. Default = 0. hovering condition to add to the way-points.
+        :param hovering:                s, scalar or n x 1 array. Default = 0. Hovering condition to add to the waypoints.
         """
         # Assign ETAS
         # ============
@@ -593,20 +543,20 @@ class Trajectory():
             etas = np.zeros_like(self.waypoints['eta'], dtype=np.float64)
             for i, eta_i in enumerate(self.waypoints['eta']):
                 etas[i] = dt.datetime.timestamp(eta_i) 
-        # Compute etas
+        # Compute ETAs
         self.eta_compute_and_verify(etas=etas, hovering=hovering)
 
 
     def eta_compute_and_verify(self, etas, hovering, distance_method='greatcircle'):
         """
-        If etas are already provided, verify that they are feasible according to basic
-        average speed estimate, then assign them. If etas are not provided, 
-        calculate them based on the takeoff time, and the desired speed in-between waypoints.
+        If ETAs are already provided, verify that they are feasible according to basic
+        average speed estimate, then assign them. If ETAs are not provided, 
+        calculate them based on the takeoff time, and the desired speed between waypoints.
 
         :param etas:                s, unix, either takeoff time, n x 1 array or None.
         :param hovering:            s, extra time for hovering in between waypoints
         :param distance_method:     string, method used to compute the distance between two points, either 'greatcircle' or 'vincenty'. default = 'greatcircle'
-        :return:                    s, n x 1, ETAs for all way-points.
+        :return:                    s, n x 1, ETAs for all waypoints.
         """
         if len(self.waypoints['alt']) <= 2:
             raise ValueError("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))

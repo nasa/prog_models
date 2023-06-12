@@ -116,11 +116,6 @@ class TestUAVGen(unittest.TestCase):
             # Both ETAs and spees provided, warning is thrown
             params = {'cruise_speed': 1, 'descent_speed': 1, 'ascent_speed': 1, 'landing_speed': 1, 'vehicle_model':vehicle.parameters['vehicle_model']}
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, **params)
-
-        # # Incorrect parameters
-        # with self.assertRaises(UserWarning):
-        #     # dt is incorrectly provided as parameter to ref_traj
-        #     ref_traj = traj_gen(waypoints=waypoints, vehicle=vehicle, **{'dt': 2})
      
         # Test trajectory generation functionality is generating an accurate result
         # Convert waypoints to Cartesian 
