@@ -9,37 +9,36 @@ from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
 from prog_models.models.uav_model.vehicles import vehicles
 from prog_models.utils.traj_gen import geometry as geom
 
-# Small Rotorcraft Model
-# ======================
-class SmallRotorcraft(PrognosticsModel):
 
-    """
+class SmallRotorcraft(PrognosticsModel):
+    r"""
     Vectorized prognostics :term:`model` to generate a predicted trajectory for a small rotorcraft using a n=6 degrees-of-freedom dynamic model
     with feedback control loop. The model follows the form:
     
-    u     = h(x, x_{ref})
-    dx/dt = f(x, \theta, u)
+    .. math::
+        u     = h(x, x_{ref})
+        
+        dx/dt = f(x, \theta, u)
     
     where:
       x is a 2n state vector containing position, attitude and corresponding derivatives
-      \theta is a vector of model parameters including rotorcraft mass, inertia moment, aerodynamic coefficients, etc.
+      :math:`\theta` is a vector of model parameters including rotorcraft mass, inertia moment, aerodynamic coefficients, etc.
       u is the input vector: thrust along the body vertical axis, and three moments along the UAV body axis to follow the desired trajectory.
-      x_{ref} is the desired state vector at that specific time step, with dimension 2n
+      :math:`x_{ref}` is the desired state vector at that specific time step, with dimension 2n
       f(.) is growth rate function of all vehicle state
-      h(.) is the feedback-loop control function that returns the necessary thrust and moments (u vector) to cover the error between desired state x_{ref} and current state x
+      h(.) is the feedback-loop control function that returns the necessary thrust and moments (u vector) to cover the error between desired state :math:`x_{ref}` and current state x
       dx/dt is the state-increment per unit time.
 
-    
-    Model generates cartesian positions and velocities, pitch, roll, and yaw, and angular velocities throughout time to satisfy some user-define waypoints. 
+    Model generates cartesian positions and velocities, pitch, roll, and yaw, and angular velocities throughout time to satisfy some user-define waypoints.
 
-    See [0]_ for modeling details. 
+    See [0]_ for modeling details.
 
     :term:`Events<event>`: (1)
-        TrajectoryComplete: The final time of the reference trajectory has been reached 
+        TrajectoryComplete: The final time of the reference trajectory has been reached
     
     :term:`Inputs/Loading<input>`: (0)
         | T: thrust
-        | mx: moment in x 
+        | mx: moment in x
         | my: moment in y
         | mz: moment in z
         | mission_complete: progression throughout time to final time point in reference trajectory, where 0 is no progress and 1 is mission completed
@@ -55,9 +54,9 @@ class SmallRotorcraft(PrognosticsModel):
         | vy: velocity along y-axis, i.e., velocity along North in fixed inertia frame
         | vz: velocity along z-axis, i.e., velocity Up in fixed inertia frame
         | p: angular velocity around UAV body x-axis
-        | q: angular velocity around UAV body y-axis 
-        | r: angular velocity around UAV body z-axis 
-        | t: time 
+        | q: angular velocity around UAV body y-axis
+        | r: angular velocity around UAV body z-axis
+        | t: time
         | mission_complete: progression throughout time to final time point in reference trajectory, where 0 is no progress and 1 is mission completed
 
     :term:`Outputs<output>`: (12)
@@ -71,14 +70,14 @@ class SmallRotorcraft(PrognosticsModel):
         | vy: velocity along y-axis, i.e., velocity along North in fixed inertia frame
         | vz: velocity along z-axis, i.e., velocity Up in fixed inertia frame
         | p: angular velocity around UAV body x-axis
-        | q: angular velocity around UAV body y-axis 
-        | r: angular velocity around UAV body z-axis 
+        | q: angular velocity around UAV body y-axis
+        | r: angular velocity around UAV body z-axis
 
     Keyword Args
     ------------
         process_noise : Optional, float or dict[str, float]
-          :term:`Process noise<process noise>` (applied at dx/next_state). 
-          Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+          :term:`Process noise<process noise>` (applied at dx/next_state).
+          Can be number (e.g., .2) applied to every state, a dictionary of values for each
           state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, str
           distribution for :term:`process noise` (e.g., normal, uniform, triangular)
@@ -91,7 +90,7 @@ class SmallRotorcraft(PrognosticsModel):
         dt : Optional, float
           Time step in seconds for trajectory generation
         gravity : Optional, float
-          m/s^2, gravity magnitude, 
+          m/s^2, gravity magnitude
         air_density : Optional, float
           kg/m^3, atmospheric density
         steadystate_input : Optional, float
@@ -106,16 +105,16 @@ class SmallRotorcraft(PrognosticsModel):
           m/s, maximum vehicle speed
         vehicle_max_roll : Optional, float
           rad, maximum roll angle
-        vehicle_max_pitch : Optional, float  
-          rad, maximum pitch angle 
+        vehicle_max_pitch : Optional, float
+          rad, maximum pitch angle
 
-    References 
+    References
     ----------
     [0] M. Corbetta et al., "Real-time UAV trajectory prediction for safely monitoring in low-altitude airspace," AIAA Aviation 2019 Forum,  2019. https://arc.aiaa.org/doi/pdf/10.2514/6.2019-3514
     """
 
     events = ['TrajectoryComplete']
-    inputs = ['T','mx','my','mz', 'mission_complete']
+    inputs = ['T', 'mx', 'my', 'mz', 'mission_complete']
     n_inputs = len(inputs)
     states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r', 't', 'mission_complete']
     n_states = len(states)
@@ -126,7 +125,7 @@ class SmallRotorcraft(PrognosticsModel):
 
     default_parameters = {  # Set to defaults
         # Simulation parameters:
-        'dt': 0.1, 
+        'dt': 0.1,
         'gravity': 9.81,
         'air_density': 1.225,
         'steadystate_input': None,
@@ -135,10 +134,10 @@ class SmallRotorcraft(PrognosticsModel):
         'x0': {key: 0.0 for key in states},
 
         # Vehicle parameters:
-        'vehicle_model': 'tarot18', 
+        'vehicle_model': 'tarot18',
         'vehicle_payload': 0.0,
-        'vehicle_max_speed': 15.0, 
-        'vehicle_max_roll': 0.7853981633974483, 
+        'vehicle_max_speed': 15.0,
+        'vehicle_max_roll': 0.7853981633974483,
         'vehicle_max_pitch': 0.7853981633974483
     }
 
@@ -148,7 +147,7 @@ class SmallRotorcraft(PrognosticsModel):
         # Select model
         # ------------
         if not isinstance(self.parameters['vehicle_model'], str):
-          raise TypeError("Vehicle model must be defined as a string.")
+            raise TypeError("Vehicle model must be defined as a string.")
         if self.parameters['vehicle_model'].lower() == 'djis1000':
             self.mass, self.geom, self.dynamics = vehicles.DJIS1000(self.parameters['vehicle_payload'], self.parameters['gravity'])
         elif self.parameters['vehicle_model'].lower() == 'tarot18':   
@@ -166,15 +165,15 @@ class SmallRotorcraft(PrognosticsModel):
                                                       air_density=self.parameters['air_density']),
                         lift=None)
 
-    def dx(self, x : dict, u : dict):
+    def dx(self, x: dict, u: dict):
 
         # Extract useful values
         # ---------------------
         m = self.mass['total']  # vehicle mass
-        Ixx, Iyy, Izz = self.mass['Ixx'], self.mass['Iyy'], self.mass['Izz']    # vehicle inertia
+        Ixx, Iyy, Izz = self.mass['Ixx'], self.mass['Iyy'], self.mass['Izz']  # vehicle inertia
         
         # Input vector
-        T  = u['T']   # Thrust (along body z)
+        T = u['T']   # Thrust (along body z)
         tp = u['mx']  # Moment along body x
         tq = u['my']  # Moment along body y
         tr = u['mz']  # Moment along body z
