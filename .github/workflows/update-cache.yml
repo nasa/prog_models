@@ -1,9 +1,8 @@
 name: Update cache 
 on: [workflow_dispatch]
-
 jobs:
   cache-dependencies:
-    timeout-minutes: 30
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     strategy:
       matrix:
