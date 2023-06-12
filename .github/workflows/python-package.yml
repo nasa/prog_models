@@ -11,17 +11,14 @@ on:
 
 jobs:
   test_base_models:
-    timeout-minutes: 30
+    timeout-minutes: 5
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.7']
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.7'
     - name: Install dependencies cache
       uses: actions/cache@v2
       with:
@@ -32,17 +29,14 @@ jobs:
     - name: Run tests
       run: python -m tests.test_base_models
   test_battery:
-    timeout-minutes: 30
+    timeout-minutes: 10
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.7']
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.7'
     - name: Install dependencies cache
       uses: actions/cache@v2
       with:
@@ -52,6 +46,42 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager -e .
     - name: Run tests
       run: python -m tests.test_battery
+  test_calc_error:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_calc_error
+  test_centrifugal_pump:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    - name: Install dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: pip-cache
+    - name: Update
+      run: pip install --upgrade --upgrade-strategy eager -e .
+    - name: Run tests
+      run: python -m tests.test_centrifugal_pump
   # test_prog_algs_released:
   #   timeout-minutes: 30
   #   runs-on: ubuntu-latest
