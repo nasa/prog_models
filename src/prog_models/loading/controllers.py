@@ -68,6 +68,19 @@ class LQR():
             dictionary of reference trajectories for each state variable (x, y, z, phi, theta, psi, ...)
         vehicle:
             UAV model object
+
+    keyword args: 
+        Q (np.ndarray):
+            State error penalty matrix, size num_states x num_states (where num_states only includes dynamic states)
+            Represents how 'bad' an error is in the state vector w.r.t. the reference state vector
+        R (np.ndarray):
+            Input penalty matrix, size num_inputs x num_inputs (where num_inputs only includes inputs that inform the system dynamics)
+            Represents how 'hard' it is to produce the desired input (thrust and three moments along three axes)
+        scheduled_var (str):
+            Variable used to create the scheduled controller gains; must correspond to a state key
+        index_scheduled_var (int):
+            Index corresponding to the scheduled_var in the state vector
+
     """
     def __init__(self, x_ref, vehicle, **kwargs):
 
@@ -185,6 +198,20 @@ class LQR_I(LQR):
             dictionary of reference trajectories for each state variable (x, y, z, phi, theta, psi, ...)
         vehicle:
             UAV model object
+
+    keyword args: 
+        Q (np.ndarray):
+            State error penalty matrix, size num_states x num_states (where num_states only includes dynamic states)
+            Represents how 'bad' an error is in the state vector w.r.t. the reference state vector
+        R (np.ndarray):
+            Input penalty matrix, size num_inputs x num_inputs (where num_inputs only includes inputs that inform the system dynamics)
+            Represents how 'hard' it is to produce the desired input (thrust and three moments along three axes)
+        int_lag (int):
+            
+        scheduled_var (str):
+            Variable used to create the scheduled controller gains; must correspond to a state key
+        index_scheduled_var (int):
+            Index corresponding to the scheduled_var in the state vector
     """
 
     def __init__(self, x_ref, vehicle, **kwargs):
