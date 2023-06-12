@@ -135,6 +135,7 @@ jobs:
       run: |
         coverage run -m tests.test_base_models
         coverage run -a -m tests.test_battery
+        coverage run -a -m tests.test_calc_error
         coverage run -a -m tests.test_centrifugal_pump
         coverage run -a -m tests.test_composite
         coverage run -a -m tests.test_datasets
