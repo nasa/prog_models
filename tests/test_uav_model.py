@@ -258,10 +258,6 @@ class TestUAVGen(unittest.TestCase):
 
         # Reset warnings
         warnings.simplefilter("default", category=UserWarning)
-
-# This allows the module to be executed directly
-def run_tests():
-    unittest.main()
     
 def main():
     l = unittest.TestLoader()
