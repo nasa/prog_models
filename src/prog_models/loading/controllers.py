@@ -1,12 +1,6 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-"""
-Controllers
-"""
-
-# IMPORTS
-# ========
 import numpy as np
 
 # LQR general function
@@ -36,7 +30,7 @@ def lqr_calc_k(A, B, Q, R):
 
     # --------- Generate hamiltonian matrix ------------ #
     HM1 = A
-    HM2 = - np.dot( np.dot( B, R_inv), B_tr )
+    HM2 = - np.dot(np.dot(B, R_inv), B_tr)
     HM3 = - Q
     HM4 = - A.T
 
@@ -46,28 +40,34 @@ def lqr_calc_k(A, B, Q, R):
 
     # --------- Extract eigevectors whose eigenvalues have real part < 0 ------------ #
     eig_val, eig_vec = np.linalg.eig(HM)
-    V_ = eig_vec[:, np.real(eig_val)<0.0]
+    V_ = eig_vec[:, np.real(eig_val) < 0.0]
 
     # --------- Partition matrix of resulting eigenvectors ------------ #
-    X = V_[:n, :n] # first half (row-wise)
-    Y = V_[n:, :n] # second half (row-wise) 
+    X = V_[:n, :n]  # first half (row-wise)
+    Y = V_[n:, :n]  # second half (row-wise)
 
     # ----------- Estimate control gain ----------------- #
-    K = np.dot( np.dot( np.dot(R_inv, B_tr), Y ), np.linalg.inv(X) )
-    K = np.real(K) # some spuriorus imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
+    K = np.dot(np.dot(np.dot(R_inv, B_tr), Y), np.linalg.inv(X))
+    K = np.real(K)  # some spuriorus imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
 
     # Calculate the eigenvalues of the matrix A - B*K
-    E, _ = np.linalg.eig( A - np.dot(B, K) )
+    E, _ = np.linalg.eig(A - np.dot(B, K))
     return K, E
 
     
 # # CONTROLLERS: FULL STATE VECTOR CONTROL  (i.e., no powertrain)
 # # ==============================================================
 class LQR():
-    """ 
+    """
     Linear Quadratic Regulator UAV Controller
 
     A Controller that calculates the vehicle control inputs for a UAV model (prog_models.models.uav_model).
+
+    args:
+        x_ref (dict[str, np.ndarray]):
+            dictionary of reference trajectories for each state variable (x, y, z, phi, theta, psi, ...)
+        vehicle:
+            UAV model object
     """
     def __init__(self, x_ref, vehicle, **kwargs):
 
@@ -78,7 +78,6 @@ class LQR():
             if not isinstance(vals, np.ndarray):
                 raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
 
-        self.type      = 'LQR'                  # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
         self.n_states  = len(self.states) - 2   # number of states (minus two to remove time and mission_complete)
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled
@@ -89,13 +88,13 @@ class LQR():
         
         # Default control parameters
         # --------------------------------
-        self.parameters = dict(Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]), # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
+        self.parameters = dict(Q=np.diag([1000, 1000, 25000, 100.0, 100.0, 100.0, 1000, 1000, 5000, 1000, 1000, 1000]),  # state error penalty matrix: how 'bad' is an error in the state vector w.r.t. the reference state vector
                                R=np.diag([500, 4000, 4000, 4000]), # input penalty matrix: how 'hard' it is to produce the desired input (thrust and three moments along three axes)
                                scheduled_var='psi',     # variable used to create the scheduled controller gains (only psi allowed for now)
                                index_scheduled_var=5)   # index corresponding to the scheduled_var (psi) in the state vector x; i.e., x[5] = psi
         self.parameters.update(kwargs)                  # update control parameters according to user
 
-        # Get scheduled variable index 
+        # Get scheduled variable index
         self.parameters['index_scheduled_var'] = self.states.index(self.parameters['scheduled_var'])
 
         # Initialize other controller-related variables
@@ -113,7 +112,7 @@ class LQR():
     def __call__(self, t, x=None):
 
         # Check that build_scheduled_control has been called
-        if not hasattr(self,'scheduled_states'):
+        if not hasattr(self, 'scheduled_states'):
             raise TypeError("Scheduled states do not exist. Controller's build_scheduled_control function must be called before using controller to simulate.")
 
         if x is None:
@@ -123,22 +122,27 @@ class LQR():
         
         # Identify reference state (desired state) at t
         t_k = np.round(t + self.dt/2.0, 1)  # current time step
-        time_ind = np.argmin(np.abs(t_k - self.ref_traj['t'].tolist())) # get index of time value in ref_traj closest to t_k
+        time_ind = np.argmin(np.abs(t_k - self.ref_traj['t'].tolist()))  # get index of time value in ref_traj closest to t_k
         x_ref_k = []
         for state in self.states:
             if state != 'mission_complete':
                 x_ref_k.append(self.ref_traj[state][time_ind])
-        x_ref_k = np.asarray(x_ref_k[:-1]) # get rid of time index in state vector
+        x_ref_k = np.asarray(x_ref_k[:-1])  # get rid of time index in state vector
         x_k = x_k.reshape(x_k.shape[0],)
 
         error         = x_k - x_ref_k    # Error between current and reference state
         scheduled_var = x_k[self.parameters['index_scheduled_var']]    # get psi from current state vector (self.parameters = 'psi')
-        k_idx         = np.argmin(np.abs(self.scheduled_states[self.parameters['index_scheduled_var'], :] - scheduled_var)) # find the psi value stored in the controller closest to the current psi --> extract index
+        k_idx         = np.argmin(np.abs(self.scheduled_states[self.parameters['index_scheduled_var'], :] - scheduled_var))  # find the psi value stored in the controller closest to the current psi --> extract index
         K             = self.control_gains[:, :, k_idx]     # extract gain corresponding to the current psi value
         u             = self.compute_input(K, error)                 # compute input u given the gain matrix K and the error between current and reference state
         u[0]         += self.ss_input
         u[0]  = min(max([0, u[0]]), self.vehicle_max_thrust)
-        return {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3], 'mission_complete': t_k/self.ref_traj['t'][-1]}
+        return {
+            'T': u[0],
+            'mx': u[1],
+            'my': u[2],
+            'mz': u[3],
+            'mission_complete': t_k/self.ref_traj['t'][-1]}
 
     def compute_gain(self, A, B):
         """ Compute controller gain given state of the system described by linear model A, B"""
@@ -173,7 +177,15 @@ class LQR():
 
 
 class LQR_I(LQR):
-    """ Linear Quadratic Regulator with Integral Effect"""
+    """
+    Linear Quadratic Regulator with Integral Effect
+    
+    args:
+        x_ref (dict[str, np.ndarray]):
+            dictionary of reference trajectories for each state variable (x, y, z, phi, theta, psi, ...)
+        vehicle:
+            UAV model object
+    """
 
     def __init__(self, x_ref, vehicle, **kwargs):
         # Check correct arguments:
@@ -183,8 +195,6 @@ class LQR_I(LQR):
             if not isinstance(vals, np.ndarray):
                 raise TypeError("Reference trajectory must be a dictionary of numpy arrays for each state throughout time.")
 
-        
-        self.type      = 'LQR_I'                # type of controller
         self.states    = vehicle.states         # state variables of the system to be controlled (x, y, z, phi, theta, psi)
         self.n_states  = len(self.states) - 2   # number of states (minus two to remove time and mission_complete)
         self.inputs    = vehicle.inputs         # input variables of the system to be controlled
@@ -254,14 +264,7 @@ class LQR_I(LQR):
         return - np.dot(gain[:, :self.n_states], error) - np.dot(gain[:, self.n_states:], err_integral)
 
     def reset_controller(self):
-
-        # Reset Error history (from integral action, if exist)
-        # ===================================================
+        """ Reset Error history (from integral action, if exist) """
         if hasattr(self, 'err_hist'):
             self.err_hist = []    
         print("Controller reset complete")
-
-
-if __name__ == '__main__':
-
-    print('Controllers')

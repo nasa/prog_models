@@ -7,7 +7,6 @@ Auxiliary functions for trajectories and aircraft routes
 
 import datetime as dt
 import numpy as np
-import datetime as dt
 from warnings import warn
 
 from prog_models.utils.traj_gen import geometry as geom
@@ -39,7 +38,7 @@ def reshape_route_attribute(x, dim=None, msk=None):
     :param msk:         list or array of int, or None, mask to reshape attribute x. The function return x by repeating x[msk] at msk points.
     :return:            reshaped attribute
     """
-    if not hasattr(x, "__len__"):   
+    if not hasattr(x, "__len__"):
         return x * np.ones((dim, ))
     elif msk:
         return np.insert(x, msk, x[msk])
@@ -104,6 +103,7 @@ def gen_attitude(psi, ax, ay, az, max_phi, max_theta, gravity):
     theta = np.fmax(np.fmin(theta, max_theta), -max_theta)
     return phi, theta, psi
    
+
 class Trajectory():
     """
     Trajectory class.
@@ -112,51 +112,70 @@ class Trajectory():
     position, velocity, acceleration, Euler's angles, and attitude rates.
     The profiles are used to generate the desired state of a vehicle that needs to be followed to complete the trajectory.
     
-    Input variables:
-            lat                 rad, n x 1 array, doubles, latitude coordinates of waypoints
-            lon                 rad, n x 1 array, doubles, longitude coordinates of waypoints
-            alt                 m, n x 1 array, doubles, altitude coordinates of waypoints
-            takeoff_time        datetime object, scalar, take off time of the trajectory. Default is None.
-            etas                list of datetime objects, ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
+    args:
+            lat (np.ndarray):
+                rad, n x 1 array, doubles, latitude coordinates of waypoints
+            lon (np.ndarray):
+                rad, n x 1 array, doubles, longitude coordinates of waypoints
+            alt (np.ndarray):
+                m, n x 1 array, doubles, altitude coordinates of waypoints
+            takeoff_time (datetime):
+                take off time of the trajectory. Default is None.
+            etas (list[datetime]):
+                ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
 
-    Additional kwargs and default values:
-            'gravity': 9.81                     m/s^2, gravity magnitude
-            'vehicle_model': None               -, vehicle model, necessary to generate the correct Euler's angles
-            'max_phi' : 45/180.0*np.pi,         rad, maximum Euler's angle phi
-            'max_theta' : 45/180.0*np.pi        rad, maximum Euler's angle theta
-            'max_iter': 10                      -, maximum number of iterations to adjust the trajectory according to the maximum average jerk
-            'max_avgjerk': 20.0                 m/s^3, maximum average Jerk allowed, if the generated trajectory has a higher value, new, more forgiving ETAs are generated to satisfy this constraint
-            'nurbs_order': 4                    -, order of the NURBS used to generate the position profile
-            'waypoint_weight': 20               -, default weight value associated to all the waypoints. 
-            'weight_vector': None               -, waypoint weight vector. Default is None (all waypoints will have same value from 'waypoint_weight'). If passed, the user can define different weight for each waypoints, such that some waypoints will be approached more closely and some will be approached more smoothly.
-            'nurbs_basis_length': 1000          -, default length of basis function used to generate the position profile with the NURBS.
-            
-            'cruise_speed': 6.0                 m/s, desired cruise speed between waypoints. If ETAs are provided, this value is ignored.
-            'ascent_speed': 3.0                 m/s, desired ascent speed between waypoints. If ETAs are provided, this value is ignored.
-            'descent_speed': 3.0                m/s, desired descent speed between waypoints. If ETAs are provided, this value is ignored.
-            'landing_speed': 1.5                m/s, desired landing speed between waypoints. This speed is used when the vehicle's altitude is lower than 'landing_altitude' parameter. If ETAs are provided, this value is ignored.
-            'landing_altitude': 10.5            m, landing altitude below which the vehicle is supposed to move at 'landing_speed'
+    kwargs:
+            vehicle_model (Vehicle Model, required):             
+                vehicle model, necessary to generate the correct Euler's angles
+            gravity (float, optional):
+                Magnitude of force of gravity. Default 9.81 m/s^2
+            max_phi (float, optional):
+                Maximum Euler's angle (rad). Default 45/180.0*np.pi
+            max_theta (float, optional):
+                maximum Euler's angle (rad). Default 45/180.0*np.pi
+            max_iter (int, optional):
+                maximum number of iterations to adjust the trajectory according to the maximum average jerk. Default: 10
+            max_avgjerk (float, optional):
+                maximum average Jerk allowed (m/s^3), if the generated trajectory has a higher value, new, more forgiving ETAs are generated to satisfy this constraint. Default: 20
+            nurbs_order (int, optional):
+                order of the NURBS used to generate the position profile. Default: 4
+            waypoint_weight (int, optional):
+                default weight value associated to all the waypoints. Default: 20
+            weight_vector (np.ndarray, optional):
+                Waypoint weight vector. Default is None (all waypoints will have same value from 'waypoint_weight'). If passed, the user can define different weight for each waypoints, such that some waypoints will be approached more closely and some will be approached more smoothly.
+            nurbs_basis_length (int, optional):
+                default length of basis function used to generate the position profile with the NURBS.Default: 1000
+            cruise_speed (float, optional):
+                desired cruise speed between waypoints (m/s). If ETAs are provided, this value is ignored. Default = 6.0.
+            ascent_speed (float, optional):
+                desired ascent speed (m/s) between waypoints. If ETAs are provided, this value is ignored. Defualt: 3
+            descent_speed (float, optional):
+                desired descent speed (m/s) between waypoints. If ETAs are provided, this value is ignored. Default: 3
+            landing_speed (float, optional):
+                desired landing speed (m/s) between waypoints. This speed is used when the vehicle's altitude is lower than 'landing_altitude' parameter. If ETAs are provided, this value is ignored. Default: 1.5
+            landing_altitude (float, optional):
+                landing altitude (m) below which the vehicle is supposed to move at 'landing_speed'. Default: 10.5
     """
-    def __init__(self, 
-                 lat, 
-                 lon, 
-                 alt, 
-                 takeoff_time = None, 
-                 etas = None, 
+    def __init__(self,
+                 lat,
+                 lon,
+                 alt,
+                 takeoff_time=None,
+                 etas=None,
                  **kwargs):
 
         # Check waypoint types:
         # ---------------------
-        if not isinstance(lat,np.ndarray) or not isinstance(lon,np.ndarray) or not isinstance(alt,np.ndarray):
+        if not isinstance(lat, np.ndarray) or not isinstance(lon, np.ndarray) or not isinstance(alt, np.ndarray):
             raise TypeError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays.")
         if lat.shape != lon.shape or lon.shape != alt.shape:
             raise ValueError("Provided latitude, longitude, and altitude arrays must be the same length.")
         if lat.shape[0] <= 1 or lon.shape[0] <= 1 or alt.shape[0] <= 1:
             raise ValueError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays, with n > 1.")
-        if isinstance(etas,np.ndarray):
+        if isinstance(etas, np.ndarray):
             raise TypeError("ETAs must be provided as a list of datetime objects.")
         if etas is not None:
-            if not isinstance(etas,list):
+            if not isinstance(etas, list):
                 raise TypeError("ETAs must be provided as a list of datetime objects.")
             if len(etas) != 1 and len(etas) != lat.shape[0]:
                 raise ValueError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
@@ -172,13 +191,13 @@ class Trajectory():
 
         # Route properties
         # =================
-        self.waypoints = {'lat': lat, 
-                          'lon': lon, 
+        self.waypoints = {'lat': lat,
+                          'lon': lon,
                           'alt': alt,
                           'takeoff_time': takeoff_time,
                           'eta': etas,
-                          'x': None, 
-                          'y': None, 
+                          'x': None,
+                          'y': None,
                           'z': None,
                           'eta_unix': None,
                           'heading': None}
@@ -230,8 +249,8 @@ class Trajectory():
         # ========================
         self.parameters = {'gravity': 9.81,
                            'vehicle_model': None,
-                           'max_phi' : 45/180.0*np.pi, 
-                           'max_theta' : 45/180.0*np.pi,
+                           'max_phi': 45/180.0*np.pi,
+                           'max_theta': 45/180.0*np.pi,
                            'max_iter': 10,
                            'max_avgjerk': 20.0,
                            'nurbs_order': 4,
@@ -246,7 +265,6 @@ class Trajectory():
             raise ValueError("Vehicle model is not defined. Must specify a string for 'vehicle_model' in keyword arguments.")
         if not isinstance(self.parameters['vehicle_model'], str):
             raise TypeError("Vehicle model must be defined as a string.")
-
 
     @property
     def ref_traj(self,):
