@@ -35,7 +35,7 @@ class TestCalcError(unittest.TestCase):
 
 
         # Given the same preselected data, we are now removing values from times, inputs, and outputs, to create 'shifts' in data.
-        # Our default Mean Squared Error method would produce a high error given the newly transformed data, however, our DTW method would correctly match each time to it's corresponding outputs.
+        # Our default Mean Squared Error method would produce a high error given the newly transformed data, however, our DTW method would correctly match each time to its corresponding outputs.
         times = [0.0, 1.0, 1.5, 2.0, 2.5, 3.5, 4.0, 4.5, 5.0, 6.5, 7.5, 8.0, 8.5, 9.0]
         inputs = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
         outputs = [{'x': 2.83}, {'x': 40.422881456712254}, {'x': 55.51861687290881}, {'x': 68.06865643702567}, 
