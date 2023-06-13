@@ -173,15 +173,13 @@ class Trajectory():
             raise ValueError("Provided latitude, longitude, and altitude arrays must be the same length.")
         if lat.shape[0] <= 1 or lon.shape[0] <= 1 or alt.shape[0] <= 1:
             raise ValueError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays, with n > 1.")
-        if isinstance(etas, np.ndarray):
-            raise TypeError("ETAs must be provided as a list of datetime objects.")
         if etas is not None:
             if not isinstance(etas, list):
                 raise TypeError("ETAs must be provided as a list of datetime objects.")
             if len(etas) != 1 and len(etas) != lat.shape[0]:
                 raise ValueError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
             for iter in range(len(etas)):
-                if not isinstance(etas[iter],dt.datetime):
+                if not isinstance(etas[iter], dt.datetime):
                     raise TypeError("ETAs must be provided as a list of datetime objects.")
         if takeoff_time != None and not isinstance(takeoff_time, dt.datetime):
             raise TypeError("Takeoff time must be provided as a datetime object.")
@@ -235,7 +233,10 @@ class Trajectory():
         idx_land_pos = self.set_landing_waypoints()
 
         # Set ETAs for waypoints
+        logging.warn(f"waypoints eta (before) {self.waypoints['eta']}")
         self.set_eta(idx_land_pos=idx_land_pos) 
+        logging.warn(f"waypoints eta (after) {self.waypoints['eta']}")
+        raise Exception()
         
         # Generate ETAs at waypoints in unix time from dt
         self.waypoints['eta_unix'] = np.asarray([self.waypoints['eta'][item].timestamp() for item in range(len(self.waypoints['eta']))])  # convert to unix time
@@ -648,5 +649,5 @@ class Trajectory():
                 d_eta[point] += hovering[point]
 
         eta_array = np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
-        self.waypoints['eta'] = [dt.datetime.fromtimestamp(eta_array[ii] + + self.waypoints['takeoff_time'].timestamp()) for ii in range(len(eta_array))]
+        self.waypoints['eta'] = [dt.datetime.fromtimestamp(eta + self.waypoints['takeoff_time'].timestamp()) for eta in eta_array]
         
