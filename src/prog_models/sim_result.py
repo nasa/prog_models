@@ -39,7 +39,7 @@ class SimResult(UserList):
 
     def __getitem__(self, item):
         """
-        created for deprecation warning. [] continues to be handled by parent
+            created for deprecation warning. [] continues to be handled by parent
         """
         warn('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
             'data by element.', DeprecationWarning, stacklevel=2)
@@ -47,7 +47,7 @@ class SimResult(UserList):
     
     def __iter__(self):
         """
-        created for deprecation warning. iteration continues to be handled by parent
+            created for deprecation warning. iteration continues to be handled by parent
         """
         warn(
             'iteration will be deprecated after version 1.5 of ProgPy. The function will be renamed, iterrows, '
@@ -82,17 +82,26 @@ class SimResult(UserList):
             return self._frame
 
     def __setitem__(self, key, value):
+        """
+            in addition to the normal functionality, updates the _frame if it exists
+        """
         super().__setitem__(key, value)
         if self._frame is not None:
             for col in value:
                 self._frame.at[key, col] = value[col]
 
     def __delitem__(self, key):
+        """
+            in addition to the normal functionality, updates the _frame if it exists
+        """
         super().__delitem__(self, key)
         if self._frame is not None:
             self._frame = self._frame.drop([key])
 
     def insert(self, i: int, item) -> None:
+        """
+            in addition to the normal functionality, updates the _frame if it exists
+        """
         self.insert(i, item)
         if self._frame is not None:
             for value in item:
@@ -101,7 +110,7 @@ class SimResult(UserList):
     @property
     def iloc(self):
         """
-        returns the iloc indexer
+            returns the iloc indexer
         """
         return self.frame.iloc
 
