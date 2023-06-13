@@ -52,16 +52,12 @@ def run_example():
                       alt=waypoints['alt_ft'] * 0.3048,
                       etas=[dt.datetime.fromtimestamp(time) for time in waypoints['time_unix']],
                       vehicle_model=vehicle.parameters['vehicle_model'])
-    logging.warn(traj.waypoints)
-    logging.warn(traj.parameters)
 
     ref_traj = traj.generate(dt=vehicle.parameters['dt'])
     tmp = {key: ref_traj[key][0] for key in ref_traj.keys()}
     logging.warn(f'0: {tmp}')
     tmp = {key: ref_traj[key][100] for key in ref_traj.keys()}
     logging.warn(f'100: {tmp}')
-    tmp = {key: ref_traj[key][-1] for key in ref_traj.keys()}
-    logging.warn(f'-1: {tmp}')
 
     # Define controller and build scheduled control. The controller acts as a
     # future_loading function when simulating
