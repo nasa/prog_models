@@ -204,11 +204,13 @@ class Trajectory():
         logging.warn(f"waypoints eta {self.waypoints['eta']}")
         
         # Assign takeoff time
+        logging.warn(f"waypoints eta (before assign takeoff) {self.waypoints['eta']}")
         if self.waypoints['takeoff_time'] is None:
             if self.waypoints['eta'] is not None:
                 self.waypoints['takeoff_time'] = self.waypoints['eta'][0]
             else:
                 self.waypoints['takeoff_time'] = dt.datetime.now()
+        logging.warn(f"waypoints eta (after assign takeoff) {self.waypoints['eta']}")
 
         # Generate Heading
         self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
@@ -232,6 +234,7 @@ class Trajectory():
         self.speed_parameters.update(**kwargs)
 
         # Set landing waypoints dimensions
+        logging.warn(f"waypoints eta (before landing waypoints) {self.waypoints['eta']}")
         idx_land_pos = self.set_landing_waypoints()
 
         # Set ETAs for waypoints
