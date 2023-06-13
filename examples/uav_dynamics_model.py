@@ -50,22 +50,22 @@ def run_example():
                       vehicle_model=vehicle.parameters['vehicle_model'])
     ref_traj = traj.generate(dt=vehicle.parameters['dt'])
 
-    # # Define controller and build scheduled control. The controller acts as a
-    # # future_loading function when simulating
-    # # We use a linear quadratic regulator (LQR), which tries to minimize the
-    # # cost function defined by:
-    # # J = \int{ x^T Q x + u^T R u \mathrm{d}t }
-    # # Where x is the state vector, u is the input vector, t is time, Q is the
-    # # state error penalty matrix, and R is the input generation penalty matrix.
-    # # The LQR uses a linearized version of the dynamic system
-    # # (i.e., dxdt = A x + Bu) to find the gain matrix K that minimizes the cost J.
-    # ctrl = LQR(ref_traj, vehicle)
+    # Define controller and build scheduled control. The controller acts as a
+    # future_loading function when simulating
+    # We use a linear quadratic regulator (LQR), which tries to minimize the
+    # cost function defined by:
+    # J = \int{ x^T Q x + u^T R u \mathrm{d}t }
+    # Where x is the state vector, u is the input vector, t is time, Q is the
+    # state error penalty matrix, and R is the input generation penalty matrix.
+    # The LQR uses a linearized version of the dynamic system
+    # (i.e., dxdt = A x + Bu) to find the gain matrix K that minimizes the cost J.
+    ctrl = LQR(ref_traj, vehicle)
 
-    # # Simulate vehicle to fly trajectory
-    # traj_results = vehicle.simulate_to_threshold(
-    #     ctrl,
-    #     dt=vehicle.parameters['dt'],
-    #     save_freq=vehicle.parameters['dt'])
+    # Simulate vehicle to fly trajectory
+    traj_results = vehicle.simulate_to_threshold(
+        ctrl,
+        dt=vehicle.parameters['dt'],
+        save_freq=vehicle.parameters['dt'])
 
     # # Visualize Results
     # vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
