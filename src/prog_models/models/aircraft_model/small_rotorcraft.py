@@ -226,7 +226,7 @@ class SmallRotorcraft(AircraftModel):
         dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz     # Angular acceleration along body z-axis: yaw rate
         dxdt[12] = 1                                                              # Auxiliary time variable
         dxdt[13] = (u['mission_complete'] - x['mission_complete'])/self.parameters['dt']    # Value to keep track of percentage of mission completed
-        logging.warning(f'time {x["t"]}')
+        logging.warning(f'state {x}')
         logging.warning(f'input {u}')
         
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
