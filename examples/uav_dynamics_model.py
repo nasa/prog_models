@@ -133,12 +133,12 @@ def run_example():
     z_1 = [traj_results.outputs[iter]['z'] for iter in range(len(traj_results.times))]
     z_4 = [traj_results_interval.outputs[iter]['z'] for iter in range(len(traj_results_interval.times))]
 
-    # fig, ax = plt.subplots()
-    # ax.plot(traj_results.times, z_1, '-b', label='Example 1')
-    # ax.plot(traj_results_interval.times, z_4, '--r', label='Example 3')
-    # ax.set_xlabel('time, s', fontsize=14)
-    # ax.set_ylabel('altitude, m', fontsize=14)
-    # ax.legend()
+    fig, ax = plt.subplots()
+    ax.plot(traj_results.times, z_1, '-b', label='Example 1')
+    ax.plot(traj_results_interval.times, z_4, '--r', label='Example 3')
+    ax.set_xlabel('time, s', fontsize=14)
+    ax.set_ylabel('altitude, m', fontsize=14)
+    ax.legend()
 
 # This allows the module to be executed directly 
 if __name__ == '__main__':
