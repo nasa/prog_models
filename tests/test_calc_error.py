@@ -181,7 +181,7 @@ class TestCalcError(unittest.TestCase):
         
         m.calc_error(times, inputs, outputs)
 
-        # Will be testing length errors, will also be providing a 'runs' feedback whenever there are multiple give?
+        # Only 1 run provided for times and 2 provided for inputs and outputs
         incorrectTimes = [[0, 1, 2, 3, 4, 5, 6, 7, 8]]
 
         with self.assertRaises(ValueError) as cm:
