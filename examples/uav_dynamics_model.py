@@ -38,11 +38,10 @@ def run_example():
     waypoints['lat_deg'] = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
     waypoints['lon_deg'] = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
     waypoints['alt_ft'] = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
-    waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
+    waypoints['time_unix'] = [dt.datetime(2018, 12, 7, 5, 12, 16), dt.datetime(2018, 12, 7, 5, 12, 38), dt.datetime(2018, 12, 7, 5, 12, 40), dt.datetime(2018, 12, 7, 5, 12, 57), dt.datetime(2018, 12, 7, 5, 13, 14), dt.datetime(2018, 12, 7, 5, 13, 31), dt.datetime(2018, 12, 7, 5, 13, 48), dt.datetime(2018, 12, 7, 5, 14, 56), dt.datetime(2018, 12, 7, 5, 15, 39), dt.datetime(2018, 12, 7, 5, 16, 24), dt.datetime(2018, 12, 7, 5, 16, 41), dt.datetime(2018, 12, 7, 5, 17, 15), dt.datetime(2018, 12, 7, 5, 17, 32), dt.datetime(2018, 12, 7, 5, 17, 52), dt.datetime(2018, 12, 7, 5, 18, 12)]
 
     import logging
     logging.warn(waypoints['time_unix'])
-    logging.warn([dt.datetime.fromtimestamp(time) for time in waypoints['time_unix']])
     
     # Generate trajectory
     # =====================
@@ -50,7 +49,7 @@ def run_example():
     traj = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0,
                       lon=waypoints['lon_deg'] * np.pi/180.0,
                       alt=waypoints['alt_ft'] * 0.3048,
-                      etas=[dt.datetime.fromtimestamp(time) for time in waypoints['time_unix']],
+                      etas=waypoints['time_unix'],
                       vehicle_model=vehicle.parameters['vehicle_model'])
     logging.warn(traj.waypoints)
     logging.warn(traj.parameters)
@@ -80,8 +79,8 @@ def run_example():
         dt=vehicle.parameters['dt'],
         save_freq=vehicle.parameters['dt'])
 
-    # # Visualize Results
-    # vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
+    # Visualize Results
+    vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
 
     # # EXAMPLE 2:
     # # In this example, we define another trajectory through the same
