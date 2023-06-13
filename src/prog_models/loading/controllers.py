@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+import logging
 import numpy as np
 
 # LQR general function
@@ -121,6 +122,8 @@ class LQR():
         # Build and store control matrices for scheduling
         # --------------------------------------------------
         self.build_scheduled_control(vehicle.linear_model, input_vector=[self.ss_input])
+        logging.warn(f'Vehicle model {vehicle.linear_model}')
+        logging.warn(f'parameters: {self.parameters}')
 
     def __call__(self, t, x=None):
 
