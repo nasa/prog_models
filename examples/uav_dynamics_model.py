@@ -66,8 +66,8 @@ def run_example():
     # Simulate vehicle to fly trajectory 
     traj_results = vehicle.simulate_to_threshold(ctrl, **options)
 
-    # # Visualize Results
-    # vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
+    # Visualize Results
+    vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
 
     # # EXAMPLE 2: 
     # # In this example, we define another trajectory through the same waypoints but with speeds defined instead of ETAs
