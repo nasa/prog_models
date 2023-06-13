@@ -69,37 +69,37 @@ def run_example():
     # Visualize Results
     vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
 
-    # # EXAMPLE 2: 
-    # # In this example, we define another trajectory through the same waypoints but with speeds defined instead of ETAs
+    # EXAMPLE 2: 
+    # In this example, we define another trajectory through the same waypoints but with speeds defined instead of ETAs
     
-    # # Generate trajectory object and pass the route (lat/lon/alt, no ETAs) and speed information to it
-    # traj_speed = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
-    #                         lon=waypoints['lon_deg'] * np.pi/180.0, 
-    #                         alt=waypoints['alt_ft'] * 0.3048, 
-    #                         takeoff_time = dt.datetime.now(),
-    #                         cruise_speed=8.0,
-    #                         ascent_speed=2.0,
-    #                         descent_speed=3.0,
-    #                         landing_speed=2.0,
-    #                         vehicle_model=vehicle.parameters['vehicle_model']) 
-    # ref_traj_speeds = traj_speed.generate(dt = vehicle.parameters['dt'])
+    # Generate trajectory object and pass the route (lat/lon/alt, no ETAs) and speed information to it
+    traj_speed = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
+                            lon=waypoints['lon_deg'] * np.pi/180.0, 
+                            alt=waypoints['alt_ft'] * 0.3048, 
+                            takeoff_time = dt.datetime.now(),
+                            cruise_speed=8.0,
+                            ascent_speed=2.0,
+                            descent_speed=3.0,
+                            landing_speed=2.0,
+                            vehicle_model=vehicle.parameters['vehicle_model']) 
+    ref_traj_speeds = traj_speed.generate(dt = vehicle.parameters['dt'])
 
-    # # Define controller and build scheduled control. This time we'll use LQR_I, which is a linear quadratic regulator with integral action.
-    # # The integral action has the same purpose of "I" in PI or PID controllers, which is to minimize offset errors in the variable of interest.
-    # # This version of LQR_I compensates for integral errors in the position of the vehicle, i.e., x, y, z variables of the state vector.
-    # ctrl_speeds = LQR_I(ref_traj_speeds, vehicle)
+    # Define controller and build scheduled control. This time we'll use LQR_I, which is a linear quadratic regulator with integral action.
+    # The integral action has the same purpose of "I" in PI or PID controllers, which is to minimize offset errors in the variable of interest.
+    # This version of LQR_I compensates for integral errors in the position of the vehicle, i.e., x, y, z variables of the state vector.
+    ctrl_speeds = LQR_I(ref_traj_speeds, vehicle)
     
-    # # Set simulation options 
-    # options = {
-    #     'dt': vehicle_params['dt'], 
-    #     'save_freq': vehicle_params['dt']
-    # }
+    # Set simulation options 
+    options = {
+        'dt': vehicle_params['dt'], 
+        'save_freq': vehicle_params['dt']
+    }
 
-    # # Simulate vehicle to fly trajectory 
-    # traj_results_speeds = vehicle.simulate_to_threshold(ctrl_speeds, **options)
+    # Simulate vehicle to fly trajectory 
+    traj_results_speeds = vehicle.simulate_to_threshold(ctrl_speeds, **options)
 
-    # # Visualize results - notice these results are slightly different, since the speeds through the waypoints (and therefore the resulting trajectory) are different than Example 1 
-    # vehicle.visualize_traj(pred=traj_results_speeds, ref=ref_traj_speeds)
+    # Visualize results - notice these results are slightly different, since the speeds through the waypoints (and therefore the resulting trajectory) are different than Example 1 
+    vehicle.visualize_traj(pred=traj_results_speeds, ref=ref_traj_speeds)
 
     # # EXAMPLE 3: 
     # # In this example, we just want to simulate a specific portion of the reference trajectory
