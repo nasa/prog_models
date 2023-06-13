@@ -6,6 +6,7 @@ Auxiliary functions for trajectories and aircraft routes
 """
 
 import datetime as dt
+import logging
 import numpy as np
 from warnings import warn
 
@@ -342,7 +343,7 @@ class Trajectory():
 
     
     def compute_trajectory_nurbs(self, dt):
-        
+        logging.warn(f'Entering compute_trajectory_nurbs with dt={dt}')
         # Compute position and yaw profiles with NURBS
         # --------------------------------------------
         # Instantiate NURBS class to generate trajectory
@@ -355,9 +356,16 @@ class Trajectory():
         
         # Generate position and yaw interpolated given the timestep size 
         pos_interp, yaw_interp, time_interp = nurbs_alg.generate(timestep_size=dt)
+        pos0 = {key: pos_interp[key][0] for key in pos_interp.keys()}
+        
+        logging.warn(f'Gerated position (0) {pos0}, yaw {yaw_interp[0]}, and time profiles {time_interp[0]}')
+
+        pos100 = {key: pos_interp[key][100] for key in pos_interp.keys()}
+        logging.warn(f'Gerated position (100) {pos100}, yaw {yaw_interp[100]}, and time profiles {time_interp[100]}')
         
         # Generate velocity, acceleration, and jerk (optional) profile from position profile
         linear_profiles  = self.compute_derivatives(pos_interp, time_interp)
+        logging.warn(f'Generated linear profiles {linear_profiles}')
         
         # Generate angular profiles: attitude and angular velocities from heading and acceleration
         angular_profiles = self.compute_attitude(heading_profile      = yaw_interp, 
@@ -380,6 +388,7 @@ class Trajectory():
         :param dt:          s, scalar, time step size used to interpolate the waypoints and generate the trajectory
         :return:            dictionary of state variables describing the trajectory as a function of time
         """
+        logging.warn(f'Entered generate() with dt={dt} and kwargs={kwargs}')
         self.parameters.update(**kwargs)    # Override NURBS parameters
         assert len(self.parameters['weight_vector']) == len(self.waypoints['x']), "Length of waypoint weight vector and number of waypoints must coincide."
 
