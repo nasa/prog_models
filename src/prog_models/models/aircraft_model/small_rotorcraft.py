@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+import logging
 import numpy as np
 from warnings import warn
 
@@ -163,7 +164,6 @@ class SmallRotorcraft(AircraftModel):
                         lift=None)
 
     def dx(self, x: dict, u: dict):
-
         # Extract useful values
         # ---------------------
         m = self.mass['total']  # vehicle mass
@@ -226,11 +226,12 @@ class SmallRotorcraft(AircraftModel):
         dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz     # Angular acceleration along body z-axis: yaw rate
         dxdt[12] = 1                                                              # Auxiliary time variable
         dxdt[13] = (u['mission_complete'] - x['mission_complete'])/self.parameters['dt']    # Value to keep track of percentage of mission completed
+        logging.warning(f'time {x[12]}')
+        logging.warning(f'input {u}')
         
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
     def event_state(self, x: dict) -> dict:
-
         # Based on percentage of reference trajectory completed 
         return {
                 'TrajectoryComplete': x['mission_complete']
@@ -241,17 +242,15 @@ class SmallRotorcraft(AircraftModel):
         return self.OutputContainer(x.matrix[0:-2])
 
     def threshold_met(self, x: dict) -> dict:
-        
-        # Progress through the reference trajectory is saved in the state 'mission_complete' 
+        # Progress through the reference trajectory is saved in the state 'mission_complete'
         return {
             'TrajectoryComplete': x['mission_complete'] >= 1}
 
     def simulate_to_threshold(self, future_loading_eqn, first_output=None, threshold_keys=None, **kwargs):
-
-        # Check for appropriately defined dt - must be same as vehicle model 
+        # Check for appropriately defined dt - must be same as vehicle model
         if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:
           kwargs['dt'] = self.parameters['dt']
-          warn("Simulation dt must be equal to dt defined for the vehicle model. dt = {} is used.".format(self.parameters['dt'])) 
+          warn(f"Simulation dt must be equal to dt defined for the vehicle model. dt = {self.parameters['dt']} is used.")
         elif 'dt' not in kwargs:
           kwargs['dt'] = self.parameters['dt']
 

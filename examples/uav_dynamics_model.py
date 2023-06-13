@@ -61,11 +61,11 @@ def run_example():
     # (i.e., dxdt = A x + Bu) to find the gain matrix K that minimizes the cost J.
     ctrl = LQR(ref_traj, vehicle)
 
-    # # Simulate vehicle to fly trajectory
-    # traj_results = vehicle.simulate_to_threshold(
-    #     ctrl,
-    #     dt=vehicle.parameters['dt'],
-    #     save_freq=vehicle.parameters['dt'])
+    # Simulate vehicle to fly trajectory
+    traj_results = vehicle.simulate_to_threshold(
+        ctrl,
+        dt=vehicle.parameters['dt'],
+        save_freq=vehicle.parameters['dt'])
 
     # # Visualize Results
     # vehicle.visualize_traj(pred=traj_results, ref=ref_traj)
