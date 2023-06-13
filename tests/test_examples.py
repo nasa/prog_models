@@ -18,7 +18,7 @@ EXAMPLES_SKIPPED = ['benchmarking', 'chaos', 'composite_model', 'custom_model', 
                     'future_loading', 'generate_surrogate', 'growth', 'linear_model', 'lstm_model',
                     'matrix_model', 'new_model', 'noise', 'param_est', 'sensitivity', 'serialization',
                     'sim_battery_eol', 'sim_dcmotor_singlephase', 'sim_powertrain', 'sim_pump', 'sim_valve',
-                    'sim', 'state_limits', 'vectorized','uav_dynamics_model']
+                    'sim', 'state_limits', 'vectorized']
 
 def make_test_function(example):
     def test(self):
