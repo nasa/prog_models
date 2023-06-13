@@ -39,16 +39,16 @@ def run_example():
     waypoints['alt_ft']  = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
     waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
     
-    # # Generate trajectory
-    # # =====================
-    # # Generate trajectory object and pass the route (waypoints, ETA) to it
-    # traj = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
-    #                   lon=waypoints['lon_deg'] * np.pi/180.0, 
-    #                   alt=waypoints['alt_ft'] * 0.3048, 
-    #                   takeoff_time = dt.datetime.fromtimestamp(waypoints['time_unix'][0]), 
-    #                   etas=[dt.datetime.fromtimestamp(waypoints['time_unix'][ii]) for ii in range(len(waypoints['time_unix']))],
-    #                   vehicle_model=vehicle.parameters['vehicle_model']) 
-    # ref_traj = traj.generate(dt = vehicle.parameters['dt'])
+    # Generate trajectory
+    # =====================
+    # Generate trajectory object and pass the route (waypoints, ETA) to it
+    traj = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0, 
+                      lon=waypoints['lon_deg'] * np.pi/180.0, 
+                      alt=waypoints['alt_ft'] * 0.3048, 
+                      takeoff_time = dt.datetime.fromtimestamp(waypoints['time_unix'][0]), 
+                      etas=[dt.datetime.fromtimestamp(waypoints['time_unix'][ii]) for ii in range(len(waypoints['time_unix']))],
+                      vehicle_model=vehicle.parameters['vehicle_model']) 
+    ref_traj = traj.generate(dt = vehicle.parameters['dt'])
 
     # # Define controller and build scheduled control. The controller acts as a future_loading function when simulating
     # # We use a linear quadratic regulator (LQR), which tries to minimize the cost function defined by:
