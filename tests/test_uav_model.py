@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 import warnings
 
 from prog_models.utils.traj_gen import Trajectory
-from prog_models.models.uav_model import SmallRotorcraft 
+from prog_models.models.aircraft_model import SmallRotorcraft 
 from prog_models.loading.controllers import LQR_I, LQR
 from prog_models.utils.traj_gen import geometry as geom
 

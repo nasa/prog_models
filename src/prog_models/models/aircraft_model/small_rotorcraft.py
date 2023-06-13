@@ -4,13 +4,13 @@
 import numpy as np
 from warnings import warn
 
-from prog_models.prognostics_model import PrognosticsModel
-from prog_models.models.uav_model.vehicles.aero import aerodynamics as aero
-from prog_models.models.uav_model.vehicles import vehicles
+from prog_models.models.aircraft_model import AircraftModel
+from prog_models.models.aircraft_model.vehicles.aero import aerodynamics as aero
+from prog_models.models.aircraft_model.vehicles import vehicles
 from prog_models.utils.traj_gen import geometry as geom
 
 
-class SmallRotorcraft(PrognosticsModel):
+class SmallRotorcraft(AircraftModel):
     r"""
     Vectorized prognostics :term:`model` to generate a predicted trajectory for a small rotorcraft using a n=6 degrees-of-freedom dynamic model
     with feedback control loop. The model follows the form:
@@ -115,11 +115,8 @@ class SmallRotorcraft(PrognosticsModel):
 
     events = ['TrajectoryComplete']
     inputs = ['T', 'mx', 'my', 'mz', 'mission_complete']
-    n_inputs = len(inputs)
     states = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r', 't', 'mission_complete']
-    n_states = len(states)
     outputs = ['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz', 'p', 'q', 'r']
-    n_outputs = len(outputs)
     
     is_vectorized = True
 
@@ -180,9 +177,9 @@ class SmallRotorcraft(PrognosticsModel):
 
         # Extract state variables from current state vector
         # -------------------------------------------------
-        phi   = x['phi'] 
-        theta = x['theta'] 
-        psi   = x['psi']
+        phi = x['phi']
+        theta = x['theta']
+        psi = x['psi']
         vx_a = x['vx']
         vy_a = x['vy']
         vz_a = x['vz']
@@ -192,20 +189,20 @@ class SmallRotorcraft(PrognosticsModel):
 
         # Pre-compute Trigonometric values
         # --------------------------------
-        sin_phi   = np.sin(phi)
-        cos_phi   = np.cos(phi)
+        sin_phi = np.sin(phi)
+        cos_phi = np.cos(phi)
         sin_theta = np.sin(theta)
         cos_theta = np.cos(theta)
         tan_theta = np.tan(theta)
-        sin_psi   = np.sin(psi)
-        cos_psi   = np.cos(psi)
+        sin_psi = np.sin(psi)
+        cos_psi = np.cos(psi)
         
         # Compute drag forces
         # -------------------
-        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,)) # velocity in Earth-fixed frame
-        v_body  = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)  # Velocity in body-axis
+        v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))  # velocity in Earth-fixed frame
+        v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)  # Velocity in body-axis
         fb_drag = self.aero['drag'](v_body)   # drag force in body axis
-        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag) # drag forces in Earth-fixed frame
+        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)  # drag forces in Earth-fixed frame
         fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])  # adjust vertical (z=Up) force according to velocity in fixed frame
 
         # Update state vector
@@ -216,15 +213,15 @@ class SmallRotorcraft(PrognosticsModel):
         dxdt[1] = vy_a    # y-position increment (airspeed along y-direction)
         dxdt[2] = vz_a    # z-position increment (airspeed along z-direction)
         
-        dxdt[3]  = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta        # Euler's angle phi increment
-        dxdt[4]  = q * cos_phi - r * sin_phi                                    # Euler's angle theta increment
-        dxdt[5]  = q * sin_phi / cos_theta + r * cos_phi / cos_theta            # Euler's angle psi increment
+        dxdt[3] = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta        # Euler's angle phi increment
+        dxdt[4] = q * cos_phi - r * sin_phi                                    # Euler's angle theta increment
+        dxdt[5] = q * sin_phi / cos_theta + r * cos_phi / cos_theta            # Euler's angle psi increment
         
-        dxdt[6]  = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m   # Acceleration along x-axis
-        dxdt[7]  = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m   # Acceleration along y-axis
-        dxdt[8]  = - self.parameters['gravity'] + (cos_phi * cos_theta  * T - fe_drag[2]) / m   # Acceleration along z-axis
+        dxdt[6] = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m   # Acceleration along x-axis
+        dxdt[7] = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m   # Acceleration along y-axis
+        dxdt[8] = - self.parameters['gravity'] + (cos_phi * cos_theta  * T - fe_drag[2]) / m   # Acceleration along z-axis
 
-        dxdt[9]  = ((Iyy - Izz) * q * r + tp * self.geom['arm_length']) / Ixx     # Angular acceleration along body x-axis: roll rate
+        dxdt[9] = ((Iyy - Izz) * q * r + tp * self.geom['arm_length']) / Ixx     # Angular acceleration along body x-axis: roll rate
         dxdt[10] = ((Izz - Ixx) * p * r + tq * self.geom['arm_length']) / Iyy     # Angular acceleration along body y-axis: pitch rate
         dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz     # Angular acceleration along body z-axis: yaw rate
         dxdt[12] = 1                                                              # Auxiliary time variable
@@ -232,24 +229,24 @@ class SmallRotorcraft(PrognosticsModel):
         
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x: dict) -> dict:
 
         # Based on percentage of reference trajectory completed 
         return {
                 'TrajectoryComplete': x['mission_complete']
         }
  
-    def output(self, x : dict):
+    def output(self, x: dict):
         # Output is the same as the state vector, without time and mission_complete
         return self.OutputContainer(x.matrix[0:-2])
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x: dict) -> dict:
         
         # Progress through the reference trajectory is saved in the state 'mission_complete' 
         return {
             'TrajectoryComplete': x['mission_complete'] >= 1}
 
-    def simulate_to_threshold(self, future_loading_eqn, first_output = None, threshold_keys = None, **kwargs):
+    def simulate_to_threshold(self, future_loading_eqn, first_output=None, threshold_keys=None, **kwargs):
 
         # Check for appropriately defined dt - must be same as vehicle model 
         if 'dt' in kwargs and kwargs['dt'] != self.parameters['dt']:
@@ -259,7 +256,7 @@ class SmallRotorcraft(PrognosticsModel):
           kwargs['dt'] = self.parameters['dt']
 
         # Simulate to threshold
-        sim_res = super().simulate_to_threshold(future_loading_eqn,first_output, threshold_keys, **kwargs)
+        sim_res = super().simulate_to_threshold(future_loading_eqn, first_output, threshold_keys, **kwargs)
 
         return sim_res
 

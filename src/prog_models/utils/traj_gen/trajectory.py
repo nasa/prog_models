@@ -119,9 +119,9 @@ class Trajectory():
                 rad, n x 1 array, doubles, longitude coordinates of waypoints
             alt (np.ndarray):
                 m, n x 1 array, doubles, altitude coordinates of waypoints
-            takeoff_time (datetime):
-                take off time of the trajectory. Default is None.
-            etas (list[datetime]):
+            takeoff_time (datetime, optional):
+                take off time of the trajectory. Default is None (starting at current time).
+            etas (list[datetime], optional):
                 ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
 
     kwargs:
@@ -212,8 +212,9 @@ class Trajectory():
         # Generate Heading
         self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
 
-        # Set up coordinate system conversion between Geodetic, Earth-Centric Earth-Fixed (ECF), and Cartesian (East-North-Up, ENU)
-        # -----------------------------------------------------------------------------------------------------------------------
+        # Set up coordinate system conversion between Geodetic, 
+        # Earth-Centric Earth-Fixed (ECF), and Cartesian (East-North-Up, ENU)
+        # ----------------------------------------------------------------------------
         self.coordinate_system = geom.Coord(self.waypoints['lat'][0], self.waypoints['lon'][0], self.waypoints['alt'][0])
 
         # Define speed parameters - only necessary if ETAs are not defined 
