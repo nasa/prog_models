@@ -1189,7 +1189,6 @@ class PrognosticsModel(ABC):
             return aggr_method(error)
                 
         # Checks stability_tol is within bounds
-        # Throwing a default after the warning.
         if not isinstance(kwargs['stability_tol'], Number):
             raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
         if kwargs['stability_tol'] > 1 or kwargs['stability_tol'] <= 0:
