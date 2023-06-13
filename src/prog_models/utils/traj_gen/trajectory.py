@@ -122,7 +122,7 @@ class Trajectory():
                 m, n x 1 array, doubles, altitude coordinates of waypoints
             takeoff_time (datetime, optional):
                 take off time of the trajectory. Default is None (starting at current time).
-            etas (list[datetime], optional):
+            etas (list[float], optional):
                 ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
 
     kwargs:
@@ -175,13 +175,13 @@ class Trajectory():
             raise ValueError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays, with n > 1.")
         if etas is not None:
             if not isinstance(etas, list):
-                raise TypeError("ETAs must be provided as a list of datetime objects.")
+                raise TypeError("ETAs must be provided as a list of floats.")
             if len(etas) != 1 and len(etas) != lat.shape[0]:
                 raise ValueError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
             for iter in range(len(etas)):
-                if not isinstance(etas[iter], dt.datetime):
-                    raise TypeError("ETAs must be provided as a list of datetime objects.")
-        if takeoff_time != None and not isinstance(takeoff_time, dt.datetime):
+                if not isinstance(etas[iter], float):
+                    raise TypeError("ETAs must be provided as a list of float.")
+        if takeoff_time is not None and not isinstance(takeoff_time, float):
             raise TypeError("Takeoff time must be provided as a datetime object.")
 
         # Trajectory dictionary to store output
