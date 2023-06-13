@@ -101,37 +101,37 @@ def run_example():
     # Visualize results - notice these results are slightly different, since the speeds through the waypoints (and therefore the resulting trajectory) are different than Example 1 
     vehicle.visualize_traj(pred=traj_results_speeds, ref=ref_traj_speeds)
 
-    # # EXAMPLE 3: 
-    # # In this example, we just want to simulate a specific portion of the reference trajectory
-    # # We will simulate the second cruise interval in Example 1, i.e. waypoints 10 - 13 (where the first waypoint is index 0).
-    # # We will use the reference trajectory (ref_traj) and controller (ctrl) already generated in Example 1
+    # EXAMPLE 3: 
+    # In this example, we just want to simulate a specific portion of the reference trajectory
+    # We will simulate the second cruise interval in Example 1, i.e. waypoints 10 - 13 (where the first waypoint is index 0).
+    # We will use the reference trajectory (ref_traj) and controller (ctrl) already generated in Example 1
 
-    # # First, we'll re-define the ETAs in the waypoints dictionary (since we deleted them from the waypoints in Example 2)
-    # waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
+    # First, we'll re-define the ETAs in the waypoints dictionary (since we deleted them from the waypoints in Example 2)
+    waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
 
-    # # Extract time information for desired interval, starting at waypoint 10 and ending at waypoint 13
-    # start_time = waypoints['time_unix'][10] - waypoints['time_unix'][0]
-    # end_time = waypoints['time_unix'][13] - waypoints['time_unix'][0]
-    # sim_time = end_time - start_time
+    # Extract time information for desired interval, starting at waypoint 10 and ending at waypoint 13
+    start_time = waypoints['time_unix'][10] - waypoints['time_unix'][0]
+    end_time = waypoints['time_unix'][13] - waypoints['time_unix'][0]
+    sim_time = end_time - start_time
 
-    # # Define initial state, x0, based on reference trajectory at start_time 
-    # ind = np.where(ref_traj['t'] == start_time)
-    # x0 = {key: ref_traj[key][ind][0] for key in ref_traj.keys()}
-    # vehicle.parameters['x0'] = x0
+    # Define initial state, x0, based on reference trajectory at start_time 
+    ind = np.where(ref_traj['t'] == start_time)
+    x0 = {key: ref_traj[key][ind][0] for key in ref_traj.keys()}
+    vehicle.parameters['x0'] = x0
 
-    # # Define simulation parameters - note that we must define t0 as start_time since we are not starting at the default of t0 = 0
-    # options = {
-    #     'dt': vehicle_params['dt'], 
-    #     'save_freq': vehicle_params['dt'],
-    #     't0': start_time
-    # }
+    # Define simulation parameters - note that we must define t0 as start_time since we are not starting at the default of t0 = 0
+    options = {
+        'dt': vehicle_params['dt'], 
+        'save_freq': vehicle_params['dt'],
+        't0': start_time
+    }
 
-    # # Simulate starting from this initial state from start_time to end_time
-    # traj_results_interval = vehicle.simulate_to(sim_time, ctrl, **options)
+    # Simulate starting from this initial state from start_time to end_time
+    traj_results_interval = vehicle.simulate_to(sim_time, ctrl, **options)
 
-    # # Plot results with Example 1 results to show equivalence on this interval 
-    # z_1 = [traj_results.outputs[iter]['z'] for iter in range(len(traj_results.times))]
-    # z_4 = [traj_results_interval.outputs[iter]['z'] for iter in range(len(traj_results_interval.times))]
+    # Plot results with Example 1 results to show equivalence on this interval 
+    z_1 = [traj_results.outputs[iter]['z'] for iter in range(len(traj_results.times))]
+    z_4 = [traj_results_interval.outputs[iter]['z'] for iter in range(len(traj_results_interval.times))]
 
     # fig, ax = plt.subplots()
     # ax.plot(traj_results.times, z_1, '-b', label='Example 1')
