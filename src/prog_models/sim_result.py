@@ -67,16 +67,19 @@ class SimResult(UserList):
             pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
         warn('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
-        if len(self.data) > 0:  #
-            self._frame = pd.concat([
-                pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
-            ], ignore_index=True, axis=0)
+        if self._frame is None:
+            if len(self.data) > 0:  #
+                self._frame = pd.concat([
+                    pd.DataFrame(dict(dframe), index=[0]) for dframe in self.data
+                ], ignore_index=True, axis=0)
+            else:
+                self._frame = pd.DataFrame()
+            if self.times is not None:
+                self._frame.insert(0, "time", self.times)
+                self._frame.reindex()
+            return self._frame
         else:
-            self._frame = pd.DataFrame()
-        if self.times is not None:
-            self._frame.insert(0, "time", self.times)
-            self._frame.reindex()
-        return self._frame
+            return self._frame
 
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
