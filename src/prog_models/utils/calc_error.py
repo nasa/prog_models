@@ -4,13 +4,10 @@
 """
 This file contains functions for calculating error given a model and some data (times, inputs, outputs). This is used by the PrognosticsModel.calc_error() method.
 """
-
-from collections.abc import Iterable
+import math
 from typing import List
 from warnings import warn
-import math
 import numpy as np
-
 
 def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
@@ -18,30 +15,25 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error.
+            before the model goes unstable in order to produce a valid estimate of error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
 
     Returns:
         float: Maximum error between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [MAX_E(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return max(error)
-
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
@@ -51,22 +43,15 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
-
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "
-             f"Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
 
     counter = 0
     t_last = times[0]
     err_max = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -83,7 +68,7 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
                 else:
@@ -106,21 +91,21 @@ def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error.
+            before the model goes unstable in order to produce a valid estimate of error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
 
     Returns:
         float: RMSE between model and data
@@ -133,30 +118,25 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (dict, optional): Initial state.
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error.
+            before the model goes unstable in order to produce a valid estimate of error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
 
     Returns:
         float: Total error
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [m.calc_error(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
@@ -170,18 +150,11 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
 
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
-             f"Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
-
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
     z_obs = m.output(x)
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -198,7 +171,7 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
@@ -206,7 +179,6 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
                     break
             err_total += np.sum(np.square(z.matrix - z_obs.matrix), where= ~np.isnan(z.matrix))
             counter += 1
-
     return err_total/counter
 
 def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
@@ -215,30 +187,25 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error.
+            before the model goes unstable in order to produce a valid estimate of error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
 
     Returns:
         float: MAE between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [MAE(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
@@ -248,22 +215,15 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
-
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
-             f"Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
     z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -280,7 +240,7 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")       
                 else:
@@ -297,30 +257,25 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
     Args:
         m (PrognosticsModel): Model to use for comparison
-        times (list[float]): array of times for each sample
-        inputs (list[dict]): array of input dictionaries where input[x] corresponds to time[x]
-        outputs (list[dict]): array of output dictionaries where output[x] corresponds to time[x]
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
 
     Keyword Args:
-        x0 (StateContainer): Current State of the model
+        x0 (StateContainer, optional): Initial state.
         dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
         stability_tol (float, optional): Configurable parameter.
             Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
             In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
             stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
-            before the model goes unstable in order to produce a valid estimate of mean squared error.
+            before the model goes unstable in order to produce a valid estimate of error.
 
             If the model goes unstable before stability_tol is met, NaN is returned. 
-            Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
 
     Returns:
         float: MAPE between model and data
     """
-    if isinstance(times[0], Iterable):
-        # Calculate error for each
-        error = [MAPE(t, i, z, **kwargs) for (t, i, z) in zip(times, inputs, outputs)]
-        return sum(error)/len(error)
-
     x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
     dt = kwargs.get('dt', 1e99)
     stability_tol = kwargs.get('stability_tol', 0.95)
@@ -330,22 +285,15 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
     if not isinstance(inputs[0], m.InputContainer):
         inputs = [m.InputContainer(u_i) for u_i in inputs]
-    
+
     if not isinstance(outputs[0], m.OutputContainer):
         outputs = [m.OutputContainer(z_i) for z_i in outputs]
-
-    # Checks stability_tol is within bounds
-    # Throwing a default after the warning.
-    if stability_tol >= 1 or stability_tol < 0:
-        warn(f"configurable cutoff must be some float value in the domain (0, 1]. "  
-             f"Received {stability_tol}. Resetting value to 0.95")
-        stability_tol = 0.95
 
     counter = 0  # Needed to account for skipped (i.e., none) values
     t_last = times[0]
     err_total = 0
-    z_obs = m.output(x)  # Initialize
-    cutoffThreshold = math.floor(stability_tol * len(times))
+    z_obs = m.output(x)
+    cutoffThreshold = stability_tol * times[-1]
 
     for t, u, z in zip(times, inputs, outputs):
         while t_last < t:
@@ -362,7 +310,7 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
             # produce an output until the model has received enough data
             # This is true for any window-based model
             if any(np.isnan(z_obs.matrix)):
-                if counter < cutoffThreshold:
+                if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
@@ -371,3 +319,102 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
             err_total += np.sum(np.abs(z.matrix - z_obs.matrix) / z.matrix)
             counter += 1
     return err_total/counter
+
+
+def DTW(m, times, inputs, outputs, **kwargs):
+    """
+    Dynamic Time Warping Algorithm using FastDTW's package.
+    How DTW Works: https://cs.fit.edu/~pkc/papers/tdm04.pdf
+    FastDTW Documentation: https://pypi.org/project/fastdtw/
+
+    Args:
+        m (PrognosticsModel): Model to use for comparison
+        times (list[float], list[list[float]]): Array of times for each sample.
+        inputs (list[dict, SimResult]): Array of input dictionaries where input[x] corresponds to time[x].
+        outputs (list[dict, SimResult]): Array of output dictionaries where output[x] corresponds to time[x].
+
+    Keyword Args:
+        x0 (StateContainer, optional): Initial state.
+        dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to use time between samples.
+        stability_tol (float, optional): Configurable parameter.
+            Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.
+            In some cases, a prognostics model will become unstable under certain conditions, after which point the model can no longer represent behavior. 
+            stability_tol represents the fraction of the provided argument `times` that are required to be met in simulation, 
+            before the model goes unstable in order to produce a valid estimate of error.
+
+            If the model goes unstable before stability_tol is met, NaN is returned. 
+            Else, model goes unstable after stability_tol is met, the error calculated from data up to the instability is returned.
+
+    Returns:
+        float: DTW distance between model and data
+    """
+    x = kwargs.get('x0', m.initialize(inputs[0], outputs[0]))
+    dt = kwargs.get('dt', 1e99)
+    stability_tol = kwargs.get('stability_tol', 0.95)
+
+    if not isinstance(x, m.StateContainer):
+        x = [m.StateContainer(x_i) for x_i in x]
+
+    if not isinstance(inputs[0], m.InputContainer):
+        inputs = [m.InputContainer(u_i) for u_i in inputs]
+
+    if not isinstance(outputs[0], m.OutputContainer):
+        outputs = [m.OutputContainer(z_i) for z_i in outputs]
+
+    counter = 0  # Needed to account for skipped (i.e., none) values
+    t_last = times[0]
+    z_obs = m.output(x)  # Initialize
+    cutoffThreshold = stability_tol * times[-1]
+    simulated = []
+
+    for t, u, z in zip(times, inputs, outputs):
+        while t_last < t:
+            t_new = min(t_last + dt, t)
+            x = m.next_state(x, u, t_new-t_last)
+            t_last = t_new
+            if t >= t_last:
+                z_obs = m.output(x)
+        if not (None in z_obs.matrix or None in z.matrix):
+            if any(np.isnan(z_obs.matrix)):
+                if t <= cutoffThreshold:
+                    raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
+                else:
+                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    # When model goes unstable after cutoffThreshold, we want to match the last stable observed value with the 
+                        # equivalent user-provided output by truncating our user-provided series to match the length of our observed series.
+                    percent = counter / len(outputs)
+                    index = math.floor(percent * len(outputs))
+                    outputs = list(outputs)[:index]
+                    break
+            simulated.append(z_obs)
+            counter += 1
+
+    from fastdtw import fastdtw
+    from scipy.spatial.distance import euclidean
+    
+    def dtw_helper(data):
+        """
+        Helper function to take in given data (simulated and observed), and then transform it such that the function fastdtw can use it.
+
+        The data would start by looking like:
+            [{'x': 2.83}, {'x': 22.83}, {'x': 40.3775}, {'x': 55.4725}, {'x': 68.115}, ...]
+        Then would be transformed to something like:
+            [[2.83, 0.0], [22.83, 0.5], [40.3775, 1.0], [55.4725, 1.5], [68.115, 2.0], ...]
+        
+        Note that the helper function also adds 'time' to each of the indices to account for any data that may not necessarily be 
+        recorded at a consistent rate.
+        """
+        transform = []
+        for index in data:
+            inner_list = []
+            for key in index.keys():
+                inner_list.append(index.get(key))
+            transform.append(inner_list)
+        for i, t in enumerate(times):
+            transform[i].append(t)
+        return transform
+    simulated, observed = dtw_helper(simulated), dtw_helper(outputs)
+    distance, path = fastdtw(simulated, observed, dist=euclidean)
+
+    return distance

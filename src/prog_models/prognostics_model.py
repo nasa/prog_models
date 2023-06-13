@@ -14,8 +14,7 @@ from warnings import warn
 from prog_models.exceptions import ProgModelStateLimitWarning
 from prog_models.loading import Piecewise
 from prog_models.sim_result import SimResult, LazySimResult
-from prog_models.utils import ProgressBar
-from prog_models.utils import calc_error
+from prog_models.utils import ProgressBar, calc_error, input_validation
 from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import next_state_functions
 from prog_models.utils.parameters import PrognosticsModelParameters
@@ -1096,9 +1095,9 @@ class PrognosticsModel(ABC):
     def __sizeof__(self):
         return getsizeof(self)
 
-    def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], **kwargs) -> float:
-        """Calculate Mean Squared Error (MSE) between simulated and observed
-
+    def calc_error(self, times: List[float], inputs: List[InputContainer], outputs: List[OutputContainer], _loc = None, **kwargs) -> float:
+        """Calculate Error between simulated and observed data using selected Error Calculation Method
+        
         Args:
             times (list[float]): array of times for each sample
             inputs (list[InputContainer]): array of input dictionaries where input[x] corresponds to time[x]
@@ -1111,6 +1110,7 @@ class PrognosticsModel(ABC):
                 * MAX_E (Maximum Error)
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
+                * DTW (Dynamic Time Warping)
             x0 (dict, optional): Initial state
             dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to time between samples.
             stability_tol (double, optional): Configurable parameter.
@@ -1121,6 +1121,7 @@ class PrognosticsModel(ABC):
 
                 If the model goes unstable before stability_tol is met, a ValueError is raised.
                 Else, model goes unstable after stability_tol is met, the mean squared error calculated from data up to the instability is returned.
+            aggr_method (func, optional): When multiple runs are provided, users can state how to aggregate the results of the errors. Defaults to taking the mean.
 
         Returns:
             float: error
@@ -1131,24 +1132,79 @@ class PrognosticsModel(ABC):
             :func:`calc_error.MAX_E`
             :func:`calc_error.MAPE`
             :func:`calc_error.MAE`
+            :func:'calc_error.DTW'
         """
         method = kwargs.get('method', 'MSE')
 
-        # Call appropriate error calculation method
-        if method.lower() == 'mse':
-            return calc_error.MSE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'max_e':
-            return calc_error.MAX_E(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'rmse':
-            return calc_error.RMSE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'mae':
-            return calc_error.MAE(self, times, inputs, outputs, **kwargs)
-        if method.lower() == 'mape':
-            return calc_error.MAPE(self, times, inputs, outputs, **kwargs)
+        method_map = {
+            'mse': calc_error.MSE,
+            'max_e': calc_error.MAX_E,
+            'rmse': calc_error.RMSE,
+            'mae': calc_error.MAE,
+            'mape': calc_error.MAPE,
+            'dtw': calc_error.DTW,
+        }
 
-        # If we get here, method is not supported
-        raise ValueError(f"Error method '{method}' not supported")
-    
+        try:
+            method = method_map[method.lower()]
+        except KeyError:
+            # If we get here, method is not supported
+            raise KeyError(f"Error method '{method}' not supported")
+        
+        acceptable_types = {abc.Sequence, np.ndarray, SimResult, LazySimResult}
+
+        if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
+            type_error = f"Types passed in must be from the following: Sequence, np.ndarray, SimResult, or LazySimResult. Current types" \
+                         f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
+                         f": times = {type(times).__name__}, inputs = {type(inputs).__name__}, and outputs = {type(outputs).__name__}."
+            raise TypeError(type_error)
+        if len(times) != len(inputs) or len(inputs) != len(outputs):
+            len_error = f"Times, inputs, and outputs must all be the same length. Current lengths" \
+                        f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}" \
+                        f": times = {len(times)}, inputs = {len(inputs)}, outputs = {len(outputs)}."
+            raise ValueError(len_error)
+        if len(times) < 2:
+            less_2_error = f"Must provide at least 2 data points for times, inputs, and outputs" \
+                           f"{(' at data location (' + str(_loc) + ')' if _loc is not None else '')}."
+            raise ValueError(less_2_error)
+
+        # Determines if all values of arguments are iterables
+        input_validation.all_none_iterable(times, 'times', loc=_loc) if _loc is not None else input_validation.all_none_iterable(times, 'times')
+        input_validation.all_none_iterable(inputs, 'inputs', loc=_loc) if _loc is not None else input_validation.all_none_iterable(inputs, 'inputs')
+        input_validation.all_none_iterable(outputs, 'outputs', loc=_loc) if _loc is not None else input_validation.all_none_iterable(outputs, 'outputs')
+
+        dt = kwargs.get('dt', 1e99)
+        aggr_method = kwargs.get('aggr_method', np.mean)
+        kwargs['stability_tol'] = kwargs.get('stability_tol', 0.95)
+
+        if isinstance(times[0], str):
+            raise TypeError("Times values cannot be strings")
+        if isinstance(times[0], abc.Iterable):
+            # Calculate error for each
+            error = []
+            for r, (t, i, z) in enumerate(zip(times, inputs, outputs)):
+                run_updated = str(r) if _loc is None else _loc + f', {str(r)}'
+                error.append(self.calc_error(t, i, z, _loc=run_updated, **kwargs))
+            return aggr_method(error)
+                
+        # Checks stability_tol is within bounds
+        if not isinstance(kwargs['stability_tol'], Number):
+            raise TypeError(f"Keyword argument 'stability_tol' must be either a int, float, or double.")
+        if kwargs['stability_tol'] > 1 or kwargs['stability_tol'] <= 0:
+            raise ValueError(f"Configurable cutoff must be some float value in the domain (0, 1]. Received {kwargs['stability_tol']}.")
+
+        # Type and Value checking dt to make sure it has correctly passed in values.
+        if not isinstance(dt, Number):
+            raise TypeError(f"Keyword argument 'dt' must be either a int, float, or double.")
+        if dt <= 0:
+            raise ValueError(f"Keyword argument 'dt' must a initialized to a value greater than 0. Currently passed in {dt}.")
+        
+        if 'x0' in kwargs.keys() and not isinstance(kwargs['x0'], (self.StateContainer, dict)):
+            raise TypeError(f"Keyword argument 'x0' must be initialized to a Dict or StateContainer, not a {type(kwargs['x0']).__name__}.")
+        
+        return method(self, times, inputs, outputs, **kwargs)
+
+
     def estimate_params(self, runs: List[tuple] = None, keys: List[str] = None, times: List[float] = None, inputs: List[InputContainer] = None,
                         outputs: List[OutputContainer] = None, method: str = 'nelder-mead', **kwargs) -> None:
         """Estimate the model parameters given data. Overrides model parameters
@@ -1306,7 +1362,7 @@ class PrognosticsModel(ABC):
         self.parameters['measurement_noise'] = m_noise
         self.parameters['process_noise'] = p_noise
 
-        return res   
+        return res
 
 
     def generate_surrogate(self, load_functions: List[abc.Callable], method: str = 'dmd', **kwargs):
