@@ -39,6 +39,10 @@ def run_example():
     waypoints['lon_deg'] = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
     waypoints['alt_ft'] = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
     waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
+
+    import logging
+    logging.warn(waypoints['time_unix'])
+    logging.warn([dt.datetime.fromtimestamp(time) for time in waypoints['time_unix']])
     
     # Generate trajectory
     # =====================
@@ -48,7 +52,6 @@ def run_example():
                       alt=waypoints['alt_ft'] * 0.3048,
                       etas=[dt.datetime.fromtimestamp(time) for time in waypoints['time_unix']],
                       vehicle_model=vehicle.parameters['vehicle_model'])
-    import logging
     logging.warn(traj.waypoints)
     logging.warn(traj.parameters)
 
