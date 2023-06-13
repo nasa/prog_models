@@ -1151,7 +1151,6 @@ class PrognosticsModel(ABC):
             # If we get here, method is not supported
             raise KeyError(f"Error method '{method}' not supported")
         
-        # Ensure error methods provide correct results via hand-calculating each one and equating each one.
         acceptable_types = {abc.Sequence, np.ndarray, SimResult, LazySimResult}
 
         if not all(isinstance(obj, tuple(acceptable_types)) for obj in [times, inputs, outputs]):
@@ -1175,7 +1174,7 @@ class PrognosticsModel(ABC):
         input_validation.all_none_iterable(outputs, 'outputs', loc=_loc) if _loc is not None else input_validation.all_none_iterable(outputs, 'outputs')
 
         dt = kwargs.get('dt', 1e99)
-        aggr_method = kwargs.get('aggr_method', lambda x: sum(x)/len(x))
+        aggr_method = kwargs.get('aggr_method', np.mean)
         kwargs['stability_tol'] = kwargs.get('stability_tol', 0.95)
 
         if isinstance(times[0], str):
