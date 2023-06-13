@@ -122,11 +122,10 @@ class LQR():
         # Build and store control matrices for scheduling
         # --------------------------------------------------
         self.build_scheduled_control(vehicle.linear_model, input_vector=[self.ss_input])
-        logging.warn(f'Vehicle model {vehicle.linear_model}')
         logging.warn(f'parameters: {self.parameters}')
 
     def __call__(self, t, x=None):
-
+        logging.warn(f'In controller __call__ at t={t}, x={x}')
         # Check that build_scheduled_control has been called
         if not hasattr(self, 'scheduled_states'):
             raise TypeError("Scheduled states do not exist. Controller's build_scheduled_control function must be called before using controller to simulate.")
@@ -135,24 +134,38 @@ class LQR():
             x_k = np.zeros((self.n_states, 1))
         else:
             x_k = np.array([x.matrix[ii][0] for ii in range(len(x.matrix)-2)])
-        
+            logging.warn(f'x is not none, set to {x_k} (from {x.matrix})')
+
         # Identify reference state (desired state) at t
         t_k = np.round(t + self.dt/2.0, 1)  # current time step
+        logging.warn(f't_k = {t_k}')
         time_ind = np.argmin(np.abs(t_k - self.ref_traj['t'].tolist()))  # get index of time value in ref_traj closest to t_k
+        logging.warn(f'time_ind = {time_ind}')
         x_ref_k = []
         for state in self.states:
             if state != 'mission_complete':
                 x_ref_k.append(self.ref_traj[state][time_ind])
+                logging.warn(f'Mission is not complete, state {state}, {self.ref_traj[state][time_ind]}')
         x_ref_k = np.asarray(x_ref_k[:-1])  # get rid of time index in state vector
         x_k = x_k.reshape(x_k.shape[0],)
+        logging.warn(f'x_k = {x_k}')
+        logging.warn(f'x_ref_k = {x_ref_k}')
 
         error         = x_k - x_ref_k    # Error between current and reference state
+        logging.warn(f'error = {error}')
         scheduled_var = x_k[self.parameters['index_scheduled_var']]    # get psi from current state vector (self.parameters = 'psi')
+        logging.warn(f'scheduled_var = {scheduled_var}')
         k_idx         = np.argmin(np.abs(self.scheduled_states[self.parameters['index_scheduled_var'], :] - scheduled_var))  # find the psi value stored in the controller closest to the current psi --> extract index
+        logging.warn(f'k_idx = {k_idx}')
         K             = self.control_gains[:, :, k_idx]     # extract gain corresponding to the current psi value
+        logging.warn(f'K = {K}')
         u             = self.compute_input(K, error)                 # compute input u given the gain matrix K and the error between current and reference state
+        logging.warn(f'u = {u}')
         u[0]         += self.ss_input
         u[0]  = min(max([0, u[0]]), self.vehicle_max_thrust)
+        logging.warn(f'u[0] = {u[0]}')
+        result = {'T': u[0], 'mx': u[1], 'my': u[2], 'mz': u[3], 'mission_complete': t_k/self.ref_traj['t'][-1]}
+        logging.warn(f"{result}")
         return {
             'T': u[0],
             'mx': u[1],
