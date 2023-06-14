@@ -34,22 +34,21 @@ def run_example():
 
     # Here, we specify waypoints in a dictionary and then pass
     # lat/lon/alt/ETAs into the trajectory class
-    waypoints = {}
-    waypoints['lat_deg'] = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
-    waypoints['lon_deg'] = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
-    waypoints['alt_ft'] = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
-    waypoints['time_unix'] = [dt.datetime(2018, 12, 7, 5, 12, 16), dt.datetime(2018, 12, 7, 5, 12, 38), dt.datetime(2018, 12, 7, 5, 12, 40), dt.datetime(2018, 12, 7, 5, 12, 57), dt.datetime(2018, 12, 7, 5, 13, 14), dt.datetime(2018, 12, 7, 5, 13, 31), dt.datetime(2018, 12, 7, 5, 13, 48), dt.datetime(2018, 12, 7, 5, 14, 56), dt.datetime(2018, 12, 7, 5, 15, 39), dt.datetime(2018, 12, 7, 5, 16, 24), dt.datetime(2018, 12, 7, 5, 16, 41), dt.datetime(2018, 12, 7, 5, 17, 15), dt.datetime(2018, 12, 7, 5, 17, 32), dt.datetime(2018, 12, 7, 5, 17, 52), dt.datetime(2018, 12, 7, 5, 18, 12)]
+    lat_deg = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
+    lon_deg = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
+    alt_ft = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
+    time_unix = [dt.datetime(2018, 12, 7, 5, 12, 16), dt.datetime(2018, 12, 7, 5, 12, 38), dt.datetime(2018, 12, 7, 5, 12, 40), dt.datetime(2018, 12, 7, 5, 12, 57), dt.datetime(2018, 12, 7, 5, 13, 14), dt.datetime(2018, 12, 7, 5, 13, 31), dt.datetime(2018, 12, 7, 5, 13, 48), dt.datetime(2018, 12, 7, 5, 14, 56), dt.datetime(2018, 12, 7, 5, 15, 39), dt.datetime(2018, 12, 7, 5, 16, 24), dt.datetime(2018, 12, 7, 5, 16, 41), dt.datetime(2018, 12, 7, 5, 17, 15), dt.datetime(2018, 12, 7, 5, 17, 32), dt.datetime(2018, 12, 7, 5, 17, 52), dt.datetime(2018, 12, 7, 5, 18, 12)]
 
     import logging
-    logging.warn(waypoints['time_unix'])
+    logging.warn(time_unix)
     
     # Generate trajectory
     # =====================
     # Generate trajectory object and pass the route (waypoints, ETA) to it
-    traj = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0,
-                      lon=waypoints['lon_deg'] * np.pi/180.0,
-                      alt=waypoints['alt_ft'] * 0.3048,
-                      etas=waypoints['time_unix'],
+    traj = Trajectory(lat=lat_deg * np.pi/180.0,
+                      lon=lon_deg * np.pi/180.0,
+                      alt=alt_ft * 0.3048,
+                      etas=time_unix,
                       vehicle_model=vehicle.parameters['vehicle_model'])
     logging.warn(traj.waypoints)
     logging.warn(traj.parameters)
@@ -88,9 +87,9 @@ def run_example():
     
     # # Generate trajectory object and pass the route (lat/lon/alt, no ETAs)
     # and speed information to it
-    traj_speed = Trajectory(lat=waypoints['lat_deg'] * np.pi/180.0,
-                            lon=waypoints['lon_deg'] * np.pi/180.0,
-                            alt=waypoints['alt_ft'] * 0.3048,
+    traj_speed = Trajectory(lat=lat_deg * np.pi/180.0,
+                            lon=lon_deg * np.pi/180.0,
+                            alt=alt_ft * 0.3048,
                             cruise_speed=8.0,
                             ascent_speed=2.0,
                             descent_speed=3.0,
@@ -130,12 +129,12 @@ def run_example():
 
     # First, we'll re-define the ETAs in the waypoints dictionary
     # (since we deleted them from the waypoints in Example 2)
-    waypoints['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
+    time_unix = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692])
 
     # Extract time information for desired interval, starting at waypoint 10
     # and ending at waypoint 13
-    start_time = waypoints['time_unix'][10] - waypoints['time_unix'][0]
-    end_time = waypoints['time_unix'][13] - waypoints['time_unix'][0]
+    start_time = time_unix[10] - time_unix[0]
+    end_time = time_unix[13] - time_unix[0]
     sim_time = end_time - start_time
 
     # Define initial state, x0, based on reference trajectory at start_time
@@ -164,7 +163,7 @@ def run_example():
     ax.set_xlabel('time, s', fontsize=14)
     ax.set_ylabel('altitude, m', fontsize=14)
     ax.legend()
-    
+
 
 # This allows the module to be executed directly
 if __name__ == '__main__':
