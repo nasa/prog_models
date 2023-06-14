@@ -241,7 +241,6 @@ class Trajectory():
         logging.warn(f"waypoints eta (before) {self.waypoints['eta']}")
         self.set_eta(idx_land_pos=idx_land_pos) 
         logging.warn(f"waypoints eta (after) {self.waypoints['eta']}")
-        raise Exception()
         
         # Generate ETAs at waypoints in unix time from dt
         self.waypoints['eta_unix'] = np.asarray([self.waypoints['eta'][item].timestamp() for item in range(len(self.waypoints['eta']))])  # convert to unix time
