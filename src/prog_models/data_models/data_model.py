@@ -100,7 +100,7 @@ class DataModel(PrognosticsModel, ABC):
         Keyword Args:
             add_dt (bool): If the timestep should be added as an input
 
-        Addditional configuration parameters from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold`. These can be an array (of same length as load_functions) of config for each individual sim, or one value to apply to all
+        Additional configuration parameters from :py:func:`prog_models.PrognosticsModel.simulate_to_threshold`. These can be an array (of same length as load_functions) of config for each individual sim, or one value to apply to all
         Additional configuration parameters from `from_data`
 
         Returns:
