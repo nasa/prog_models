@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d
 import types
 from warnings import warn
 
+from prog_models.exceptions import warn_once
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models import LinearModel, PrognosticsModel
 from prog_models.data_models import DataModel
@@ -63,7 +64,7 @@ class DMDModel(LinearModel, DataModel):
     def __new__(cls, dmd_matrix, *args, **kwargs):
         if isinstance(dmd_matrix, PrognosticsModel):
             # Keep for backwards compatability (in first version, model was passed into constructor)
-            warn('Passing a PrognosticsModel into DMDModel is deprecated and will be removed in v1.5.  Please use DMDModel.from_model instead', DeprecationWarning)
+            warn_once('Passing a PrognosticsModel into DMDModel is deprecated and will be removed in v1.6.  Please use DMDModel.from_model instead', DeprecationWarning)
             return cls.from_model(dmd_matrix, args[0], **kwargs)
         return DataModel.__new__(cls)
 
@@ -433,7 +434,7 @@ class DMDModel(LinearModel, DataModel):
         
         # Interpolate results to be at user-desired time step
         if 'dt' in kwargs:
-            warn("dt is not used in DMD approximation")
+            warn_once("dt is not used in DMD approximation")
 
         # Default parameters
         config = {
