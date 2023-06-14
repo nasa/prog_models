@@ -1,12 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections import UserList, defaultdict
+from collections import UserList, defaultdict, abc
 from copy import deepcopy
-
 from matplotlib.pyplot import figure
 import numpy as np
 import pandas as pd
-from typing import Callable, Dict, List
+from typing import Dict, List
 from warnings import warn
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
@@ -344,10 +343,10 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     Used to store the result of a simulation, which is only calculated on first request
     """
 
-    def __init__(self, fcn: Callable, times: list = None, states: list = None, _copy=True) -> None:
+    def __init__(self, fcn: abc.Callable, times: list = None, states: list = None, _copy=True) -> None:
         """
         Args:
-            fcn (callable): function (x) -> z where x is the state and z is the data
+            fcn (abc.Callable): function (x) -> z where x is the state and z is the data
             times (array(float)): Times for each data point where times[n] corresponds to data[n]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
