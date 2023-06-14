@@ -74,7 +74,7 @@ class SimResult(UserList):
                 self._frame = pd.DataFrame()
             if self.times is not None:
                 self._frame.insert(0, "time", self.times)
-                self._frame.reindex()
+                self._frame = self._frame.set_index(pd.Index(self.times))
             return self._frame
         else:
             return self._frame
@@ -199,6 +199,7 @@ class SimResult(UserList):
         self.times.pop(index)
         if self._frame is not None:
             self._frame = self._frame.drop([index])
+            self._frame.reset_index(drop=True)
         return self.data.pop(index)
 
     def pop(self, index: int = -1) -> dict:
