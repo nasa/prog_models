@@ -566,7 +566,7 @@ class Trajectory():
             dh, dv = geom.geodetic_distance([self.waypoints['lat'][point], self.waypoints['lat'][point+1]], 
                                             [self.waypoints['lon'][point], self.waypoints['lon'][point+1]], 
                                             [self.waypoints['alt'][point], self.waypoints['alt'][point+1]], 
-                                            method=distance_method, return_surf_vert=True)
+                                            method='greatcircle', return_surf_vert=True)
             dv = dv[0]
             
             # Identify correct vertical speed
