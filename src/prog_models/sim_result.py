@@ -92,7 +92,7 @@ class SimResult(UserList):
         """
             in addition to the normal functionality, updates the _frame if it exists
         """
-        super().__delitem__(self, key)
+        super().__delitem__(key)
         if self._frame is not None:
             self._frame = self._frame.drop([key])
 
@@ -154,6 +154,7 @@ class SimResult(UserList):
             DeprecationWarning, stacklevel=2)
 
         return self.data.index(other, *args, **kwargs)
+    
     def index(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
@@ -268,6 +269,7 @@ class SimResult(UserList):
         if keys is None:
             keys = self.data[0].keys()
         return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
+    
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
