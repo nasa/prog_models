@@ -2,7 +2,6 @@
 
 from collections import UserList, defaultdict
 from copy import deepcopy
-from warnings import warn
 
 from matplotlib.pyplot import figure
 import numpy as np
