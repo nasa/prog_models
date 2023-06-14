@@ -215,9 +215,6 @@ class SimResult(UserList):
         warn(
             'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
-        if self._frame is not None:
-            self._frame = self._frame.drop([index])
-
         return self.pop_by_index(index)
 
 
