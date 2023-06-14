@@ -186,7 +186,6 @@ class SimResult(UserList):
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
         if self._frame is not None:
             self._frame = None
-            self._frame = self.frame
 
     def pop_by_index(self, index: int = -1) -> dict:
         """Remove and return an element
