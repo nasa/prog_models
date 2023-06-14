@@ -1,13 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
 
-from collections import UserList, defaultdict
+from collections import UserList, defaultdict, abc
 from copy import deepcopy
-from warnings import warn
-
 from matplotlib.pyplot import figure
 import numpy as np
 import pandas as pd
-from typing import Callable, Dict, List
+from typing import Dict, List
 from warnings import warn
 
 from prog_models.utils.containers import DictLikeMatrixWrapper
@@ -94,7 +92,7 @@ class SimResult(UserList):
         """
             in addition to the normal functionality, updates the _frame if it exists
         """
-        super().__delitem__(self, key)
+        super().__delitem__(key)
         if self._frame is not None:
             self._frame = self._frame.drop([key])
 
@@ -156,6 +154,7 @@ class SimResult(UserList):
             DeprecationWarning, stacklevel=2)
 
         return self.data.index(other, *args, **kwargs)
+    
     def index(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
@@ -187,7 +186,6 @@ class SimResult(UserList):
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}")
         if self._frame is not None:
             self._frame = None
-            self._frame = self.frame
 
     def pop_by_index(self, index: int = -1) -> dict:
         """Remove and return an element
@@ -215,9 +213,6 @@ class SimResult(UserList):
         warn(
             'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
-        if self._frame is not None:
-            self._frame = self._frame.drop([index])
-
         return self.pop_by_index(index)
 
 
@@ -273,6 +268,7 @@ class SimResult(UserList):
         if keys is None:
             keys = self.data[0].keys()
         return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
+    
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
@@ -348,10 +344,10 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
     Used to store the result of a simulation, which is only calculated on first request
     """
 
-    def __init__(self, fcn: Callable, times: list = None, states: list = None, _copy=True) -> None:
+    def __init__(self, fcn: abc.Callable, times: list = None, states: list = None, _copy=True) -> None:
         """
         Args:
-            fcn (callable): function (x) -> z where x is the state and z is the data
+            fcn (abc.Callable): function (x) -> z where x is the state and z is the data
             times (array(float)): Times for each data point where times[n] corresponds to data[n]
             data (array(dict)): Data points where data[n] corresponds to times[n]
         """
