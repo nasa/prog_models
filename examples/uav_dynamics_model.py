@@ -42,8 +42,6 @@ def run_example():
     # Generate trajectory
     # =====================
     # Generate trajectory object and pass the route (waypoints, ETA) to it
-    # TODO(CT): LAT DEG/RAD
-    # TODO(CT): ETAs np.array
     traj = Trajectory(lat=lat_deg * np.pi/180.0,
                       lon=lon_deg * np.pi/180.0,
                       alt=alt_ft * 0.3048,
@@ -79,10 +77,10 @@ def run_example():
     # In this example, we define another trajectory through the same
     # waypoints but with speeds defined instead of ETAs
     
-    # # Generate trajectory object and pass the route (lat/lon/alt, no ETAs)
+    # Generate trajectory object and pass the route (lat/lon/alt, no ETAs)
     # and speed information to it
     traj_speed = Trajectory(lat=lat_deg * np.pi/180.0,
-                            lon=lat_deg * np.pi/180.0,
+                            lon=lon_deg * np.pi/180.0,
                             alt=alt_ft * 0.3048,
                             cruise_speed=8.0,
                             ascent_speed=2.0,
