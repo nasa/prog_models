@@ -16,11 +16,13 @@ def compute_derivatives(position_profile, timevec):
     # Compute derivatives of position: velocity and acceleration
     # (optional: jerk, not needed)
     # ---------------------------------------------------------
-    dim_keys   = list(position_profile.keys())
+    dim_keys = list(position_profile.keys())
     vel_interp = {dim_key: None for dim_key in dim_keys}
     acc_interp = {dim_key: None for dim_key in dim_keys}
     for key in dim_keys:
-        vel_interp[key], acc_interp[key], _ = derivate_position(position_profile[key], timevec[1]-timevec[0])
+        vel_interp[key], acc_interp[key], _ = derivate_position(
+            position_profile[key],
+            timevec[1]-timevec[0])
     
     return {'velocity': vel_interp, 'acceleration': acc_interp}
 
@@ -34,10 +36,10 @@ def linearinterp_t(t0, x0, t1, x1, xp):
     :param x1:          dependent variable of second point
     :param xp:          independent variable of query point
     """
-    dx     = x1 - x0
-    dt     = t1 - t0
-    der    = dx / dt
-    t_land = 1.0/der * ( xp + der * t0 - x0)
+    dx = x1 - x0
+    dt = t1 - t0
+    der = dx / dt
+    t_land = 1.0/der * (xp + der * t0 - x0)
     return t_land
 
 
@@ -69,14 +71,15 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
     :return q:          double, n x 1, body pitch rate as a function of time
     :return r:          double, n x 1, body yaw rate as a function of time
     """
-    phidot   = np.insert(np.diff(phi) / delta_t, 0, 0.0)
+    phidot = np.insert(np.diff(phi) / delta_t, 0, 0.0)
     thetadot = np.insert(np.diff(theta) / delta_t, 0, 0.0)
-    psidot   = np.insert(np.diff(psi) / delta_t, 0, 0.0)
-    p        = np.zeros_like(phidot)
-    q        = np.zeros_like(phidot)
-    r        = np.zeros_like(phidot)
+    psidot = np.insert(np.diff(psi) / delta_t, 0, 0.0)
+    p = np.zeros_like(phidot)
+    q = p.copy()
+    r = p.copy()
     for ii in range(len(phi)):
-        des_angular_vel = geom.body_ang_vel_from_eulers(phi[ii], theta[ii], psi[ii], phidot[ii], thetadot[ii], psidot[ii])
+        des_angular_vel = geom.body_ang_vel_from_eulers(
+            phi[ii], theta[ii], psi[ii], phidot[ii], thetadot[ii], psidot[ii])
         p[ii], q[ii], r[ii] = des_angular_vel[0], des_angular_vel[1], des_angular_vel[2]
     return p, q, r
 
@@ -92,8 +95,8 @@ def derivate_position(p, dt):
     :return:            three n x 1 arrays of doubles in a list, corresponding to velocity, acceleration and jerk, respectively.
     """
     v = np.zeros_like(p)
-    a = np.zeros_like(p)
-    j = np.zeros_like(p)
+    a = v.copy()
+    j = v.copy()
 
     v = np.gradient(p, dt)
     v[0] = 0.
@@ -105,13 +108,13 @@ def derivate_position(p, dt):
 
 
 def gen_attitude(psi, ax, ay, az, max_phi, max_theta, gravity):
-    # --------- Calculate angular kinematics based on acceleration and yaw ---------- #
+    """Calculate angular kinematics based on acceleration and yaw"""
     # linearized angular kinematics
-    phi   = 1.0 / (gravity + az) * (ax * np.sin(psi) - ay * np.cos(psi))    # 
-    theta = 1.0 / (gravity + az) * (ax * np.cos(psi) + ay * np.sin(psi))    # 
+    phi = 1.0 / (gravity + az) * (ax * np.sin(psi) - ay * np.cos(psi))
+    theta = 1.0 / (gravity + az) * (ax * np.cos(psi) + ay * np.sin(psi))
     
     # Introduce limits on attitude angles
-    phi   = np.fmax(np.fmin(phi, max_phi), -max_phi)
+    phi = np.fmax(np.fmin(phi, max_phi), -max_phi)
     theta = np.fmax(np.fmin(theta, max_theta), -max_theta)
     return phi, theta, psi
    
@@ -218,12 +221,18 @@ class Trajectory():
                 self.waypoints['takeoff_time'] = 0
 
         # Generate Heading
-        self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
+        self.waypoints['heading'] = geom.gen_heading_angle(
+            self.waypoints['lat'],
+            self.waypoints['lon'],
+            self.waypoints['alt'])
 
         # Set up coordinate system conversion between Geodetic,
         # Earth-Centric Earth-Fixed (ECF), and Cartesian (East-North-Up, ENU)
         # ------------------------------------------------------
-        self.coordinate_system = geom.Coord(self.waypoints['lat'][0], self.waypoints['lon'][0], self.waypoints['alt'][0])
+        self.coordinate_system = geom.Coord(
+            self.waypoints['lat'][0],
+            self.waypoints['lon'][0],
+            self.waypoints['alt'][0])
 
         # Define speed parameters - only necessary if ETAs are not defined
         # ------------------------------------------------------
@@ -251,7 +260,10 @@ class Trajectory():
         # Covert to cartesian coordinates
         self.waypoints['x'], \
             self.waypoints['y'], \
-                self.waypoints['z'] = self.coordinate_system.geodetic2enu(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
+            self.waypoints['z'] = self.coordinate_system.geodetic2enu(
+                self.waypoints['lat'],
+                self.waypoints['lon'],
+                self.waypoints['alt'])
                 
         # Interpolation properties
         # ========================
@@ -326,7 +338,10 @@ class Trajectory():
         # Compute position and yaw profiles with NURBS
         # --------------------------------------------
         # Instantiate NURBS class to generate trajectory
-        points = {'x': self.waypoints['x'], 'y': self.waypoints['y'], 'z': self.waypoints['z']}
+        points = {
+            'x': self.waypoints['x'],
+            'y': self.waypoints['y'],
+            'z': self.waypoints['z']}
         nurbs_alg = NURBS(points=points,
                           weights=self.parameters['weight_vector'],
                           times=self.waypoints['eta'] - self.waypoints['eta'][0],
@@ -336,12 +351,9 @@ class Trajectory():
         
         # Generate position and yaw interpolated given the timestep size
         pos_interp, yaw_interp, time_interp = nurbs_alg.generate(timestep_size=dt)
-        pos0 = {key: pos_interp[key][0] for key in pos_interp.keys()}
-        
-        pos100 = {key: pos_interp[key][100] for key in pos_interp.keys()}
         
         # Generate velocity, acceleration, and jerk (optional) profile from position profile
-        linear_profiles  = compute_derivatives(pos_interp, time_interp)
+        linear_profiles = compute_derivatives(pos_interp, time_interp)
         
         # Generate angular profiles: attitude and angular velocities from heading and acceleration
         angular_profiles = self.compute_attitude(heading_profile=yaw_interp,
@@ -374,9 +386,10 @@ class Trajectory():
         self.trajectory['geodetic_pos'] = np.zeros_like(self.trajectory['position'])
         self.trajectory['geodetic_pos'][:, 0], \
             self.trajectory['geodetic_pos'][:, 1], \
-                self.trajectory['geodetic_pos'][:, 2] = self.coordinate_system.enu2geodetic(self.trajectory['position'][:, 0],
-                                                                                            self.trajectory['position'][:, 1],
-                                                                                            self.trajectory['position'][:, 2])
+                self.trajectory['geodetic_pos'][:, 2] = self.coordinate_system.enu2geodetic(
+                    self.trajectory['position'][:, 0],
+                    self.trajectory['position'][:, 1],
+                    self.trajectory['position'][:, 2])
         return self.ref_traj
 
     def __adjust_eta_given_max_acceleration(self, dt):
@@ -418,13 +431,12 @@ class Trajectory():
 
             if any(etas_rel != new_eta_rel):
                 # Generate new curve and new_eta becomes the reference eta
-                # ---------------------------------------------------------
                 self.waypoints['eta'] = new_eta_rel + self.waypoints['eta'][0]
                 self.compute_trajectory_nurbs(dt)
                 etas_rel = new_eta_rel.copy()
 
-            # Exit the while loop and give up if in maxiter iterations the trajectory acceleration has not been pushed under the limit
             if counter == maxiter:
+                # Exit the while loop and give up if in maxiter iterations the trajectory acceleration has not been pushed under the limit
                 print("WARNING: max number of iterations reached, the trajectory still contains accelerations beyond the limit.")
                 break
 
@@ -533,7 +545,7 @@ class Trajectory():
         self.speed_parameters['landing_speed'] = reshape_route_attribute(self.speed_parameters['landing_speed'], dim=n-1, msk=idx_land_pos)
         hovering = reshape_route_attribute(hovering, dim=n-1, msk=idx_land_pos)
 
-        if self.waypoints['eta'] is None or len(self.waypoints['eta'])==1:
+        if self.waypoints['eta'] is None or len(self.waypoints['eta']) == 1:
             etas = None
         else:
             if len(self.waypoints['eta']) != len(self.waypoints['lat']):
@@ -549,8 +561,8 @@ class Trajectory():
         # define margin on cruise speed
         # ----------------------------
         # If calculated ETA produces a speed that is larger than desired speed, we can accommodate it as long as is within this margin (%)
-        cruise_speed_margin = 0.1   # %, 'extra' speed we can tolerate on cruise.
-        vert_speed_margin = 0.05    # %, 'extra' speed we can tolerate on ascent/descent
+        cruise_speed_margin = 0.1  # %, 'extra' speed we can tolerate on cruise.
+        vert_speed_margin = 0.05   # %, 'extra' speed we can tolerate on ascent/descent
 
         # Compute relative ETAs
         # -------------------
@@ -588,11 +600,11 @@ class Trajectory():
                     d_eta[point] = 2.0  # if there's no vertical / horizontal speed (waypoints are identical) add a default hovering value of 2 s to avoid extreme accelerations.
                 else:
                     if np.isclose(dh, 0.):
-                        speed_sq = vert_speed**2.0
+                        speed_sq = vert_speed*vert_speed
                     elif np.isclose(dv, 0.):
                         speed_sq = self.speed_parameters['cruise_speed'][point]**2.0
                     else:
-                        speed_sq = self.speed_parameters['cruise_speed'][point]**2.0 + vert_speed**2.0
+                        speed_sq = self.speed_parameters['cruise_speed'][point]**2.0 + vert_speed*vert_speed
                     d_eta[point] = np.sqrt( (dh**2.0 + dv**2.0) / speed_sq ) * 1.3  # adding some %
                     
                     # If speed is larger than desired (possible when both dh, dv>0), increment d_eta to reduce until desired (consider margin)
