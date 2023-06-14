@@ -5,7 +5,6 @@
 Auxiliary functions for trajectories and aircraft routes
 """
 
-import logging
 import numpy as np
 from warnings import warn
 
@@ -212,13 +211,11 @@ class Trajectory():
             'heading': None}
         
         # Assign takeoff time
-        logging.warn(f"waypoints eta (before assign takeoff) {self.waypoints['eta']}")
         if self.waypoints['takeoff_time'] is None:
             if self.waypoints['eta'] is not None:
                 self.waypoints['takeoff_time'] = self.waypoints['eta'][0]
             else:
                 self.waypoints['takeoff_time'] = 0
-        logging.warn(f"waypoints eta (after assign takeoff) {self.waypoints['eta']}")
 
         # Generate Heading
         self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
@@ -243,13 +240,10 @@ class Trajectory():
         self.speed_parameters.update(**kwargs)
 
         # Set landing waypoints dimensions
-        logging.warn(f"waypoints eta (before landing waypoints) {self.waypoints['eta']}")
         idx_land_pos = self.set_landing_waypoints()
 
         # Set ETAs for waypoints
-        logging.warn(f"waypoints eta (before) {self.waypoints['eta']}")
         self.set_eta(idx_land_pos=idx_land_pos)
-        logging.warn(f"waypoints eta (after) {self.waypoints['eta']}")
 
         # Get waypoints in cartesian frame, unix time,
         # and calculate heading angle for yaw
@@ -329,7 +323,6 @@ class Trajectory():
             'angVel': np.array([p, q, r]).T}
 
     def compute_trajectory_nurbs(self, dt):
-        logging.warn(f'Entering compute_trajectory_nurbs with dt={dt}')
         # Compute position and yaw profiles with NURBS
         # --------------------------------------------
         # Instantiate NURBS class to generate trajectory
@@ -370,7 +363,6 @@ class Trajectory():
         :param dt:          s, scalar, time step size used to interpolate the waypoints and generate the trajectory
         :return:            dictionary of state variables describing the trajectory as a function of time
         """
-        logging.warn(f'Entered generate() with dt={dt} and kwargs={kwargs}')
         self.parameters.update(**kwargs)    # Override NURBS parameters
         assert len(self.parameters['weight_vector']) == len(self.waypoints['x']), "Length of waypoint weight vector and number of waypoints must coincide."
 

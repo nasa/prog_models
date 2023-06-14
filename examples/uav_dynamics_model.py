@@ -5,7 +5,6 @@
 Example of generating a trajectory for a small rotorcraft through a set of coarse waypoints, and simulate the rotorcraft flight using a 6-dof model.
 """
 
-import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -49,9 +48,7 @@ def run_example():
 
     ref_traj = traj.generate(dt=vehicle.parameters['dt'])
     tmp = {key: ref_traj[key][0] for key in ref_traj.keys()}
-    logging.warn(f'0: {tmp}')
     tmp = {key: ref_traj[key][100] for key in ref_traj.keys()}
-    logging.warn(f'100: {tmp}')
 
     # Define controller and build scheduled control. The controller acts as a
     # future_loading function when simulating
