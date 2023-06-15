@@ -5,7 +5,6 @@
 Example of generating a trajectory for a small rotorcraft through a set of coarse waypoints, and simulate the rotorcraft flight using a 6-dof model.
 """
 
-import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -37,29 +36,19 @@ def run_example():
     lat_deg = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719, 37.09719, 37.09719, 37.09748, 37.09798, 37.09776, 37.09776])
     lon_deg = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628, -76.38628, -76.38628, -76.3848, -76.38589, -76.38629, -76.38629])
     alt_ft = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0, 0.0, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
-    time_unix = [dt.datetime(2018, 12, 7, 5, 12, 16), dt.datetime(2018, 12, 7, 5, 12, 38), dt.datetime(2018, 12, 7, 5, 12, 40), dt.datetime(2018, 12, 7, 5, 12, 57), dt.datetime(2018, 12, 7, 5, 13, 14), dt.datetime(2018, 12, 7, 5, 13, 31), dt.datetime(2018, 12, 7, 5, 13, 48), dt.datetime(2018, 12, 7, 5, 14, 56), dt.datetime(2018, 12, 7, 5, 15, 39), dt.datetime(2018, 12, 7, 5, 16, 24), dt.datetime(2018, 12, 7, 5, 16, 41), dt.datetime(2018, 12, 7, 5, 17, 15), dt.datetime(2018, 12, 7, 5, 17, 32), dt.datetime(2018, 12, 7, 5, 17, 52), dt.datetime(2018, 12, 7, 5, 18, 12)]
+    time_unix = [1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539, 1544188584, 1544188601, 1544188635, 1544188652, 1544188672, 1544188692]
 
-    import logging
-    logging.warn(time_unix)
-    
     # Generate trajectory
     # =====================
     # Generate trajectory object and pass the route (waypoints, ETA) to it
     traj = Trajectory(lat=lat_deg * np.pi/180.0,
                       lon=lon_deg * np.pi/180.0,
                       alt=alt_ft * 0.3048,
-                      etas=time_unix,
-                      vehicle_model=vehicle.parameters['vehicle_model'])
-    logging.warn(traj.waypoints)
-    logging.warn(traj.parameters)
+                      etas=time_unix)
 
     ref_traj = traj.generate(dt=vehicle.parameters['dt'])
     tmp = {key: ref_traj[key][0] for key in ref_traj.keys()}
-    logging.warn(f'0: {tmp}')
     tmp = {key: ref_traj[key][100] for key in ref_traj.keys()}
-    logging.warn(f'100: {tmp}')
-    tmp = {key: ref_traj[key][-1] for key in ref_traj.keys()}
-    logging.warn(f'-1: {tmp}')
 
     # Define controller and build scheduled control. The controller acts as a
     # future_loading function when simulating
@@ -85,7 +74,7 @@ def run_example():
     # In this example, we define another trajectory through the same
     # waypoints but with speeds defined instead of ETAs
     
-    # # Generate trajectory object and pass the route (lat/lon/alt, no ETAs)
+    # Generate trajectory object and pass the route (lat/lon/alt, no ETAs)
     # and speed information to it
     traj_speed = Trajectory(lat=lat_deg * np.pi/180.0,
                             lon=lon_deg * np.pi/180.0,
@@ -93,8 +82,7 @@ def run_example():
                             cruise_speed=8.0,
                             ascent_speed=2.0,
                             descent_speed=3.0,
-                            landing_speed=2.0,
-                            vehicle_model=vehicle.parameters['vehicle_model'])
+                            landing_speed=2.0)
     ref_traj_speeds = traj_speed.generate(dt=vehicle.parameters['dt'])
 
     # Define controller and build scheduled control. This time we'll use LQR_I,
@@ -105,7 +93,7 @@ def run_example():
     # the vehicle, i.e., x, y, z variables of the state vector.
     ctrl_speeds = LQR_I(ref_traj_speeds, vehicle)
     
-    # Set simulation options 
+    # Set simulation options
     options = {
         'dt': vehicle.parameters['dt'],
         'save_freq': vehicle.parameters['dt']
@@ -163,7 +151,6 @@ def run_example():
     ax.set_xlabel('time, s', fontsize=14)
     ax.set_ylabel('altitude, m', fontsize=14)
     ax.legend()
-
 
 # This allows the module to be executed directly
 if __name__ == '__main__':

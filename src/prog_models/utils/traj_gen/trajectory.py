@@ -5,13 +5,26 @@
 Auxiliary functions for trajectories and aircraft routes
 """
 
-import datetime as dt
-import logging
 import numpy as np
 from warnings import warn
 
 from prog_models.utils.traj_gen import geometry as geom
-from .nurbs import NURBS
+from prog_models.utils.traj_gen.nurbs import NURBS
+
+
+def compute_derivatives(position_profile, timevec):
+    # Compute derivatives of position: velocity and acceleration
+    # (optional: jerk, not needed)
+    # ---------------------------------------------------------
+    dim_keys = list(position_profile.keys())
+    vel_interp = {dim_key: None for dim_key in dim_keys}
+    acc_interp = {dim_key: None for dim_key in dim_keys}
+    for key in dim_keys:
+        vel_interp[key], acc_interp[key], _ = derivate_position(
+            position_profile[key],
+            timevec[1]-timevec[0])
+    
+    return {'velocity': vel_interp, 'acceleration': acc_interp}
 
 
 def linearinterp_t(t0, x0, t1, x1, xp):
@@ -23,10 +36,10 @@ def linearinterp_t(t0, x0, t1, x1, xp):
     :param x1:          dependent variable of second point
     :param xp:          independent variable of query point
     """
-    dx     = x1 - x0
-    dt     = t1 - t0
-    der    = dx / dt
-    t_land = 1.0/der * ( xp + der * t0 - x0)
+    dx = x1 - x0
+    dt = t1 - t0
+    der = dx / dt
+    t_land = 1.0/der * (xp + der * t0 - x0)
     return t_land
 
 
@@ -58,14 +71,15 @@ def angular_vel_from_attitude(phi, theta, psi, delta_t=1):
     :return q:          double, n x 1, body pitch rate as a function of time
     :return r:          double, n x 1, body yaw rate as a function of time
     """
-    phidot   = np.insert(np.diff(phi) / delta_t, 0, 0.0)
+    phidot = np.insert(np.diff(phi) / delta_t, 0, 0.0)
     thetadot = np.insert(np.diff(theta) / delta_t, 0, 0.0)
-    psidot   = np.insert(np.diff(psi) / delta_t, 0, 0.0)
-    p        = np.zeros_like(phidot)
-    q        = np.zeros_like(phidot)
-    r        = np.zeros_like(phidot)
+    psidot = np.insert(np.diff(psi) / delta_t, 0, 0.0)
+    p = np.zeros_like(phidot)
+    q = p.copy()
+    r = p.copy()
     for ii in range(len(phi)):
-        des_angular_vel = geom.body_ang_vel_from_eulers(phi[ii], theta[ii], psi[ii], phidot[ii], thetadot[ii], psidot[ii])
+        des_angular_vel = geom.body_ang_vel_from_eulers(
+            phi[ii], theta[ii], psi[ii], phidot[ii], thetadot[ii], psidot[ii])
         p[ii], q[ii], r[ii] = des_angular_vel[0], des_angular_vel[1], des_angular_vel[2]
     return p, q, r
 
@@ -81,8 +95,8 @@ def derivate_position(p, dt):
     :return:            three n x 1 arrays of doubles in a list, corresponding to velocity, acceleration and jerk, respectively.
     """
     v = np.zeros_like(p)
-    a = np.zeros_like(p)
-    j = np.zeros_like(p)
+    a = v.copy()
+    j = v.copy()
 
     v = np.gradient(p, dt)
     v[0] = 0.
@@ -94,13 +108,13 @@ def derivate_position(p, dt):
 
 
 def gen_attitude(psi, ax, ay, az, max_phi, max_theta, gravity):
-    # --------- Calculate angular kinematics based on acceleration and yaw ---------- #
+    """Calculate angular kinematics based on acceleration and yaw"""
     # linearized angular kinematics
-    phi   = 1.0 / (gravity + az) * (ax * np.sin(psi) - ay * np.cos(psi))    # 
-    theta = 1.0 / (gravity + az) * (ax * np.cos(psi) + ay * np.sin(psi))    # 
+    phi = 1.0 / (gravity + az) * (ax * np.sin(psi) - ay * np.cos(psi))
+    theta = 1.0 / (gravity + az) * (ax * np.cos(psi) + ay * np.sin(psi))
     
     # Introduce limits on attitude angles
-    phi   = np.fmax(np.fmin(phi, max_phi), -max_phi)
+    phi = np.fmax(np.fmin(phi, max_phi), -max_phi)
     theta = np.fmax(np.fmin(theta, max_theta), -max_theta)
     return phi, theta, psi
    
@@ -122,12 +136,10 @@ class Trajectory():
                 m, n x 1 array, doubles, altitude coordinates of waypoints
             takeoff_time (datetime, optional):
                 take off time of the trajectory. Default is None (starting at current time).
-            etas (list[datetime], optional):
+            etas (list[float], optional):
                 ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
 
     kwargs:
-            vehicle_model (Vehicle Model, required):             
-                vehicle model, necessary to generate the correct Euler's angles
             gravity (float, optional):
                 Magnitude of force of gravity. Default 9.81 m/s^2
             max_phi (float, optional):
@@ -175,14 +187,14 @@ class Trajectory():
             raise ValueError("Latitudes, longitudes, and altitudes must be provided as n x 1 arrays, with n > 1.")
         if etas is not None:
             if not isinstance(etas, list):
-                raise TypeError("ETAs must be provided as a list of datetime objects.")
+                raise TypeError("ETAs must be provided as a list of floats.")
             if len(etas) != 1 and len(etas) != lat.shape[0]:
                 raise ValueError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
-            for iter in range(len(etas)):
-                if not isinstance(etas[iter], dt.datetime):
-                    raise TypeError("ETAs must be provided as a list of datetime objects.")
-        if takeoff_time != None and not isinstance(takeoff_time, dt.datetime):
-            raise TypeError("Takeoff time must be provided as a datetime object.")
+            for eta in etas:
+                if not isinstance(eta, (float, int)):
+                    raise TypeError("ETAs must be provided as a list of float.")
+        if takeoff_time is not None and not isinstance(takeoff_time, float):
+            raise TypeError("Takeoff time must be provided as a float.")
 
         # Trajectory dictionary to store output
         # -----------------------------------
@@ -190,72 +202,72 @@ class Trajectory():
 
         # Route properties
         # =================
-        logging.warn(f'etas{etas}')
-        self.waypoints = {'lat': lat,
-                          'lon': lon,
-                          'alt': alt,
-                          'takeoff_time': takeoff_time,
-                          'eta': etas,
-                          'x': None,
-                          'y': None,
-                          'z': None,
-                          'eta_unix': None,
-                          'heading': None}
-        logging.warn(f"waypoints eta {self.waypoints['eta']}")
+        self.waypoints = {
+            'lat': lat,
+            'lon': lon,
+            'alt': alt,
+            'takeoff_time': takeoff_time,
+            'eta': etas,
+            'x': None,
+            'y': None,
+            'z': None,
+            'heading': None}
         
         # Assign takeoff time
-        logging.warn(f"waypoints eta (before assign takeoff) {self.waypoints['eta']}")
         if self.waypoints['takeoff_time'] is None:
             if self.waypoints['eta'] is not None:
                 self.waypoints['takeoff_time'] = self.waypoints['eta'][0]
             else:
-                self.waypoints['takeoff_time'] = dt.datetime.now()
-        logging.warn(f"waypoints eta (after assign takeoff) {self.waypoints['eta']}")
+                self.waypoints['takeoff_time'] = 0
 
         # Generate Heading
-        self.waypoints['heading'] = geom.gen_heading_angle(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])
+        self.waypoints['heading'] = geom.gen_heading_angle(
+            self.waypoints['lat'],
+            self.waypoints['lon'],
+            self.waypoints['alt'])
 
-        # Set up coordinate system conversion between Geodetic, 
+        # Set up coordinate system conversion between Geodetic,
         # Earth-Centric Earth-Fixed (ECF), and Cartesian (East-North-Up, ENU)
-        # ----------------------------------------------------------------------------
-        self.coordinate_system = geom.Coord(self.waypoints['lat'][0], self.waypoints['lon'][0], self.waypoints['alt'][0])
+        # ------------------------------------------------------
+        self.coordinate_system = geom.Coord(
+            self.waypoints['lat'][0],
+            self.waypoints['lon'][0],
+            self.waypoints['alt'][0])
 
-        # Define speed parameters - only necessary if ETAs are not defined 
-        # ----------------------------------------------------------------
-        if etas != None and ('cruise_speed' in kwargs or 'ascent_speed' in kwargs or 'descent_speed' in kwargs or 'landing_speed' in kwargs):
+        # Define speed parameters - only necessary if ETAs are not defined
+        # ------------------------------------------------------
+        if etas is not None and ('cruise_speed' in kwargs or 'ascent_speed' in kwargs or 'descent_speed' in kwargs or 'landing_speed' in kwargs):
             warn("Speed values are ignored since ETAs were specified. To define speeds (cruise, ascent, descent, landing) instead, do not specify ETAs.")
         if etas is None and ('cruise_speed' not in kwargs or 'ascent_speed' not in kwargs or 'descent_speed' not in kwargs or 'landing_speed' not in kwargs):
             warn("Neither ETAs nor speeds were defined. Default speeds will be used.")
-        self.speed_parameters = {'cruise_speed': 6.0,
-                                 'ascent_speed': 3.0,
-                                 'descent_speed': 3.0,
-                                 'landing_speed': 1.5,
-                                 'landing_altitude': 10.5}
+        self.speed_parameters = {
+            'cruise_speed': 6.0,
+            'ascent_speed': 3.0,
+            'descent_speed': 3.0,
+            'landing_speed': 1.5,
+            'landing_altitude': 10.5}
         self.speed_parameters.update(**kwargs)
 
         # Set landing waypoints dimensions
-        logging.warn(f"waypoints eta (before landing waypoints) {self.waypoints['eta']}")
         idx_land_pos = self.set_landing_waypoints()
 
         # Set ETAs for waypoints
-        logging.warn(f"waypoints eta (before) {self.waypoints['eta']}")
-        self.set_eta(idx_land_pos=idx_land_pos) 
-        logging.warn(f"waypoints eta (after) {self.waypoints['eta']}")
-        
-        # Generate ETAs at waypoints in unix time from dt
-        self.waypoints['eta_unix'] = np.asarray([self.waypoints['eta'][item].timestamp() for item in range(len(self.waypoints['eta']))])  # convert to unix time
+        self.set_eta(idx_land_pos=idx_land_pos)
 
-        # Get waypoints in cartesian frame, unix time, and calculate heading angle for yaw
-        # ----------------------------------------------------------------------------------------
+        # Get waypoints in cartesian frame, unix time,
+        # and calculate heading angle for yaw
+        # ----------------------------------------------
         # Covert to cartesian coordinates
         self.waypoints['x'], \
             self.waypoints['y'], \
-                self.waypoints['z'] = self.coordinate_system.geodetic2enu(self.waypoints['lat'], self.waypoints['lon'], self.waypoints['alt'])  
+            self.waypoints['z'] = self.coordinate_system.geodetic2enu(
+                self.waypoints['lat'],
+                self.waypoints['lon'],
+                self.waypoints['alt'])
                 
         # Interpolation properties
         # ========================
         self.parameters = {'gravity': 9.81,
-                           'vehicle_model': None,
                            'max_phi': 45/180.0*np.pi,
                            'max_theta': 45/180.0*np.pi,
                            'max_iter': 10,
@@ -268,52 +280,26 @@ class Trajectory():
         if self.parameters['weight_vector'] is None:
             self.parameters['weight_vector'] = np.asarray([self.parameters['waypoint_weight'],] * len(self.waypoints['x']))
 
-        if self.parameters['vehicle_model'] is None:
-            raise ValueError("Vehicle model is not defined. Must specify a string for 'vehicle_model' in keyword arguments.")
-        if not isinstance(self.parameters['vehicle_model'], str):
-            raise TypeError("Vehicle model must be defined as a string.")
-
     @property
     def ref_traj(self,):
-        x_ref = {}
-        vehicle_model = self.parameters['vehicle_model'].lower().replace(" ", "")
-
-        if any([name == vehicle_model for name in ['tarot18', 'djis1000']]):
-            x_ref['x']     = self.trajectory['position'][:,0]
-            x_ref['y']     = self.trajectory['position'][:,1]
-            x_ref['z']     = self.trajectory['position'][:,2]
-            
-            x_ref['phi']   = self.trajectory['attitude'][:,0]
-            x_ref['theta'] = self.trajectory['attitude'][:,1]
-            x_ref['psi']   = self.trajectory['attitude'][:,2]
-            
-            x_ref['vx']    = self.trajectory['velocity'][:,0]
-            x_ref['vy']    = self.trajectory['velocity'][:,1]
-            x_ref['vz']    = self.trajectory['velocity'][:,2]
-            
-            x_ref['p']     = self.trajectory['angVel'][:,0]
-            x_ref['q']     = self.trajectory['angVel'][:,1]
-            x_ref['r']     = self.trajectory['angVel'][:,2]
-
-            x_ref['t']     = self.trajectory['time']
-
-        else:
-            raise ValueError(f"Unable to generate reference, trajectory. Model type {self.parameters['vehicle_model']} not recognized.")
-
-        return x_ref
+        return {
+            'x': self.trajectory['position'][:, 0],
+            'y': self.trajectory['position'][:, 1],
+            'z': self.trajectory['position'][:, 2],
         
-
-    def compute_derivatives(self, position_profile, timevec):
-
-        # Compute derivatives of position: velocity and acceleration (optional: jerk, not needed)
-        # ---------------------------------------------------------------------------------------
-        dim_keys   = list(position_profile.keys())
-        vel_interp = {dim_key: None for dim_key in dim_keys}
-        acc_interp = {dim_key: None for dim_key in dim_keys}
-        for key in dim_keys:
-            vel_interp[key], acc_interp[key], _ = derivate_position(position_profile[key], timevec[1]-timevec[0])
+            'phi': self.trajectory['attitude'][:, 0],
+            'theta': self.trajectory['attitude'][:, 1],
+            'psi': self.trajectory['attitude'][:, 2],
         
-        return {'velocity': vel_interp, 'acceleration': acc_interp}
+            'vx': self.trajectory['velocity'][:, 0],
+            'vy': self.trajectory['velocity'][:, 1],
+            'vz': self.trajectory['velocity'][:, 2],
+        
+            'p': self.trajectory['angVel'][:, 0],
+            'q': self.trajectory['angVel'][:, 1],
+            'r': self.trajectory['angVel'][:, 2],
+            
+            't': self.trajectory['time']}
     
     def compute_attitude(self, heading_profile, acceleration_profile, timestep_size):
         """
@@ -328,54 +314,51 @@ class Trajectory():
         :param max_theta:                   rad, scalar, maximum theta angle possible
         :return:                            dictionary containing attitude phi, theta, psi and angular velocity p, q, r, as a function of time.
         """
-        
-        dim_keys = list(acceleration_profile.keys()) # get names of cartesian directions
+        # get names of cartesian directions
+        dim_keys = list(acceleration_profile.keys())
 
         # Compute attitude
         # ---------------
-        phi, theta, psi = gen_attitude(heading_profile, 
-                                       acceleration_profile[dim_keys[0]], 
-                                       acceleration_profile[dim_keys[1]], 
-                                       acceleration_profile[dim_keys[2]], 
-                                       self.parameters['max_phi'], 
-                                       self.parameters['max_theta'], 
+        phi, theta, psi = gen_attitude(heading_profile,
+                                       acceleration_profile[dim_keys[0]],
+                                       acceleration_profile[dim_keys[1]],
+                                       acceleration_profile[dim_keys[2]],
+                                       self.parameters['max_phi'],
+                                       self.parameters['max_theta'],
                                        self.parameters['gravity'])
         # Compute angular velocity
         # -------------------------
         p, q, r = angular_vel_from_attitude(phi, theta, psi, timestep_size)
 
-        return {'attitude': np.array([phi, theta, psi]).T, 'angVel':   np.array([p, q, r]).T}
+        return {
+            'attitude': np.array([phi, theta, psi]).T,
+            'angVel': np.array([p, q, r]).T}
 
-    
     def compute_trajectory_nurbs(self, dt):
-        logging.warn(f'Entering compute_trajectory_nurbs with dt={dt}')
         # Compute position and yaw profiles with NURBS
         # --------------------------------------------
         # Instantiate NURBS class to generate trajectory
-        nurbs_alg = NURBS(points       = {'x': self.waypoints['x'], 'y': self.waypoints['y'], 'z': self.waypoints['z']}, 
-                          weights      = self.parameters['weight_vector'],  
-                          times        = self.waypoints['eta_unix'] - self.waypoints['eta_unix'][0], 
-                          yaw          = self.waypoints['heading'],
-                          order        = self.parameters['nurbs_order'],
-                          basis_length = self.parameters['nurbs_basis_length'])
+        points = {
+            'x': self.waypoints['x'],
+            'y': self.waypoints['y'],
+            'z': self.waypoints['z']}
+        nurbs_alg = NURBS(points=points,
+                          weights=self.parameters['weight_vector'],
+                          times=self.waypoints['eta'] - self.waypoints['eta'][0],
+                          yaw=self.waypoints['heading'],
+                          order=self.parameters['nurbs_order'],
+                          basis_length=self.parameters['nurbs_basis_length'])
         
-        # Generate position and yaw interpolated given the timestep size 
+        # Generate position and yaw interpolated given the timestep size
         pos_interp, yaw_interp, time_interp = nurbs_alg.generate(timestep_size=dt)
-        pos0 = {key: pos_interp[key][0] for key in pos_interp.keys()}
-        
-        logging.warn(f'Gerated position (0) {pos0}, yaw {yaw_interp[0]}, and time profiles {time_interp[0]}')
-
-        pos100 = {key: pos_interp[key][100] for key in pos_interp.keys()}
-        logging.warn(f'Gerated position (100) {pos100}, yaw {yaw_interp[100]}, and time profiles {time_interp[100]}')
         
         # Generate velocity, acceleration, and jerk (optional) profile from position profile
-        linear_profiles  = self.compute_derivatives(pos_interp, time_interp)
-        logging.warn(f'Generated linear profiles {linear_profiles}')
+        linear_profiles = compute_derivatives(pos_interp, time_interp)
         
         # Generate angular profiles: attitude and angular velocities from heading and acceleration
-        angular_profiles = self.compute_attitude(heading_profile      = yaw_interp, 
-                                                 acceleration_profile = linear_profiles['acceleration'],
-                                                 timestep_size        = dt)
+        angular_profiles = self.compute_attitude(heading_profile=yaw_interp,
+                                                 acceleration_profile=linear_profiles['acceleration'],
+                                                 timestep_size=dt)
         # Store in trajectory dictionary
         # ----------------------------
         self.trajectory = {**{'position': np.vstack(list(pos_interp.values())).T}, 
@@ -383,7 +366,6 @@ class Trajectory():
                            **{'acceleration': np.vstack(list(linear_profiles['acceleration'].values())).T}, 
                            **angular_profiles,
                            **{'time': time_interp}}
-
 
     def generate(self, dt, **kwargs):
         """
@@ -393,7 +375,6 @@ class Trajectory():
         :param dt:          s, scalar, time step size used to interpolate the waypoints and generate the trajectory
         :return:            dictionary of state variables describing the trajectory as a function of time
         """
-        logging.warn(f'Entered generate() with dt={dt} and kwargs={kwargs}')
         self.parameters.update(**kwargs)    # Override NURBS parameters
         assert len(self.parameters['weight_vector']) == len(self.waypoints['x']), "Length of waypoint weight vector and number of waypoints must coincide."
 
@@ -405,11 +386,11 @@ class Trajectory():
         self.trajectory['geodetic_pos'] = np.zeros_like(self.trajectory['position'])
         self.trajectory['geodetic_pos'][:, 0], \
             self.trajectory['geodetic_pos'][:, 1], \
-                self.trajectory['geodetic_pos'][:, 2] = self.coordinate_system.enu2geodetic(self.trajectory['position'][:, 0],
-                                                                                            self.trajectory['position'][:, 1],
-                                                                                            self.trajectory['position'][:, 2])
+                self.trajectory['geodetic_pos'][:, 2] = self.coordinate_system.enu2geodetic(
+                    self.trajectory['position'][:, 0],
+                    self.trajectory['position'][:, 1],
+                    self.trajectory['position'][:, 2])
         return self.ref_traj
-
 
     def __adjust_eta_given_max_acceleration(self, dt):
         """
@@ -421,7 +402,7 @@ class Trajectory():
         keep_adjusting = True
         counter = 0
         positions = {'x': self.waypoints['x'], 'y': self.waypoints['y'], 'z': self.waypoints['z']}
-        etas_rel = self.waypoints['eta_unix'] - self.waypoints['eta_unix'][0]
+        etas_rel = self.waypoints['eta'] - self.waypoints['eta'][0]
 
         while keep_adjusting:
             m = len(self.trajectory['time'])
@@ -450,16 +431,14 @@ class Trajectory():
 
             if any(etas_rel != new_eta_rel):
                 # Generate new curve and new_eta becomes the reference eta
-                # ---------------------------------------------------------
-                self.waypoints['eta_unix'] = new_eta_rel + self.waypoints['eta_unix'][0]
+                self.waypoints['eta'] = new_eta_rel + self.waypoints['eta'][0]
                 self.compute_trajectory_nurbs(dt)
                 etas_rel = new_eta_rel.copy()
 
-            # Exit the while loop and give up if in maxiter iterations the trajectory acceleration has not been pushed under the limit
             if counter == maxiter:
+                # Exit the while loop and give up if in maxiter iterations the trajectory acceleration has not been pushed under the limit
                 print("WARNING: max number of iterations reached, the trajectory still contains accelerations beyond the limit.")
                 break
-
 
     def set_landing_waypoints(self,):
         """
@@ -470,72 +449,75 @@ class Trajectory():
         """
         
         # get boolean flag where altitude is below the landing altitude, and get the corresponding indices
-        idx_land     = np.asarray(self.waypoints['alt'] < self.speed_parameters['landing_altitude'])
+        idx_land = np.asarray(self.waypoints['alt'] < self.speed_parameters['landing_altitude'])
         idx_land_pos = np.where(idx_land)[0]    
         
         # if there are waypoints below landing altitude: append a landing point (with altitude self.speed_parameters['landing_altitude']) accordingly.
         if idx_land_pos.size != 0:
-            n_ = len(self.waypoints['lat'])
+            n_waypoints = len(self.waypoints['lat'])
             if hasattr(self.waypoints['eta'], '__len__'):
-                m_ = len(self.waypoints['eta'])
+                n_times = len(self.waypoints['eta'])
             else:
-                m_ = 0
+                n_times = 0
             counter = 0
             for item in idx_land_pos:
                 if item == 0:   # if first element is below, just add a landing waypoint
                     self.waypoints['lat'] = np.insert(self.waypoints['lat'], item + 1, self.waypoints['lat'][item])
                     self.waypoints['lon'] = np.insert(self.waypoints['lon'], item + 1, self.waypoints['lon'][item])
-                    if m_ > 1:
-                        t_land = linearinterp_t(self.waypoints['eta'][item].timestamp(), 
+                    if n_times > 1:
+                        t_land = linearinterp_t(self.waypoints['eta'][item], 
                                                 self.waypoints['alt'][item], 
-                                                self.waypoints['eta'][item+1].timestamp(), 
+                                                self.waypoints['eta'][item+1], 
                                                 self.waypoints['alt'][item+1], # just added the landing altitude, so I need to take the next point
                                                 self.speed_parameters['landing_altitude'])
-                        self.waypoints['eta'] = np.insert(self.waypoints['eta'], item + 1, dt.datetime.utcfromtimestamp(t_land) + dt.timedelta(hours=-8)) # -8 hours for california time
+                        self.waypoints['eta'] = np.insert(self.waypoints['eta'], item + 1, t_land)
                     self.waypoints['alt'] = np.insert(self.waypoints['alt'], item + 1, self.speed_parameters['landing_altitude']*1.0)
                     counter += 1
 
-                elif item == n_-1: # if one before the last element, add landing waypoints right before landing.
+                elif item == n_waypoints-1: # if one before the last element, add landing waypoints right before landing.
                     if self.waypoints['alt'][item+counter-1] > self.speed_parameters['landing_altitude']:
                         self.waypoints['lat'] = np.insert(self.waypoints['lat'], -1, self.waypoints['lat'][item+counter-1])
                         self.waypoints['lon'] = np.insert(self.waypoints['lon'], -1, self.waypoints['lon'][item+counter-1])
-                        if m_ > 1:
-                            t_land = linearinterp_t(self.waypoints['eta'][item+counter-1].timestamp(), 
+                        if n_times > 1:
+                            t_land = linearinterp_t(self.waypoints['eta'][item+counter-1], 
                                                     self.waypoints['alt'][item+counter-1], 
-                                                    self.waypoints['eta'][-1].timestamp(), 
+                                                    self.waypoints['eta'][-1], 
                                                     self.waypoints['alt'][-1], 
                                                     self.speed_parameters['landing_altitude'])
-                            self.waypoints['eta'] = np.insert(self.waypoints['eta'], -1, dt.datetime.utcfromtimestamp(t_land) + dt.timedelta(hours=-8)) # -8 hours for california time
+                            self.waypoints['eta'] = np.insert(self.waypoints['eta'], -1, t_land)
                         self.waypoints['alt'] = np.insert(self.waypoints['alt'], -1, self.speed_parameters['landing_altitude']*1.0)
                         counter += 1
                 else:
-                    if self.waypoints['alt'][item+counter] - self.waypoints['alt'][item+counter-1] < 0:     # descending
+                    if self.waypoints['alt'][item+counter] - self.waypoints['alt'][item+counter-1] < 0:  
+                        # descending
                         idx_delta = 0
-                    else:   # ascending
+                    else:
+                        # ascending
                         idx_delta = +1
                     self.waypoints['lat'] = np.insert(self.waypoints['lat'], item+counter + idx_delta, self.waypoints['lat'][item+counter])
                     self.waypoints['lon'] = np.insert(self.waypoints['lon'], item+counter + idx_delta, self.waypoints['lon'][item+counter])
-                    if m_ > 1:
-                        t_land = linearinterp_t(self.waypoints['eta'][item+counter+idx_delta-1].timestamp(), 
+                    if n_times > 1:
+                        t_land = linearinterp_t(self.waypoints['eta'][item+counter+idx_delta-1], 
                                                 self.waypoints['alt'][item+counter+idx_delta-1], 
-                                                self.waypoints['eta'][item+counter+idx_delta].timestamp(), 
+                                                self.waypoints['eta'][item+counter+idx_delta], 
                                                 self.waypoints['alt'][item+counter+idx_delta], 
                                                 self.speed_parameters['landing_altitude'])
-                        self.waypoints['eta'] = np.insert(self.waypoints['eta'], item+counter+idx_delta, dt.datetime.utcfromtimestamp(t_land) + dt.timedelta(hours=-8))
+                        self.waypoints['eta'] = np.insert(self.waypoints['eta'], item+counter+idx_delta, t_land)
                     self.waypoints['alt'] = np.insert(self.waypoints['alt'], item+counter+idx_delta, self.speed_parameters['landing_altitude']*1.0)
                     counter += 1
-                    if idx_delta == 0:  # if descended, needs to go back up
+                    if idx_delta == 0:
+                        # if descended, needs to go back up
                         if self.waypoints['alt'][item+counter+1] > self.speed_parameters['landing_altitude']:
                             self.waypoints['lat'] = np.insert(self.waypoints['lat'], item+counter+1, self.waypoints['lat'][item+counter+1])
                             self.waypoints['lon'] = np.insert(self.waypoints['lon'], item+counter+1, self.waypoints['lon'][item + counter+1])
                             self.waypoints['alt'] = np.insert(self.waypoints['alt'], item+counter+1, self.speed_parameters['landing_altitude']*1.0)
                             if self.waypoints['eta'] is not None:
-                                t_land = linearinterp_t(self.waypoints['eta'][item+counter].timestamp(), 
+                                t_land = linearinterp_t(self.waypoints['eta'][item+counter], 
                                                         self.waypoints['alt'][item+counter], 
-                                                        self.waypoints['eta'][item+counter+1].timestamp(), 
+                                                        self.waypoints['eta'][item+counter+1], 
                                                         self.waypoints['alt'][item+counter+1], 
                                                         self.speed_parameters['landing_altitude'])
-                                self.waypoints['eta'] = np.insert(self.waypoints['eta'], item+counter+1, dt.datetime.utcfromtimestamp(t_land) + dt.timedelta(hours=-8))
+                                self.waypoints['eta'] = np.insert(self.waypoints['eta'], item+counter+1, t_land)
                                 
                             counter += 1
         
@@ -544,7 +526,6 @@ class Trajectory():
         idx_land_pos = np.where(idx_land)[0]
         
         return idx_land_pos
-
     
     def set_eta(self, idx_land_pos, hovering=0):
         """
@@ -556,9 +537,6 @@ class Trajectory():
         :param idx_land_pos:            -, m x 1 array. Index of the added landing waypoints.
         :param hovering:                s, scalar or n x 1 array. Default = 0. Hovering condition to add to the waypoints.
         """
-        # Assign ETAS
-        # ============
-        
         # Set speed dimensions
         n = len(self.waypoints['lat'])
         self.speed_parameters['cruise_speed']  = reshape_route_attribute(self.speed_parameters['cruise_speed'], dim=n-1, msk=idx_land_pos)
@@ -567,38 +545,24 @@ class Trajectory():
         self.speed_parameters['landing_speed'] = reshape_route_attribute(self.speed_parameters['landing_speed'], dim=n-1, msk=idx_land_pos)
         hovering = reshape_route_attribute(hovering, dim=n-1, msk=idx_land_pos)
 
-        if self.waypoints['eta'] is None or len(self.waypoints['eta'])==1:
+        if self.waypoints['eta'] is None or len(self.waypoints['eta']) == 1:
             etas = None
         else:
             if len(self.waypoints['eta']) != len(self.waypoints['lat']):
                 raise TypeError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
 
-            etas = np.zeros_like(self.waypoints['eta'], dtype=np.float64)
-            for i, eta_i in enumerate(self.waypoints['eta']):
-                etas[i] = dt.datetime.timestamp(eta_i) 
+            etas = self.waypoints['eta']
+        
         # Compute ETAs
-        self.eta_compute_and_verify(etas=etas, hovering=hovering)
-
-
-    def eta_compute_and_verify(self, etas, hovering, distance_method='greatcircle'):
-        """
-        If ETAs are already provided, verify that they are feasible according to basic
-        average speed estimate, then assign them. If ETAs are not provided, 
-        calculate them based on the takeoff time, and the desired speed between waypoints.
-
-        :param etas:                s, unix, either takeoff time, n x 1 array or None.
-        :param hovering:            s, extra time for hovering in between waypoints
-        :param distance_method:     string, method used to compute the distance between two points, either 'greatcircle' or 'vincenty'. default = 'greatcircle'
-        :return:                    s, n x 1, ETAs for all waypoints.
-        """
+        # ============================================
         if len(self.waypoints['alt']) <= 2:
             raise ValueError("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
         
         # define margin on cruise speed
         # ----------------------------
         # If calculated ETA produces a speed that is larger than desired speed, we can accommodate it as long as is within this margin (%)
-        cruise_speed_margin = 0.1   # %, 'extra' speed we can tolerate on cruise.
-        vert_speed_margin = 0.05    # %, 'extra' speed we can tolerate on ascent/descent
+        cruise_speed_margin = 0.1  # %, 'extra' speed we can tolerate on cruise.
+        vert_speed_margin = 0.05   # %, 'extra' speed we can tolerate on ascent/descent
 
         # Compute relative ETAs
         # -------------------
@@ -614,7 +578,7 @@ class Trajectory():
             dh, dv = geom.geodetic_distance([self.waypoints['lat'][point], self.waypoints['lat'][point+1]], 
                                             [self.waypoints['lon'][point], self.waypoints['lon'][point+1]], 
                                             [self.waypoints['alt'][point], self.waypoints['alt'][point+1]], 
-                                            method=distance_method, return_surf_vert=True)
+                                            method='greatcircle', return_surf_vert=True)
             dv = dv[0]
             
             # Identify correct vertical speed
@@ -628,16 +592,19 @@ class Trajectory():
             elif dv < 0 and alt_for_land[point] < self.speed_parameters['landing_altitude']:    
                 vert_speed = self.speed_parameters['landing_speed'][point]
             else:                                                           
-                vert_speed = 0. # not moving vertically.
+                vert_speed = 0.  # not moving vertically.
                 
             if etas is None:
                 # Define the correct speed:
                 if np.isclose(dh + dv, 0.0):
                     d_eta[point] = 2.0  # if there's no vertical / horizontal speed (waypoints are identical) add a default hovering value of 2 s to avoid extreme accelerations.
                 else:
-                    if np.isclose(dh, 0.):      speed_sq = vert_speed**2.0
-                    elif np.isclose(dv, 0.):    speed_sq = self.speed_parameters['cruise_speed'][point]**2.0
-                    else:                       speed_sq = self.speed_parameters['cruise_speed'][point]**2.0 + vert_speed**2.0
+                    if np.isclose(dh, 0.):
+                        speed_sq = vert_speed*vert_speed
+                    elif np.isclose(dv, 0.):
+                        speed_sq = self.speed_parameters['cruise_speed'][point]**2.0
+                    else:
+                        speed_sq = self.speed_parameters['cruise_speed'][point]**2.0 + vert_speed*vert_speed
                     d_eta[point] = np.sqrt( (dh**2.0 + dv**2.0) / speed_sq ) * 1.3  # adding some %
                     
                     # If speed is larger than desired (possible when both dh, dv>0), increment d_eta to reduce until desired (consider margin)
@@ -653,5 +620,5 @@ class Trajectory():
                 d_eta[point] += hovering[point]
 
         eta_array = np.asarray(np.cumsum(np.insert(d_eta, 0, 0.0)))
-        self.waypoints['eta'] = [dt.datetime.fromtimestamp(eta + self.waypoints['takeoff_time'].timestamp()) for eta in eta_array]
+        self.waypoints['eta'] = [eta + self.waypoints['takeoff_time'] for eta in eta_array]
         
