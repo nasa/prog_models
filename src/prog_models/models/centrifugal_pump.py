@@ -232,7 +232,7 @@ class CentrifugalPumpBase(PrognosticsModel):
         wdot = (Te-friction-backTorque)/params['I']
         Qdot = 1/params['FluidI']*(Qo-x['Q'])
 
-        return self.StateContainer(np.array([
+        state_array = np.array([
             np.atleast_1d(x['w'] + wdot * dt),
             np.atleast_1d(x['Q'] + Qdot * dt),
             np.atleast_1d(x['Tt'] + Ttdot * dt),
@@ -242,7 +242,9 @@ class CentrifugalPumpBase(PrognosticsModel):
             np.atleast_1d(x['rRadial'] + rRadialdot * dt),
             np.atleast_1d(x['rThrust'] + rThrustdot * dt),
             np.atleast_1d(QLeak)
-        ]))
+        ])
+
+        return self.StateContainer(state_array)
 
     def output(self, x: dict):
         Qout = np.maximum(0, x['Q']-x['QLeak'])
@@ -337,13 +339,15 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
             self.parameters['wRadial'] = x['wRadial']
             self.parameters['wThrust'] = x['wThrust']
         next_x = CentrifugalPumpBase.next_state(self, x, u, dt)
-
-        next_x.matrix = np.vstack((next_x.matrix, np.array([
+        # Variables for extending model
+        np_ex = np.array([
             np.atleast_1d(x['wA']),
             np.atleast_1d(x['wRadial']),
             np.atleast_1d(x['wThrust'])
-        ])))
+        ])
+        next_x.matrix = np.vstack((next_x.matrix, np_ex))
         return next_x
+
 
 
 CentrifugalPump = CentrifugalPumpWithWear

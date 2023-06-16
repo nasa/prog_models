@@ -10,7 +10,7 @@ from prog_models.data_models import DMDModel
 
 class TestSerialization(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
@@ -30,7 +30,6 @@ class TestSerialization(unittest.TestCase):
             else:
                 i = 4.5
             return batt.InputContainer({'i': i})
-        
         def future_loading_2(t, x=None):
             # Variable (piece-wise) future loading scheme 
             if (t < 300):
@@ -57,7 +56,6 @@ class TestSerialization(unittest.TestCase):
 
         # Generate surrogate model  
         surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
-
         # Serialize parameters
         save_json_dict = surrogate_orig.to_json()
 
