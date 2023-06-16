@@ -11,7 +11,7 @@ import numpy as np
 from typing import List  # Still needed until v3.9
 from warnings import warn
 
-from prog_models.exceptions import ProgModelStateLimitWarning
+from prog_models.exceptions import ProgModelStateLimitWarning, warn_once
 from prog_models.loading import Piecewise
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar, calc_error, input_validation
@@ -470,9 +470,9 @@ class PrognosticsModel(ABC):
         | z = m.output(x) # Returns m.OutputContainer({'z1': 2.2})
         """
         if self.is_direct_model:
-            warn('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
+            warn_once('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
         else:
-            warn('This model does not support output estimation.')
+            warn_once('This model does not support output estimation.')
         return self.OutputContainer({})
 
     def __output(self, x):
@@ -1418,19 +1418,19 @@ class PrognosticsModel(ABC):
         config.update(kwargs)
 
         if 'inputs' in config:
-            warn("Use 'input_keys' instead of 'inputs'. 'inputs' will be deprecated in v1.5")
+            warn_once("Use 'input_keys' instead of 'inputs'. 'inputs' was deprecated and will be removed in v1.6", DeprecationWarning)
             config['input_keys'] = config['inputs']
             del config['inputs']
         if 'states' in config:
-            warn("Use 'state_keys' instead of 'states'. 'states' will be deprecated in v1.5")
+            warn_once("Use 'state_keys' instead of 'states'. 'states' was deprecated and will be removed in v1.6", DeprecationWarning)
             config['state_keys'] = config['states']
             del config['states']
         if 'outputs' in config:
-            warn("Use 'output_keys' instead of 'outputs'. 'outputs' will be deprecated in v1.5")
+            warn_once("Use 'output_keys' instead of 'outputs'. 'outputs' was deprecated and will be removed in v1.6", DeprecationWarning)
             config['output_keys'] = config['outputs']
             del config['outputs']
         if 'events' in config:
-            warn("Use 'event_keys' instead of 'events'. 'events' will be deprecated in v1.5")
+            warn_once("Use 'event_keys' instead of 'events'. 'events' was deprecated and will be deprecated in v1.6")
             config['event_keys'] = config['events']
             del config['events']
 
