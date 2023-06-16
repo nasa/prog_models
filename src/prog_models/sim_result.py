@@ -5,11 +5,10 @@ from copy import deepcopy
 from matplotlib.pyplot import figure
 import numpy as np
 import pandas as pd
-from typing import Dict, List
-from warnings import warn
-
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models.visualize import plot_timeseries
+from typing import Dict, List
+from warnings import warn
 
 
 class SimResult(UserList):
@@ -74,10 +73,17 @@ class SimResult(UserList):
                 self._frame = pd.DataFrame()
             if self.times is not None:
                 self._frame.insert(0, "time", self.times)
-                self._frame = self._frame.set_index(pd.Index(self.times))
+                self._frame = self._frame.set_index('time')
             return self._frame
         else:
             return self._frame
+        
+    def frame_is_empty(self) -> bool:
+        """
+        Returns:
+            bool: If the value has been calculated
+        """
+        return self._frame.empty
 
     def __setitem__(self, key, value):
         """
@@ -198,8 +204,7 @@ class SimResult(UserList):
         """
         self.times.pop(index)
         if self._frame is not None:
-            self._frame = self._frame.drop([index])
-            self._frame.reset_index(drop=True)
+            self._frame = self._frame.drop([self._frame.index.values[index]])
         return self.data.pop(index)
 
     def pop(self, index: int = -1) -> dict:

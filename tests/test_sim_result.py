@@ -25,7 +25,12 @@ class TestSimResult(unittest.TestCase):
         time = list(range(5))
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
         # Checks values from SimResult object and static variables
+        self.assertTrue(result.frame.equals(result_df))
         self.assertListEqual(list(result), state)
         self.assertListEqual(result.times, time)
         for i in range(5):
@@ -56,30 +61,45 @@ class TestSimResult(unittest.TestCase):
         time = list(range(5))  # list of int from 0 to 4
         state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
         result = SimResult(time, state)
-        time_df = pd.DataFrame(data=time, columns=['time'])
-        data = pd.concat([time_df, pd.DataFrame(data=state)], axis=1)
-        self.assertTrue(result.frame.equals(data))
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
+        self.assertTrue(result.frame.equals(result_df))
 
     def test_iloc(self):
         # Variables
         time = list(range(5))  # list of int from 0 to 4
         state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
         result = SimResult(time, state)
-        time_df = pd.DataFrame(data=time, columns=['time'])
-        data = pd.concat([time_df, pd.DataFrame(data=state)], axis=1)
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
         for i in list(range(5)):
-            self.assertTrue(result.iloc[i].equals(data.iloc[i]))
+            self.assertTrue(result.iloc[i].equals(result_df.iloc[i]))
 
     def test_extend(self):
         # Variables
         time = list(range(5))  # list of int from 0 to 4
         state = [{'a': i * 2.5, 'b': i * 2.5} for i in range(5)]
         result = SimResult(time, state)
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
+        # Extends
         time2 = list(range(10))  # list of int from 0 to 9
         state2 = [{'a': i * 5, 'b': i * 5} for i in range(10)]
         result2 = SimResult(time2, state2)
         time_extended = time + time2
         state_extended = state + state2
+        # DataFrame Extended
+        time_ext_df = pd.DataFrame(time_extended, index=time_extended, columns=['time'])
+        state_ext_df = pd.DataFrame(state_extended, index=time_extended)
+        result_ext_df = pd.concat([time_ext_df, state_ext_df], axis=1)
+        result_ext_df = result_ext_df.set_index('time')
 
         self.assertEqual(result.times, time)
         self.assertEqual(result2.times, time2)
@@ -87,6 +107,7 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result2.data, state2)
 
         result.extend(result2)  # Extend result with result2
+        self.assertTrue(result.frame.equals(result_ext_df))
         self.assertEqual(result.times, time_extended)
         self.assertEqual(result.data, state_extended)
 
@@ -104,6 +125,19 @@ class TestSimResult(unittest.TestCase):
         state2 = [{'a': i * 5, 'b': i * 5} for i in range(10)]
         data2 = [{'a': i * 10, 'b': i * 10} for i in range(10)]
         result = SimResult(time, state)  # Creating one SimResult object
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
+        # Extends
+        time_extended = time + time2
+        data_extended = state + data2
+        # DataFrame Extended
+        time_ext_df = pd.DataFrame(time_extended, index=time_extended, columns=['time'])
+        state_ext_df = pd.DataFrame(data_extended, index=time_extended)
+        result_ext_df = pd.concat([time_ext_df, state_ext_df], axis=1)
+        result_ext_df = result_ext_df.set_index('time')
 
         def f(x):
             return {k: v * 2 for k, v in x.items()}
@@ -114,10 +148,12 @@ class TestSimResult(unittest.TestCase):
         self.assertEqual(result2.times, time2)
         self.assertEqual(result.data, state)  # Assert data is correct before extending
         self.assertEqual(result2.data, data2)
+        self.assertTrue(result.frame.equals(result_df))
         result.extend(result2)  # Extend result with result2
         # check data when result is extended with result2
         self.assertEqual(result.times, time + time2)
         self.assertEqual(result.data, state + data2)
+        self.assertTrue(result.frame.equals(result_ext_df))
 
     def test_pickle_lazy(self):
         def f(x):
@@ -141,10 +177,16 @@ class TestSimResult(unittest.TestCase):
         time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
 
         self.assertEqual(result.index({'a': 10, 'b': 20}), 4)
         self.assertEqual(result.index({'a': 2.5, 'b': 5}), 1)
         self.assertEqual(result.index({'a': 0, 'b': 0}), 0)
+
         self.assertRaises(ValueError, result.index, 6.0)  # Other argument doesn't exist
         self.assertRaises(ValueError, result.index, -1)  # Non-existent data value
         self.assertRaises(ValueError, result.index, "7.5")  # Data specified incorrectly as string
@@ -156,22 +198,36 @@ class TestSimResult(unittest.TestCase):
 
     def test_pop(self):
         # Variables
-        time = list(map(float, range(5)))
+        time = list(range(5))
         state = [{'a': i * 2.5, 'b': i * 5.0} for i in range(5)]
         result = SimResult(time, state)
+        result.frame
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
 
         result.pop(2)  # Test specified index
+        result_df = result_df.drop([2])
         state.remove({'a': 5.0, 'b': 10})  # update state by removing value
         self.assertEqual(result.data, state)
+        self.assertTrue(result.frame.equals(result_df))
         # removing row from DataFrame
         result.pop()  # Test default index -1 (last element)
         state.pop()  # pop state, removes last item
         self.assertEqual(result.data, state)
+        result_df = result_df.drop([result_df.index.values[-1]])
+        self.assertTrue(result.frame.equals(result_df))
         result.pop(-1)  # Test argument of index -1 (last element)
         state.pop()  # pop state, removes last item
+        result_df = result_df.drop([result_df.index.values[-1]])
+        self.assertTrue(result.frame.equals(result_df))
         self.assertEqual(result.data, state)
         result.pop(0)  # Test argument of 0
         state.pop(0)  # pop state, removes first item
+        result_df = result_df.drop([result_df.index.values[0]])
+        self.assertTrue(result.frame.equals(result_df))
 
         self.assertEqual(result.data, state)
         self.assertRaises(IndexError, result.pop, 5)  # Test specifying an invalid index value
@@ -221,29 +277,42 @@ class TestSimResult(unittest.TestCase):
         time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
 
         result.remove({'a': 5.0, 'b': 10})  # Positional defaults to removing data
         # Update Variables
         time.remove(2)
         state.remove({'a': 5.0, 'b': 10})
+        result_df = result_df.drop([result_df.index.values[2]])
+        self.assertTrue(result.frame.equals(result_df))
         self.assertEqual(result.times, time)
         self.assertEqual(result.data, state)
         result.remove(d={'a': 0.0, 'b': 0})  # Testing named removal of data
         # Update Variables
         time.remove(0)
         state.remove({'a': 0.0, 'b': 0})
+        result_df = result_df.drop([result_df.index.values[0]])
+        self.assertTrue(result.frame.equals(result_df))
         self.assertEqual(result.times, time)
         self.assertEqual(result.data, state)
         result.remove(t=3)  # Testing named removal of time
         # Update Variables
         time.remove(3)
         state.remove({'a': 7.5, 'b': 15})
+        result_df = result_df.drop([3])
+        self.assertTrue(result.frame.equals(result_df))
         self.assertEqual(result.times, time)
         self.assertEqual(result.data, state)
         result.remove(t=1)
         # Update Variables
         time.remove(1)
         state.remove({'a': 2.5, 'b': 5})
+        result_df = result_df.drop([1])
+        self.assertTrue(result.frame.equals(result_df))
         self.assertEqual(result.times, time)
         self.assertEqual(result.data, state)
 
@@ -262,13 +331,21 @@ class TestSimResult(unittest.TestCase):
         time = list(range(5))  # list of int, 0 to 4
         state = [{'a': i * 2.5, 'b': i * 5} for i in range(5)]
         result = SimResult(time, state)
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
+        
         self.assertEqual(result.times, time)
+        self.assertTrue(result.frame.equals(result_df))
         self.assertEqual(result.data, state)
         self.assertRaises(TypeError, result.clear, True)
 
         result.clear()
         self.assertEqual(result.times, [])
         self.assertEqual(result.data, [])
+        self.assertTrue(result.frame_is_empty)
 
     def test_get_time(self):
         # Variables
@@ -433,6 +510,21 @@ class TestSimResult(unittest.TestCase):
             return {k: v * 5 for k, v in x.items()}
 
         result2 = LazySimResult(f2, time2, state2)
+        
+
+        # DataFrame
+        time_df = pd.DataFrame(time, index=time, columns=['time'])
+        state_df = pd.DataFrame(state, index=time)
+        result_df = pd.concat([time_df, state_df], axis=1)
+        result_df = result_df.set_index('time')
+        # Extends
+        # DataFrame Extended
+        time_ext_df = pd.DataFrame(time+time2, index=time+time2, columns=['time'])
+        state_ext_df = pd.DataFrame(state+state2, index=time+time2)
+        result_ext_df = pd.concat([time_ext_df, state_ext_df], axis=1)
+        result_ext_df = result_ext_df.set_index('time')
+
+
         self.assertEqual(result.times, time)  # Assert data is correct before extending
         self.assertEqual(result.data, data)
         self.assertEqual(result.states, state)
