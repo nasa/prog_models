@@ -47,8 +47,6 @@ def run_example():
                       etas=time_unix)
 
     ref_traj = traj.generate(dt=vehicle.parameters['dt'])
-    tmp = {key: ref_traj[key][0] for key in ref_traj.keys()}
-    tmp = {key: ref_traj[key][100] for key in ref_traj.keys()}
 
     # Define controller and build scheduled control. The controller acts as a
     # future_loading function when simulating

@@ -134,7 +134,7 @@ class Trajectory():
                 rad, n x 1 array, doubles, longitude coordinates of waypoints
             alt (np.ndarray):
                 m, n x 1 array, doubles, altitude coordinates of waypoints
-            takeoff_time (datetime, optional):
+            takeoff_time (float, optional):
                 take off time of the trajectory. Default is None (starting at current time).
             etas (list[float], optional):
                 ETAs of each waypoints. Default is None. In that case, the ETAs are calculated based on the desired speed between waypoints.
@@ -192,8 +192,8 @@ class Trajectory():
                 raise ValueError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
             for eta in etas:
                 if not isinstance(eta, (float, int)):
-                    raise TypeError("ETAs must be provided as a list of float.")
-        if takeoff_time is not None and not isinstance(takeoff_time, float):
+                    raise TypeError("ETAs must be provided as a list of floats.")
+        if takeoff_time is not None and not isinstance(takeoff_time, (float, int)):
             raise TypeError("Takeoff time must be provided as a float.")
 
         # Trajectory dictionary to store output

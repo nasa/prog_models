@@ -22,7 +22,6 @@ class TestUAVGen(unittest.TestCase):
     def tearDown(self):
         sys.stdout = sys.__stdout__
 
-    @unittest.skip
     def test_reference_trajectory_generation(self):
 
         # Set warnings to temporarily act as exceptions
@@ -36,13 +35,14 @@ class TestUAVGen(unittest.TestCase):
         waypoints_dict['lat_deg']   = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719])
         waypoints_dict['lon_deg']   = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628])
         waypoints_dict['alt_ft']    = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
-        waypoints_dict['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539])
+        waypoints_dict['time_unix'] = [1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539]
         
         lat_in = waypoints_dict['lat_deg'] * np.pi/180.0
         lon_in = waypoints_dict['lon_deg'] * np.pi/180.0
         alt_in = waypoints_dict['alt_ft'] * 0.3048
-        takeoff_time = dt.datetime.fromtimestamp(waypoints_dict['time_unix'][0])
-        etas_in = [dt.datetime.fromtimestamp(waypoints_dict['time_unix'][ii]) for ii in range(len(waypoints_dict['time_unix']))]
+        etas_in = waypoints_dict['time_unix']
+        takeoff_time = etas_in[0]
+        etas_wrong = [dt.datetime.fromtimestamp(waypoints_dict['time_unix'][ii]) for ii in range(len(waypoints_dict['time_unix']))]
 
         lat_small = np.array([lat_in[0]])
         lon_small = np.array([lon_in[0]])
@@ -62,60 +62,53 @@ class TestUAVGen(unittest.TestCase):
         with self.assertRaises(TypeError):
             # Only subset of waypoint information provided
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, takeoff_time = takeoff_time, etas=etas_in)
-        with self.assertRaises(ValueError):
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in)
 
         # Waypoints defined incorrectly 
         # Wrong type for waypoints 
         with self.assertRaises(TypeError):
             # Waypoints defined incorrectly; must be numpy arrays
-            ref_traj = Trajectory(lat='a', lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat='a', lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in)
         with self.assertRaises(TypeError):
             # Waypoints defined incorrectly; must be numpy arrays
-            ref_traj = Trajectory(lat=lat_in, lon=[1, 2, 3], alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat=lat_in, lon=[1, 2, 3], alt=alt_in, takeoff_time = takeoff_time, etas=etas_in)
         with self.assertRaises(TypeError):
             # Waypoints defined incorrectly; must be numpy arrays
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=1, takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=1, takeoff_time = takeoff_time, etas=etas_in)
         with self.assertRaises(TypeError):
             # Waypoints defined incorrectly; must be numpy arrays
-            ref_traj = Trajectory(lat={'lat': 1}, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat={'lat': 1}, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in)
         with self.assertRaises(TypeError):
-            # Waypoints defined incorrectly; takeoff_time must be datetime
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = 1, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            # Waypoints defined incorrectly; takeoff_time must be float/int
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = np.array([1]), etas=etas_in)
         with self.assertRaises(TypeError):
-            # Waypoints defined incorrectly; takeoff_time must be datetime
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = 'abc', etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            # Waypoints defined incorrectly; takeoff_time must be float/int
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = 'abc', etas=etas_in)
         with self.assertRaises(TypeError):
-            # Waypoints defined incorrectly; etas must be list of datetimes
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=[1,2,3, 4, 5, 6, 7, 8, 9], vehicle_model=vehicle.parameters['vehicle_model'])
+            # Waypoints defined incorrectly; etas must be list of float/int
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_wrong)
         with self.assertRaises(TypeError):
-            # Waypoints defined incorrectly; etas must be list of datetimes
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=np.array([1, 2, 3]), vehicle_model=vehicle.parameters['vehicle_model'])
-        with self.assertRaises(TypeError):
-            # Waypoints defined incorrectly; vehicle_model must be specific string
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = 1, etas=etas_in, vehicle_model=1)
-        with self.assertRaises(TypeError):
-            # Waypoints defined incorrectly; vehicle_model must be specific string
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = 1, etas=etas_in, vehicle_model=[1, 2, 3])
+            # Waypoints defined incorrectly; etas must be list of float/int
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=np.array([1, 2, 3]))
+
         # Wrong lengths for waypoints
         with self.assertRaises(ValueError):
-            ref_traj = Trajectory(lat=lat_in[:5], lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])      
+            ref_traj = Trajectory(lat=lat_in[:5], lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in)      
         with self.assertRaises(ValueError):
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in[2:4], alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in[2:4], alt=alt_in, takeoff_time = takeoff_time, etas=etas_in)
         with self.assertRaises(ValueError):
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in[1:7], takeoff_time = takeoff_time, etas=etas_in, vehicle_model=vehicle.parameters['vehicle_model'])         
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in[1:7], takeoff_time = takeoff_time, etas=etas_in)         
         with self.assertRaises(ValueError):
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in[:5], vehicle_model=vehicle.parameters['vehicle_model']) 
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in[:5]) 
         with self.assertRaises(ValueError):
-            ref_traj = Trajectory(lat=lat_small, lon=lon_small, alt=alt_small, etas=etas_small, takeoff=takeoff_time, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat=lat_small, lon=lon_small, alt=alt_small, etas=etas_small, takeoff=takeoff_time)
 
         # Checking correct combination of ETAs and speeds
         with self.assertRaises(UserWarning):
             # No ETAs or speeds provided, warning is thrown
-            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, vehicle_model=vehicle.parameters['vehicle_model'])
+            ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time)
         with self.assertRaises(UserWarning):
             # Both ETAs and spees provided, warning is thrown
-            params = {'cruise_speed': 1, 'descent_speed': 1, 'ascent_speed': 1, 'landing_speed': 1, 'vehicle_model':vehicle.parameters['vehicle_model']}
+            params = {'cruise_speed': 1, 'descent_speed': 1, 'ascent_speed': 1, 'landing_speed': 1}
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, **params)
      
         # Test trajectory generation functionality is generating an accurate result
@@ -128,7 +121,7 @@ class TestUAVGen(unittest.TestCase):
 
         # Generate trajectory
         vehicle.parameters['dt'] = 1
-        traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, etas=etas_in, takeoff_time=takeoff_time, vehicle_model=vehicle.parameters['vehicle_model'])
+        traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, etas=etas_in, takeoff_time=takeoff_time)
         ref_traj_test = traj.generate(dt=vehicle.parameters['dt'])
 
         # Check that generated trajectory is close to waypoints 
@@ -141,7 +134,6 @@ class TestUAVGen(unittest.TestCase):
         # Reset warnings
         warnings.simplefilter("default", category=UserWarning)
 
-    @unittest.skip
     def test_controllers_and_vehicle(self):
 
         # Controller and vehicle tests are combined so we only have to generate the reference trajectory once 
@@ -157,17 +149,15 @@ class TestUAVGen(unittest.TestCase):
         waypoints_dict['lat_deg']   = np.array([37.09776, 37.09776, 37.09776, 37.09798, 37.09748, 37.09665, 37.09703, 37.09719, 37.09719])
         waypoints_dict['lon_deg']   = np.array([-76.38631, -76.38629, -76.38629, -76.38589, -76.3848, -76.38569, -76.38658, -76.38628, -76.38628])
         waypoints_dict['alt_ft']    = np.array([-1.9682394, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 164.01995, 0.0])
-        waypoints_dict['time_unix'] = np.array([1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539])
+        waypoints_dict['time_unix'] = [1544188336, 1544188358, 1544188360, 1544188377, 1544188394, 1544188411, 1544188428, 1544188496, 1544188539]
         
         lat_in = waypoints_dict['lat_deg'] * np.pi/180.0
         lon_in = waypoints_dict['lon_deg'] * np.pi/180.0
         alt_in = waypoints_dict['alt_ft'] * 0.3048
-        takeoff_time = dt.datetime.fromtimestamp(waypoints_dict['time_unix'][0])
-        etas_in = etas=[dt.datetime.fromtimestamp(waypoints_dict['time_unix'][ii]) for ii in range(len(waypoints_dict['time_unix']))]
-        vehicle_name = vehicle.parameters['vehicle_model']
+        etas_in = waypoints_dict['time_unix']
 
         # Generate reference trajectory
-        ref_traj_temp = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, etas=etas_in, takeoff_time=takeoff_time, vehicle_model=vehicle_name)
+        ref_traj_temp = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, etas=etas_in)
         ref_traj = ref_traj_temp.generate(dt=vehicle.parameters['dt'])
 
         # Controller tests:
@@ -235,11 +225,10 @@ class TestUAVGen(unittest.TestCase):
             'ascent_speed': 2.0,
             'descent_speed': 3.0,
             'landing_speed': 2,
-            'vehicle_model': vehicle.parameters['vehicle_model']
         }
 
         # Generate reference trajectory
-        ref_traj_speeds_temp = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in,takeoff_time=takeoff_time, **ref_params)
+        ref_traj_speeds_temp = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, **ref_params)
         ref_traj_speeds = ref_traj_speeds_temp.generate(dt=vehicle.parameters['dt'])
 
         # Build controller
