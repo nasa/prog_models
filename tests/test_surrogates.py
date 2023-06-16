@@ -531,6 +531,10 @@ class TestSurrogate(unittest.TestCase):
         
         surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0)
 
+        # Reset warnings seen so warning will occur
+        from prog_models import exceptions
+        exceptions.warnings_seen = set() 
+
         with self.assertWarns(Warning):
             surrogate.simulate_to_threshold(load_eqn, dt=0.05)
 
