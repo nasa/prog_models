@@ -430,6 +430,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         # Append this way because the keys in the structure but the values are
         # missing - this is due to the behavior of subclassed models calling
         # their parent functions.
+
         next_x.matrix = np.vstack((next_x.matrix, np.array([
             np.atleast_1d(x['wb']),
             np.atleast_1d(x['wi']),

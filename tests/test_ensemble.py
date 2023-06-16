@@ -12,7 +12,7 @@ from prog_models.models.test_models.linear_models import OneInputOneOutputOneEve
 
 class TestEnsemble(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):

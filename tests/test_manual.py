@@ -21,7 +21,7 @@ This file includes tests that are too long to be run as part of the automated te
 
 class TestManual(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):

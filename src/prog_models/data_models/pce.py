@@ -47,7 +47,7 @@ class PolynomialChaosExpansion(DataModel):
         self.parameters['times'] = times
 
     def time_of_event(self, x, future_loading_eqn, **kwargs) -> dict:
-        loading = np.reshape(np.array([future_loading_eqn(t, x).matrix for t in self.parameters['times']]).T, (len(self.inputs*len(self.parameters['times']))))
+        loading = np.reshape(np.array([future_loading_eqn(t, x).matrix for t in self.parameters['times']]).T, (len(self.inputs * len(self.parameters['times']))))
         return {key: model(*loading) for key, model in zip(self.events, self.parameters['models'])}
 
     @classmethod
