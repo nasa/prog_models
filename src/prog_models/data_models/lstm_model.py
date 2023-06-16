@@ -8,6 +8,7 @@ import numpy as np
 import sys
 from warnings import warn
 
+from prog_models.exceptions import warn_once
 from prog_models.data_models import DataModel
 from prog_models.sim_result import SimResult
 
@@ -94,7 +95,7 @@ class LSTMStateTransitionModel(DataModel):
         self.parameters.__setitem__('history', self.history, _copy = False)        
 
     def __getstate__(self):
-        warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
+        warn_once("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
         return ((), self.parameters.data)
 
     def __eq__(self, other):
