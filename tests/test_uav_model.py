@@ -143,7 +143,7 @@ class TestUAVGen(unittest.TestCase):
 
         # Instantiate vehicles - one for each configuration
         vehicle = SmallRotorcraft(**{'dt': 0.1})
-        vehicle_djis = SmallRotorcraft(**{'dt': 0.1, 'vehilce_model': 'djis1000'})
+        vehicle_djis = SmallRotorcraft(**{'dt': 0.1, 'vehicle_model': 'djis1000'})
 
         # Define waypoints 
         waypoints_dict = {}
