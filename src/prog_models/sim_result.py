@@ -5,10 +5,10 @@ from copy import deepcopy
 from matplotlib.pyplot import figure
 import numpy as np
 import pandas as pd
+from prog_models.exceptions import warn_once
 from prog_models.utils.containers import DictLikeMatrixWrapper
 from prog_models.visualize import plot_timeseries
 from typing import Dict, List
-from warnings import warn
 
 
 class SimResult(UserList):
@@ -38,7 +38,7 @@ class SimResult(UserList):
         """
             created for deprecation warning. [] continues to be handled by parent
         """
-        warn('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
+        warn_once('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
             'data by element.', DeprecationWarning, stacklevel=2)
         return super().__getitem__(item)
     
@@ -46,7 +46,7 @@ class SimResult(UserList):
         """
             created for deprecation warning. iteration continues to be handled by parent
         """
-        warn(
+        warn_once(
             'iteration will be deprecated after version 1.5 of ProgPy. The function will be renamed, iterrows, '
             'and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
@@ -63,7 +63,7 @@ class SimResult(UserList):
         """
             pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
-        warn('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
+        warn_once('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
         if self._frame is None:
             if len(self.data) > 0:  #
                 self._frame = pd.concat([
@@ -139,7 +139,7 @@ class SimResult(UserList):
         Returns:
             bool: If the two SimResults are equal
         """
-        warn(
+        warn_once(
             ' \' == \' will be deprecated after version 1.5 of ProgPy. The function will be available as \' equals() \', '
             'and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
@@ -156,9 +156,6 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
-        warn('index will be deprecated after version 1.5 of ProgPy. The function will be renamed, indexofdata, and users may begin using it under this name now.',
-            DeprecationWarning, stacklevel=2)
-
         return self.data.index(other, *args, **kwargs)
     
     def index(self, other: dict, *args, **kwargs) -> int:
@@ -171,8 +168,7 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
-        warn(
-            'index will be deprecated after version 1.5 of ProgPy. The function will be renamed, indexofdata, and users may begin using it under this name now.',
+        warn_once('index will be deprecated after version 1.5 of ProgPy. The function will be renamed, index_of_data, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
 
         return self.index_of_data(other, *args, **kwargs)
@@ -216,11 +212,10 @@ class SimResult(UserList):
         Returns:
             dict: Element Removed
         """
-        warn(
+        warn_once(
             'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
         return self.pop_by_index(index)
-
 
     def remove(self, d: dict = None, t: float = None) -> None:
         """Remove an element
@@ -295,7 +290,7 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        warn('Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
+        warn_once('Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
         return plot_timeseries(self.times, self.data, legend={'display': True}, options=kwargs)
 
     def monotonicity(self) -> Dict[str, float]:
