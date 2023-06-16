@@ -123,9 +123,6 @@ class LQR():
         self.build_scheduled_control(vehicle.linear_model, input_vector=[self.ss_input])
 
     def __call__(self, t, x=None):
-        # Check that build_scheduled_control has been called
-        if not hasattr(self, 'scheduled_states'):
-            raise TypeError("Scheduled states do not exist. Controller's build_scheduled_control function must be called before using controller to simulate.")
 
         if x is None:
             x_k = np.zeros((self.n_states, 1))

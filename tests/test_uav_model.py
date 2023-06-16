@@ -110,7 +110,7 @@ class TestUAVGen(unittest.TestCase):
             # Both ETAs and spees provided, warning is thrown
             params = {'cruise_speed': 1, 'descent_speed': 1, 'ascent_speed': 1, 'landing_speed': 1}
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time = takeoff_time, etas=etas_in, **params)
-     
+
         # Test trajectory generation functionality is generating an accurate result
         # Convert waypoints to Cartesian 
         DEG2RAD = np.pi/180.0
@@ -141,8 +141,9 @@ class TestUAVGen(unittest.TestCase):
         # Set warnings to temporarily act as exceptions
         warnings.simplefilter("error", category=UserWarning)
 
-        # Instantiate vehicle 
+        # Instantiate vehicles - one for each configuration
         vehicle = SmallRotorcraft(**{'dt': 0.1})
+        vehicle_djis = SmallRotorcraft(**{'dt': 0.1, 'vehilce_model': 'djis1000'})
 
         # Define waypoints 
         waypoints_dict = {}
@@ -160,7 +161,7 @@ class TestUAVGen(unittest.TestCase):
         ref_traj_temp = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, etas=etas_in)
         ref_traj = ref_traj_temp.generate(dt=vehicle.parameters['dt'])
 
-        # Controller tests:
+        # Controller tests: LQR
         # -----------------
         # Testing incorrect arguments:
         with self.assertRaises(TypeError):
@@ -185,6 +186,31 @@ class TestUAVGen(unittest.TestCase):
         # Generate Controller
         ctrl = LQR(x_ref=ref_traj, vehicle=vehicle)
 
+        # Controller tests: LQR_I
+        # -----------------
+        # Testing incorrect arguments:
+        with self.assertRaises(TypeError):
+            # Reference trajectory not defined as dict
+            ctrl = LQR_I(x_ref='abc', vehicle=vehicle)
+        with self.assertRaises(TypeError):
+            # Reference trajectory not defined as dict
+            ctrl = LQR_I(x_ref=[1, 2, 3], vehicle=vehicle)
+        with self.assertRaises(TypeError):
+            # Incorrect type for values in reference trajectory dict
+            ctrl = LQR_I(x_ref={'x': [1, 2, 3]}, vehicle=vehicle)
+        with self.assertRaises(TypeError):
+            # Incorrect type for values in reference trajectory dict
+            ctrl = LQR_I(x_ref={'x': np.array([1, 2, 3]), 'y': [1, 2, 3]}, vehicle=vehicle)
+        with self.assertRaises(TypeError):
+            # No vehicle model given
+            ctrl = LQR_I(x_ref=ref_traj)
+        with self.assertRaises(TypeError):
+            # No reference trajectory given
+            ctrl = LQR_I(vehicle=vehicle)
+
+        # Generate Controller
+        ctrl_I = LQR_I(x_ref=ref_traj, vehicle=vehicle)
+
         # Testing appropriate input parameters: 
         with self.assertRaises(ValueError):
             vehicle_wrong = SmallRotorcraft(**{'vehicle_model': 'fakemodel'})
@@ -201,7 +227,7 @@ class TestUAVGen(unittest.TestCase):
             sim = vehicle.simulate_to(100, ctrl, **{'dt': 2})
 
         # Run simulation and verify accuracy of simulated trajectory:
-        # Case 1: ETAs provided 
+        # Case 1: ETAs provided + LQR controller + tarot18 vehicle 
         # Use above ref_traj, ctrl
         # Simulate and compare
         sim = vehicle.simulate_to(ref_traj['t'][-1], ctrl, **{'save_freq': vehicle.parameters['dt']})
@@ -216,8 +242,7 @@ class TestUAVGen(unittest.TestCase):
             self.assertAlmostEqual(ref_traj['y'][iter], sim.outputs[iter]['y'], delta=5)
             self.assertAlmostEqual(ref_traj['z'][iter], sim.outputs[iter]['z'], delta=5)
 
-        # Case 2: Speeds provided, no ETAs 
-
+        # Case 2: Speeds provided, no ETAs + LQR_I controller + djis1000 vehicle
         # Define speeds:
         ref_params = {
             'nurbs_order': 4,
@@ -229,13 +254,13 @@ class TestUAVGen(unittest.TestCase):
 
         # Generate reference trajectory
         ref_traj_speeds_temp = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, **ref_params)
-        ref_traj_speeds = ref_traj_speeds_temp.generate(dt=vehicle.parameters['dt'])
+        ref_traj_speeds = ref_traj_speeds_temp.generate(dt=vehicle_djis.parameters['dt'])
 
         # Build controller
-        ctrl_speeds = LQR(x_ref=ref_traj_speeds, vehicle=vehicle)
+        ctrl_speeds = LQR_I(x_ref=ref_traj_speeds, vehicle=vehicle_djis)
 
         # Simulate and compare:
-        sim_speeds = vehicle.simulate_to(ref_traj_speeds['t'][-1], ctrl_speeds, **{'save_freq': vehicle.parameters['dt']})
+        sim_speeds = vehicle_djis.simulate_to(ref_traj_speeds['t'][-1], ctrl_speeds, **{'save_freq': vehicle_djis.parameters['dt']})
         x_speeds_temp = [sim_speeds.outputs[iter]['x'] for iter in range(len(sim_speeds.times))]
         y_speeds_temp = [sim_speeds.outputs[iter]['y'] for iter in range(len(sim_speeds.times))]
         z_speeds_temp = [sim_speeds.outputs[iter]['z'] for iter in range(len(sim_speeds.times))]

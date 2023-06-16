@@ -548,8 +548,6 @@ class Trajectory():
         if self.waypoints['eta'] is None or len(self.waypoints['eta']) == 1:
             etas = None
         else:
-            if len(self.waypoints['eta']) != len(self.waypoints['lat']):
-                raise TypeError("ETA must be either a take off time (one value), or a vector array with same length as lat, lon and alt.")
 
             etas = self.waypoints['eta']
         

@@ -12,13 +12,7 @@ from unittest.mock import patch
 sys.path.append(join(dirname(__file__), ".."))  # needed to access examples
 from examples import *
 
-# EXAMPLES_SKIPPED = ['dataset', 'sim_battery_eol', 'ensemble', 'custom_model', 'uav_dynamics_model']
-EXAMPLES_SKIPPED = ['benchmarking', 'chaos', 'composite_model', 'custom_model', 'dataset', 'derived_params',
-                    'direct_model', 'dynamic_step_size', 'ensemble', 'events', 'full_lstm_model', 
-                    'future_loading', 'generate_surrogate', 'growth', 'linear_model', 'lstm_model',
-                    'matrix_model', 'new_model', 'noise', 'param_est', 'sensitivity', 'serialization',
-                    'sim_battery_eol', 'sim_dcmotor_singlephase', 'sim_powertrain', 'sim_pump', 'sim_valve',
-                    'sim', 'state_limits', 'vectorized']
+EXAMPLES_SKIPPED = ['dataset', 'sim_battery_eol', 'ensemble', 'custom_model']
 
 def make_test_function(example):
     def test(self):
