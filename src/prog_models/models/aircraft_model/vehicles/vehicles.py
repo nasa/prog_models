@@ -152,20 +152,20 @@ def rotor_angles(n):
 
 
 def sphere_inertia(mass, radius):
-    Ix = 2.0 * mass * radius**2.0 / 5.0
+    Ix = 0.4 * mass * radius*radius
     Iz = Ix.copy()
     return Ix, Iz
 
 
 def flatdisk_inertia(mass, radius):
-    Ix = 1.0/4.0 * mass * radius**2.0
+    Ix = 0.25 * mass * radius*radius
     Iz = Ix * 2.0
     return Ix, Iz
 
 
 def thickdisk_inertia(mass, radius, height):
-    Ix = 1.0/4.0 * mass * radius**2.0 + 1.0/12.0 * mass * height**2.0
-    Iz = 1.0/2.0 * mass * radius**2.0
+    Ix = 0.25 * mass * radius*radius + 1.0/12.0 * mass * height*height
+    Iz = 0.25 * mass * radius*radius
     return Ix, Iz
 
 
