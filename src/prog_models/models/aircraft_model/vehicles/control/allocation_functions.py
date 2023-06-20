@@ -1,12 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-# IMPORTS
-# ========
 import numpy as np
 
-# FUNCTIONS
-# ========
 def rotorcraft_cam(n, l, b, d, constrained=False):
     """
     Generate control allocation matrix (CAM) to transform rotor's angular velocity into thrust and torques around three main body axes.
@@ -35,24 +31,24 @@ def rotorcraft_cam(n, l, b, d, constrained=False):
         l_b_sq2o2 = l_b * np.sqrt(2.0)/2.0
         # This CAM is assuming there's no rotor pointing towards the drone forward direction (x-axis)
         # See Dmitry Luchinsky's report for details (TO BE VERIFIED)
-        Gamma = np.array([ [   b,           b,     b,          b,     b,          b,    b,         b],
-                           [  l_b,  l_b_sq2o2,   0.0, -l_b_sq2o2,  -l_b, -l_b_sq2o2,  0.0, l_b_sq2o2], 
-                           [  0.0, -l_b_sq2o2,  -l_b, -l_b_sq2o2,   0.0,  l_b_sq2o2,  l_b, l_b_sq2o2],
-                           [   -d,          d,    -d,          d,    -d,          d,   -d,         d]])
+        Gamma = np.array([[   b,           b,     b,          b,     b,          b,    b,         b],
+                          [  l_b,  l_b_sq2o2,   0.0, -l_b_sq2o2,  -l_b, -l_b_sq2o2,  0.0, l_b_sq2o2],
+                          [  0.0, -l_b_sq2o2,  -l_b, -l_b_sq2o2,   0.0,  l_b_sq2o2,  l_b, l_b_sq2o2],
+                          [   -d,          d,    -d,          d,    -d,          d,   -d,         d]])
     if n == 8 and constrained:
         bl = b * l
         b2 = 2.0 * b
         d2 = 2.0 * d
         blsqrt2 = np.sqrt(2.0) * bl
 
-        Gamma = np.array([ [ b2,       b2,  b2,      b2],
-                           [ bl,      0.0, -bl,     0.0],
-                           [-bl, -blsqrt2,  bl, blsqrt2],
-                           [-d2,       d2, -d2,      d2] ])
-        optional['selector'] = np.array([ [1, 0, 1, 0, 0, 0, 0, 0],
-                                          [0, 1, 0, 1, 0, 0, 0, 0],
-                                          [0, 0, 0, 0, 1, 0, 1, 0],
-                                          [0, 0, 0, 0, 0, 1, 0, 1]]).T
+        Gamma = np.array([[ b2,       b2,  b2,      b2],
+                          [ bl,      0.0, -bl,     0.0],
+                          [-bl, -blsqrt2,  bl, blsqrt2],
+                          [-d2,       d2, -d2,      d2]])
+        optional['selector'] = np.array([[1, 0, 1, 0, 0, 0, 0, 0],
+                                         [0, 1, 0, 1, 0, 0, 0, 0],
+                                         [0, 0, 0, 0, 1, 0, 1, 0],
+                                         [0, 0, 0, 0, 0, 1, 0, 1]]).T
 
     return Gamma, np.linalg.pinv(Gamma), optional
    

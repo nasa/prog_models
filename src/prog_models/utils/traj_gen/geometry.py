@@ -8,7 +8,6 @@ Geometric functions
 import numpy as np
 
 # EARTH-RELATED DISTANCE FUNCTIONS
-# ================================
 def greatcircle_distance(lat1, lat2, lon1, lon2, R=6371e3):
     """
     Compute distance between two points on a sphere, using a circle passing for those two points given the sphere's radius.
@@ -23,14 +22,14 @@ def greatcircle_distance(lat1, lat2, lon1, lon2, R=6371e3):
     """
     phi1    = lat1
     phi2    = lat2
-    dphi    = (lat2 - lat1) 
+    dphi    = (lat2 - lat1)
     dlambda = (lon2 - lon1)
 
     a = np.sin(dphi / 2.0) * np.sin(dphi / 2.0) + \
             np.cos(phi1) * np.cos(phi2) * \
                 np.sin(dlambda / 2.0) * np.sin(dlambda / 2.0)
     c = 2.0 * np.arctan2(np.sqrt(a), np.sqrt(1.0-a))
-    d = R * c # distance in meters
+    d = R * c  # distance in meters
     return d
 
 
@@ -56,28 +55,25 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
     lat2, lon2 = p2
 
     # If points are identical, return distance=0
-    # ------------------------------------------
     if lat1 == lat2 and lon1 == lon2:
         return 0.0
     
     # Define ellipsoid constants
-    # -----------------------------
-    a  = 6378137.0          # semi-major Earth axis (radius at Equator), meters, according to WGS84
-    f  = 1/298.257223563    # flat parameter of the ellipsoid, according to WGS84
-    b  = (1.0 - f)*a        # semi-minor axis of the ellipsoid (radius at the poles), meters, according to WGS84 = 6356752.314245 
+    a = 6378137.0          # semi-major Earth axis (radius at Equator), meters, according to WGS84
+    f = 1/298.257223563    # flat parameter of the ellipsoid, according to WGS84
+    b = (1.0 - f)*a        # semi-minor axis of the ellipsoid (radius at the poles), meters, according to WGS84 = 6356752.314245 
     
     # Define coordinate-dependent values
-    # ------------------------------------
     U1 = np.arctan((1.0-f)*np.tan(lat1))    # reduced latitude (latitude on auxiliary sphere, lat1)
     U2 = np.arctan((1.0-f)*np.tan(lat2))    # reduced latitude (latitude on auxiliary sphere, lat2)
-    L  = lon2 - lon1                        # difference over longitude of the two points
+    L = lon2 - lon1                        # difference over longitude of the two points
     # Compute trigonometric values for U1, U2
     sin_U1 = np.sin(U1)
     cos_U1 = np.cos(U1)
     sin_U2 = np.sin(U2)
     cos_U2 = np.cos(U2)
 
-    lam  = L    # initialize longitude difference between p1 and p2 on auxiliary sphere. It should asymptotically converge to 0
+    lam = L    # initialize longitude difference between p1 and p2 on auxiliary sphere. It should asymptotically converge to 0
     iter = 0    # initialize iterator
     while iter < max_iter:
         # Trigonometry of lambda
@@ -85,38 +81,44 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
         cos_lam = np.cos(lam)
 
         # Trigonometry of sigma
-        sin_sigma = np.sqrt( (cos_U2 * sin_lam )**2.0 + (cos_U1 * sin_U2 - sin_U1 * cos_U2 * cos_lam)**2.0 )
-        if sin_sigma == 0.0:        return 0.0  # coincident points
+        sin_sigma = np.sqrt((cos_U2 * sin_lam )**2.0 + (cos_U1 * sin_U2 - sin_U1 * cos_U2 * cos_lam)**2.0)
+        if sin_sigma == 0.0:
+            return 0.0  # coincident points
         cos_sigma = sin_U1 * sin_U2 + cos_U1 * cos_U2 * cos_lam
-        sigma      = np.arctan2(sin_sigma, cos_sigma)
+        sigma = np.arctan2(sin_sigma, cos_sigma)
 
         # Trigonometry of alpha
-        sin_alpha  = cos_U1 * cos_U2 * sin_lam / sin_sigma
+        sin_alpha = cos_U1 * cos_U2 * sin_lam / sin_sigma
         cos_alpha2 = 1.0 - sin_alpha**2.0
         # Compute cos(2 \sigma_m)
-        try:                            cos_2sigma_m = cos_sigma - 2.0 * sin_U1 * sin_U2 / cos_alpha2
-        except ZeroDivisionError:       cos_2sigma_m = 0.0
+        try:
+            cos_2sigma_m = cos_sigma - 2.0 * sin_U1 * sin_U2 / cos_alpha2
+        except ZeroDivisionError:
+            cos_2sigma_m = 0.0
         
         # Compute new lambda
-        C       = f/16.0 * cos_alpha2 * ( 4.0 + f * (4.0 - 3.0 * cos_alpha2) )
+        C = f/16.0 * cos_alpha2 * (4.0 + f * (4.0 - 3.0 * cos_alpha2))
         lam_old = lam
-        lam     = L + (1.0 - C) * f * sin_alpha * ( sigma + C * sin_sigma * ( cos_2sigma_m + C * cos_sigma * ( -1.0 + 2.0 * cos_2sigma_m**2.0 ) ) )
+        lam = L + (1.0 - C) * f * sin_alpha * (sigma + C * sin_sigma * (cos_2sigma_m + C * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m**2.0 )))
         
         # Evaluate difference
         d_lam = abs(lam - lam_old)
-        if d_lam < tol: break
-        iter += 1   # update iterator
+        if d_lam < tol:
+            break
+        iter += 1  # update iterator
     
     # Return value
     # ----------
-    if d_lam > tol or iter == max_iter: # Failure to converge
-        return None 
-    else:   # After lambda converged, compute the following:
-        u2     = cos_alpha2 * (a**2.0 - b**2.0) / b**2.0
-        A      = 1.0 + u2 / 16384.0 * (4096.0 + u2 * (-786.0 + u2 * (320.0 - 175.0*u2)))
-        B      = u2/1024.0 * ( 256.0 + u2 * ( -128.0 + u2 * (74.0 - 47.0*u2) ) )
-        dsigma = B * sin_sigma * ( cos_2sigma_m + 1.0/4.0 * B * ( cos_sigma * ( -1.0 + 2.0 * cos_2sigma_m**2.0) - B / 6.0 * cos_2sigma_m * (-3.0 + 4.0 * sin_sigma**2.0) * (-3.0 + 4.0 * cos_2sigma_m**2.0) ) )
-        s      = b * A * (sigma - dsigma)
+    if d_lam > tol or iter == max_iter:
+        # Failure to converge
+        return None
+    else:
+        # After lambda converged, compute the following:
+        u2 = cos_alpha2 * (a*a - b*b) / b**2.0
+        A = 1.0 + u2 / 16384.0 * (4096.0 + u2 * (-786.0 + u2 * (320.0 - 175.0*u2)))
+        B = u2/1024.0 * (256.0 + u2 * (-128.0 + u2 * (74.0 - 47.0*u2)))
+        dsigma = B * sin_sigma * (cos_2sigma_m + 1.0/4.0 * B * (cos_sigma * (-1.0 + 2.0 * cos_2sigma_m**2.0) - B / 6.0 * cos_2sigma_m * (-3.0 + 4.0 * sin_sigma*sin_sigma) * (-3.0 + 4.0 * cos_2sigma_m**2.0)))
+        s = b * A * (sigma - dsigma)
     return np.round(s, 6)
 
 
@@ -138,19 +140,24 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
     """
     if len(lats) != 2 or len(lons) != 2 or len(alts) != 2:
         raise ValueError("Latitudes, longitudes and altitude values must be 2-element lists or arrays.")
-    if type(alts[0])==np.ndarray:   # if altitudes are vectors, compute point-wise difference (must be same length)
+    if type(alts[0]) == np.ndarray:  # if altitudes are vectors, compute point-wise difference (must be same length)
         if len(alts[0]) != len(alts[1]):
             raise ValueError("If altitudes are vectors, their length must coincide.")
         vert_dist = alts[1]-alts[0]
     else:   # if alts are two points, compute difference between them
         vert_dist = np.diff(alts)   # compute difference in altitude
     # Compute geodetic distance according to method
-    if method=='greatcircle':       surface_dist = greatcircle_distance(lats[0], lats[1], lons[0], lons[1])
-    elif method=='vincenty':        surface_dist = vincenty_distance([lats[0], lons[0]], [lats[1], lons[1]])
-    else:                           raise Exception("Geodetic distance method " + method + " not recognized.")
+    if method == 'greatcircle':
+        surface_dist = greatcircle_distance(lats[0], lats[1], lons[0], lons[1])
+    elif method == 'vincenty':
+        surface_dist = vincenty_distance([lats[0], lons[0]], [lats[1], lons[1]])
+    else:
+        raise Exception("Geodetic distance method " + method + " not recognized.")
     # return horizontal and vertical distance or total distance
-    if return_surf_vert:            return surface_dist, vert_dist
-    else:                           return np.sqrt(surface_dist**2.0 + vert_dist**2.0)
+    if return_surf_vert:
+        return surface_dist, vert_dist
+    else:
+        return np.sqrt(surface_dist**2.0 + vert_dist**2.0)
     
 
 def euclidean_distance_point_vector(point, vector):
@@ -165,13 +172,12 @@ def euclidean_distance_point_vector(point, vector):
     :param point:   n x 1 array
     :param vector:  m x n array
     """
-    point_rep = np.repeat(point.reshape((1,-1)), repeats=vector.shape[0], axis=0)
-    d         = np.sum(abs(point_rep - vector)**2.0, axis=1)
+    point_rep = np.repeat(point.reshape((1, -1)), repeats=vector.shape[0], axis=0)
+    d = np.sum(abs(point_rep - vector)**2.0, axis=1)
     return np.sqrt(d)
 
     
 # REFERENCE FRAMES
-# ================
 def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     """
     Return the rotation matrix R to transform coordinates from an Earth-fixed (inertial) reference frame to a body reference frame.
@@ -189,6 +195,7 @@ def rot_eart2body_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
                      [-cphi * spsi + sphi * stheta * cpsi,  cphi * cpsi + sphi * stheta * spsi,     sphi * ctheta],
                      [ sphi * spsi + cphi * stheta * cpsi, -sphi * cpsi + cphi * stheta * spsi,     cphi * ctheta]])
 
+
 def rot_body2earth_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     """
     Return the rotation matrix R to transform coordinates from a body (non-inertial) reference frame to an Earth-fixed (inertial) reference frame.
@@ -202,9 +209,10 @@ def rot_body2earth_fast(sphi, cphi, stheta, ctheta, spsi, cpsi):
     :param cpsi:            scalar, cosine of psi
     :return:                rotation matrix to transform coordinates from Earth-fixed frame to body frame
     """
-    return np.array([[      cpsi * ctheta,          cpsi * stheta * sphi - spsi * cphi,         cpsi * stheta * cphi + spsi * sphi],
-                     [      spsi * ctheta,          spsi * stheta * sphi + cpsi * cphi,         spsi * stheta * cphi - cpsi * sphi],
-                     [           - stheta,                               ctheta * sphi,                              ctheta * cphi]])                    
+    return np.array([[cpsi * ctheta, cpsi * stheta * sphi - spsi * cphi, cpsi * stheta * cphi + spsi * sphi],
+                     [spsi * ctheta, spsi * stheta * sphi + cpsi * cphi, spsi * stheta * cphi - cpsi * sphi],
+                     [      -stheta,                      ctheta * sphi,                      ctheta * cphi]])
+
 
 def body_ang_vel_from_eulers(phi, theta, psi, phidot, thetadot, psidot):
     """ 
@@ -222,8 +230,6 @@ def body_ang_vel_from_eulers(phi, theta, psi, phidot, thetadot, psidot):
     r = - thetadot * np.sin(phi) + psidot * np.cos(phi) * np.cos(theta)
     return p, q, r
 
-# COORDINATE TRANSFORMATION
-# ==========================
 def gen_heading_angle(lat, lon, alt):
     """
     Function to generate heading angle to follow a set of points defined by latitude (lat), longitude (lon), and altitude (alt).
@@ -248,6 +254,7 @@ def gen_heading_angle(lat, lon, alt):
     head = heading_adjust_rotation(head)
     return head
 
+
 def heading_adjust_first_nonzero(heading, altitude):
     """
     Adjust first non-zero heading angle based on altitude.
@@ -260,6 +267,7 @@ def heading_adjust_first_nonzero(heading, altitude):
             heading[jj] = heading[jj + 1]
             break
     return heading
+
 
 def heading_adjust_rotation(heading):
     """
@@ -282,9 +290,12 @@ def heading_adjust_rotation(heading):
         else:
             next_p_2 = next_p - 2.0*np.pi   # angle in opposite direction
             # Select angle based on minimum rotation necessary
-            if abs(curr_p - next_p) < abs(curr_p - next_p_2):   heading[idx+1] = next_p
-            else:                                               heading[idx+1] = next_p_2
+            if abs(curr_p - next_p) < abs(curr_p - next_p_2):
+                heading[idx+1] = next_p
+            else:
+                heading[idx+1] = next_p_2
     return heading
+
 
 def heading_compute_geodetic(lat, lon):
     """
@@ -294,14 +305,14 @@ def heading_compute_geodetic(lat, lon):
     :param lon:         rad, n x 1, longitude points
     :return:            rad, n x 1, heading angle
     """
-    n = len(lat)    
+    n = len(lat)
     heading = np.zeros((n,))
-    for jj in range(1, n):  
-        dlon_ = lon[jj] - lon[jj - 1]   # compute difference in longitude
-        dlat_ = lat[jj] - lat[jj - 1]   # compute difference in latitude
-        X = np.cos(lat[jj]) * np.sin(dlon_) # compute cartesian coordinate
-        Y = np.cos(lat[jj - 1]) * np.sin(lat[jj]) - np.sin(lat[jj - 1]) * np.cos(lat[jj]) * np.cos(dlon_)   # compute cartesian coordinate
-        head_temp = np.arctan2(X, Y)    # heading as arc-tangent of cartesian coordinates
+    for jj in range(1, n):
+        dlon_ = lon[jj] - lon[jj - 1]  # compute difference in longitude
+        dlat_ = lat[jj] - lat[jj - 1]  # compute difference in latitude
+        X = np.cos(lat[jj]) * np.sin(dlon_)  # compute cartesian coordinate
+        Y = np.cos(lat[jj - 1]) * np.sin(lat[jj]) - np.sin(lat[jj - 1]) * np.cos(lat[jj]) * np.cos(dlon_)  # compute cartesian coordinate
+        head_temp = np.arctan2(X, Y)  # heading as arc-tangent of cartesian coordinates
         if Y != 0:  # adjust for 360 degrees
             head_temp -= np.pi / 2.0
             head_temp *= -1.0
@@ -312,8 +323,6 @@ def heading_compute_geodetic(lat, lon):
     return heading
 
 
-# Coordinate class
-# ===============
 class Coord():
     """
     Coordinate class:

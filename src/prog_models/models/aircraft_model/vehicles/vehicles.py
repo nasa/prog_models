@@ -2,17 +2,15 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 """
-Vehicle Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.gov) for the SWS project 
+Vehicle Models - originally developed by Matteo Corbetta (matteo.corbetta@nasa.gov) for the SWS project
 """
 
-# Import functions
-# =================
 import numpy as np
+from warnings import warn
 
-from .control import allocation_functions as caf
+from prog_models.models.aircraft_model.vehicles.control import allocation_functions as caf
 
 # VEHICLE MODELS
-# ==============
 def TAROT18(payload=0.0, gravity=9.81):
     """
     Tarot T18 Octocopter mass, geometry and dynamic properties.
@@ -31,16 +29,16 @@ def TAROT18(payload=0.0, gravity=9.81):
                 Iyy=None,                   # kg*m^2, inertia moments along local axis
                 Izz=None)                   # kg*m^2, inertia moments along local axis
     
-    geom = dict(num_rotors=8,              #, number of rotors
-                body_type='thickdisk',     # -, should be either sphere, flatdisk, thickdisk.
-                body_radius=((0.301+0.209)/2.0)/2.0, # m, body radius. Internal plate is kind of oval, took average of main axes
-                body_height=0.025*2.0,        # m, height of the body
-                arm_length=1.270/2.0 - 0.1275)       # m, arm length
+    geom = dict(num_rotors=8,  #, number of rotors
+                body_type='thickdisk',  # -, should be either sphere, flatdisk, thickdisk.
+                body_radius=((0.301+0.209)/2.0)/2.0,  # m, body radius. Internal plate is kind of oval, took average of main axes
+                body_height=0.025*2.0,  # m, height of the body
+                arm_length=1.270/2.0 - 0.1275)  # m, arm length
 
     dynamics = dict(num_states=12,          # -, number of states in state vector: [x, y, z, u, v, w, phi, theta, psi, p, q, r]
                     num_inputs=4,           # -, number of inputs: thrust, moments along three axes
                     num_outputs=3,          # -, number of output measures (position coordinates)
-                    C = None,               # observation matrix (constant)
+                    C=None,               # observation matrix (constant)
                     thrust2weight=(45.0/gravity * geom['num_rotors']) / (mass['body_empty'] + mass['arm']*geom['num_rotors']),  # -, thrust over weight ratio. Tarot 18: 50 N per motor divided by weight
                     max_speed=15.0,         # m/s, max speed, see: https://www.nasa.gov/offices/amd/nasa_aircraft/small_unmanned_aircraft_systems/larc
                     max_wind_speed=8.0,     # m/s, max wind speed for safe flight (from DJIS1000 forum)
@@ -50,9 +48,9 @@ def TAROT18(payload=0.0, gravity=9.81):
                     state_vars=['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz'],
                     max_roll=45/180.0*np.pi,      # rad, maximum roll during flight
                     max_pitch=45/180.0*np.pi,     # rad, maximum pitch during flight
-                    aero = dict(cd=1.0,   # drag coefficient of airframe (including rotors), not reliable
-                                ad=0.25,  # apparent face of the rotorcraft facing air for drag force
-                                ),
+                    aero=dict(cd=1.0,   # drag coefficient of airframe (including rotors), not reliable
+                              ad=0.25,  # apparent face of the rotorcraft facing air for drag force
+                              ),
                     kt=5.25e-5,    # Approximation derived from: max omega of motor+rotor couple and max thrust for each rotor
                     kq=5e-5,       # Rotor torque constant
                     Gamma=None,     # Thrust allocation matrix (constant, depending on kt, kq, and the UAV rotor configuration)
@@ -61,9 +59,10 @@ def TAROT18(payload=0.0, gravity=9.81):
     
     mass = rotorcraft_masses(mass, geom)   # compute total and body mass
     mass, geom = rotorcraft_inertia(mass, geom)   # Build rotorcraft inertia properties
-    if payload > mass['max_payload']:   raise Warning("Payload for TAROT 18 exceeds its maximum recommended payload.")
+    if payload > mass['max_payload']:
+        warn("Payload for TAROT 18 exceeds its maximum recommended payload.")
 
-    dynamics      = rotorcraft_performance(dynamics, mass, gravity)
+    dynamics = rotorcraft_performance(dynamics, mass, gravity)
     dynamics['C'] = observation_matrix(dynamics['num_states'], dynamics['num_outputs'])
     
     # Set control allocation matrix and its inverse
@@ -103,7 +102,7 @@ def DJIS1000(payload=0.0, gravity=9.81):
     dynamics = dict(num_states=12,      # -, number of states in state vector: [x, y, z, u, v, w, phi, theta, psi, p, q, r]
                     num_inputs=4,       # -, number of inputs: thrust, moments along three axes
                     num_outputs=3,      # -, number of output measures (position coordinates)
-                    C = None,           # observation matrix (constant)
+                    C=None,             # observation matrix (constant)
                     thrust2weight=5.0,  # -, thrust over weight ratio
                     max_speed=16.0,     # m/s, max speed, from DJI website, not recommended
                     max_wind_speed=8.0, # m/s, max wind speed for safe flight
@@ -113,10 +112,10 @@ def DJIS1000(payload=0.0, gravity=9.81):
                     state_vars=['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz'],
                     max_roll=45 / 180.0 * np.pi,  # rad, maximum roll during flight
                     max_pitch=45 / 180.0 * np.pi,  # rad, maximum pitch during flight
-                    aero=dict(cd=1.0,  # drag coefficient of airframe (including rotors), not reliable
-                              ad=0.25, # apparent face of the rotorcraft facing air for drag force
+                    aero=dict(cd=1.0,   # drag coefficient of airframe (including rotors), not reliable
+                              ad=0.25,  # apparent face of the rotorcraft facing air for drag force
                               ),
-                    kt = 5.41e-5,       # Approximation derived from: max omega of motor+rotor couple and max thrust for each rotor
+                    kt=5.41e-5,         # Approximation derived from: max omega of motor+rotor couple and max thrust for each rotor
                     kq=5e-5,            # Rotor torque constant
                     Gamma=None,         # Thrust allocation matrix (constant, depending on kt, kq, and the UAV rotor configuration)
                     Gamma_inv=None,     # Inverse of thrust allocation matrix (constant, depending on kt, kq, and the UAV rotor configuration)
