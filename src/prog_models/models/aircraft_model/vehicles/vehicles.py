@@ -139,9 +139,7 @@ def DJIS1000(payload=0.0, gravity=9.81):
     
     return mass, geom, dynamics
 
-
 # Vehicle-agnostic functions
-# =========================
 def rotor_angles(n):
     # n: number of rotors
     arm_angle = 2.0 * np.pi / n
