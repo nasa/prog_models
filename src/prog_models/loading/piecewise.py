@@ -9,16 +9,16 @@ class Piecewise():
     -----
         InputContainer : class
             The InputContainer class for the model (model.InputContainer)
-        times : list
+        times : list[float]
             A list of times (s)
-        values : list
-            A list of values
+        values : dict[str, list[float]]
+            A dictionary with keys matching model inputs. Dictionary contains list of value for that input at until time in times (i.e., index 0 is the load until time[0], then it's index 1)
 
     Example
     -------
     >>> from prog_models.loading import Piecewise
     >>> m = SomeModel()
-    >>> future_load = Piecewise(m.InputContainer, [0, 10, 20], [0, 1, 0])
+    >>> future_load = Piecewise(m.InputContainer, [0, 10, 20], {'input0': [0, 1, 0]})
     >>> m.simulate_to_threshold(future_load)
     """
     def __init__(self, InputContainer, times, values):
@@ -32,7 +32,7 @@ class Piecewise():
 
         Args:
             t (float): Time (s)
-            x (StateContaienr, optional): Current state. Defaults to None.
+            x (StateContainer, optional): Current state. Defaults to None.
 
         Returns:
             InputContainer: The value that corresponds to the current time
