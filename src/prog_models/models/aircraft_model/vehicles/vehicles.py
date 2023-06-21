@@ -123,7 +123,8 @@ def DJIS1000(payload=0.0, gravity=9.81):
     
     mass = rotorcraft_masses(mass, geom)
     mass, geom = rotorcraft_inertia(mass, geom)
-    if payload > mass['max_payload']:   raise Warning("Payload for DJIS1000 exceeds its maximum recommended payload.")
+    if payload > mass['max_payload']:
+        warn("Payload for DJIS1000 exceeds its maximum recommended payload.")
 
     dynamics = rotorcraft_performance(dynamics, mass, gravity)
 
@@ -143,34 +144,31 @@ def DJIS1000(payload=0.0, gravity=9.81):
 def rotor_angles(n):
     # n: number of rotors
     arm_angle = 2.0 * np.pi / n
-    nhalf     = int(n/2)    # half of number of rotors
-    angular_vector = np.zeros((nhalf,))
-    for ri in range(nhalf):
-        angular_vector[ri] = arm_angle/2.0 * (2*ri + 1)
-    return angular_vector
+    nhalf = int(n/2)  # half of number of rotors
+    return [arm_angle/2.0 * (2*ri + 1) for ri in range(nhalf)]
 
 
 def sphere_inertia(mass, radius):
-    Ix = 2.0 * mass * radius**2.0 / 5.0
+    Ix = 0.4 * mass * radius*radius
     Iz = Ix.copy()
     return Ix, Iz
 
 
 def flatdisk_inertia(mass, radius):
-    Ix = 1.0/4.0 * mass * radius**2.0
+    Ix = 0.25 * mass * radius*radius
     Iz = Ix * 2.0
     return Ix, Iz
 
 
 def thickdisk_inertia(mass, radius, height):
-    Ix = 1.0/4.0 * mass * radius**2.0 + 1.0/12.0 * mass * height**2.0
-    Iz = 1.0/2.0 * mass * radius**2.0
+    Ix = 0.25 * mass * radius*radius + 1.0/12.0 * mass * height*height
+    Iz = 0.25 * mass * radius*radius
     return Ix, Iz
 
 
 def rotorcraft_inertia(m, g):
-    n_rotors   = g['num_rotors']
-    m['body']  = m['body_empty'] + n_rotors * m['arm']
+    n_rotors = g['num_rotors']
+    m['body'] = m['body_empty'] + n_rotors * m['arm']
     m['total'] = m['body'] + m['payload']
 
     # Define rotor positions on the 360 degree circle
@@ -178,10 +176,14 @@ def rotorcraft_inertia(m, g):
     angular_vector = rotor_angles(n_rotors)
     
     motor_distance_from_xaxis = g['arm_length'] * np.sin(angular_vector)
-    if g['body_type'].lower() == 'sphere':          Ix0, Iz0 = sphere_inertia(m['body'], g['body_radius'])
-    elif g['body_type'].lower() == 'flatdisk':      Ix0, Iz0 = flatdisk_inertia(m['body'], g['body_radius'])
-    elif g['body_type'].lower() == 'thickdisk':     Ix0, Iz0 = thickdisk_inertia(m['body'], g['body_radius'], g['body_height'])
-    else:                                           raise Exception("Body geometry not implemented. Please choose among: sphere, flatdisk, thickdisk.")
+    if g['body_type'].lower() == 'sphere':
+        Ix0, Iz0 = sphere_inertia(m['body'], g['body_radius'])
+    elif g['body_type'].lower() == 'flatdisk':
+        Ix0, Iz0 = flatdisk_inertia(m['body'], g['body_radius'])
+    elif g['body_type'].lower() == 'thickdisk':
+        Ix0, Iz0 = thickdisk_inertia(m['body'], g['body_radius'], g['body_height'])
+    else:
+        raise Exception("Body geometry not implemented. Please choose among: sphere, flatdisk, thickdisk.")
     m['Ixx'] = Ix0 + 2.0 * sum(m['arm'] * motor_distance_from_xaxis**2.0)  # [kg m^2], inertia along x
     m['Iyy'] = m['Ixx']                                                    # [kg m^2], inertia along y (symmetric uav)
     m['Izz'] = Iz0 + g['num_rotors'] * (g['arm_length']**2.0 * m['arm'])   # [kg m^2], inertia along z
@@ -195,7 +197,7 @@ def rotorcraft_masses(mass_dict, geom_dict):
     :param geom_dict:           dictionary of geometry properties of the vehicle
     :return:                    updated dictionary of mass properties of the vehicle
     """
-    mass_dict['body']  = mass_dict['body_empty'] + geom_dict['num_rotors'] * mass_dict['arm']
+    mass_dict['body'] = mass_dict['body_empty'] + geom_dict['num_rotors'] * mass_dict['arm']
     mass_dict['total'] = mass_dict['body'] + mass_dict['payload'] 
     return mass_dict
 
@@ -224,6 +226,6 @@ def observation_matrix(num_states, num_outputs):
     where x is the state vector, u is the input vector, \theta is the vector of model parameters, and y is the output vector.
     """
     c = np.zeros((num_outputs, num_states))
-    for ii in range(num_outputs):   c[ii, ii] = 1.0
+    for ii in range(num_outputs):
+        c[ii, ii] = 1.0
     return c
-  

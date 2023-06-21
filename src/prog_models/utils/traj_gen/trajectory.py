@@ -436,7 +436,7 @@ class Trajectory():
 
             if counter == maxiter:
                 # Exit the while loop and give up if in maxiter iterations the trajectory acceleration has not been pushed under the limit
-                print("WARNING: max number of iterations reached, the trajectory still contains accelerations beyond the limit.")
+                warn("max number of iterations reached, the trajectory still contains accelerations beyond the limit.")
                 break
 
     def set_landing_waypoints(self,):
