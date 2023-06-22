@@ -28,8 +28,7 @@ def calc_v(x: float, v: float, dv: float, forces: float, Ls: float, new_x: float
 
 class PneumaticValveBase(PrognosticsModel):
     """
-    Prognostics :term:`model` for a Pneumatic Valve model as described in the following paper:
-    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
+    Prognostics :term:`model` for a Pneumatic Valve model as described in [DaigleValve2011]_.
     
     :term:`Events<event>`: (5)
         | Bottom Leak: Failure due to a leak at the bottom pneumatic port
@@ -144,6 +143,10 @@ class PneumaticValveBase(PrognosticsModel):
     Note
     ----
     Supply gas parameters (gas_mass, gas_temp, gas_gamme, gas_z, gas_R) are for Nitrogen by default
+
+    References
+    ----------
+    .. [DaigleValve2014] `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
     """
     events = ["Bottom Leak", "Top Leak", "Internal Leak", "Spring Failure", "Friction Failure"]
     inputs = ["pL", "pR", "uBot", "uTop"]
