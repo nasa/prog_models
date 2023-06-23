@@ -191,7 +191,7 @@ class DMDModel(LinearModel, DataModel):
         # Input validation
         if not isinstance(config['trim_data_to'], Number) or config['trim_data_to'] > 1 or config['trim_data_to'] <= 0:
             raise ValueError("Invalid 'trim_data_to' input value, must be between 0 and 1.")
-        if not isinstance(config['stability_tol'], Number) or  config['stability_tol'] < 0:
+        if not isinstance(config['stability_tol'], Number) or config['stability_tol'] < 0:
             raise ValueError(f"Invalid 'stability_tol' input value {config['stability_tol']}, must be a positive number.")
         if not isinstance(config['training_noise'], Number) or config['training_noise'] < 0:
             raise ValueError(f"Invalid 'training_noise' input value {config['training_noise']}, must be a positive number.")

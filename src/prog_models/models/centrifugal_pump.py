@@ -205,9 +205,9 @@ class CentrifugalPumpBase(PrognosticsModel):
 
     def next_state(self, x: dict, u: dict, dt: float):
         params = self.parameters
-        Todot = 1/params['mcOil'] * (params['HOil1']*(x['Tt']-x['To']) + params['HOil2']*(x['Tr']-x['To'])\
+        Todot = 1/params['mcOil'] * (params['HOil1']*(x['Tt']-x['To']) + params['HOil2']*(x['Tr']-x['To'])
             + params['HOil3']*(u['Tamb']-x['To']))
-        Ttdot = 1/params['mcThrust'] * (x['rThrust']*x['w']*x['w'] - params['HThrust1']*(x['Tt']-u['Tamb'])\
+        Ttdot = 1/params['mcThrust'] * (x['rThrust']*x['w']*x['w'] - params['HThrust1']*(x['Tt']-u['Tamb'])
             - params['HThrust2']*(x['Tt']-x['To']))
         Adot = -params['wA']*x['Q']*x['Q']
         rRadialdot = params['wRadial']*x['rRadial']*x['w']*x['w']
@@ -250,11 +250,11 @@ class CentrifugalPumpBase(PrognosticsModel):
         Qout = np.maximum(0, x['Q']-x['QLeak'])
 
         return self.OutputContainer({
-            'w':    x['w'],
+            'w': x['w'],
             'Qout': Qout,
-            'Tt':   x['Tt'],
-            'Tr':   x['Tr'],
-            'To':   x['To']
+            'Tt': x['Tt'],
+            'Tr': x['Tr'],
+            'To': x['To']
         })
 
     def event_state(self, x: dict) -> dict:

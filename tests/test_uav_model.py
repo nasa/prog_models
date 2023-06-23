@@ -276,10 +276,10 @@ class TestUAVGen(unittest.TestCase):
         warnings.simplefilter("default", category=UserWarning)
     
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Trajectory Generation model")
-    result = runner.run(l.loadTestsFromTestCase(TestUAVGen)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestUAVGen)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

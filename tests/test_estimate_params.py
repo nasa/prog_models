@@ -1051,10 +1051,10 @@ class TestEstimateParams(unittest.TestCase):
         self.assertEqual(override2, override3)
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting EstimateParams Feature")
-    result = runner.run(l.loadTestsFromTestCase(TestEstimateParams)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestEstimateParams)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

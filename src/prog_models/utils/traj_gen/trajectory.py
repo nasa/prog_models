@@ -581,7 +581,7 @@ class Trajectory():
             
             # Identify correct vertical speed
             # -------------------------------
-            if   dv > 0 and alt_for_land[point] > self.speed_parameters['landing_altitude']:    
+            if dv > 0 and alt_for_land[point] > self.speed_parameters['landing_altitude']:    
                 vert_speed = self.speed_parameters['ascent_speed'][point]
             elif dv > 0 and alt_for_land[point] <= self.speed_parameters['landing_altitude']:   
                 vert_speed = self.speed_parameters['landing_speed'][point]

@@ -233,10 +233,10 @@ class TestCompositeModel(unittest.TestCase):
         self.assertAlmostEqual(x['OneInputOneOutputOneEventLM_2.x1'], 2)
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Composite Models")
-    result = runner.run(l.loadTestsFromTestCase(TestCompositeModel)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestCompositeModel)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")
