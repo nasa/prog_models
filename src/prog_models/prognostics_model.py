@@ -24,7 +24,7 @@ from prog_models.utils.size import getsizeof
 
 class PrognosticsModel(ABC):
     """
-    A general time-variant state space :term:`model` of system degradation behavior.
+    A general time-variant state space :term:`model` of system degradation.
 
     The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.
 

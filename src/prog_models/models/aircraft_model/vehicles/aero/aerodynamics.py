@@ -7,8 +7,7 @@ Functions for aerodynamics effects
 
 import numpy as np
 
-# Aerodynamic forces
-# ====================
+
 class DragModel():
     """
     Bluff body drag model of the form:

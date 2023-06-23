@@ -84,11 +84,17 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
             return 0.0  # coincident points
         cos_sigma = sin_U1 * sin_U2 + cos_U1 * cos_U2 * cos_lam
         sigma = np.arctan2(sin_sigma, cos_sigma)
+        sigma = np.arctan2(sin_sigma, cos_sigma)
 
         # Trigonometry of alpha
         sin_alpha = cos_U1 * cos_U2 * sin_lam / sin_sigma
+        sin_alpha = cos_U1 * cos_U2 * sin_lam / sin_sigma
         cos_alpha2 = 1.0 - sin_alpha**2.0
         # Compute cos(2 \sigma_m)
+        try:
+            cos_2sigma_m = cos_sigma - 2.0 * sin_U1 * sin_U2 / cos_alpha2
+        except ZeroDivisionError:
+            cos_2sigma_m = 0.0
         try:
             cos_2sigma_m = cos_sigma - 2.0 * sin_U1 * sin_U2 / cos_alpha2
         except ZeroDivisionError:
@@ -98,9 +104,13 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
         C = f / 16.0 * cos_alpha2 * (4.0 + f * (4.0 - 3.0 * cos_alpha2))
         lam_old = lam
         lam = L + (1.0 - C) * f * sin_alpha * (sigma + C * sin_sigma * (cos_2sigma_m + C * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m**2.0 )))
+        lam = L + (1.0 - C) * f * sin_alpha * (sigma + C * sin_sigma * (cos_2sigma_m + C * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m**2.0 )))
         
         # Evaluate difference
         d_lam = abs(lam - lam_old)
+        if d_lam < tol:
+            break
+        iter += 1  # update iterator
         if d_lam < tol:
             break
         iter += 1  # update iterator

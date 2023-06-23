@@ -9,9 +9,6 @@ import numpy as np
 import scipy.interpolate as interp
 
 
-
-# NURBS Functions
-# ================
 def normalize_t_1(t, a, b):
     """ 
     Normalization Function 1: normalize t in (a,b) range as:
@@ -49,12 +46,11 @@ def normalize_t_2(t, a, b):
 
 
 class NURBS:
-
-    def __init__(self, 
-                 points : dict,
+    def __init__(self,
+                 points: dict,
                  weights,
                  times,
-                 yaw = None,
+                 yaw=None,
                  **kwargs) -> None:
 
         self.points = points
@@ -86,35 +82,32 @@ class NURBS:
         :return:                        three m x 1 arrays corresponding to the interpolated position and yaw angle, and the corresponding time vector
         """
         # Generate intermediate way-points to control which way-points should/could be passed by closely or far away
-        # ------------------------------------------------------------------------------------------------------
         points_new, self.times_new, self.yaw_new, self.weight_vector_new = self.generate_intermediate_points()
         self.points_new = {dim: points_new[:, i] for i, dim in enumerate(self.dims)}    # Save way-points with intermediate values:
 
         # Generate the knot vector necessary for the NURBS-based interpolation
-        # --------------------------------------------------------------------
         self.gen_knot_vector(points_new.shape[0]-1)
         
         # Interpolate position profile
-        # -----------------
-        position_interp = {self.dims[ii]:None for ii in range(len(self.dims))}
+        position_interp = {self.dims[ii]: None for ii in range(len(self.dims))}
         timevec_interp = None
         for ii, dim_i in enumerate(self.dims):
-            pos_interp, timevec = self.interpolate(pos=points_new[:, ii], 
-                                                   times=self.times_new, 
-                                                   timestepsize=timestep_size, 
+            pos_interp, timevec = self.interpolate(pos=points_new[:, ii],
+                                                   times=self.times_new,
+                                                   timestepsize=timestep_size,
                                                    weightvector=self.weight_vector_new)
             position_interp[dim_i] = pos_interp
         timevec_interp = timevec
 
         # Interpolate yaw
         # -----------------
-        yaw_interp, timevec = self.interpolate(self.yaw_new,        # anchor points: yaw points
-                                               self.times_new,      # time instants of the anchor points
-                                               np.ones_like(self.yaw_new),      # weight vector, can be all the same for the yaw points
-                                               timestep_size,                   # time step size for the curve (same as for position)
-                                               order=3,                         # overriding order of the nurbs: higher order help the sharp yaw changes
-                                               basis_length=2000,               # basis length: 1000, could be changed but would either increase computation cost or coarse the trajectory too much
-                                               interp_order='zero')             # order of the yaw curves: the yaw should be kept constant in-between waypoints (no smooth variations, except for the proximity of turns), keep order 0 so is step-wise constant
+        yaw_interp, timevec = self.interpolate(self.yaw_new,  # anchor points: yaw points
+                                               self.times_new,  # time instants of the anchor points
+                                               np.ones_like(self.yaw_new),  # weight vector, can be all the same for the yaw points
+                                               timestep_size,  # time step size for the curve (same as for position)
+                                               order=3,  # overriding order of the nurbs: higher order help the sharp yaw changes
+                                               basis_length=2000,  # basis length: 1000, could be changed but would either increase computation cost or coarse the trajectory too much
+                                               interp_order='zero')  # order of the yaw curves: the yaw should be kept constant in-between waypoints (no smooth variations, except for the proximity of turns), keep order 0 so is step-wise constant
         return position_interp, yaw_interp, timevec_interp
 
     def gen_knot_vector(self, n):
@@ -124,12 +117,12 @@ class NURBS:
         :return:        normalized knot vector, [0,1]
         """
         k = self.parameters['order']
-        t              = np.zeros((n + k + 1,))             # initialize vector
-        idx_vec        = np.arange(1, n + k + 2)            # generate indices of the vector
-        msk1           = (idx_vec >= k) * (idx_vec <= n)    # create a mask for values between k and n
-        t[msk1]        = (idx_vec[msk1] - 1) - k + 1        # assign values to the masked elements
-        t[idx_vec > n] = n - k + 2                          # assign fixed value n-k+2 for everything above index n
-        t              = (t - min(t)) / (max(t) - min(t))   # normalize vector
+        t = np.zeros((n + k + 1,))  # initialize vector
+        idx_vec = np.arange(1, n + k + 2)  # generate indices of the vector
+        msk1 = (idx_vec >= k) * (idx_vec <= n)  # create a mask for values between k and n
+        t[msk1] = (idx_vec[msk1] - 1) - k + 1  # assign values to the masked elements
+        t[idx_vec > n] = n - k + 2  # assign fixed value n-k+2 for everything above index n
+        t = (t - min(t)) / (max(t) - min(t))  # normalize vector
         self.knotv = t
     
     def basisfunction(self, u):
@@ -145,16 +138,16 @@ class NURBS:
         t = self.knotv
         
         n_points = len(t)
-        N        = np.zeros((n_points,))
+        N = np.zeros((n_points,))
         N[(u > t) * np.insert((u <= t[1:]), -1, True)] = 1
         if N.any() != 0:
             for n in range(1, order):
-                t_pn  = np.concatenate((t[n:], np.ones((n,))))
-                d     = normalize_t_1(u, t, t_pn) * N
+                t_pn = np.concatenate((t[n:], np.ones((n,))))
+                d = normalize_t_1(u, t, t_pn) * N
                 t_pn1 = np.concatenate((t[n+1:], np.ones((n+1,))))
-                t_p1  = np.concatenate((t[1:], np.ones((1,))))
-                e     = normalize_t_2(u, t_p1, t_pn1) * np.insert(N[1:], -1, 0) 
-                N     = np.nan_to_num(e) + np.nan_to_num(d)
+                t_p1 = np.concatenate((t[1:], np.ones((1,))))
+                e = normalize_t_2(u, t_p1, t_pn1) * np.insert(N[1:], -1, 0)
+                N = np.nan_to_num(e) + np.nan_to_num(d)
                 
         return N[:n_points - order]
 
@@ -224,7 +217,7 @@ class NURBS:
         m = len(times)  # time values of each corresponding point in pos
         
         # Initialize array containing the time-parameterized curve
-        p_vector = np.zeros((2, m)) 
+        p_vector = np.zeros((2, m))
         p_vector[0, :] = times  # first row is time
         p_vector[1, :] = pos    # second row is anchor points (or positions)
 
@@ -259,13 +252,12 @@ class NURBS:
         :return eta_new:                 (m,) array, ETA at points, including intermediate points, [s]
         """
         # Get from class properties
-        # -----------------------
         points = self.point_values()
         times = self.times
         yaw = self.yaw
 
-        # ------- New array of waypoints ------- #
-        intermediate_points = np.zeros((points.shape[0] - 1, 3))     # initialize array of fictitious waypoints
+        # ------- New array of waypoints -------
+        intermediate_points = np.zeros((points.shape[0] - 1, 3))  # initialize array of fictitious waypoints
         for ii in range(1, points.shape[0]):
             intermediate_points[ii - 1, :] = (points[ii, :] - points[ii - 1, :]) / 2.0 + points[ii - 1, :]  # generate a fictitious waypoint as average of true waypoints
 
@@ -280,38 +272,38 @@ class NURBS:
                 points_new[ii, :] = intermediate_points[counter_2, :]
                 counter_2 += 1
 
-        # -------- New Weight Vector ------------- #
-        weight_vector_new = np.zeros((points_new.shape[0],))            # initialize weight vector
+        # -------- New Weight Vector -------------
+        weight_vector_new = np.zeros((points_new.shape[0],))  # initialize weight vector
         counter_1 = 0  # add a temporary counter for the true weight vector
         for jj in range(len(weight_vector_new)):
             if jj % 2 == 0:
-                weight_vector_new[jj] = self.weights[counter_1]      # Assign pre-defined weight to the waypoint
+                weight_vector_new[jj] = self.weights[counter_1]  # Assign pre-defined weight to the waypoint
                 counter_1 += 1
             else:
-                weight_vector_new[jj] = 1                            # Assign standard weight of 1 to the fictitious waypoint
+                weight_vector_new[jj] = 1  # Assign standard weight of 1 to the fictitious waypoint
 
-        # -------- Generate new ETA vector ------------- #
-        intermediate_times = np.zeros((len(self.weights) - 1,))      # initialize fictitious ETA vector
+        # -------- Generate new ETA vector -------------
+        intermediate_times = np.zeros((len(self.weights) - 1,))  # initialize fictitious ETA vector
         for ii in range(1, len(intermediate_times) + 1):
-            intermediate_times[ii - 1] = (times[ii] - times[ii - 1]) / 2.0 + times[ii - 1] # generate fictitious ETA as average of real ETAs
+            intermediate_times[ii - 1] = (times[ii] - times[ii - 1]) / 2.0 + times[ii - 1]  # generate fictitious ETA as average of real ETAs
 
         # Generate new ETA vector
         times_new = np.zeros((weight_vector_new.shape[0],))
         counter_1, counter_2 = 0, 0
         for ii in range(len(times_new)):
             if ii == 0 or ii % 2 == 0:
-                times_new[ii] = times[counter_1]                # Assign existing ETA
+                times_new[ii] = times[counter_1]  # Assign existing ETA
                 counter_1 += 1
             else:
-                times_new[ii] = intermediate_times[counter_2]      # Assign fictitious ETA
+                times_new[ii] = intermediate_times[counter_2]  # Assign fictitious ETA
                 counter_2 += 1
 
-        # -------- Generate new Yaw vector ---------- #
+        # -------- Generate new Yaw vector ----------
         # The fictitious yaw is NOT the average of the true yaw, but it is equal to the yaw at the previous (true) waypoint.
-        yaw_new = np.zeros((points_new.shape[0],))            # Initialize new yaw vector
+        yaw_new = np.zeros((points_new.shape[0],))  # Initialize new yaw vector
         counter_1 = 1
         for jj in range(len(yaw)):
-            yaw_new[counter_1:counter_1 + 2] = yaw[jj]    # Assign new yaw value
-            counter_1 += 2                                # this counter is
+            yaw_new[counter_1:counter_1 + 2] = yaw[jj]  # Assign new yaw value
+            counter_1 += 2  # this counter is
         return points_new, times_new, yaw_new, weight_vector_new
         

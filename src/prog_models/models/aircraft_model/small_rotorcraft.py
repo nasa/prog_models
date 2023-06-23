@@ -1,6 +1,7 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
+import matplotlib.pyplot as plt
 import numpy as np
 from warnings import warn
 
@@ -127,8 +128,7 @@ class SmallRotorcraft(AircraftModel):
         'air_density': 1.225,
         'steadystate_input': None,
         
-        # State initialization:
-        'x0': {key: 0.0 for key in states},
+        'x0': {key: 0.0 for key in states}, # Initial state
 
         # Vehicle parameters:
         'vehicle_model': 'tarot18',
@@ -147,9 +147,9 @@ class SmallRotorcraft(AircraftModel):
             raise TypeError("Vehicle model must be defined as a string.")
         if self.parameters['vehicle_model'].lower() == 'djis1000':
             self.mass, self.geom, self.dynamics = vehicles.DJIS1000(self.parameters['vehicle_payload'], self.parameters['gravity'])
-        elif self.parameters['vehicle_model'].lower() == 'tarot18':   
+        elif self.parameters['vehicle_model'].lower() == 'tarot18':
             self.mass, self.geom, self.dynamics = vehicles.TAROT18(self.parameters['vehicle_payload'], self.parameters['gravity'])
-        else:                                                         
+        else:
             raise ValueError("Specified vehicle type is not supported. Only 'tarot18' and 'djis1000' are currently supported.")
         
         # Steady-state input value: hover, [weight, 0, 0, 0]
@@ -157,25 +157,25 @@ class SmallRotorcraft(AircraftModel):
             self.parameters['steadystate_input'] = self.mass['total'] * self.parameters['gravity']
         
         # Introduction of Aerodynamic effects:
-        self.aero = dict(drag=aero.DragModel(bodyarea=self.dynamics['aero']['ad'],
-                                                      Cd=self.dynamics['aero']['cd'],
-                                                      air_density=self.parameters['air_density']),
-                        lift=None)
+        self.aero = dict(
+          drag=aero.DragModel(
+            bodyarea=self.dynamics['aero']['ad'],
+            Cd=self.dynamics['aero']['cd'],
+            air_density=self.parameters['air_density']),
+          lift=None)
 
     def dx(self, x: dict, u: dict):
         # Extract useful values
-        # ---------------------
         m = self.mass['total']  # vehicle mass
         Ixx, Iyy, Izz = self.mass['Ixx'], self.mass['Iyy'], self.mass['Izz']  # vehicle inertia
 
         # Input vector
-        T = u['T']   # Thrust (along body z)
+        T = u['T']  # Thrust (along body z)
         tp = u['mx']  # Moment along body x
         tq = u['my']  # Moment along body y
         tr = u['mz']  # Moment along body z
 
         # Extract state variables from current state vector
-        # -------------------------------------------------
         phi = x['phi']
         theta = x['theta']
         psi = x['psi']
@@ -187,7 +187,6 @@ class SmallRotorcraft(AircraftModel):
         r = x['r']
 
         # Pre-compute Trigonometric values
-        # --------------------------------
         sin_phi = np.sin(phi)
         cos_phi = np.cos(phi)
         sin_theta = np.sin(theta)
@@ -197,11 +196,26 @@ class SmallRotorcraft(AircraftModel):
         cos_psi = np.cos(psi)
 
         # Compute drag forces
-        # -------------------
         v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))  # velocity in Earth-fixed frame
-        v_body = np.dot(geom.rot_eart2body_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), v_earth)  # Velocity in body-axis
+        v_body = np.dot(
+          geom.rot_eart2body_fast(
+            sin_phi,
+            cos_phi,
+            sin_theta,
+            cos_theta,
+            sin_psi,
+            cos_psi),
+          v_earth)  # Velocity in body-axis
         fb_drag = self.aero['drag'](v_body)   # drag force in body axis
-        fe_drag = np.dot(geom.rot_body2earth_fast(sin_phi, cos_phi, sin_theta, cos_theta, sin_psi, cos_psi), fb_drag)  # drag forces in Earth-fixed frame
+        fe_drag = np.dot(
+          geom.rot_body2earth_fast(
+            sin_phi,
+            cos_phi,
+            sin_theta,
+            cos_theta,
+            sin_psi,
+            cos_psi),
+          fb_drag)  # drag forces in Earth-fixed frame
         fe_drag[-1] = np.sign(v_earth[-1]) * np.abs(fe_drag[-1])  # adjust vertical (z=Up) force according to velocity in fixed frame
 
         # Update state vector
@@ -229,10 +243,8 @@ class SmallRotorcraft(AircraftModel):
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
 
     def event_state(self, x: dict) -> dict:
-        # Based on percentage of reference trajectory completed 
-        return {
-                'TrajectoryComplete': x['mission_complete']
-        }
+        # Based on percentage of reference trajectory completed
+        return {'TrajectoryComplete': x['mission_complete']}
  
     def output(self, x: dict):
         # Output is the same as the state vector, without time and mission_complete
@@ -240,8 +252,7 @@ class SmallRotorcraft(AircraftModel):
 
     def threshold_met(self, x: dict) -> dict:
         # Progress through the reference trajectory is saved in the state 'mission_complete'
-        return {
-            'TrajectoryComplete': x['mission_complete'] >= 1}
+        return {'TrajectoryComplete': x['mission_complete'] >= 1}
 
     def simulate_to_threshold(self, future_loading_eqn, first_output=None, threshold_keys=None, **kwargs):
         # Check for appropriately defined dt - must be same as vehicle model
@@ -335,29 +346,23 @@ class SmallRotorcraft(AircraftModel):
         fig : Visualization of trajectory generation results 
         """
 
-        import matplotlib.pyplot as plt
-
         # Extract reference trajectory information
-        # ----------------------------------------
         time        = ref['t'].tolist() 
         ref_x       = ref['x'].tolist() 
         ref_y       = ref['y'].tolist() 
         ref_z       = ref['z'].tolist()
 
         # Extract predicted trajectory information
-        # ----------------------------------------
         pred_time = pred.times
         pred_x = [pred.outputs[iter]['x'] for iter in range(len(pred_time))]
         pred_y = [pred.outputs[iter]['y'] for iter in range(len(pred_time))]
         pred_z = [pred.outputs[iter]['z'] for iter in range(len(pred_time))]
 
         # Initialize Figure
-        # ----------------
         params = dict(figsize=(13, 9), fontsize=14, linewidth=2.0, alpha_preds=0.6)
         fig, (ax1, ax2) = plt.subplots(2)
 
         # Plot trajectory predictions
-        # -------------------------
         ax1.plot(ref_x, ref_y, '--', linewidth=params['linewidth'], color='tab:orange', alpha=0.5, label='reference trajectory')
         ax1.plot(pred_x, pred_y,'-', color='tab:blue', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
 
@@ -366,7 +371,6 @@ class SmallRotorcraft(AircraftModel):
         ax1.legend(fontsize=params['fontsize'])
 
         # Add altitude plot
-        # -------------------------------------------------------
         ax2.plot(time, ref_z, '-', color='tab:orange', alpha=params['alpha_preds'], linewidth=params['linewidth'], label='reference trajectory')
         ax2.plot(pred_time, pred_z,'-', color='tab:blue',alpha=params['alpha_preds'], linewidth=params['linewidth'], label='prediction')
         

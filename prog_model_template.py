@@ -55,7 +55,14 @@ class ProgModelTemplate(PrognosticsModel):
     # REPLACE THE FOLLOWING LIST WITH OUTPUTS (MEASURED VALUES)
     outputs = [
         'Example Output 1',
-        'Example Output 2' 
+        'Example Output 2'
+    ]
+
+    # REPLACE THE FOLLOWING LIST WITH PERFORMANCE METRICS
+    # i.e., NON-MEASURED VALUES THAT ARE A FUNCTION OF STATE
+    # e.g., maximum torque of a motor
+    performance_metric_keys = [
+        'metric 1',
     ]
 
     # REPLACE THE FOLLOWING LIST WITH CONFIGURED PARAMETERS
@@ -97,7 +104,7 @@ class ProgModelTemplate(PrognosticsModel):
     #     """
     #     Constructor for model
 
-    #     Note 
+    #     Note
     #     ----
     #     To use the JSON serialization capabilities in to_json and from_json, model.parameters must include everything necessary for initialize, including any keyword arguments.
     #     """
@@ -124,16 +131,16 @@ class ProgModelTemplate(PrognosticsModel):
     #
     #     Parameters
     #     ----------
-    #     u : dict
+    #     u : InputContainer
     #         Inputs, with keys defined by model.inputs.
     #         e.g., u = {'i':3.2} given inputs = ['i']
-    #     z : dict
+    #     z : OutputContainer
     #         Outputs, with keys defined by model.outputs.
     #         e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
     #
     #     Returns
     #     -------
-    #     x : dict
+    #     x : StateContainer
     #         First state, with keys defined by model.states
     #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
     #     """
@@ -157,16 +164,16 @@ class ProgModelTemplate(PrognosticsModel):
     #
     #     Parameters
     #     ----------
-    #     x : dict
+    #     x : StateContainer
     #         state, with keys defined by model.states
     #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-    #     u : dict
+    #     u : InputContainer
     #         Inputs, with keys defined by model.inputs.
     #         e.g., u = {'i':3.2} given inputs = ['i']
     #
     #     Returns
     #     -------
-    #     dx : dict
+    #     dx : StateContainer
     #         First derivitive of state, with keys defined by model.states
     #         e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
     # 
@@ -195,10 +202,10 @@ class ProgModelTemplate(PrognosticsModel):
     #
     #     Parameters
     #     ----------
-    #     x : dict
+    #     x : StateContainer
     #         state, with keys defined by model.states
     #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
-    #     u : dict
+    #     u : InputContainer
     #         Inputs, with keys defined by model.inputs.
     #         e.g., u = {'i':3.2} given inputs = ['i']
     #     dt : number
@@ -207,7 +214,7 @@ class ProgModelTemplate(PrognosticsModel):
     #
     #     Returns
     #     -------
-    #     x : dict
+    #     x : StateContainer
     #         Next state, with keys defined by model.states
     #         e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
     #     """
@@ -219,17 +226,17 @@ class ProgModelTemplate(PrognosticsModel):
 
     def output(self, x):
         """
-        Calculate next statem, forward one timestep
+        Calculate output, z (i.e., measurable values) given the state x
 
         Parameters
         ----------
-        x : dict
+        x : StateContainer
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         
         Returns
         -------
-        z : dict
+        z : OutputContainer
             Outputs, with keys defined by model.outputs.
             e.g., z = {'t':12.4, 'v':3.3} given inputs = ['t', 'v']
         """
@@ -249,7 +256,7 @@ class ProgModelTemplate(PrognosticsModel):
 
         Parameters
         ----------
-        x : dict
+        x : StateContainer
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         
@@ -276,7 +283,7 @@ class ProgModelTemplate(PrognosticsModel):
 
         Parameters
         ----------
-        x : dict
+        x : StateContainer
             state, with keys defined by model.states
             e.g., x = {'abc': 332.1, 'def': 221.003} given states = ['abc', 'def']
         
@@ -294,3 +301,69 @@ class ProgModelTemplate(PrognosticsModel):
         }
 
         return t_met
+
+    def performance_metrics(self, x) -> dict:
+        """
+        Calculate performance metrics where
+
+        Parameters
+        ----------
+        x : StateContainer
+            state, with keys defined by model.states \n
+            e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+        
+        Returns
+        -------
+        pm : dict
+            Performance Metrics, with keys defined by model.performance_metric_keys. \n
+            e.g., pm = {'tMax':33, 'iMax':19} given performance_metric_keys = ['tMax', 'iMax']
+
+        Example
+        -------
+        | m = PrognosticsModel() # Replace with specific model being simulated
+        | u = m.InputContainer({'u1': 3.2})
+        | z = m.OutputContainer({'z1': 2.2})
+        | x = m.initialize(u, z) # Initialize first state
+        | pm = m.performance_metrics(x) # Returns {'tMax':33, 'iMax':19}
+        """
+
+        # REPLACE BELOW WITH LOGIC TO CALCULATE PERFORMANCE METRICS
+        # NOTE: KEYS FOR p_metrics MATCH 'performance_metric_keys' LIST ABOVE
+        p_metrics = {
+            'metric1': 23
+        }
+        return p_metrics
+
+    # V UNCOMMENT THE BELOW FUNCTION FOR DIRECT FUNCTIONS V
+    # V i.e., a function that directly estimate ToE from  V
+    # V x and future loading function                     V
+    # VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+    # def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
+    #     """
+    #     Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
+
+    #     Args:
+    #         x (StateContainer):
+    #             state, with keys defined by model.states \n
+    #             e.g., x = m.StateContainer({'abc': 332.1, 'def': 221.003}) given states = ['abc', 'def']
+    #         future_loading_eqn (abc.Callable, optional)
+    #             Function of (t) -> z used to predict future loading (output) at a given time (t). Defaults to no outputs
+
+    #     Returns:
+    #         time_of_event (dict)
+    #             time of each event, with keys defined by model.events \n
+    #             e.g., time_of_event = {'impact': 8.2, 'falling': 4.077} given events = ['impact', 'falling']
+
+    #     Note:
+    #         Also supports arguments from :py:meth:`simulate_to_threshold`
+
+    #     See Also:
+    #         threshold_met
+    #     """
+    #     # REPLACE BELOW WITH LOGIC TO CALCULATE IF TIME THAT EVENT OCCURS
+    #     # NOTE: KEYS FOR t_event MATCH 'events' LIST ABOVE
+    #     t_event = {
+    #         'Example Event': 2330
+    #     }
+
+    #     return t_event

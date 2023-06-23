@@ -10,7 +10,7 @@ from prog_models import PrognosticsModel
 
 class CentrifugalPumpBase(PrognosticsModel):
     """
-    Prognostics :term:`model` for a Centrifugal Pump as described in [0]_.
+    Prognostics :term:`model` for a Centrifugal Pump as described in [DaiglePump2013]_.
 
     :term:`Events<event>`: (4)
         | ImpellerWearFailure: Failure of the impeller due to wear
@@ -110,7 +110,7 @@ class CentrifugalPumpBase(PrognosticsModel):
 
     References
     ----------
-    .. [0] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
+    .. [DaiglePump2013] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
     """
     events = ['ImpellerWearFailure', 'PumpOilOverheat', 'RadialBearingOverheat', 'ThrustBearingOverheat']
     inputs = ['Tamb', 'V', 'pdisch', 'psuc', 'wsync']
@@ -286,7 +286,7 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     """
     Prognostics :term:`model` for a centrifugal pump with wear parameters as part of the model state. This is identical to CentrifugalPumpBase, only CentrifugalPumpBase has the wear params as parameters instead of states
 
-    This class implements a Centrifugal Pump model as described in [1]_.
+    This class implements a Centrifugal Pump model as described in [DaiglePump2013]_.
 
     :term:`Events<event>`: (4)
         See CentrifugalPumpBase
@@ -309,10 +309,6 @@ class CentrifugalPumpWithWear(CentrifugalPumpBase):
     See Also
     --------
     CentrifugalPumpBase
-
-    References
-    ----------
-    .. [1] M. Daigle and K. Goebel, "Model-based Prognostics with Concurrent Damage Progression Processes," IEEE Transactions on Systems, Man, and Cybernetics: Systems, vol. 43, no. 4, pp. 535-546, May 2013. https://www.researchgate.net/publication/260652495_Model-Based_Prognostics_With_Concurrent_Damage_Progression_Processes
     """
     inputs = CentrifugalPumpBase.inputs
     outputs = CentrifugalPumpBase.outputs
