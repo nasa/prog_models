@@ -22,7 +22,7 @@ def rotorcraft_cam(n, length, b, d, constrained=False):
     Special CAM should be built ad-hoc per UAV model.
 
     :param n:           number of rotors
-    :param l:           rotor arm's length (from center of mass to rotor center)
+    :param length:           rotor arm's length (from center of mass to rotor center)
     :param b:           thrust constant, function of rotor type
     :param d:           torque constant, function of rotor type
     :return:            control allocation matrix of dimensions (4, n) and its pseudo-inverse of dimensions (n, 4)
