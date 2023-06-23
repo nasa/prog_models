@@ -59,7 +59,7 @@ class TestSerialization(unittest.TestCase):
         # Serialize parameters
         save_json_dict = surrogate_orig.to_json()
 
-        # Generate new surrogated with serialized version
+        # Generate new surrogate with serialized version
         new_model = DMDModel.from_json(save_json_dict)
 
         # Check serialization
@@ -99,10 +99,10 @@ class TestSerialization(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Serialization of Surrogate Model")
-    result = runner.run(l.loadTestsFromTestCase(TestSerialization)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSerialization)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

@@ -18,7 +18,7 @@ def lqr_calc_k(A, B, Q, R):
 
     :param A:       Nx x Nx state matrix, linearized w.r.t. current attitude and thrust
     :param B:       Nu x Nx input matrix, linearized w.r.t. current attitude
-    :param Q:       Nx x Nx state cost matrix, the higher the values of the (i,i)-th element, the more aggresive the controller is w.r.t. that variable
+    :param Q:       Nx x Nx state cost matrix, the higher the values of the (i,i)-th element, the more aggressive the controller is w.r.t. that variable
     :param R:       Nx x Nu input cost matrix, higher values imply higher cost of producing that input (used to limit the amount of power)
     :return K:      Nx x Nu, control gain matrix
     :return E:      Nx x 1, eigenvalues of the matrix A - B * K
@@ -37,7 +37,7 @@ def lqr_calc_k(A, B, Q, R):
     HM34 = np.concatenate((HM3, HM4), axis=1)
     HM = np.concatenate((HM12, HM34), axis=0)
 
-    # --------- Extract eigevectors whose eigenvalues have real part < 0 ------------ #
+    # --------- Extract eigenvectors whose eigenvalues have real part < 0 ------------ #
     eig_val, eig_vec = np.linalg.eig(HM)
     V_ = eig_vec[:, np.real(eig_val) < 0.0]
 
@@ -47,7 +47,7 @@ def lqr_calc_k(A, B, Q, R):
 
     # ----------- Estimate control gain ----------------- #
     K = np.dot(np.dot(np.dot(R_inv, B_tr), Y), np.linalg.inv(X))
-    K = np.real(K)  # some spuriorus imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
+    K = np.real(K)  # some spurious imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
 
     # Calculate the eigenvalues of the matrix A - B*K
     E, _ = np.linalg.eig(A - np.dot(B, K))

@@ -279,9 +279,9 @@ class SmallRotorcraft(AircraftModel):
         To generate the linearized matrices, only the attitude angles, angular velocities, and thrust are necessary,
         since the model model ignores gyroscopic effect and wind rate of change. 
         
-        :param phi:       rad, scalar, dobule, first Euler's angle
-        :param theta:     rad, scalar, dobule, second Euler's angle
-        :param psi:       rad, scalar, dobule, third Euler's angle
+        :param phi:       rad, scalar, double, first Euler's angle
+        :param theta:     rad, scalar, double, second Euler's angle
+        :param psi:       rad, scalar, double, third Euler's angle
         :param p:         rad/s, scalar, double, roll rate of change
         :param q:         rad/s, scalar, double, pitch rate of change
         :param r:         rad/s, scalar, double, yaw rate of change
