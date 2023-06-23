@@ -391,7 +391,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_initiialize(PrognosticsModel):
+        class missing_initialize(PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -424,7 +424,7 @@ class TestModels(unittest.TestCase):
         m = missing_outputs()
         self.assertEqual(len(m.outputs), 0)
 
-        m = missing_initiialize()
+        m = missing_initialize()
         # Should work- initialize is now optional
 
         m = missing_output()
@@ -712,7 +712,7 @@ class TestModels(unittest.TestCase):
             # Noise will make output not equal the expected
             self.assertNotEqual(round(z['o1'], 6), round(oi, 6))
 
-        ## Now with no measurmeent Noise
+        ## Now with no measurement Noise
         m = MockProgModel(process_noise = 0.0, measurement_noise = 0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
@@ -934,7 +934,7 @@ class TestModels(unittest.TestCase):
         result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
 
-    # when range specified when state doesnt exist or entered incorrectly
+    # when range specified when state doesn't exist or entered incorrectly
     def test_state_limits(self):
         m = MockProgModel()
         m.state_limits = {
@@ -1211,14 +1211,14 @@ class TestModels(unittest.TestCase):
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propagates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
 
-        # Propogate again
+        # Propagate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
@@ -1240,13 +1240,13 @@ class TestModels(unittest.TestCase):
         # Only provide non-zero input for model 1
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propagates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
 
-        # Propogate again
+        # Propagate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
@@ -1316,7 +1316,7 @@ class TestModels(unittest.TestCase):
         self.assertFalse(m1.parameters == m4.parameters)
         self.assertFalse(m4.parameters == m1.parameters) # checking both directions
 
-        m5 = LinearThrownObjectUpdatedInitalizedMethod() # Model with incorrectly initalized throwing height, but same parameters
+        m5 = LinearThrownObjectUpdatedInitializedMethod() # Model with incorrectly initialized throwing height, but same parameters
 
         self.assertFalse(m1.parameters == m5.parameters) 
         self.assertFalse(m5.parameters == m1.parameters) 
