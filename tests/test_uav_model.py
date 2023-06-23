@@ -142,8 +142,8 @@ class TestUAVGen(unittest.TestCase):
         warnings.simplefilter("error", category=UserWarning)
 
         # Instantiate vehicles - one for each configuration
-        vehicle = SmallRotorcraft(**{'dt': 0.1})
-        vehicle_djis = SmallRotorcraft(**{'dt': 0.1, 'vehicle_model': 'djis1000'})
+        vehicle = SmallRotorcraft(**{'dt': 0.1, 'process_noise': 0})
+        vehicle_djis = SmallRotorcraft(**{'dt': 0.1, 'vehicle_model': 'djis1000', 'process_noise': 0})
 
         # Define waypoints 
         waypoints_dict = {}
@@ -230,7 +230,7 @@ class TestUAVGen(unittest.TestCase):
         # Case 1: ETAs provided + LQR controller + tarot18 vehicle 
         # Use above ref_traj, ctrl
         # Simulate and compare
-        sim = vehicle.simulate_to(ref_traj['t'][-1], ctrl, **{'save_freq': vehicle.parameters['dt']})
+        sim = vehicle.simulate_to(ref_traj['t'][-1], ctrl, **{'dt': vehicle.parameters['dt'], 'save_freq': vehicle.parameters['dt']})
         x_temp = [sim.outputs[iter]['x'] for iter in range(len(sim.times))]
         y_temp = [sim.outputs[iter]['y'] for iter in range(len(sim.times))]
         z_temp = [sim.outputs[iter]['z'] for iter in range(len(sim.times))]
@@ -238,9 +238,9 @@ class TestUAVGen(unittest.TestCase):
         y_sim_interp = interp1d(sim.times, y_temp)(ref_traj['t'])
         z_sim_interp = interp1d(sim.times, z_temp)(ref_traj['t'])
         for iter in range(min(len(sim.times), len(ref_traj['t']))):
-            self.assertAlmostEqual(ref_traj['x'][iter], sim.outputs[iter]['x'], delta=5)
-            self.assertAlmostEqual(ref_traj['y'][iter], sim.outputs[iter]['y'], delta=5)
-            self.assertAlmostEqual(ref_traj['z'][iter], sim.outputs[iter]['z'], delta=5)
+            self.assertAlmostEqual(ref_traj['x'][iter], x_sim_interp[iter], delta=5)
+            self.assertAlmostEqual(ref_traj['y'][iter], y_sim_interp[iter], delta=5)
+            self.assertAlmostEqual(ref_traj['z'][iter], z_sim_interp[iter], delta=5)
 
         # Case 2: Speeds provided, no ETAs + LQR_I controller + djis1000 vehicle
         # Define speeds:
@@ -268,9 +268,9 @@ class TestUAVGen(unittest.TestCase):
         y_speeds_sim_interp = interp1d(sim_speeds.times, y_speeds_temp)(ref_traj_speeds['t'])
         z_speeds_sim_interp = interp1d(sim_speeds.times, z_speeds_temp)(ref_traj_speeds['t'])
         for iter in range(len(sim_speeds.times)):
-            self.assertAlmostEqual(ref_traj_speeds['x'][iter], sim_speeds.outputs[iter]['x'], delta=8)
-            self.assertAlmostEqual(ref_traj_speeds['y'][iter], sim_speeds.outputs[iter]['y'], delta=8)
-            self.assertAlmostEqual(ref_traj_speeds['z'][iter], sim_speeds.outputs[iter]['z'], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['x'][iter], x_speeds_sim_interp[iter], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['y'][iter], y_speeds_sim_interp[iter], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['z'][iter], z_speeds_sim_interp[iter], delta=8)
 
         # Reset warnings
         warnings.simplefilter("default", category=UserWarning)
