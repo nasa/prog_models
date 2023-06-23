@@ -15,7 +15,6 @@ from prog_models.utils.traj_gen.nurbs import NURBS
 def compute_derivatives(position_profile, timevec):
     # Compute derivatives of position: velocity and acceleration
     # (optional: jerk, not needed)
-    # ---------------------------------------------------------
     dim_keys = list(position_profile.keys())
     vel_interp = {dim_key: None for dim_key in dim_keys}
     acc_interp = {dim_key: None for dim_key in dim_keys}
@@ -117,7 +116,7 @@ def gen_attitude(psi, ax, ay, az, max_phi, max_theta, gravity):
     phi = np.fmax(np.fmin(phi, max_phi), -max_phi)
     theta = np.fmax(np.fmin(theta, max_theta), -max_theta)
     return phi, theta, psi
-   
+
 
 class Trajectory():
     """
@@ -361,7 +360,7 @@ class Trajectory():
                                                  timestep_size=dt)
         # Store in trajectory dictionary
         # ----------------------------
-        self.trajectory = {**{'position': np.vstack(list(pos_interp.values())).T}, 
+        self.trajectory = {**{'position': np.vstack(list(pos_interp.values())).T},
                            **{'velocity': np.vstack(list(linear_profiles['velocity'].values())).T}, 
                            **{'acceleration': np.vstack(list(linear_profiles['acceleration'].values())).T}, 
                            **angular_profiles,
@@ -420,7 +419,7 @@ class Trajectory():
                 dtime1 = 100.0 * np.abs(etas_rel[i] - self.trajectory['time'])**3.0  # time is fundamental and more important than distance, so I'm using a higher power to take that into account
                 dtime2 = 100.0 * np.abs(etas_rel[i+1] - self.trajectory['time'])**3.0
 
-                accelerations_abs = np.abs(self.trajectory['acceleration'][max(np.argmin(dist1 * dtime1), 0) : min(np.argmin(dist2 * dtime2), m), :])
+                accelerations_abs = np.abs(self.trajectory['acceleration'][max(np.argmin(dist1 * dtime1), 0):min(np.argmin(dist2 * dtime2), m), :])
 
                 if accelerations_abs.size > 0:
                     acc_max = np.amax(accelerations_abs)
@@ -437,7 +436,7 @@ class Trajectory():
 
             if counter == maxiter:
                 # Exit the while loop and give up if in maxiter iterations the trajectory acceleration has not been pushed under the limit
-                print("WARNING: max number of iterations reached, the trajectory still contains accelerations beyond the limit.")
+                warn("max number of iterations reached, the trajectory still contains accelerations beyond the limit.")
                 break
 
     def set_landing_waypoints(self,):
@@ -474,7 +473,7 @@ class Trajectory():
                     self.waypoints['alt'] = np.insert(self.waypoints['alt'], item + 1, self.speed_parameters['landing_altitude']*1.0)
                     counter += 1
 
-                elif item == n_waypoints-1: # if one before the last element, add landing waypoints right before landing.
+                elif item == n_waypoints-1:  # if one before the last element, add landing waypoints right before landing.
                     if self.waypoints['alt'][item+counter-1] > self.speed_parameters['landing_altitude']:
                         self.waypoints['lat'] = np.insert(self.waypoints['lat'], -1, self.waypoints['lat'][item+counter-1])
                         self.waypoints['lon'] = np.insert(self.waypoints['lon'], -1, self.waypoints['lon'][item+counter-1])
@@ -493,7 +492,7 @@ class Trajectory():
                         idx_delta = 0
                     else:
                         # ascending
-                        idx_delta = +1
+                        idx_delta = 1
                     self.waypoints['lat'] = np.insert(self.waypoints['lat'], item+counter + idx_delta, self.waypoints['lat'][item+counter])
                     self.waypoints['lon'] = np.insert(self.waypoints['lon'], item+counter + idx_delta, self.waypoints['lon'][item+counter])
                     if n_times > 1:
@@ -522,7 +521,7 @@ class Trajectory():
                             counter += 1
         
         # Recalculate landing positions with new waypoints:
-        idx_land     = np.asarray(self.waypoints['alt'] < self.speed_parameters['landing_altitude'])
+        idx_land = np.asarray(self.waypoints['alt'] < self.speed_parameters['landing_altitude'])
         idx_land_pos = np.where(idx_land)[0]
         
         return idx_land_pos
@@ -539,8 +538,8 @@ class Trajectory():
         """
         # Set speed dimensions
         n = len(self.waypoints['lat'])
-        self.speed_parameters['cruise_speed']  = reshape_route_attribute(self.speed_parameters['cruise_speed'], dim=n-1, msk=idx_land_pos)
-        self.speed_parameters['ascent_speed']  = reshape_route_attribute(self.speed_parameters['ascent_speed'], dim=n-1, msk=idx_land_pos)
+        self.speed_parameters['cruise_speed'] = reshape_route_attribute(self.speed_parameters['cruise_speed'], dim=n-1, msk=idx_land_pos)
+        self.speed_parameters['ascent_speed'] = reshape_route_attribute(self.speed_parameters['ascent_speed'], dim=n-1, msk=idx_land_pos)
         self.speed_parameters['descent_speed'] = reshape_route_attribute(self.speed_parameters['descent_speed'], dim=n-1, msk=idx_land_pos)
         self.speed_parameters['landing_speed'] = reshape_route_attribute(self.speed_parameters['landing_speed'], dim=n-1, msk=idx_land_pos)
         hovering = reshape_route_attribute(hovering, dim=n-1, msk=idx_land_pos)
@@ -548,22 +547,18 @@ class Trajectory():
         if self.waypoints['eta'] is None or len(self.waypoints['eta']) == 1:
             etas = None
         else:
-
             etas = self.waypoints['eta']
         
         # Compute ETAs
-        # ============================================
         if len(self.waypoints['alt']) <= 2:
             raise ValueError("At least 3 waypoints are required to compute ETAS from speed. Only {} were given.".format(len(self.lat)))
         
         # define margin on cruise speed
-        # ----------------------------
         # If calculated ETA produces a speed that is larger than desired speed, we can accommodate it as long as is within this margin (%)
         cruise_speed_margin = 0.1  # %, 'extra' speed we can tolerate on cruise.
         vert_speed_margin = 0.05   # %, 'extra' speed we can tolerate on ascent/descent
 
         # Compute relative ETAs
-        # -------------------
         alt_for_land = self.waypoints['alt'][1:]
         n = len(self.waypoints['alt'])-1
         
@@ -580,8 +575,7 @@ class Trajectory():
             dv = dv[0]
             
             # Identify correct vertical speed
-            # -------------------------------
-            if dv > 0 and alt_for_land[point] > self.speed_parameters['landing_altitude']:    
+            if   dv > 0 and alt_for_land[point] > self.speed_parameters['landing_altitude']:    
                 vert_speed = self.speed_parameters['ascent_speed'][point]
             elif dv > 0 and alt_for_land[point] <= self.speed_parameters['landing_altitude']:   
                 vert_speed = self.speed_parameters['landing_speed'][point]
