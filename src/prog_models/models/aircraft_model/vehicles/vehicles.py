@@ -127,7 +127,7 @@ def DJIS1000(payload=0.0, gravity=9.81):
     mass = rotorcraft_masses(mass, geom)
     mass, geom = rotorcraft_inertia(mass, geom)
     if payload > mass['max_payload']:
-        raise Warning("Payload for DJIS1000 exceeds its maximum recommended payload.")
+        warn("Payload for DJIS1000 exceeds its maximum recommended payload.")
 
     dynamics = rotorcraft_performance(dynamics, mass, gravity)
 
