@@ -86,10 +86,10 @@ class TestManual(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Manual")
-    result = runner.run(l.loadTestsFromTestCase(TestManual)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestManual)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

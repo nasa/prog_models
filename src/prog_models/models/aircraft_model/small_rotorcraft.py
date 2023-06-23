@@ -278,7 +278,7 @@ class SmallRotorcraft(AircraftModel):
         Ixx = self.mass['Ixx']
         Iyy = self.mass['Iyy']
         Izz = self.mass['Izz']
-        l = self.geom['arm_length'] 
+        length = self.geom['arm_length'] 
         sin_phi = np.sin(phi)
         cos_phi = np.cos(phi)
         sin_theta = np.sin(theta)
@@ -310,8 +310,8 @@ class SmallRotorcraft(AircraftModel):
                        [(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0],
                        [(-sin_phi*cos_psi + sin_psi*sin_theta*cos_phi)/m, 0, 0, 0],
                        [cos_phi*cos_theta/m, 0, 0, 0],
-                       [0, l/Ixx, 0, 0],
-                       [0, 0, l/Iyy, 0],
+                       [0, length/Ixx, 0, 0],
+                       [0, 0, length/Iyy, 0],
                        [0, 0, 0, 1.0/Izz]])
 
         return A, B

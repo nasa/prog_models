@@ -792,10 +792,10 @@ class TestSimResult(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Sim Result")
-    result = runner.run(l.loadTestsFromTestCase(TestSimResult)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSimResult)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

@@ -7,7 +7,7 @@ import numpy as np
 
 # FUNCTIONS
 # ========
-def rotorcraft_cam(n, l, b, d, constrained=False):
+def rotorcraft_cam(n, length, b, d, constrained=False):
     """
     Generate control allocation matrix (CAM) to transform rotor's angular velocity into thrust and torques around three main body axes.
 
@@ -31,7 +31,7 @@ def rotorcraft_cam(n, l, b, d, constrained=False):
     Gamma = np.empty((4, n))
     optional = {}
     if n == 8 and not constrained:
-        l_b = l * b
+        l_b = length * b
         l_b_sq2o2 = l_b * np.sqrt(2.0) / 2.0
         # This CAM is assuming there's no rotor pointing towards the drone forward direction (x-axis)
         # See Dmitry Luchinsky's report for details (TO BE VERIFIED)
@@ -40,7 +40,7 @@ def rotorcraft_cam(n, l, b, d, constrained=False):
                           [0.0, -l_b_sq2o2, -l_b, -l_b_sq2o2, 0.0, l_b_sq2o2, l_b, l_b_sq2o2],
                           [-d, d, -d, d, -d, d, -d, d]])
     if n == 8 and constrained:
-        bl = b * l
+        bl = b * length
         b2 = 2.0 * b
         d2 = 2.0 * d
         blsqrt2 = np.sqrt(2.0) * bl
