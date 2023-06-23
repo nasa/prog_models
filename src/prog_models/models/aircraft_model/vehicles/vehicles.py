@@ -70,7 +70,7 @@ def TAROT18(payload=0.0, gravity=9.81):
     # Set control allocation matrix and its inverse
     dynamics['Gamma'], dynamics['Gamma_inv'], _ = caf.rotorcraft_cam(
         n=geom['num_rotors'],
-        l=geom['arm_length'],
+        length=geom['arm_length'],
         b=dynamics['kt'],
         d=dynamics['kq']
     )
@@ -234,4 +234,3 @@ def observation_matrix(num_states, num_outputs):
     for ii in range(num_outputs):
         c[ii, ii] = 1.0
     return c
-  
