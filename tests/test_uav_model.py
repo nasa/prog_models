@@ -268,9 +268,9 @@ class TestUAVGen(unittest.TestCase):
         y_speeds_sim_interp = interp1d(sim_speeds.times, y_speeds_temp)(ref_traj_speeds['t'])
         z_speeds_sim_interp = interp1d(sim_speeds.times, z_speeds_temp)(ref_traj_speeds['t'])
         for iter in range(len(sim_speeds.times)):
-            self.assertAlmostEqual(ref_traj_speeds['x'][iter], x_speeds_sim_interp.outputs[iter]['x'], delta=8)
-            self.assertAlmostEqual(ref_traj_speeds['y'][iter], y_speeds_sim_interp.outputs[iter]['y'], delta=8)
-            self.assertAlmostEqual(ref_traj_speeds['z'][iter], z_speeds_sim_interp.outputs[iter]['z'], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['x'][iter], x_speeds_sim_interp[iter], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['y'][iter], y_speeds_sim_interp[iter], delta=8)
+            self.assertAlmostEqual(ref_traj_speeds['z'][iter], z_speeds_sim_interp[iter], delta=8)
 
         # Reset warnings
         warnings.simplefilter("default", category=UserWarning)
