@@ -104,7 +104,7 @@ class TestDataModel(unittest.TestCase):
             'epochs': 75
         }
 
-        # No early stopping 
+        # No early stopping
         _stdout = sys.stdout
         sys.stdout = StringIO()
         m2 = LSTMStateTransitionModel.from_model(m, [future_loading], early_stop=False, **cfg)

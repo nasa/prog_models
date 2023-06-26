@@ -161,9 +161,9 @@ def update_qSBmax(params: dict) -> dict:
 
 class BatteryElectroChemEOD(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in [0]_. This model predicts the end of discharge event. 
+    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in [Daigle2013]_. This model predicts the end of discharge event. 
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [1]_.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [DataRepo]_.
 
     :term:`Events<event>`: (1)
         EOD: End of Discharge
@@ -254,8 +254,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
     References 
     -------------
-     .. [0] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
-     .. [1] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
+     .. [Daigle2013] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
+     .. [DataRepo] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     events = ['EOD']
     inputs = ['i']
@@ -568,9 +568,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
 class BatteryElectroChemEOL(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in [2]_
+    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in [Daigle2016]_
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository[3]_.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [DataRepo]_.
 
     :term:`Events<event>`: (1)
         InsufficientCapacity: Insufficient battery capacity
@@ -616,8 +616,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
 
     References
     -----------
-    .. [2] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
-    .. [3] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
+    .. [Daigle2016] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
     """
     states = ['qMax', 'Ro', 'D']
     events = ['InsufficientCapacity']
@@ -677,9 +676,9 @@ def OverwrittenWarning(params):
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """
-    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in [4]_ and [5]_
+    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in [Dailge2013]_ and [Daigle2016]_
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [6]_.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [DataRepo]_.
 
     :term:`Events<event>`: (2)
         | EOD: End of Discharge
@@ -702,12 +701,6 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     Note
     ----
     For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
-
-    References
-    -----------
-    .. [4] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
-    .. [5] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
-    .. [6] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     inputs = BatteryElectroChemEOD.inputs
     outputs = BatteryElectroChemEOD.outputs
