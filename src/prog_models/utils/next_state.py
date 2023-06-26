@@ -86,9 +86,13 @@ class SciPyIntegrateNextState():
         **kwargs: Keyword arguments to pass to scipy.integrate.solve_ivp
 
     Examples:
-        >>> from prog_models.utils import SciPyIntegrateNextState
-        >>> next_state = SciPyIntegrateNextState(m, sp.integrate.RK45)
+        >>> from prog_models.utils.next_state import SciPyIntegrateNextState
+        >>> from prog_models.models.battery_circuit import BatteryCircuit
+        >>> import scipy
+        >>> m = BatteryCircuit()
+        >>> next_state = SciPyIntegrateNextState(m, scipy.integrate.RK45)
         >>> next_state(x, u, dt)
+
     """
     def __init__(self, m, method):
 

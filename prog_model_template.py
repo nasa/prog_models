@@ -269,7 +269,7 @@ class ProgModelTemplate(PrognosticsModel):
         return event_x
         
     # Note: Thresholds met equation below is not strictly necessary.
-    # By default threshold_met will check if event_state is ≤ 0 for each event
+    # By default, threshold_met will check if event_state is ≤ 0 for each event
     def threshold_met(self, x):
         """
         For each event threshold, calculate if it has been met

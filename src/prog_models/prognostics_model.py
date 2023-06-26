@@ -4,6 +4,7 @@
 from abc import ABC
 from collections import abc, namedtuple
 from copy import deepcopy
+import doctest
 import itertools
 import json
 from numbers import Number
@@ -56,8 +57,17 @@ class PrognosticsModel(ABC):
     Example
     -------
         >>> m = PrognosticsModel(process_noise=3.2)
+        Traceback (most recent call last):
+            ...
+        TypeError: Must have `states` attribute
         >>> m2 = PrognosticsModel(integration_method='rk4')
+        Traceback (most recent call last):
+            ...
+        TypeError: Must have `states` attribute
         >>> m3 = PrognosticsModel(integration_method=sp.integrate.RK45)
+        Traceback (most recent call last):
+            ...
+        NameError: name 'sp' is not defined
 
     Attributes
     ----------
@@ -215,11 +225,11 @@ class PrognosticsModel(ABC):
         Example
         -------
             :
-                m = PrognosticsModel()
-                # ^ Replace above with specific model being simulated ^
-                u = m.InputContainer({'u1': 3.2})
-                z = m.OutputContainer({'z1': 2.2})
-                x = m.initialize(u, z)  # Initialize first state
+            >>> from prog_models.models import BatteryCircuit
+            >>> m = BatteryCircuit()    # Replace above with specific model being simulated ^
+            >>> u = m.InputContainer({'u1': 3.2})
+            >>> z = m.OutputContainer({'z1': 2.2})
+            >>> x = m.initialize(u, z)  # Initialize first state
         """
         return self.StateContainer(self.parameters['x0'])
 
@@ -241,9 +251,10 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | z = m.OutputContainer({'z1': 2.2})
-        | z = m.apply_measurement_noise(z)
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit()
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> z = m.apply_measurement_noise(z)
 
         Note
         ----
@@ -272,11 +283,12 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | x = m.apply_process_noise(x)
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> u = m.InputContainer({'u1': 3.2})
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> x = m.apply_process_noise(x)    # {'tb': 292.04728504765023, 'qb': 7856.398056966799, 'qcp': 0.1736435913459429, 'qcs': 0.053705829558158086}
 
         Note
         ----
@@ -306,11 +318,13 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = DerivProgModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | dx = m.dx(x, u) # Returns first derivative of state given input u
+        Miryam Bookmark
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit()  # Replace with specific model being simulated
+        >>> u = m.InputContainer({'i': 2.0})
+        >>> z = m.OutputContainer({'v': 3.2, 't': 295})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> dx = m.dx(x, u) # Returns first derivative of state given input u
 
         See Also
         --------
@@ -347,11 +361,15 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u
+        Miryam BOOKMARK
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> u = m.InputContainer({'u1': 3.2})
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u
+
+        ???{'tb': 292.1, 'qb': nan, 'qcp': nan, 'qcs': nan}
 
         See Also
         --------
@@ -402,11 +420,12 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | x = m.apply_limits(x) # Returns bounded state
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> u = m.InputContainer({'u1': 3.2})
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> x = m.apply_limits(x) # Returns bounded state
         """
         for (key, limit) in self.state_limits.items():
             if np.any(np.array(x[key]) < limit[0]):
@@ -435,11 +454,12 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | pm = m.performance_metrics(x) # Returns {'tMax':33, 'iMax':19}
+        >>> from prog_models.models import BatteryElectroChemEOD
+        >>> m = BatteryElectroChemEOD() # Replace with specific model being simulated
+        >>> u = m.InputContainer({'u1': 3.2})
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> pm = m.performance_metrics(x)   # {'max_i': array([8.83810109])}
         """
         return {}
 
@@ -463,11 +483,13 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | z = m.output(x) # Returns m.OutputContainer({'z1': 2.2})
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> u = m.InputContainer({'u1': 3.2})
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> z = m.output(x) # {'t': 292.1, 'v': 4.182999999010731}
+
         """
         if self.is_direct_model:
             warn_once('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
@@ -491,13 +513,6 @@ class PrognosticsModel(ABC):
             Outputs, with keys defined by model.outputs. \n
             e.g., z = m.OutputContainer({'t':12.4, 'v':3.3} )given outputs = ['t', 'v']
 
-        Example
-        -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | z = m.__output(3.0, x) # Returns {'o1': 1.2} with noise added
         """
 
         # Calculate next state, forward one timestep
@@ -524,11 +539,12 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        | m = PrognosticsModel() # Replace with specific model being simulated
-        | u = m.InputContainer({'u1': 3.2})
-        | z = m.OutputContainer({'z1': 2.2})
-        | x = m.initialize(u, z) # Initialize first state
-        | event_state = m.event_state(x) # Returns {'EOD': 1.0}, when m = BatteryCircuit()
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> u = m.InputContainer({'u1': 3.2})
+        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> x = m.initialize(u, z) # Initialize first state
+        >>> event_state = m.event_state(x)  # {'EOD': 1.0}
 
         Note
         ----
@@ -560,11 +576,12 @@ class PrognosticsModel(ABC):
                 e.g., thresholds_met = {'EOL': False} given events = ['EOL']
 
         Example:
-            >>> m = PrognosticsModel() # Replace with specific model being simulated
+            >>> from prog_models.models import BatteryCircuit
+            >>> m = BatteryCircuit() # Replace with specific model being simulated
             >>> u = m.InputContainer({'u1': 3.2})
             >>> z = m.OutputContainer({'z1': 2.2})
             >>> x = m.initialize(u, z) # Initialize first state
-            >>> threshold_met = m.threshold_met(x) # returns {'e1': False, 'e2': False}
+            >>> threshold_met = m.threshold_met(x)  # {'EOD': False}
 
         Note:
             If not overridden, will return True if event_state is <= 0, otherwise False. If neither threshold_met or event_state is overridden, will return an empty dictionary (i.e., no events)
@@ -722,14 +739,16 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        >>> def future_load_eqn(t):
-        >>>    if t< 5.0: # Load is 3.0 for first 5 seconds
-        >>>        return 3.0
-        >>>    else:
-        >>>        return 5.0
-        >>> first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
-        >>> m = PrognosticsModel() # Replace with specific model being simulated
-        >>> (times, inputs, states, outputs, event_states) = m.simulate_to(200, future_load_eqn, first_output)
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> def future_load_eqn(t, x = None):
+        ...     if t < 5.0: # Load is 2.0 for first 5 seconds
+        ...         return m.InputContainer({'i': 2.0})
+        ...     else:
+        ...         return m.InputContainer({'i': 2.2})
+        >>> first_output = m.OutputContainer({'v': 3.2, 't': 295})
+        >>> (results) = m.simulate_to(200, future_load_eqn, first_output)
+
         """
         # Input Validation
         if not isinstance(time, Number) or time < 0:
@@ -807,14 +826,15 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        >>> m = PrognosticsModel() # Replace with specific model being simulated
-        >>> def future_load_eqn(t):
-        >>>    if t< 5.0: # Load is 3.0 for first 5 seconds
-        >>>        return m.InputContainer({'load': 3.0})
-        >>>    else:
-        >>>        return m.InputContainer({'load': 5.0})
-        >>> first_output = m.OutputContainer({'o1': 3.2, 'o2': 1.2})
-        >>> (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_load_eqn, first_output)
+        >>> from prog_models.models import BatteryCircuit
+        >>> m = BatteryCircuit() # Replace with specific model being simulated
+        >>> def future_load_eqn(t, x = None):
+        ...    if t< 5.0: # Load is 3.0 for first 5 seconds
+        ...        return m.InputContainer({'i': 2.0})
+        ...    else:
+        ...        return m.InputContainer({'i': 2.2})
+        >>> first_output = m.OutputContainer({'v': 3.2, 't': 295})
+        >>> (results) = m.simulate_to_threshold(future_load_eqn, first_output)
 
         Note
         ----
