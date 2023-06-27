@@ -717,7 +717,7 @@ class TestModels(unittest.TestCase):
             # Noise will make output not equal the expected
             self.assertNotEqual(round(z['o1'], 6), round(oi, 6))
 
-        ## Now with no measurement Noise
+        # Now with no measurement Noise
         m = MockProgModel(process_noise = 0.0, measurement_noise = 0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
@@ -761,7 +761,7 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
-        ## Check inputs
+        # Check inputs
         (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8})
         self.assertEqual(len(times), 1)
 
@@ -777,7 +777,7 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.simulate_to(12, 132, {'o1': 0.8})
 
-        ## Simulate
+        # Simulate
         (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
 
         # Check times
@@ -814,19 +814,19 @@ class TestModels(unittest.TestCase):
         for (ei, es) in zip(e, event_states):
             self.assertAlmostEqual(es['e1'], ei, 5)
 
-        ## Check last state saving
+        # Check last state saving
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
-        ## Check dt > save_freq
+        # Check dt > save_freq
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=0.1)
         for t in range(0, 7):
             self.assertAlmostEqual(times[t], t/2, 5)
         self.assertEqual(len(times), 7, "Should be 7 elements in times") # Didn't save last state (because same as savepoint)
 
-        ## Custom Savepoint test - with last state saving
+        # Custom Savepoint test - with last state saving
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=99.0, save_pts=[1.45, 2.45])
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
@@ -835,7 +835,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 4)
         self.assertAlmostEqual(times[-1], 3.0, 5) # Save last step (even though it's not on a savepoint)
         
-        ## Custom Savepoint test
+        # Custom Savepoint test
         (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, dt=0.5, save_freq=99.0, save_pts=[1.45, 2.45])
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
@@ -865,7 +865,7 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
-        ## Check inputs
+        # Check inputs
         with self.assertRaises(TypeError):
             result = m.simulate_to(0, load, {'o1': 0.8}, dt=[1, 2])
 
