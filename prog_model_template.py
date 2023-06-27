@@ -174,7 +174,7 @@ class ProgModelTemplate(PrognosticsModel):
     #     Returns
     #     -------
     #     dx : StateContainer
-    #         First derivitive of state, with keys defined by model.states
+    #         First derivative of state, with keys defined by model.states
     #         e.g., dx = {'abc': 3.1, 'def': -2.003} given states = ['abc', 'def']
     # 
     #     Example
