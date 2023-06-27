@@ -24,11 +24,11 @@ class TestBattery(unittest.TestCase):
     
     def test_battery_circuit(self):
         batt = BatteryCircuit()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
 
     def test_battery_electrochem(self):
         batt = BatteryElectroChem()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         self.assertEqual(BatteryElectroChem, BatteryElectroChemEODEOL)
 
         # check warning raised when changing overwritten parameter
@@ -43,7 +43,7 @@ class TestBattery(unittest.TestCase):
 
     def test_battery_electrochem_EOD(self):
         batt = BatteryElectroChemEOD()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
 
     def test_battery_electrochem_EOL(self):
         batt = BatteryElectroChemEOL()

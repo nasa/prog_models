@@ -2,8 +2,7 @@
 
 import unittest
 
-from prog_models import *
-from prog_models.models import *
+from prog_models import CompositeModel
 from prog_models.models.test_models.linear_models import (
     OneInputOneOutputNoEventLM,
     OneInputNoOutputOneEventLM,
