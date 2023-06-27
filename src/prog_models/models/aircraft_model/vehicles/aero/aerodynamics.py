@@ -10,6 +10,8 @@ import numpy as np
 
 class DragModel():
     """
+    .. versionadded:: 1.5.0
+    
     Bluff body drag model of the form:
 
             F_D = 1/2 * rho * A * Cd * V^2

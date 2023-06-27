@@ -36,6 +36,8 @@ class SimResult(UserList):
 
     def __getitem__(self, item):
         """
+        .. versionadded:: 1.5.0
+        
             created for deprecation warning. [] continues to be handled by parent
         """
         warn_once('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
@@ -44,6 +46,8 @@ class SimResult(UserList):
     
     def __iter__(self):
         """
+        .. versionadded:: 1.5.0
+        
             created for deprecation warning. iteration continues to be handled by parent
         """
         warn_once(
@@ -54,6 +58,8 @@ class SimResult(UserList):
     
     def iterrows(self):
         """
+        .. versionadded:: 1.5.0
+        
             Iterates -- through keys
         """
         return super().__iter__()
@@ -61,6 +67,8 @@ class SimResult(UserList):
     @property
     def frame(self) -> pd.DataFrame:
         """
+        .. versionadded:: 1.5.0
+        
             pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
         warn_once('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
@@ -80,6 +88,8 @@ class SimResult(UserList):
         
     def frame_is_empty(self) -> bool:
         """
+        .. versionadded:: 1.5.0
+        
         Returns:
             bool: If the value has been calculated
         """
@@ -87,6 +97,8 @@ class SimResult(UserList):
 
     def __setitem__(self, key, value):
         """
+        .. versionadded:: 1.5.0
+        
             in addition to the normal functionality, updates the _frame if it exists
         """
         super().__setitem__(key, value)
@@ -96,6 +108,8 @@ class SimResult(UserList):
 
     def __delitem__(self, key):
         """
+        .. versionadded:: 1.5.0
+        
             in addition to the normal functionality, updates the _frame if it exists
         """
         super().__delitem__(key)
@@ -104,6 +118,8 @@ class SimResult(UserList):
 
     def insert(self, i: int, item) -> None:
         """
+        .. versionadded:: 1.5.0
+        
             in addition to the normal functionality, updates the _frame if it exists
         """
         self.insert(i, item)
@@ -114,12 +130,16 @@ class SimResult(UserList):
     @property
     def iloc(self):
         """
+        .. versionadded:: 1.5.0
+        
             returns the iloc indexer
         """
         return self.frame.iloc
 
     def equals(self, other: "SimResult") -> bool:
         """
+        .. versionadded:: 1.5.0
+        
         Compare 2 SimResults
 
         Args:
@@ -131,7 +151,8 @@ class SimResult(UserList):
         return self.times == other.times and self.data == other.data
 
     def __eq__(self, other) -> bool:
-        """Compare 2 SimResults
+        """
+        Compare 2 SimResults
 
         Args:
             other (SimResult)
@@ -303,7 +324,7 @@ class SimResult(UserList):
 
         Coble, J., et. al. (2021). Identifying Optimal Prognostic Parameters from Data: A Genetic Algorithms Approach. Annual Conference of the PHM Society.
         http://www.papers.phmsociety.org/index.php/phmconf/article/view/1404
-        Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Aritifical Intelligence, Volume 306.
+        Baptistia, M., et. al. (2022). Relation between prognostics predictor evaluation metrics and local interpretability SHAP values. Artificial Intelligence, Volume 306.
         https://www.sciencedirect.com/science/article/pii/S0004370222000078
 
         Args:
