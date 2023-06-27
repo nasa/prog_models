@@ -97,7 +97,7 @@ class BatteryCircuit(PrognosticsModel):
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'qb', 'qcp', 'qcs']
-    outputs = ['t',  'v']
+    outputs = ['t', 'v']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults

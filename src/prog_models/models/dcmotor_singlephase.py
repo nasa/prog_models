@@ -15,7 +15,7 @@ def update_L1(params):
 def update_Kv(params):
     # (rad/s)/V, inverse of Kt
     return {
-        'Kv':    1.0 / params['Kt']
+        'Kv': 1.0 / params['Kt']
     }
 
 def update_Km(params):

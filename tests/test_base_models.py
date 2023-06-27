@@ -1330,10 +1330,10 @@ class TestModels(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Base Models")
-    result = runner.run(l.loadTestsFromTestCase(TestModels)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestModels)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

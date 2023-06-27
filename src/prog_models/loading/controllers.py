@@ -37,7 +37,7 @@ def lqr_calc_k(A, B, Q, R):
     HM34 = np.concatenate((HM3, HM4), axis=1)
     HM = np.concatenate((HM12, HM34), axis=0)
 
-    # --------- Extract eigevectors whose eigenvalues have real part < 0 ------------ #
+    # --------- Extract eigenvectors whose eigenvalues have real part < 0 ------------ #
     eig_val, eig_vec = np.linalg.eig(HM)
     V_ = eig_vec[:, np.real(eig_val) < 0.0]
 
@@ -47,7 +47,7 @@ def lqr_calc_k(A, B, Q, R):
 
     # ----------- Estimate control gain ----------------- #
     K = np.dot(np.dot(np.dot(R_inv, B_tr), Y), np.linalg.inv(X))
-    K = np.real(K)  # some spuriorus imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
+    K = np.real(K)  # some spurious imaginary parts (1e-13) sometimes remain in the matrix. we manually remove them
 
     # Calculate the eigenvalues of the matrix A - B*K
     E, _ = np.linalg.eig(A - np.dot(B, K))
@@ -158,7 +158,6 @@ class LQR():
         return - np.dot(gain, state_error)
     
     def build_scheduled_control(self, system_linear_model_fun, input_vector, state_vector_vals=None, index_scheduled_var=None):
-
         if state_vector_vals is None:
             # using psi (yaw angle) as scheduled variable as the LQR control cannot work with yaw=0 since it's in the inertial frame.
             n_schedule_grid = 360*2 + 1
@@ -173,8 +172,8 @@ class LQR():
 
         for j in range(m):
             phi, theta, psi = state_vector_vals[3:6, j]
-            p,       q,   r = state_vector_vals[-3:, j]
-            Aj,          Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
+            p, q, r = state_vector_vals[-3:, j]
+            Aj, Bj = system_linear_model_fun(phi, theta, psi, p, q, r, input_vector[0])
             self.control_gains[:, :, j], _ = self.compute_gain(Aj, Bj)
 
         print('Control gain matrices complete.')
@@ -268,9 +267,9 @@ class LQR_I(LQR):
         self.build_scheduled_control(vehicle.linear_model, input_vector=[self.ss_input])
 
     def compute_gain(self, A, B):
-        """ Compute controller gain given state of the system described by linear model A, B"""
+        """Compute controller gain given state of the system described by linear model A, B"""
         self.Ai[:self.n_states, :self.n_states] = A
-        self.Bi[:self.n_states,              :] = B
+        self.Bi[:self.n_states, :] = B
         self.K, self.E = lqr_calc_k(self.Ai, self.Bi, self.parameters['Qi'], self.parameters['Ri'])
         return self.K, self.E
 

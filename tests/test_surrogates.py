@@ -593,10 +593,10 @@ class TestSurrogate(unittest.TestCase):
             
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Surrogate")
-    result = runner.run(l.loadTestsFromTestCase(TestSurrogate)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSurrogate)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")
