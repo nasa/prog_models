@@ -10,12 +10,12 @@ from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
-    """def setUp(self):
+    def setUp(self):
         # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
