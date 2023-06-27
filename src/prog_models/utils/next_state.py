@@ -3,6 +3,7 @@
 
 from scipy.integrate import solve_ivp
 
+
 def euler_next_state(model, x, u, dt: float):
     """
     .. versionadded:: 1.5.0
@@ -114,6 +115,7 @@ class SciPyIntegrateNextState():
             **m.parameters.get('integrator_config', {}))
 
         return m.StateContainer(next_state.y.T[-1])
+
 
 next_state_functions = {
     'euler': euler_next_state,

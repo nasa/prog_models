@@ -4,8 +4,7 @@
 import numpy as np
 import unittest
 
-from prog_models import *
-from prog_models.models import *
+from prog_models.models import ThrownObject
 
 
 class TestEstimateParams(unittest.TestCase):
@@ -68,14 +67,12 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-
     def test_estimate_params(self):
         """
         General estimate_params testing
         """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
-        data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
         # Reset some parameters
@@ -225,7 +222,7 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'g': 7})
 
         # Passing in bounds as a dictionary with tuples
-        m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds= {'g': (7, 14)})
+        m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'g': (7, 14)})
 
         with self.assertRaises(ValueError):
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=None)

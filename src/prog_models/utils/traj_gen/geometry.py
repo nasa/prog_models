@@ -99,7 +99,7 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
         # Compute new lambda
         C = f/16.0 * cos_alpha2 * (4.0 + f * (4.0 - 3.0 * cos_alpha2))
         lam_old = lam
-        lam = L + (1.0 - C) * f * sin_alpha * (sigma + C * sin_sigma * (cos_2sigma_m + C * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m**2.0 )))
+        lam = L + (1.0 - C) * f * sin_alpha * (sigma + C * sin_sigma * (cos_2sigma_m + C * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m * cos_2sigma_m)))
         
         # Evaluate difference
         d_lam = abs(lam - lam_old)
@@ -115,9 +115,9 @@ def vincenty_distance(p1, p2, tol=1e-12, max_iter=200):
     else:
         # After lambda converged, compute the following:
         u2 = cos_alpha2 * (a*a - b*b) / b**2.0
-        A = 1.0 + u2 / 16384.0 * (4096.0 + u2 * (-786.0 + u2 * (320.0 - 175.0*u2)))
+        A = 1.0 + u2 / 16384.0 * (4096.0 + u2 * (-786.0 + u2 * (320.0 - 175.0 * u2)))
         B = u2/1024.0 * (256.0 + u2 * (-128.0 + u2 * (74.0 - 47.0*u2)))
-        dsigma = B * sin_sigma * (cos_2sigma_m + 1.0/4.0 * B * (cos_sigma * (-1.0 + 2.0 * cos_2sigma_m**2.0) - B / 6.0 * cos_2sigma_m * (-3.0 + 4.0 * sin_sigma*sin_sigma) * (-3.0 + 4.0 * cos_2sigma_m**2.0)))
+        dsigma = B * sin_sigma * (cos_2sigma_m + 1.0/4.0 * B * (cos_sigma * (-1.0 + 2.0 * cos_2sigma_m * cos_2sigma_m) - B / 6.0 * cos_2sigma_m * (-3.0 + 4.0 * sin_sigma*sin_sigma) * (-3.0 + 4.0 * cos_2sigma_m * cos_2sigma_m)))
         s = b * A * (sigma - dsigma)
     return np.round(s, 6)
 
@@ -158,7 +158,7 @@ def geodetic_distance(lats, lons, alts, method='greatcircle', return_surf_vert=F
         return surface_dist, vert_dist
     else:
         return np.sqrt(surface_dist**2.0 + vert_dist**2.0)
-    
+
 
 def euclidean_distance_point_vector(point, vector):
     """
@@ -316,7 +316,8 @@ def heading_compute_geodetic(lat, lon):
         if Y != 0:  # adjust for 360 degrees
             head_temp -= np.pi / 2.0
             head_temp *= -1.0
-        if jj < n - 1 and ((dlat_ != 0 or dlon_ != 0) and head_temp == 0):  # if calculated heading is 0, keep the old one.
+        if jj < n - 1 and ((dlat_ != 0 or dlon_ != 0) and head_temp == 0):
+            # if calculated heading is 0, keep the old one.
             head_temp = heading[jj - 2]
         heading[jj - 1] = head_temp
     heading[-1] = heading[-2]
@@ -343,7 +344,7 @@ class Coord():
         self.lat0 = lat0
         self.lon0 = lon0
         self.alt0 = alt0
-        self.N0   = self.a / np.sqrt(1 - self.e**2.0 * np.sin(self.lat0)**2.0) # [m], Radius of curvature on the Earth
+        self.N0 = self.a / np.sqrt(1 - self.e**2.0 * np.sin(self.lat0)**2.0)  # [m], Radius of curvature on the Earth
 
     def ecef2enu(self, xecef, yecef, zecef):
         """
@@ -384,7 +385,6 @@ class Coord():
         :return yecef:           m, n x 1, Y-coordinate in ECEF reference frame
         :return zecef:           m, n x 1, Z-coordinate in ECEF reference frame
         """
-
         # Compute coordinates of origin of ENU in the ECEF reference frame
         x0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.cos(self.lon0)
         y0 = (self.alt0 + self.N0) * np.cos(self.lat0) * np.sin(self.lon0)
@@ -424,8 +424,6 @@ class Coord():
             lon     n x 1 array, real, [rad], longitude values
             alt     n x 1 array, real, [m], altitude values
         """
-
-        # Ancillary variables
         epsilon = self.e**2.0 / (1.0 - self.e**2.0)
         b       = self.a * (1.0 - self.f)
         p       = np.sqrt(X**2.0 + Y**2.0)

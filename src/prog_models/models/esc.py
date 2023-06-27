@@ -97,7 +97,7 @@ class ESC(PrognosticsModel):
     inputs = ['duty', 'theta', 'v']
     outputs = states
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, dt: float):
         pw = np.maximum(signal.square(PI2 * self.parameters['sawtooth_freq'] * x['t'], duty=u['duty']), 0)
         V = pw*u['v']
         SP = commutation(u['theta'])

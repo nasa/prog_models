@@ -783,7 +783,7 @@ class PrognosticsModel(ABC):
             Keys for events that will trigger the end of simulation.
             If blank, simulation will occur if any event will be met ()
         x : StateContainer, optional
-            initial state dict, e.g., x= m.StateContainer({'x1': 10, 'x2': -5.3})\n
+            initial state, e.g., x= m.StateContainer({'x1': 10, 'x2': -5.3})\n
         thresholds_met_eqn : abc.Callable, optional
             custom equation to indicate logic for when to stop sim f(thresholds_met) -> bool\n
         print : bool, optional
@@ -1112,13 +1112,14 @@ class PrognosticsModel(ABC):
             outputs (list[OutputContainer]): array of output dictionaries where output[x] corresponds to time[x]
         
         Keyword Args:
-            method (str, optional): Error method to use. Supported methods include:
-                * MSE (Mean Squared Error)
-                * RMSE (Root Mean Squared Error)
-                * MAX_E (Maximum Error)
-                * MAE (Mean Absolute Error)
-                * MAPE (Mean Absolute Percentage Error)
-                * DTW (Dynamic Time Warping)
+            method (str, optional): Error method to use when calculating error. Supported methods include:
+
+              * MSE (Mean Squared Error) - DEFAULT
+              * RMSE (Root Mean Squared Error)
+              * MAX_E (Maximum Error)
+              * MAE (Mean Absolute Error)
+              * MAPE (Mean Absolute Percentage Error)
+              * DTW (Dynamic Time Warping)
             x0 (StateContainer, optional): Initial state
             dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to time between samples.
             stability_tol (double, optional): Configurable parameter.

@@ -166,7 +166,7 @@ class SmallRotorcraft(AircraftModel):
             air_density=self.parameters['air_density']),
           lift=None)
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         # Extract useful values
         m = self.mass['total']  # vehicle mass
         Ixx, Iyy, Izz = self.mass['Ixx'], self.mass['Iyy'], self.mass['Izz']  # vehicle inertia
@@ -244,15 +244,15 @@ class SmallRotorcraft(AircraftModel):
         
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
     
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         # Based on percentage of reference trajectory completed
         return {'TrajectoryComplete': x['mission_complete']}
  
-    def output(self, x: dict):
+    def output(self, x):
         # Output is the same as the state vector, without time and mission_complete
         return self.OutputContainer(x.matrix[0:-2])
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         # Progress through the reference trajectory is saved in the state 'mission_complete'
         return {'TrajectoryComplete': x['mission_complete'] >= 1}
 

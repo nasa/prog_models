@@ -34,7 +34,7 @@ class DMDModel(LinearModel, DataModel):
             Time step
         output_keys : list[str]
             List of output keys
-        x0 : dict or StateContainer
+        x0 : StateContainer
             Initial state of the system
         state_keys : list[str]
             List of state keys
