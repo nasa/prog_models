@@ -24,7 +24,7 @@ from prog_models.utils.size import getsizeof
 
 class PrognosticsModel(ABC):
     """
-    A general time-variant state space :term:`model` of system degradation.
+    A general time-variant state space :term:`model` of system degradation behavior.
 
     The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.
 
@@ -45,7 +45,7 @@ class PrognosticsModel(ABC):
         measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         integration_method: Optional, str or OdeSolver
-          Integration method used by next state in continuous models, e.g. 'rk4' or 'euler' (default: 'euler'). Could also be a SciPy integrator (e.g., scipy.integrate.RK45). If the model is discrete, this parameter will raise an exception.
+          Integration method used by next_state in continuous models, e.g. 'rk4' or 'euler' (default: 'euler'). Could also be a SciPy integrator (e.g., scipy.integrate.RK45). If the model is discrete, this parameter will raise an exception.
 
     Additional parameters specific to the model
 
@@ -469,7 +469,7 @@ class PrognosticsModel(ABC):
         | x = m.initialize(u, z) # Initialize first state
         | z = m.output(x) # Returns m.OutputContainer({'z1': 2.2})
         """
-        if self.is_direct_model:
+        if self.is_direct:
             warn_once('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
         else:
             warn_once('This model does not support output estimation.')
@@ -593,7 +593,7 @@ class PrognosticsModel(ABC):
         return has_overridden_transition and len(self.states) > 0
 
     @property
-    def is_direct_model(self) -> bool:
+    def is_direct(self) -> bool:
         """
         If the model is a "direct model" - i.e., a model that directly estimates time of event from system state, rather than using state transition. This is useful for data-driven models that map from sensor data to time of event, and for physics-based models where state transition differential equations can be solved.
 
@@ -1111,7 +1111,7 @@ class PrognosticsModel(ABC):
                 * MAE (Mean Absolute Error)
                 * MAPE (Mean Absolute Percentage Error)
                 * DTW (Dynamic Time Warping)
-            x0 (dict, optional): Initial state
+            x0 (StateContainer, optional): Initial state
             dt (float, optional): Maximum time step in simulation. Time step used in simulation is lower of dt and time between samples. Defaults to time between samples.
             stability_tol (double, optional): Configurable parameter.
                 Configurable cutoff value, between 0 and 1, that determines the fraction of the data points for which the model must be stable.

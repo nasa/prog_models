@@ -5,6 +5,8 @@ from scipy.integrate import solve_ivp
 
 def euler_next_state(model, x, u, dt: float):
     """
+    .. versionadded:: 1.5.0
+
     State transition equation using simple euler integration: Calls next_state(), calculating the next state, and then adds noise and applies limits
 
     Parameters
@@ -36,6 +38,8 @@ def euler_next_state(model, x, u, dt: float):
 
 def rk4_next_state(model, x, u, dt: float):
     """
+    .. versionadded:: 1.5.0
+    
     State transition equation using rungekutta4 integration: Calls next_state(), calculating the next state, and then adds noise and applies limits
 
     Parameters
@@ -79,6 +83,8 @@ def rk4_next_state(model, x, u, dt: float):
 
 class SciPyIntegrateNextState():
     """
+    .. versionadded:: 1.5.0
+
     State transition equation using scipy.integrate.solve_ivp integration: Calls dx(), calculating the next state using the scip.integrate.solve_ivp function, and then adds noise and applies limits
 
     Args:

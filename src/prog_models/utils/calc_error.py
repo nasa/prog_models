@@ -11,6 +11,8 @@ import numpy as np
 
 def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Maximum Error between model behavior and some collected data.
 
     Args:
@@ -87,6 +89,8 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
 
 def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Root Mean Squared Error between model behavior and some collected data.
 
     Args:
@@ -114,7 +118,10 @@ def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
 
 def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
-    """Calculate Mean Squared Error (MSE) between simulated and observed
+    """
+    .. versionadded:: 1.5.0
+
+    Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
         m (PrognosticsModel): Model to use for comparison
@@ -183,6 +190,8 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
 def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Mean Absolute Error between model behavior and some collected data.
 
     Args:
@@ -253,6 +262,8 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
 def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Mean Absolute Percentage Error between model behavior and some collected data.
 
     Args:
@@ -323,6 +334,8 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
 def DTW(m, times, inputs, outputs, **kwargs):
     """
+    .. versionadded:: 1.5.0
+    
     Dynamic Time Warping Algorithm using FastDTW's package.
     How DTW Works: https://cs.fit.edu/~pkc/papers/tdm04.pdf
     FastDTW Documentation: https://pypi.org/project/fastdtw/
