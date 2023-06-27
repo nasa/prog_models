@@ -141,7 +141,7 @@ class DCMotorSP(PrognosticsModel):
                               x0={'i': 0.0, 'v_rot': 0.0}
                               )
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         # Get parameters
         parameters     = self.parameters
         friction_coeff = parameters['B']
@@ -165,7 +165,7 @@ class DCMotorSP(PrognosticsModel):
             np.atleast_1d(dvrotdt)          # rotor speed
         ]))
 
-    def output(self, x: dict):
+    def output(self, x):
         rotor_speed = x['v_rot']
         return self.OutputContainer(np.array([
             np.atleast_1d(rotor_speed),

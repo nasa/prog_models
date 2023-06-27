@@ -3,6 +3,7 @@
 
 from scipy.integrate import solve_ivp
 
+
 def euler_next_state(model, x, u, dt: float):
     """
     State transition equation using simple euler integration: Calls next_state(), calculating the next state, and then adds noise and applies limits
@@ -108,6 +109,7 @@ class SciPyIntegrateNextState():
             **m.parameters.get('integrator_config', {}))
 
         return m.StateContainer(next_state.y.T[-1])
+
 
 next_state_functions = {
     'euler': euler_next_state,

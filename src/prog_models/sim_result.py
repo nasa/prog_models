@@ -213,7 +213,7 @@ class SimResult(UserList):
             dict: Element Removed
         """
         warn_once(
-            'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, popbyindex, and users may begin using it under this name now.',
+            'pop will be deprecated after version 1.5 of ProgPy. The function will be renamed, pop_by_index, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
         return self.pop_by_index(index)
 
