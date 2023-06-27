@@ -582,6 +582,8 @@ class PrognosticsModel(ABC):
     @property
     def is_state_transition_model(self) -> bool:
         """
+        .. versionadded:: 1.5.0
+
         If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propagate state forward.
 
         Returns:
@@ -595,6 +597,8 @@ class PrognosticsModel(ABC):
     @property
     def is_direct(self) -> bool:
         """
+        .. versionadded:: 1.5.0
+        
         If the model is a "direct model" - i.e., a model that directly estimates time of event from system state, rather than using state transition. This is useful for data-driven models that map from sensor data to time of event, and for physics-based models where state transition differential equations can be solved.
 
         Returns:
@@ -604,6 +608,8 @@ class PrognosticsModel(ABC):
 
     def state_at_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs):
         """
+        .. versionadded:: 1.5.0
+
         Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state transition model, this returns the state at which threshold_met returns true for each event.
 
         Args:
@@ -644,6 +650,8 @@ class PrognosticsModel(ABC):
 
     def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
+        .. versionadded:: 1.5.0
+
         Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
         Args:
