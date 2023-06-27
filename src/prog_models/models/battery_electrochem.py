@@ -79,7 +79,6 @@ def update_qnSBmin(params: dict) -> dict:
     return {
         'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
         'qnBMin': params['qMax']*params['xnMin']*(1.0-params['VolSFraction'])
-
     }
 
 def update_qnSBmax(params: dict) -> dict:

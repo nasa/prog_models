@@ -83,7 +83,7 @@ class BatteryCircuit(PrognosticsModel):
           Heat transfer coefficient parameter
         hcs : float
           Heat transfer coefficient - surface
-        x0 : dict[str, float]
+        x0 : StateContianer
           Initial :term:`state`
     
     Note
