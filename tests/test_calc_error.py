@@ -1,10 +1,8 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-import numpy as np
 import unittest
-from prog_models import *
-from prog_models.models import *
+from prog_models.models import ThrownObject, LinearThrownObject, BatteryElectroChemEOD
 
 
 class TestCalcError(unittest.TestCase):
@@ -23,7 +21,7 @@ class TestCalcError(unittest.TestCase):
         self.assertEqual(m.calc_error(results.times, results.inputs, results.outputs),
                             m2.calc_error(results.times, results.inputs, results.outputs))
         
-        resultsm2 = m2.simulate_to_threshold(save_freq = 0.5)
+        resultsm2 = m2.simulate_to_threshold(save_freq=0.5)
         m2.parameters['throwing_speed'] = 35
         key = ['throwing_speed']
 

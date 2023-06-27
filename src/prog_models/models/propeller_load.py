@@ -43,7 +43,7 @@ class PropellerLoad(PrognosticsModel):
         't_l': (0, np.inf),
     }
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, dt: float):
         return self.StateContainer({
             't_l': self.parameters['C_q']*u['v_rot']**2})
     

@@ -328,7 +328,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -443,7 +443,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         
         return {'max_i': fsolve(f, [3])}
         
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
         # since voltage decreases non-linearally. 
         # However, as voltage approaches VEOD, the charge-based approach no 
@@ -503,7 +503,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'EOD': np.clip(min(charge_EOD, voltage_EOD), 0, 1)
         }
 
-    def output(self, x: dict):
+    def output(self, x):
         params = self.parameters
         An = params['An']
         # Negative Surface
@@ -557,7 +557,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             np.atleast_1d(Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp'])
         ]))
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
@@ -639,7 +639,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'qMax': (0, np.inf)
     }
 
-    def dx(self, _, u: dict):
+    def dx(self, _, u):
         params = self.parameters
 
         return self.StateContainer(np.array([
@@ -648,11 +648,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
             np.atleast_1d(params['wd'] * abs(u['i']))
         ]))
 
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
         return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
     def output(self, _):
@@ -722,7 +722,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         # Set EOD Parameters (corresponding to health)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -736,18 +736,18 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
         return x_dot
 
-    def output(self, x: dict) -> dict:
+    def output(self, x):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['qMobile'] = x['qMax']
         return BatteryElectroChemEOD.output(self, x)
 
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         e_state = BatteryElectroChemEOD.event_state(self, x)
         e_state.update(BatteryElectroChemEOL.event_state(self, x))
         return e_state
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         t_met = BatteryElectroChemEOD.threshold_met(self, x)
         t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
         return t_met

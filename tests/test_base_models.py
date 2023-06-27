@@ -103,7 +103,7 @@ class TestModels(unittest.TestCase):
             return {'i1': 1, 'i2': 2.1}
 
         # Any event, default
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
         self.assertAlmostEqual(times[-1], 5.0, 5)
         self.assertAlmostEqual(outputs[-1]['o1'], -13.2)
         self.assertIsInstance(outputs[-1], m.OutputContainer)
@@ -122,11 +122,11 @@ class TestModels(unittest.TestCase):
             measurement_noise_dist='none')
 
         # Any event, default
-        config = {'dt': 0.5, 'save_freq': 1.0}
         (times, _, _, outputs, _) = m.simulate_to_threshold(
             load,
             {'o1': 0.8},
-            **config)
+            dt=0.5,
+            save_freq=1.0)
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
     def test_integration_type(self):
@@ -161,7 +161,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(x_default['x'], x_rk4['x'])
 
     def test_integration_type_scipy(self):
-        # SciPy Integrator test. 
+        # SciPy Integrator test.
         # Here we will set the integrator to various scipy integration methods and make sure that it works
         from scipy.integrate import RK45, RK23, DOP853, Radau, BDF, LSODA
 
@@ -569,7 +569,7 @@ class TestModels(unittest.TestCase):
         self.assertDictEqual(m.event_state({}), {})
 
     def test_pickle(self):
-        m = MockProgModel(p1 = 1.3)
+        m = MockProgModel(p1=1.3)
         pickle.dump(m, open('model_test.pkl', 'wb'))
         m2 = pickle.load(open('model_test.pkl', 'rb'))
         isinstance(m2, MockProgModel)
@@ -577,48 +577,49 @@ class TestModels(unittest.TestCase):
         self.assertEqual(m, m2)
 
     def test_sim_to_thresh(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
         # Any event, default
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
         # Any event, initial state 
         x0 = {'a': 1, 'b': 5, 'c': -3.2, 't': -1}
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'x': x0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, x=x0)
         self.assertAlmostEqual(times[-1], 6.0, 5)
         self.assertAlmostEqual(states[0]['t'], -1.0, 5)
 
         # Any event, manual
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e1', 'e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, threshold_keys=['e1', 'e2'])
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
         # Only event 2
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=['e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, threshold_keys=['e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
 
         # Threshold before event
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 5.0}, threshold_keys=['e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, horizon=5.0, threshold_keys=['e2'])
         self.assertAlmostEqual(times[-1], 5.0, 5)
 
         # Threshold after event
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=['e2'])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, horizon=20.0, threshold_keys=['e2'])
         self.assertAlmostEqual(times[-1], 15.0, 5)
 
         # No thresholds
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'horizon': 20.0}, threshold_keys=[])
+        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, horizon=20.0, threshold_keys=[])
         self.assertAlmostEqual(times[-1], 20.0, 5)
 
         # No thresholds and no horizon
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, threshold_keys=[])
+            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, threshold_keys=[])
 
         # No events and no horizon
         m_noevents = OneInputNoOutputNoEventLM()
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+            (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
 
         # Custom thresholds met eqn- both keys
         def thresh_met(thresholds):
@@ -632,26 +633,29 @@ class TestModels(unittest.TestCase):
         def thresh_met(thresholds):
             return True
         linear_load = lambda t, x=None: m_noevents.InputContainer({'u1': 1})
-        (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0, 'thresholds_met_eqn': thresh_met})
+        (times, inputs, states, outputs, event_states) = m_noevents.simulate_to_threshold(linear_load, {'o1': 0.8}, dt=0.5, save_freq=1.0, thresholds_met_eqn=thresh_met)
         self.assertListEqual(times, [0, 0.5])  # Only one step
 
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], **{'dt': 0.5, 'save_freq': 1.0})
+            result = m.simulate_to_threshold(load, {'o1': 0.8}, threshold_keys=['e1', 'e2', 'e3'], dt=0.5, save_freq=1.0)
 
     def test_sim_past_thresh(self):
         m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
-        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-        self.assertAlmostEqual(times[-1], 6.0, 5)
+        result = m.simulate_to(6, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
+        self.assertAlmostEqual(result.times[-1], 6.0, 5)
 
     def test_sim_namedtuple_access(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
-        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
-        named_results = m.simulate_to(6, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        z = {'o1': 0.8}
+        (times, inputs, states, outputs, event_states) = m.simulate_to(6, load, z, dt=0.5, save_freq=1.0)
+        named_results = m.simulate_to(6, load, z, dt=0.5, save_freq=1.0)
         self.assertEqual(times, named_results.times)
         self.assertEqual(inputs, named_results.inputs)
         self.assertEqual(states, named_results.states)
@@ -659,35 +663,36 @@ class TestModels(unittest.TestCase):
         self.assertEqual(event_states, named_results.event_states)
         
     def test_next_time_fcn(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
-
         # Any event, default
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 1, 'save_freq': 1e-99})
-        self.assertEqual(len(times), 6)
+        result = m.simulate_to_threshold(load, {'o1': 0.8}, dt=1, save_freq=1e-99)
+        self.assertEqual(len(result.times), 6)
 
         def next_time(t, x):
             return 0.5
 
         # With next_time
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **{'save_freq': 1e-99, 'dt': next_time})
-        self.assertEqual(len(times), 11)
+        result = m.simulate_to_threshold(load, {'o1': 0.8}, save_freq=1e-99, dt=next_time)
+        self.assertEqual(len(result.times), 11)
 
     def test_sim_measurement_noise(self):
-        m = MockProgModel(process_noise = 0.0, measurement_noise = 1)
+        m = MockProgModel(process_noise=0.0, measurement_noise=1)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
-        ## Simulate
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        # Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
 
         # Check times
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 5)
-        self.assertAlmostEqual(times[-1], 3.5, 5) # Save last step (even though it's not on a savepoint)
+        self.assertAlmostEqual(times[-1], 3.5, 5)  # Save last step (even though it's not on a savepoint)
         
         # Check inputs
         self.assertEqual(len(inputs), 5)
@@ -712,19 +717,20 @@ class TestModels(unittest.TestCase):
             # Noise will make output not equal the expected
             self.assertNotEqual(round(z['o1'], 6), round(oi, 6))
 
-        ## Now with no measurmeent Noise
-        m = MockProgModel(process_noise = 0.0, measurement_noise = 0.0)
+        # Now with no measurmeent Noise
+        m = MockProgModel(process_noise=0.0, measurement_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
-        ## Simulate
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        # Simulate
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
 
         # Check times
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 5)
-        self.assertAlmostEqual(times[-1], 3.5, 5) # Save last step (even though it's not on a savepoint)
+        self.assertAlmostEqual(times[-1], 3.5, 5)  # Save last step (even though it's not on a savepoint)
         
         # Check inputs
         self.assertEqual(len(inputs), 5)
@@ -751,7 +757,8 @@ class TestModels(unittest.TestCase):
 
             
     def test_sim_prog(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
@@ -772,7 +779,7 @@ class TestModels(unittest.TestCase):
             m.simulate_to(12, 132, {'o1': 0.8})
 
         ## Simulate
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
 
         # Check times
         for t in range(0, 4):
@@ -809,19 +816,19 @@ class TestModels(unittest.TestCase):
             self.assertAlmostEqual(es['e1'], ei, 5)
 
         ## Check last state saving
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
         ## Check dt > save_freq
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 0.1})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=0.1)
         for t in range(0, 7):
             self.assertAlmostEqual(times[t], t/2, 5)
         self.assertEqual(len(times), 7, "Should be 7 elements in times") # Didn't save last state (because same as savepoint)
 
         ## Custom Savepoint test - with last state saving
-        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=99.0, save_pts=[1.45, 2.45])
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
         self.assertAlmostEqual(times[1], 1.5, 5)
@@ -830,7 +837,7 @@ class TestModels(unittest.TestCase):
         self.assertAlmostEqual(times[-1], 3.0, 5) # Save last step (even though it's not on a savepoint)
         
         ## Custom Savepoint test
-        (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 99.0, 'save_pts': [1.45, 2.45]})
+        (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, dt=0.5, save_freq=99.0, save_pts=[1.45, 2.45])
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
         self.assertAlmostEqual(times[1], 1.5, 5)
@@ -839,7 +846,8 @@ class TestModels(unittest.TestCase):
         # Last step is a savepoint        
 
     def test_vectorization(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         a = np.array([1, 2, 3, 4, 4.5])
@@ -853,75 +861,71 @@ class TestModels(unittest.TestCase):
             self.assertAlmostEqual(xa, xa0+dt)
 
     def test_sim_prog_inproper_config(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
         ## Check inputs
-        config = {'dt': [1, 2]}
         with self.assertRaises(TypeError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            result = m.simulate_to(0, load, {'o1': 0.8}, dt=[1, 2])
 
-        config = {'dt': -1}
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            result = m.simulate_to(0, load, {'o1': 0.8}, dt=-1)
 
-        config = {'save_freq': [1, 2]}
         with self.assertRaises(TypeError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            result = m.simulate_to(0, load, {'o1': 0.8}, save_freq=[1, 2])
 
-        config = {'save_freq': -1}
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8}, **config)
+            result = m.simulate_to(0, load, {'o1': 0.8}, save_freq=-1)
 
-        config = {'horizon': [1, 2]}
         with self.assertRaises(TypeError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            result = m.simulate_to_threshold(load, {'o1': 0.8}, horizon=[1, 2])
 
-        config = {'horizon': -1}
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            result = m.simulate_to_threshold(load, {'o1': 0.8}, horizon=-1)
         
-        config = {'thresholds_met_eqn': -1}
         with self.assertRaises(TypeError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            result = m.simulate_to_threshold(load, {'o1': 0.8}, thresholds_met_eqn=-1)
 
         # incorrect number of arguments
-        config = {'thresholds_met_eqn': lambda a, b: print(a, b)}
+        t_met = lambda a, b: print(a, b)
         with self.assertRaises(ValueError):
-            (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(load, {'o1': 0.8}, **config)
+            result = m.simulate_to_threshold(load, {'o1': 0.8}, thresholds_met_eqn=t_met)
 
     def test_sim_modes(self):
-        m = ThrownObject(process_noise = 0, measurement_noise = 0)
+        m = ThrownObject(process_noise=0, measurement_noise=0)
+
         def load(t, x=None):
             return m.InputContainer({})
 
         # Default mode should be auto
-        result = m.simulate_to_threshold(load, save_freq = 0.75, save_pts = [1.5, 2.5])
+        result = m.simulate_to_threshold(load, save_freq=0.75, save_pts=[1.5, 2.5])
         self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
 
         # Auto step size
-        result = m.simulate_to_threshold(load, dt = 'auto', save_freq = 0.75, save_pts = [1.5, 2.5])
+        result = m.simulate_to_threshold(load, dt='auto', save_freq=0.75, save_pts=[1.5, 2.5])
         self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
 
         # Auto step size with a max of 2
-        result = m.simulate_to_threshold(load, dt = ('auto', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
+        result = m.simulate_to_threshold(load, dt=('auto', 2), save_freq=0.75, save_pts=[1.5, 2.5])
         self.assertListEqual(result.times, [0, 0.75, 1.5, 2.25, 2.5, 3, 3.75])  
 
         # Constant step size of 2
-        result = m.simulate_to_threshold(load, dt = ('constant', 2), save_freq = 0.75, save_pts = [1.5, 2.5])
+        result = m.simulate_to_threshold(load, dt=('constant', 2), save_freq=0.75, save_pts=[1.5, 2.5])
         self.assertListEqual(result.times, [0, 2, 4])  
 
         # Constant step size of 2
-        result = m.simulate_to_threshold(load, dt = 2, save_freq = 0.75, save_pts = [1.5, 2.5])
+        result = m.simulate_to_threshold(load, dt=2, save_freq=0.75, save_pts=[1.5, 2.5])
         self.assertListEqual(result.times, [0, 2, 4])  
 
-        result = m.simulate_to_threshold(load, dt = 2, save_pts = [2.5])
+        result = m.simulate_to_threshold(load, dt=2, save_pts=[2.5])
         self.assertListEqual(result.times, [0, 4])  
 
     def test_sim_rk4(self):
         # With non-linear model
         m = ThrownObject()
+
         def load(t, x=None):
             return m.InputContainer({})
         
@@ -929,7 +933,7 @@ class TestModels(unittest.TestCase):
             m.simulate_to_threshold(load, integration_method='rk4')
 
         # With linear model
-        m = LinearThrownObject(process_noise = 0, measurement_noise = 0)
+        m = LinearThrownObject(process_noise=0, measurement_noise=0)
 
         result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
@@ -947,7 +951,7 @@ class TestModels(unittest.TestCase):
 
         # inside bounds using simulate_to
         x0['t'] = 0
-        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
@@ -958,7 +962,7 @@ class TestModels(unittest.TestCase):
 
         # outside low boundary
         x0['t'] = -200
-        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
         self.assertAlmostEqual(states[1]['t'], -100)
 
         x0['t'] = -200
@@ -967,7 +971,7 @@ class TestModels(unittest.TestCase):
 
         # outside high boundary
         x0['t'] = 200
-        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
         self.assertAlmostEqual(states[1]['t'], 100)
 
         x0['t'] = 200
@@ -976,7 +980,7 @@ class TestModels(unittest.TestCase):
 
         # at low boundary
         x0['t'] = -100
-        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
@@ -986,7 +990,7 @@ class TestModels(unittest.TestCase):
 
         # at high boundary
         x0['t'] = 100
-        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+        (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
         self.assertGreaterEqual(states[1]['t'], -100)
         self.assertLessEqual(states[1]['t'], 100)
 
@@ -1002,31 +1006,32 @@ class TestModels(unittest.TestCase):
         # when state doesn't exist
         with self.assertRaises(Exception):
             x0['n'] = 0
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
 
         # when state entered incorrectly
         with self.assertRaises(Exception):
             x0['t'] = 'f'
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
 
         # when boundary entered incorrectly
         with self.assertRaises(Exception):
             m.state_limits = { 't': ('f', 100) }
             x0['t'] = 0
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
 
         with self.assertRaises(Exception):
             m.state_limits = { 't': (-100, 'f') }
             x0['t'] = 0
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
 
         with self.assertRaises(Exception):
             m.state_limits = { 't': (100) }
             x0['t'] = 0
-            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x = x0)
+            (times, inputs, states, outputs, event_states) = m.simulate_to(0.001, load, {'o1': 0.8}, x=x0)
 
     def test_progress_bar(self):
-        m = MockProgModel(process_noise = 0.0)
+        m = MockProgModel(process_noise=0.0)
+
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
@@ -1035,7 +1040,7 @@ class TestModels(unittest.TestCase):
         sys.stdout = capturedOutput
 
         # Test progress bar matching
-        simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, **{'dt': 0.5, 'save_freq': 1.0}, print=False, progress=True)
+        simulate_results = m.simulate_to_threshold(load, {'o1': 0.8}, dt=0.5, save_freq=1.0, print=False, progress=True)
         capture_split =  [l+"%" for l in capturedOutput.getvalue().split("%") if l][:11]
         percentage_vals = [0, 9, 19, 30, 40, 50, 60, 70, 80, 90, 100]
         for i in range(len(capture_split)):
@@ -1063,16 +1068,16 @@ class TestModels(unittest.TestCase):
         def future_load(t, x=None):
             return {}
         event = 'impact'
-        m_nd = ThrownObject(process_noise_dist = 'none')
+        m_nd = ThrownObject(process_noise_dist='none')
         
         # Create no drag model ('cd' = 0)
         m_nd.parameters['cd'] = 0
         simulated_results_nd = m_nd.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
         # Create default drag model ('cd' = 0.007)
-        m_df = ThrownObject(process_noise_dist = 'none')
+        m_df = ThrownObject(process_noise_dist='none')
         simulated_results_df = m_df.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
         # Create high drag model ('cd' = 1.0)
-        m_hi = ThrownObject(process_noise_dist = 'none')
+        m_hi = ThrownObject(process_noise_dist='none')
         m_hi.parameters['cd'] = 1
         simulated_results_hi = m_hi.simulate_to_threshold(future_load, threshold_keys=[event], dt=0.005, save_freq=1)
 
@@ -1240,7 +1245,7 @@ class TestModels(unittest.TestCase):
         # Only provide non-zero input for model 1
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1)  # Propogates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
@@ -1249,7 +1254,7 @@ class TestModels(unittest.TestCase):
         # Propogate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3)  # 1 + 2
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 2)
 
         # Test with connections - two events
@@ -1262,15 +1267,15 @@ class TestModels(unittest.TestCase):
 
         x0 = m_composite.initialize()
         u = m_composite.InputContainer({'OneInputNoOutputOneEventLM.u1': 1})
-        x = m_composite.next_state(x0, u, 1) # 1, 1
-        x = m_composite.next_state(x, u, 1) # 2, 3
-        x = m_composite.next_state(x, u, 1) # 3, 6
+        x = m_composite.next_state(x0, u, 1)  # 1, 1
+        x = m_composite.next_state(x, u, 1)  # 2, 3
+        x = m_composite.next_state(x, u, 1)  # 3, 6
         tm = m_composite.threshold_met(x)
         self.assertSetEqual(set(tm.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
         self.assertFalse(tm['OneInputNoOutputOneEventLM.x1 == 10'])
         self.assertFalse(tm['OneInputNoOutputOneEventLM_2.x1 == 10'])
 
-        x = m_composite.next_state(x, u, 1) # 4, 10
+        x = m_composite.next_state(x, u, 1)  # 4, 10
         es = m_composite.event_state(x)
         self.assertSetEqual(set(es.keys()), {'OneInputNoOutputOneEventLM.x1 == 10', 'OneInputNoOutputOneEventLM_2.x1 == 10'})
         self.assertEqual(es['OneInputNoOutputOneEventLM.x1 == 10'], 0.6)
@@ -1300,7 +1305,6 @@ class TestModels(unittest.TestCase):
     
     # Fill parameters with different types of objects instead
     def test_parameter_equality(self):
-
         m1 = LinearThrownObject()
         m2 = LinearThrownObject()
 

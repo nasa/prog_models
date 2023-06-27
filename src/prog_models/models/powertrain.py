@@ -117,7 +117,7 @@ class Powertrain(PrognosticsModel):
 
         return self.StateContainer(x0)
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, dt: float):
         x_esc = self.esc.StateContainer(x)
         u_esc = {
             'duty': u['duty'],

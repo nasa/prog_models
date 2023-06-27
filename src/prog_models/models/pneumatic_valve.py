@@ -236,7 +236,7 @@ class PneumaticValveBase(PrognosticsModel):
         'r': (0, np.inf)
     }
 
-    def initialize(self, u: dict, z=None):
+    def initialize(self, u, z=None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
         return self.StateContainer(x0)
@@ -274,7 +274,7 @@ class PneumaticValveBase(PrognosticsModel):
         # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
         return -C*A*pOut*np.sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
-    def next_state(self, x: dict, u: dict, dt: float):
+    def next_state(self, x, u, dt: float):
         params = self.parameters  # optimization
         pInTop = params['pSupply'] if u['uTop'] else params['pAtm']
         springForce = x['k']*(params['offsetX']+x['x'])
@@ -326,7 +326,7 @@ class PneumaticValveBase(PrognosticsModel):
             np.atleast_1d(dp)                                # pL - pR
         ]))
     
-    def output(self, x: dict):
+    def output(self, x):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
@@ -346,7 +346,7 @@ class PneumaticValveBase(PrognosticsModel):
             np.atleast_1d(x['x'])                # x
         ]))
 
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": (params['AbMax'] - x['Aeb'])/(params['AbMax'] - params['x0']['Aeb']), 
@@ -356,7 +356,7 @@ class PneumaticValveBase(PrognosticsModel):
             "Friction Failure": (params['rMax'] - x['r'])/(params['rMax'] - params['x0']['r'])
         }
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": x['Aeb'] > params['AbMax'], 
@@ -420,7 +420,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         'wt': [OverwrittenWarning]
     }
 
-    def next_state(self, x: dict, u: dict, dt: float) -> dict:
+    def next_state(self, x, u, dt: float):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wb'] = x['wb']

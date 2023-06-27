@@ -61,7 +61,7 @@ class TestPowertrain(unittest.TestCase):
                 'v': 23
             })
         
-        (times, inputs, states, outputs, event_states) = powertrain.simulate_to(2, future_loading, dt=2e-5, save_freq=0.1)
+        results = powertrain.simulate_to(2, future_loading, dt=2e-5, save_freq=0.1)
         # Add additional tests
 
 # This allows the module to be executed directly

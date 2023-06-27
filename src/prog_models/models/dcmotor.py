@@ -179,7 +179,7 @@ class DCMotor(PrognosticsModel):
         }
     }
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, dt: float):
         (F_a, F_b, F_c) = backemf(x['theta'])
 
         Ac = self.parameters['Ac'].copy()
