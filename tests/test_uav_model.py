@@ -70,7 +70,7 @@ class TestUAVGen(unittest.TestCase):
             ref_traj = Trajectory(lat='a', lon=lon_in, alt=alt_in, takeoff_time=takeoff_time, etas=etas_in)
         with self.assertRaises(TypeError):
             # Waypoints defined incorrectly; must be numpy arrays
-            ref_traj = Trajectory(lat=lat_in, lon=[1, 2, 3], alt=alt_in, takeoff_time= akeoff_time, etas=etas_in)
+            ref_traj = Trajectory(lat=lat_in, lon=[1, 2, 3], alt=alt_in, takeoff_time=takeoff_time, etas=etas_in)
         with self.assertRaises(TypeError):
             # Waypoints defined incorrectly; must be numpy arrays
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=1, takeoff_time=takeoff_time, etas=etas_in)
