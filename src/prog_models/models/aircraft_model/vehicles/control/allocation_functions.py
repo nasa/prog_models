@@ -3,8 +3,6 @@
 
 import numpy as np
 
-# FUNCTIONS
-# ========
 def rotorcraft_cam(n, length, b, d, constrained=False):
     """
     Generate control allocation matrix (CAM) to transform rotor's angular velocity into thrust and torques around three main body axes.

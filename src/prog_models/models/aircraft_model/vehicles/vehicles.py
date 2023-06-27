@@ -60,9 +60,8 @@ def TAROT18(payload=0.0, gravity=9.81):
     mass = rotorcraft_masses(mass, geom)   # compute total and body mass
     mass, geom = rotorcraft_inertia(mass, geom)   # Build rotorcraft inertia properties
     if payload > mass['max_payload']:
-        raise Warning("Payload for TAROT 18 exceeds its maximum recommended payload.")
+       warn("Payload for TAROT 18 exceeds its maximum recommended payload.")
 
-    dynamics = rotorcraft_performance(dynamics, mass, gravity)
     dynamics = rotorcraft_performance(dynamics, mass, gravity)
     dynamics['C'] = observation_matrix(dynamics['num_states'], dynamics['num_outputs'])
 
@@ -178,10 +177,14 @@ def rotorcraft_inertia(m, g):
     angular_vector = rotor_angles(n_rotors)
 
     motor_distance_from_xaxis = g['arm_length'] * np.sin(angular_vector)
-    if g['body_type'].lower() == 'sphere': Ix0, Iz0 = sphere_inertia(m['body'], g['body_radius'])
-    elif g['body_type'].lower() == 'flatdisk': Ix0, Iz0 = flatdisk_inertia(m['body'], g['body_radius'])
-    elif g['body_type'].lower() == 'thickdisk': Ix0, Iz0 = thickdisk_inertia(m['body'], g['body_radius'], g['body_height'])
-    else: raise Exception("Body geometry not implemented. Please choose among: sphere, flatdisk, thickdisk.")
+    if g['body_type'].lower() == 'sphere':
+        Ix0, Iz0 = sphere_inertia(m['body'], g['body_radius'])
+    elif g['body_type'].lower() == 'flatdisk':
+        Ix0, Iz0 = flatdisk_inertia(m['body'], g['body_radius'])
+    elif g['body_type'].lower() == 'thickdisk':
+        Ix0, Iz0 = thickdisk_inertia(m['body'], g['body_radius'], g['body_height'])
+    else:
+        raise Exception("Body geometry not implemented. Please choose among: sphere, flatdisk, thickdisk.")
     
     m['Ixx'] = Ix0 + 2.0 * sum(m['arm'] * motor_distance_from_xaxis**2.0)  # [kg m^2], inertia along x
     m['Iyy'] = m['Ixx']                                                    # [kg m^2], inertia along y (symmetric uav)
