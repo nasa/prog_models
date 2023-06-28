@@ -3,6 +3,8 @@
 
 class Piecewise():
     """
+    .. versionadded:: 1.5.0
+    
     This is a simple piecewise future loading class. It takes a list of times and values and returns the value that corresponds to the current time. The object replaces the future_loading_eqn for simulate_to and simulate_to_threshold.
 
     Args

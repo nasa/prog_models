@@ -14,7 +14,7 @@ sys.path.append(join(dirname(__file__), ".."))
 from prog_models import PrognosticsModel, CompositeModel
 from prog_models.models import ThrownObject, BatteryElectroChemEOD
 from prog_models.models.test_models.linear_models import (OneInputNoOutputNoEventLM, OneInputOneOutputNoEventLM, OneInputNoOutputOneEventLM, OneInputOneOutputNoEventLMPM)
-from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod, LinearThrownObjectDiffDefaultParams)
+from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitializedMethod, LinearThrownObjectDiffDefaultParams)
 
 
 class MockModel():
@@ -391,7 +391,7 @@ class TestModels(unittest.TestCase):
                 pass
         
 
-        class missing_initiialize(PrognosticsModel):
+        class missing_initialize(PrognosticsModel):
             inputs = ['i1']
             states = ['x1', 'x2']
             outputs = ['o1']
@@ -424,7 +424,7 @@ class TestModels(unittest.TestCase):
         m = missing_outputs()
         self.assertEqual(len(m.outputs), 0)
 
-        m = missing_initiialize()
+        m = missing_initialize()
         # Should work- initialize is now optional
 
         m = missing_output()
@@ -717,9 +717,8 @@ class TestModels(unittest.TestCase):
             # Noise will make output not equal the expected
             self.assertNotEqual(round(z['o1'], 6), round(oi, 6))
 
-        # Now with no measurmeent Noise
-        m = MockProgModel(process_noise=0.0, measurement_noise=0.0)
-
+        # Now with no measurement Noise
+        m = MockProgModel(process_noise = 0.0, measurement_noise = 0.0)
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
 
@@ -762,7 +761,7 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
-        ## Check inputs
+        # Check inputs
         (times, inputs, states, outputs, event_states) = m.simulate_to(0, load, {'o1': 0.8})
         self.assertEqual(len(times), 1)
 
@@ -778,7 +777,7 @@ class TestModels(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.simulate_to(12, 132, {'o1': 0.8})
 
-        ## Simulate
+        # Simulate
         (times, inputs, states, outputs, event_states) = m.simulate_to(3.5, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
 
         # Check times
@@ -815,19 +814,19 @@ class TestModels(unittest.TestCase):
         for (ei, es) in zip(e, event_states):
             self.assertAlmostEqual(es['e1'], ei, 5)
 
-        ## Check last state saving
+        # Check last state saving
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=1.0)
         for t in range(0, 4):
             self.assertAlmostEqual(times[t], t, 5)
         self.assertEqual(len(times), 4, "Should be 4 elements in times") # Didn't save last state (because same as savepoint)
 
-        ## Check dt > save_freq
+        # Check dt > save_freq
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=0.1)
         for t in range(0, 7):
             self.assertAlmostEqual(times[t], t/2, 5)
         self.assertEqual(len(times), 7, "Should be 7 elements in times") # Didn't save last state (because same as savepoint)
 
-        ## Custom Savepoint test - with last state saving
+        # Custom Savepoint test - with last state saving
         (times, inputs, states, outputs, event_states) = m.simulate_to(3, load, {'o1': 0.8}, dt=0.5, save_freq=99.0, save_pts=[1.45, 2.45])
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
@@ -836,7 +835,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(times), 4)
         self.assertAlmostEqual(times[-1], 3.0, 5) # Save last step (even though it's not on a savepoint)
         
-        ## Custom Savepoint test
+        # Custom Savepoint test
         (times, inputs, states, outputs, event_states) = m.simulate_to(2.5, load, {'o1': 0.8}, dt=0.5, save_freq=99.0, save_pts=[1.45, 2.45])
         # Check times
         self.assertAlmostEqual(times[0], 0, 5)
@@ -866,7 +865,7 @@ class TestModels(unittest.TestCase):
         def load(t, x=None):
             return {'i1': 1, 'i2': 2.1}
         
-        ## Check inputs
+        # Check inputs
         with self.assertRaises(TypeError):
             result = m.simulate_to(0, load, {'o1': 0.8}, dt=[1, 2])
 
@@ -938,7 +937,7 @@ class TestModels(unittest.TestCase):
         result = m.simulate_to_threshold(load, dt = 0.1, integration_method='rk4')
         self.assertAlmostEqual(result.times[-1], 8.3)
 
-    # when range specified when state doesnt exist or entered incorrectly
+    # when range specified when state doesn't exist or entered incorrectly
     def test_state_limits(self):
         m = MockProgModel()
         m.state_limits = {
@@ -1216,14 +1215,14 @@ class TestModels(unittest.TestCase):
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propagates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
 
-        # Propogate again
+        # Propagate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
@@ -1245,13 +1244,13 @@ class TestModels(unittest.TestCase):
         # Only provide non-zero input for model 1
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1)  # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propagates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
 
-        # Propogate again
+        # Propagate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3)  # 1 + 2
@@ -1320,7 +1319,7 @@ class TestModels(unittest.TestCase):
         self.assertFalse(m1.parameters == m4.parameters)
         self.assertFalse(m4.parameters == m1.parameters) # checking both directions
 
-        m5 = LinearThrownObjectUpdatedInitalizedMethod() # Model with incorrectly initalized throwing height, but same parameters
+        m5 = LinearThrownObjectUpdatedInitializedMethod() # Model with incorrectly initialized throwing height, but same parameters
 
         self.assertFalse(m1.parameters == m5.parameters) 
         self.assertFalse(m5.parameters == m1.parameters) 

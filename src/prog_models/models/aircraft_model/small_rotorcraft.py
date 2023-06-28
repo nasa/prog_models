@@ -13,6 +13,8 @@ from prog_models.utils.traj_gen import geometry as geom
 
 class SmallRotorcraft(AircraftModel):
     r"""
+    .. versionadded:: 1.5.0
+    
     Vectorized prognostics :term:`model` to generate a predicted trajectory for a small rotorcraft using a n=6 degrees-of-freedom dynamic model
     with feedback control loop. The model follows the form:
     

@@ -5,7 +5,7 @@ import unittest
 import copy
 import pickle
 from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownObjectNoE, LinearThrownObjectWrongB,
-                                                                 LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod,
+                                                                 LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitializedMethod,
                                                                  LinearThrownObjectFourStates)
 from prog_models.models.test_models.linear_models import FNoneNoEventStateLM
 
@@ -160,7 +160,7 @@ class TestLinearModel(unittest.TestCase):
         m.matrixCheck()
 
 
-# Included some tests that are checking if exceptions are being thrown without matrxiCheck being invoked
+# Included some tests that are checking if exceptions are being thrown without matrixCheck being invoked
         with self.assertRaises(TypeError):
             m.D = "[[0, 1], [0, 0]]" # string
             m.matrixCheck() 
@@ -391,7 +391,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertFalse(deepcopym4 == deepcopym3)
 
 
-        m5 = LinearThrownObjectUpdatedInitalizedMethod()
+        m5 = LinearThrownObjectUpdatedInitializedMethod()
         copym5 = copy.copy(m5)
         deepcopym5 = copy.deepcopy(m5)
 
@@ -429,7 +429,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
-        updated_model = LinearThrownObjectUpdatedInitalizedMethod()
+        updated_model = LinearThrownObjectUpdatedInitializedMethod()
         bytes_l = pickle.dumps(updated_model)
         loaded_l = pickle.loads(bytes_l)
         self.assertTrue(updated_model == loaded_l)

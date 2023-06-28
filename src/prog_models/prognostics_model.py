@@ -24,7 +24,7 @@ from prog_models.utils.size import getsizeof
 
 class PrognosticsModel(ABC):
     """
-    A general time-variant state space :term:`model` of system degradation.
+    A general time-variant state space :term:`model` of system degradation behavior.
 
     The PrognosticsModel class is a wrapper around a mathematical model of a system as represented by a state, output, input, event_state and threshold equation.
 
@@ -45,7 +45,7 @@ class PrognosticsModel(ABC):
         measurement_noise_dist : Optional, str
           distribution for :term:`measurement noise` (e.g., normal, uniform, triangular)
         integration_method: Optional, str or OdeSolver
-          Integration method used by next state in continuous models, e.g. 'rk4' or 'euler' (default: 'euler'). Could also be a SciPy integrator (e.g., scipy.itegrate.RK45). If the model is discrete, this parameter will raise an exception.
+          Integration method used by next_state in continuous models, e.g. 'rk4' or 'euler' (default: 'euler'). Could also be a SciPy integrator (e.g., scipy.integrate.RK45). If the model is discrete, this parameter will raise an exception.
 
     Additional parameters specific to the model
 
@@ -469,7 +469,7 @@ class PrognosticsModel(ABC):
         | x = m.initialize(u, z) # Initialize first state
         | z = m.output(x) # Returns m.OutputContainer({'z1': 2.2})
         """
-        if self.is_direct_model:
+        if self.is_direct:
             warn_once('This Direct Model does not support output estimation. Did you mean to call time_of_event?')
         else:
             warn_once('This model does not support output estimation.')
@@ -582,6 +582,8 @@ class PrognosticsModel(ABC):
     @property
     def is_state_transition_model(self) -> bool:
         """
+        .. versionadded:: 1.5.0
+
         If the model is a "state transition model" - i.e., a model that uses state transition differential equations to propagate state forward.
 
         Returns:
@@ -593,8 +595,10 @@ class PrognosticsModel(ABC):
         return has_overridden_transition and len(self.states) > 0
 
     @property
-    def is_direct_model(self) -> bool:
+    def is_direct(self) -> bool:
         """
+        .. versionadded:: 1.5.0
+        
         If the model is a "direct model" - i.e., a model that directly estimates time of event from system state, rather than using state transition. This is useful for data-driven models that map from sensor data to time of event, and for physics-based models where state transition differential equations can be solved.
 
         Returns:
@@ -604,6 +608,8 @@ class PrognosticsModel(ABC):
 
     def state_at_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs):
         """
+        .. versionadded:: 1.5.0
+
         Calculate the :term:`state` at the time that each :term:`event` occurs (i.e., the event :term:`threshold` is met). state_at_event can be implemented by a direct model. For a state transition model, this returns the state at which threshold_met returns true for each event.
 
         Args:
@@ -644,6 +650,8 @@ class PrognosticsModel(ABC):
 
     def time_of_event(self, x, future_loading_eqn = lambda t,x=None: {}, **kwargs) -> dict:
         """
+        .. versionadded:: 1.5.0
+
         Calculate the time at which each :term:`event` occurs (i.e., the event :term:`threshold` is met). time_of_event must be implemented by any direct model. For a state transition model, this returns the time at which threshold_met returns true for each event. A model that implements this is called a "direct model".
 
         Args:
@@ -1008,7 +1016,7 @@ class PrognosticsModel(ABC):
         if not isinstance(self.output(x), DictLikeMatrixWrapper):
             # Wrapper around the output equation
             def output(x):
-                # Calculate output, convert to outputcontainer
+                # Calculate output, convert to output container
                 z = self.output(x)
                 z = self.OutputContainer(z)
 

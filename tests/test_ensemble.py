@@ -52,7 +52,7 @@ class TestEnsemble(unittest.TestCase):
         m = OneInputOneOutputOneEventLM()
         m2 = OneInputOneOutputOneEventLM(x0={'x1': 2})
 
-        # Make sure they're not the same - matricies are 3x their original values
+        # Make sure they're not the same - matrices are 3x their original values
         # The result is a model where state changes 3x as fast.
         # Event state degrades 9x as fast, since B and F compound
         m2.B = np.array([[3]])

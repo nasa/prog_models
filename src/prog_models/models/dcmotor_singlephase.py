@@ -6,7 +6,7 @@ import numpy as np
 
 from prog_models import PrognosticsModel
 
-# Derived Paramaters
+# Derived Parameters
 def update_L1(params):
     return {
         'L1': params['L'] - params['M']

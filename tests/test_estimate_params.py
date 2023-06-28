@@ -495,6 +495,19 @@ class TestEstimateParams(unittest.TestCase):
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=[np.array(['9', '9']), np.array(['2', '3']), np.array(['4', '5'])])
 
         # Resetting parameters
+        m2 = ThrownObject()
+        m.parameters['thrower_height'] = m2.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = m2.parameters['throwing_speed'] = 25
+        m.parameters['g'] = m2.parameters['g'] = 8
+        m_result = m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, error_method = 'MSE')
+        m2_result = m2.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, error_method = 'DTW')
+        # Checking if two different error_methods would result in a different final_simplex. A different final_simplex returned value would indicate
+        # that the optimized result is different. Since all other parameters are the same, and because we are using different error_methods, the only
+        # explanation for having different final_simplex values between the two results is because of the different error_methods, thus showing we have
+        # successfully passed in the error_methods to estimate_params()!
+        self.assertFalse(np.array_equal(m_result['final_simplex'], m2_result['final_simplex']))
+
+        # Resetting parameters
         m.parameters['thrower_height'] = 1.5
         m.parameters['throwing_speed'] = 25
         m.parameters['g'] = -8

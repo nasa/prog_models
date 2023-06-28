@@ -107,7 +107,7 @@ class TestUAVGen(unittest.TestCase):
             # No ETAs or speeds provided, warning is thrown
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time=takeoff_time)
         with self.assertRaises(UserWarning):
-            # Both ETAs and spees provided, warning is thrown
+            # Both ETAs and speeds provided, warning is thrown
             params = {'cruise_speed': 1, 'descent_speed': 1, 'ascent_speed': 1, 'landing_speed': 1}
             ref_traj = Trajectory(lat=lat_in, lon=lon_in, alt=alt_in, takeoff_time=takeoff_time, etas=etas_in, **params)
 
