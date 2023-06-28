@@ -211,7 +211,8 @@ class DictLikeMatrixWrapper():
         -------
         >>> from prog_models.utils.containers import DictLikeMatrixWrapper
         >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': 1, 'b': 2, 'c': 3})
-        >>> 'a' in dlmw  # True
+        >>> 'a' in dlmw
+        True
         """
         return key in self._keys
 
