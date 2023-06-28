@@ -4,7 +4,6 @@
 from abc import ABC
 from collections import abc, namedtuple
 from copy import deepcopy
-import doctest
 import itertools
 import json
 from numbers import Number
@@ -318,7 +317,6 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        Miryam Bookmark
         >>> from prog_models.models import BatteryCircuit
         >>> m = BatteryCircuit()  # Replace with specific model being simulated
         >>> u = m.InputContainer({'i': 2.0})
@@ -361,7 +359,6 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-        Miryam BOOKMARK
         >>> from prog_models.models import BatteryCircuit
         >>> m = BatteryCircuit() # Replace with specific model being simulated
         >>> u = m.InputContainer({'u1': 3.2})
