@@ -429,10 +429,10 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
-        l = LinearThrownObjectUpdatedInitializedMethod()
-        bytes_l = pickle.dumps(l)
+        updated_model = LinearThrownObjectUpdatedInitalizedMethod()
+        bytes_l = pickle.dumps(updated_model)
         loaded_l = pickle.loads(bytes_l)
-        self.assertTrue(l == loaded_l)
+        self.assertTrue(updated_model == loaded_l)
         self.assertFalse(bytes_l == bytes_m1)
 
     def test_F_property_not_none(self):
@@ -482,10 +482,10 @@ class TestLinearModel(unittest.TestCase):
         # Needs more development; test coverage needs testing of event_state not overridden
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Linear Models")
-    result = runner.run(l.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

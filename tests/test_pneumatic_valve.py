@@ -456,10 +456,10 @@ class TestPneumaticValve(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Pneumatic Valve model")
-    result = runner.run(l.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

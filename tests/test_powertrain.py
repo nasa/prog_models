@@ -66,10 +66,10 @@ class TestPowertrain(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Powertrain model")
-    result = runner.run(l.loadTestsFromTestCase(TestPowertrain)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestPowertrain)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

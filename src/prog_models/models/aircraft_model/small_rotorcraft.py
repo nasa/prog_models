@@ -170,7 +170,7 @@ class SmallRotorcraft(AircraftModel):
         # Extract useful values
         m = self.mass['total']  # vehicle mass
         Ixx, Iyy, Izz = self.mass['Ixx'], self.mass['Iyy'], self.mass['Izz']  # vehicle inertia
-        
+
         # Input vector
         T = u['T']  # Thrust (along body z)
         tp = u['mx']  # Moment along body x
@@ -196,7 +196,7 @@ class SmallRotorcraft(AircraftModel):
         tan_theta = np.tan(theta)
         sin_psi = np.sin(psi)
         cos_psi = np.cos(psi)
-        
+
         # Compute drag forces
         v_earth = np.array([vx_a, vy_a, vz_a]).reshape((-1,))  # velocity in Earth-fixed frame
         v_body = np.dot(
@@ -223,27 +223,27 @@ class SmallRotorcraft(AircraftModel):
         # Update state vector
         # -------------------
         dxdt = np.zeros((len(x),))
-        
-        dxdt[0] = vx_a  # x-position increment (airspeed along x-direction)
-        dxdt[1] = vy_a  # y-position increment (airspeed along y-direction)
-        dxdt[2] = vz_a  # z-position increment (airspeed along z-direction)
-        
-        dxdt[3] = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta  # Euler's angle phi increment
-        dxdt[4] = q * cos_phi - r * sin_phi                              # Euler's angle theta increment
-        dxdt[5] = q * sin_phi / cos_theta + r * cos_phi / cos_theta      # Euler's angle psi increment
-        
-        dxdt[6] = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m  # Acceleration along x-axis
-        dxdt[7] = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m  # Acceleration along y-axis
-        dxdt[8] = - self.parameters['gravity'] + (cos_phi * cos_theta  * T - fe_drag[2]) / m  # Acceleration along z-axis
 
-        dxdt[9] = ((Iyy - Izz) * q * r + tp * self.geom['arm_length']) / Ixx   # Angular acceleration along body x-axis: roll rate
-        dxdt[10] = ((Izz - Ixx) * p * r + tq * self.geom['arm_length']) / Iyy  # Angular acceleration along body y-axis: pitch rate
-        dxdt[11] = ((Ixx - Iyy) * p * q + tr *        1               ) / Izz  # Angular acceleration along body z-axis: yaw rate
-        dxdt[12] = 1                                                           # Auxiliary time variable
-        dxdt[13] = (u['mission_complete'] - x['mission_complete'])/self.parameters['dt']  # Value to keep track of percentage of mission completed
-        
+        dxdt[0] = vx_a    # x-position increment (airspeed along x-direction)
+        dxdt[1] = vy_a    # y-position increment (airspeed along y-direction)
+        dxdt[2] = vz_a    # z-position increment (airspeed along z-direction)
+
+        dxdt[3] = p + q * sin_phi * tan_theta + r * cos_phi * tan_theta        # Euler's angle phi increment
+        dxdt[4] = q * cos_phi - r * sin_phi                                    # Euler's angle theta increment
+        dxdt[5] = q * sin_phi / cos_theta + r * cos_phi / cos_theta            # Euler's angle psi increment
+
+        dxdt[6] = ((sin_theta * cos_psi * cos_phi + sin_phi * sin_psi) * T - fe_drag[0]) / m   # Acceleration along x-axis
+        dxdt[7] = ((sin_theta * sin_psi * cos_phi - sin_phi * cos_psi) * T - fe_drag[1]) / m   # Acceleration along y-axis
+        dxdt[8] = -self.parameters['gravity'] + (cos_phi * cos_theta * T - fe_drag[2]) / m   # Acceleration along z-axis
+
+        dxdt[9] = ((Iyy - Izz) * q * r + tp * self.geom['arm_length']) / Ixx     # Angular acceleration along body x-axis: roll rate
+        dxdt[10] = ((Izz - Ixx) * p * r + tq * self.geom['arm_length']) / Iyy     # Angular acceleration along body y-axis: pitch rate
+        dxdt[11] = ((Ixx - Iyy) * p * q + tr * 1) / Izz     # Angular acceleration along body z-axis: yaw rate
+        dxdt[12] = 1     # Auxiliary time variable
+        dxdt[13] = (u['mission_complete'] - x['mission_complete']) / self.parameters['dt']    # Value to keep track of percentage of mission completed
+
         return self.StateContainer(np.array([np.atleast_1d(item) for item in dxdt]))
-    
+
     def event_state(self, x) -> dict:
         # Based on percentage of reference trajectory completed
         return {'TrajectoryComplete': x['mission_complete']}
@@ -273,14 +273,11 @@ class SmallRotorcraft(AircraftModel):
         """ 
         Linearized model of the small rotorcraft 6-dof.
         The function returns the state-transition matrix A and the input matrix B that forms the linearized model as:
-
         dx/dt = A x + B u
-
         where x is the state vector in state-space form (namely x, \dot{x}), u is the input vector containing the thrust and three moments around the vehicle's main body axes.
-        
         To generate the linearized matrices, only the attitude angles, angular velocities, and thrust are necessary,
         since the model model ignores gyroscopic effect and wind rate of change. 
-        
+            
         :param phi:       rad, scalar, double, first Euler's angle
         :param theta:     rad, scalar, double, second Euler's angle
         :param psi:       rad, scalar, double, third Euler's angle
@@ -290,43 +287,44 @@ class SmallRotorcraft(AircraftModel):
         :param T:         N, scalar, double, thrust
         :return:          Linearized state transition matrix A, n_states x n_states, and linearized input matrix B, n_states x n_inputs
         """
-        m         = self.mass['total']
-        Ixx       = self.mass['Ixx']
-        Iyy       = self.mass['Iyy']
-        Izz       = self.mass['Izz']
-        l         = self.geom['arm_length'] 
-        sin_phi   = np.sin(phi)
-        cos_phi   = np.cos(phi)
+        m = self.mass['total']
+        Ixx = self.mass['Ixx']
+        Iyy = self.mass['Iyy']
+        Izz = self.mass['Izz']
+        length = self.geom['arm_length'] 
+        sin_phi = np.sin(phi)
+        cos_phi = np.cos(phi)
         sin_theta = np.sin(theta)
         cos_theta = np.cos(theta)
         tan_theta = np.tan(theta)
-        sin_psi   = np.sin(psi)
-        cos_psi   = np.cos(psi)
+        sin_psi = np.sin(psi)
+        cos_psi = np.cos(psi)
 
-        A = np.array([[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], 
-                      [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 
-                      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], 
-                      [0, 0, 0, q*cos_phi*tan_theta - r*sin_phi*tan_theta, q*(tan_theta**2 + 1)*sin_phi + r*(tan_theta**2 + 1)*cos_phi, 0, 0, 0, 0, 1, sin_phi*tan_theta, cos_phi*tan_theta], 
-                      [0, 0, 0, -q*sin_phi - r*cos_phi, 0, 0, 0, 0, 0, 0, cos_phi, -sin_phi], 
-                      [0, 0, 0, q*cos_phi/cos_theta - r*sin_phi/cos_theta, q*sin_phi*sin_theta/cos_theta**2 + r*sin_theta*cos_phi/cos_theta**2, 0, 0, 0, 0, 0, sin_phi/cos_theta, cos_phi/cos_theta], 
-                      [0, 0, 0, T*(-sin_phi*sin_theta*cos_psi + sin_psi*cos_phi)/m, T*cos_phi*cos_psi*cos_theta/m, T*(sin_phi*cos_psi - sin_psi*sin_theta*cos_phi)/m, 0, 0, 0, 0, 0, 0], 
-                      [0, 0, 0, T*(-sin_phi*sin_psi*sin_theta - cos_phi*cos_psi)/m, T*sin_psi*cos_phi*cos_theta/m, T*(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0, 0, 0, 0], 
-                      [0, 0, 0, -T*sin_phi*cos_theta/m, -T*sin_theta*cos_phi/m, 0, 0, 0, 0, 0, 0, 0], 
-                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, r*(Iyy - Izz)/Ixx, q*(Iyy - Izz)/Ixx], 
-                      [0, 0, 0, 0, 0, 0, 0, 0, 0, r*(-Ixx + Izz)/Iyy, 0, p*(-Ixx + Izz)/Iyy], 
+
+        A = np.array([[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, q*cos_phi*tan_theta - r*sin_phi*tan_theta, q*(tan_theta**2 + 1)*sin_phi + r*(tan_theta**2 + 1)*cos_phi, 0, 0, 0, 0, 1, sin_phi*tan_theta, cos_phi*tan_theta],
+                      [0, 0, 0, -q*sin_phi - r*cos_phi, 0, 0, 0, 0, 0, 0, cos_phi, -sin_phi],
+                      [0, 0, 0, q*cos_phi/cos_theta - r*sin_phi/cos_theta, q*sin_phi*sin_theta/cos_theta**2 + r*sin_theta*cos_phi/cos_theta**2, 0, 0, 0, 0, 0, sin_phi/cos_theta, cos_phi/cos_theta],
+                      [0, 0, 0, T*(-sin_phi*sin_theta*cos_psi + sin_psi*cos_phi)/m, T*cos_phi*cos_psi*cos_theta/m, T*(sin_phi*cos_psi - sin_psi*sin_theta*cos_phi)/m, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, T*(-sin_phi*sin_psi*sin_theta - cos_phi*cos_psi)/m, T*sin_psi*cos_phi*cos_theta/m, T*(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, -T*sin_phi*cos_theta/m, -T*sin_theta*cos_phi/m, 0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, r*(Iyy - Izz)/Ixx, q*(Iyy - Izz)/Ixx],
+                      [0, 0, 0, 0, 0, 0, 0, 0, 0, r*(-Ixx + Izz)/Iyy, 0, p*(-Ixx + Izz)/Iyy],
                       [0, 0, 0, 0, 0, 0, 0, 0, 0, q*(Ixx - Iyy)/Izz, p*(Ixx - Iyy)/Izz, 0]])
 
-        B = np.array([ [0, 0, 0, 0], 
-                       [0, 0, 0, 0], 
-                       [0, 0, 0, 0], 
-                       [0, 0, 0, 0], 
-                       [0, 0, 0, 0], 
-                       [0, 0, 0, 0], 
-                       [(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0], 
-                       [(-sin_phi*cos_psi + sin_psi*sin_theta*cos_phi)/m, 0, 0, 0], 
-                       [cos_phi*cos_theta/m, 0, 0, 0], 
-                       [0, l/Ixx, 0, 0], 
-                       [0, 0, l/Iyy, 0], 
+        B = np.array([ [0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [(sin_phi*sin_psi + sin_theta*cos_phi*cos_psi)/m, 0, 0, 0],
+                       [(-sin_phi*cos_psi + sin_psi*sin_theta*cos_phi)/m, 0, 0, 0],
+                       [cos_phi*cos_theta/m, 0, 0, 0],
+                       [0, length/Ixx, 0, 0],
+                       [0, 0, length/Iyy, 0],
                        [0, 0, 0, 1.0/Izz]])
 
         return A, B

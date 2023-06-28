@@ -145,7 +145,7 @@ class TestDataModel(unittest.TestCase):
 
             # Deepcopy test
             m3 = deepcopy(m2)
-        except:
+        except Exception:
             warnings.warn("Pickling not supported for LSTMStateTransitionModel on this system")
             pass
 
@@ -314,12 +314,12 @@ class TestDataModel(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Data Models")
 
     with patch('matplotlib.pyplot.show'):
-        result = runner.run(l.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
+        result = runner.run(load_test.loadTestsFromTestCase(TestDataModel)).wasSuccessful()
     plt.close('all')
     
     if not result:

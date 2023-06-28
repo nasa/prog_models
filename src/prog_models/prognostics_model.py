@@ -542,7 +542,7 @@ class PrognosticsModel(ABC):
             # Neither Threshold Met nor Event States are overridden
             return {}
 
-        return {key: 1.0-float(t_met) \
+        return {key: 1.0-float(t_met)
             for (key, t_met) in self.threshold_met(x).items()} 
     
     def threshold_met(self, x) -> dict:
@@ -576,7 +576,7 @@ class PrognosticsModel(ABC):
             # Neither Threshold Met nor Event States are overridden
             return {}
 
-        return {key: event_state <= 0 \
+        return {key: event_state <= 0
             for (key, event_state) in self.event_state(x).items()} 
 
     @property
@@ -955,7 +955,7 @@ class PrognosticsModel(ABC):
                 saved_states.append(deepcopy(x))  # Avoid optimization where x is not copied
                 saved_outputs.append(output(x))
                 saved_event_states.append(event_state(x))
-                print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"\
+                print("Time: {}\n\tInput: {}\n\tState: {}\n\tOutput: {}\n\tEvent State: {}\n"
                     .format(
                         saved_times[-1],
                         saved_inputs[-1],

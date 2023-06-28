@@ -395,10 +395,10 @@ class TestCalcError(unittest.TestCase):
         self.assertLess(DTW_err, MSE_err)
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting calc_error Feature\n")
-    result = runner.run(l.loadTestsFromTestCase(TestCalcError)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestCalcError)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

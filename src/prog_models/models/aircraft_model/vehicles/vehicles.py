@@ -56,21 +56,23 @@ def TAROT18(payload=0.0, gravity=9.81):
                     Gamma=None,     # Thrust allocation matrix (constant, depending on kt, kq, and the UAV rotor configuration)
                     Gamma_inv=None,     # Inverse of thrust allocation matrix (constant, depending on kt, kq, and the UAV rotor configuration)
                     )
-    
+
     mass = rotorcraft_masses(mass, geom)   # compute total and body mass
     mass, geom = rotorcraft_inertia(mass, geom)   # Build rotorcraft inertia properties
     if payload > mass['max_payload']:
-        warn("Payload for TAROT 18 exceeds its maximum recommended payload.")
+       warn("Payload for TAROT 18 exceeds its maximum recommended payload.")
 
     dynamics = rotorcraft_performance(dynamics, mass, gravity)
     dynamics['C'] = observation_matrix(dynamics['num_states'], dynamics['num_outputs'])
-    
+
     # Set control allocation matrix and its inverse
-    dynamics['Gamma'], \
-        dynamics['Gamma_inv'], _ = caf.rotorcraft_cam(n=geom['num_rotors'],
-                                                      l=geom['arm_length'],
-                                                      b=dynamics['kt'], 
-                                                      d=dynamics['kq'])
+    dynamics['Gamma'], dynamics['Gamma_inv'], _ = caf.rotorcraft_cam(
+        n=geom['num_rotors'],
+        length=geom['arm_length'],
+        b=dynamics['kt'],
+        d=dynamics['kq']
+    )
+    
     return mass, geom, dynamics
 
 
@@ -110,10 +112,10 @@ def DJIS1000(payload=0.0, gravity=9.81):
                     max_thrust=None,    # N, max thrust the power system can deliver
                     min_thrust=0.0,     # N, min thrust delivered at rotor minimum speed (25% of throttle with KDE motor)
                     state_vars=['x', 'y', 'z', 'phi', 'theta', 'psi', 'vx', 'vy', 'vz'],
-                    max_roll=45 / 180.0 * np.pi,  # rad, maximum roll during flight
-                    max_pitch=45 / 180.0 * np.pi,  # rad, maximum pitch during flight
-                    aero=dict(cd=1.0,   # drag coefficient of airframe (including rotors), not reliable
-                              ad=0.25,  # apparent face of the rotorcraft facing air for drag force
+                    max_roll=45/180.0*np.pi,      # rad, maximum roll during flight
+                    max_pitch=45/180.0*np.pi,     # rad, maximum pitch during flight
+                    aero=dict(cd=1.0,  # drag coefficient of airframe (including rotors), not reliable
+                              ad=0.25, # apparent face of the rotorcraft facing air for drag force
                               ),
                     kt=5.41e-5,         # Approximation derived from: max omega of motor+rotor couple and max thrust for each rotor
                     kq=5e-5,            # Rotor torque constant
@@ -132,11 +134,10 @@ def DJIS1000(payload=0.0, gravity=9.81):
     dynamics['C'] = observation_matrix(dynamics['num_states'], dynamics['num_outputs'])
     
     # Set control allocation matrix and its inverse
-    dynamics['Gamma'], \
-        dynamics['Gamma_inv'], _ = caf.rotorcraft_cam(n=geom['num_rotors'],
-                                                      l=geom['arm_length'],
-                                                      b=dynamics['kt'], 
-                                                      d=dynamics['kq'])
+    dynamics['Gamma'], dynamics['Gamma_inv'], _ = caf.rotorcraft_cam(n=geom['num_rotors'],
+                                                                      length=geom['arm_length'],
+                                                                      b=dynamics['kt'], 
+                                                                      d=dynamics['kq'])
     
     return mass, geom, dynamics
 
@@ -174,7 +175,7 @@ def rotorcraft_inertia(m, g):
     # Define rotor positions on the 360 degree circle
     # ------------------------------------------------
     angular_vector = rotor_angles(n_rotors)
-    
+
     motor_distance_from_xaxis = g['arm_length'] * np.sin(angular_vector)
     if g['body_type'].lower() == 'sphere':
         Ix0, Iz0 = sphere_inertia(m['body'], g['body_radius'])
@@ -184,6 +185,7 @@ def rotorcraft_inertia(m, g):
         Ix0, Iz0 = thickdisk_inertia(m['body'], g['body_radius'], g['body_height'])
     else:
         raise Exception("Body geometry not implemented. Please choose among: sphere, flatdisk, thickdisk.")
+    
     m['Ixx'] = Ix0 + 2.0 * sum(m['arm'] * motor_distance_from_xaxis**2.0)  # [kg m^2], inertia along x
     m['Iyy'] = m['Ixx']                                                    # [kg m^2], inertia along y (symmetric uav)
     m['Izz'] = Iz0 + g['num_rotors'] * (g['arm_length']**2.0 * m['arm'])   # [kg m^2], inertia along z

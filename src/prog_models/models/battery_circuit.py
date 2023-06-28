@@ -83,7 +83,7 @@ class BatteryCircuit(PrognosticsModel):
           Heat transfer coefficient parameter
         hcs : float
           Heat transfer coefficient - surface
-        x0 : dict[str, float]
+        x0 : StateContianer
           Initial :term:`state`
     
     Note
@@ -97,7 +97,7 @@ class BatteryCircuit(PrognosticsModel):
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'qb', 'qcp', 'qcs']
-    outputs = ['t',  'v']
+    outputs = ['t', 'v']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
