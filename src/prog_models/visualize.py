@@ -1,14 +1,11 @@
 # Copyright © 2021 United States Government as represented by the Administrator of the
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
-# Import packages
-# ============
 from typing import List
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-# Set default options
-# ====================
+# default options
 mpl.rcParams['lines.linewidth']  = 3
 mpl.rcParams['lines.markersize'] = 8
 mpl.rcParams['font.size']        = 14
@@ -20,7 +17,6 @@ mpl.rcParams['figure.dpi']       = 100
 mpl.rcParams['savefig.dpi']      = 300
 
 # VISUALIZE FUNCTIONS
-# ==========================
 def get_subplot_dim(num_subplots: int, rowfirst: bool = True) -> tuple:
     """
     Compute the number of rows and columns (nrows, ncols) for a figure with multiple subplots.
@@ -109,7 +105,6 @@ def set_plot_options(opt: dict) -> dict:
 
     """
     # Set up plot options
-    # =======================
     # Get list of options (if provided)
     try:
         opt_list = list(opt.keys())
@@ -555,12 +550,10 @@ def plot_timeseries(t: List[float], s: List[dict], legend: dict = None, options:
     n = len(s)
     
     # Set up options
-    # ====================
     fig_options    = set_plot_options(options)                 # Set up figure options
     legend_options = set_legend_options(legend, series_names)  # Set up legend options
     
     # Generate figure
-    # =============
     if fig_options['figsize'] is not None:
         fig = plt.figure(figsize=fig_options['figsize'])
     else:
@@ -568,12 +561,10 @@ def plot_timeseries(t: List[float], s: List[dict], legend: dict = None, options:
 
     if fig_options['compact']:  # Compact option: all time series in one plot
         # Add plot
-        # --------
         ax = fig.add_subplot()
         ax.plot(t, [[s_i[key] for key in series_names] for s_i in s])
 
         # Add options: plot options, title, labels, and legend
-        # ------------------------------------------------------
         set_ax_options(ax, fig_options)
 
         if fig_options['title']:
@@ -599,7 +590,6 @@ def plot_timeseries(t: List[float], s: List[dict], legend: dict = None, options:
             ax.plot(t, series_)                                         # add time series to subplot
             
             # Add options: display labels, title, legend
-            # ------------------------------------------
             if fig_options['display_labels'] or fig_options['display_labels'] != 'no':
                 display_labels(nrows, ncols, item, ax, fig_options, series_names)
             
@@ -613,7 +603,6 @@ def plot_timeseries(t: List[float], s: List[dict], legend: dict = None, options:
                     set_legend(ax, item, series_names, legend_options)
             
     # Other options
-    # ==============
     if fig_options['suptitle']:
         fig.suptitle(fig_options['suptitle'], fontsize=fig_options['title_fontsize'])  # Add subtitle
     if fig_options['tight_layout']:
