@@ -429,7 +429,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
-        updated_model = LinearThrownObjectUpdatedInitalizedMethod()
+        updated_model = LinearThrownObjectUpdatedInitializedMethod()
         bytes_l = pickle.dumps(updated_model)
         loaded_l = pickle.loads(bytes_l)
         self.assertTrue(updated_model == loaded_l)
