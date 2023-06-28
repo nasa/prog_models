@@ -36,8 +36,6 @@ class SimResult(UserList):
 
     def __getitem__(self, item):
         """
-        .. versionadded:: 1.5.0
-        
             created for deprecation warning. [] continues to be handled by parent
         """
         warn_once('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
@@ -46,8 +44,6 @@ class SimResult(UserList):
     
     def __iter__(self):
         """
-        .. versionadded:: 1.5.0
-        
             created for deprecation warning. iteration continues to be handled by parent
         """
         warn_once(
@@ -97,8 +93,6 @@ class SimResult(UserList):
 
     def __setitem__(self, key, value):
         """
-        .. versionadded:: 1.5.0
-        
             in addition to the normal functionality, updates the _frame if it exists
         """
         super().__setitem__(key, value)
@@ -108,8 +102,6 @@ class SimResult(UserList):
 
     def __delitem__(self, key):
         """
-        .. versionadded:: 1.5.0
-        
             in addition to the normal functionality, updates the _frame if it exists
         """
         super().__delitem__(key)
@@ -118,8 +110,6 @@ class SimResult(UserList):
 
     def insert(self, i: int, item) -> None:
         """
-        .. versionadded:: 1.5.0
-        
             in addition to the normal functionality, updates the _frame if it exists
         """
         self.insert(i, item)
