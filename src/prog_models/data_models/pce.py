@@ -14,7 +14,7 @@ class PolynomialChaosExpansion(DataModel):
 
     Polynomial Chaos Expansion direct data model. Uses chaospy to generate a polynomial chaos expansion from data or a model to learn the relationship between future inputs and time of event.
 
-    Generally this is used as a :term:`surrogate model` for a :term:`model` that is too expensive to simulate. This is done using the :meth:`PolynomialChaosExpansion.from_model` method. The model is used to generate data, which is then used to train the polynomial chaos expansion. The polynomial chaos expansion can then be used to predict the time of event for future inputs.
+    Generally this is used as a :term:`surrogate` for a :term:`model` that is too expensive to simulate. This is done using the :meth:`PolynomialChaosExpansion.from_model` method. The model is used to generate data, which is then used to train the polynomial chaos expansion. The polynomial chaos expansion can then be used to predict the time of event for future inputs.
 
     Args:
         models (List[chaospy.Poly]):
