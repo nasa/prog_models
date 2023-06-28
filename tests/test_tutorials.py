@@ -15,13 +15,13 @@ class TestTutorials(unittest.TestCase):
                 self.assertEqual(tb.__class__.__name__, "TestbookNotebookClient")
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Tutorials")
-    result = runner.run(l.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestTutorials)).wasSuccessful()
 
     if not result:
-        raise Exception("Failed test") 
+        raise Exception("Failed test")
 
 if __name__ == '__main__':
     main()

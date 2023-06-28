@@ -13,6 +13,7 @@ Example further illustrating the concept of 'events' which generalizes EOL.
     This example demonstrates how events can be used in your applications. 
 """
 import matplotlib.pyplot as plt
+from prog_models.loading import Piecewise
 from prog_models.models import BatteryElectroChemEOD
 
 def run_example():
@@ -49,7 +50,7 @@ def run_example():
 
         def threshold_met(self, x):
             # Get threshold met from parent
-            t_met =  super().threshold_met(x)
+            t_met = super().threshold_met(x)
 
             # Add yell and red states from event_state
             event_state = self.event_state(x)
@@ -63,20 +64,13 @@ def run_example():
     m = MyBatt()
 
     # 2a: Setup model
-    def future_loading(t, x=None):
-        # Variable (piece-wise) future loading scheme 
-        # For a battery, future loading is in term of current 'i' in amps. 
-        if (t < 600):
-            i = 2
-        elif (t < 900):
-            i = 1
-        elif (t < 1800):
-            i = 4
-        elif (t < 3000):
-            i = 2     
-        else:
-            i = 3
-        return m.InputContainer({'i': i})
+
+    # Variable (piece-wise) future loading scheme 
+    # For a battery, future loading is in term of current 'i' in amps. 
+    future_loading = Piecewise(
+        m.InputContainer,
+        [600, 900, 1800, 3000, float('inf')],
+        {'i': [2, 1, 4, 2, 3]})
     
     # 2b: Simulate to threshold
     simulated_results = m.simulate_to_threshold(future_loading, threshold_keys=['EOD'], print = True)

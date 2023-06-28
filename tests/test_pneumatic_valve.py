@@ -10,7 +10,7 @@ from prog_models.models.pneumatic_valve import PneumaticValve, PneumaticValveWit
 
 class TestPneumaticValve(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
@@ -18,9 +18,10 @@ class TestPneumaticValve(unittest.TestCase):
 
     @unittest.skip
     def test_pneumatic_valve_vectorized(self):
-        m = PneumaticValveWithWear(process_noise= 0)    
+        m = PneumaticValveWithWear(process_noise=0)
 
         cycle_time = 20
+
         def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
@@ -58,13 +59,14 @@ class TestPneumaticValve(unittest.TestCase):
             'wt': array([0]*4)
         }
 
-        x = m.next_state(x0, future_loading(0), 0.1)
+        m.next_state(x0, future_loading(0), 0.1)
 
     def test_pneumatic_valve_with_wear(self):
         # Test using PneumaticValveWithWear
-        m = PneumaticValveWithWear(process_noise= 0)
+        m = PneumaticValveWithWear(process_noise=0)
 
         cycle_time = 20
+
         def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
@@ -208,10 +210,11 @@ class TestPneumaticValve(unittest.TestCase):
 
     def test_pneumatic_valve_base(self):
         # Test using PneumaticValveBase
-        m = PneumaticValveBase(process_noise= 0)
+        m = PneumaticValveBase(process_noise=0)
         param = m.parameters
 
         cycle_time = 20
+
         def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
@@ -280,7 +283,7 @@ class TestPneumaticValve(unittest.TestCase):
         z = m.output(x)
         z_test = {
             "Q": 0,
-            "iB": True, 
+            "iB": True,
             "iT": False,
             "pB": 0.91551734,
             "pT": 3.7319387914459899,
@@ -336,16 +339,16 @@ class TestPneumaticValve(unittest.TestCase):
             self.assertAlmostEqual(x[key], x_test[key], 7)
 
         config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
-        (times, inputs, states, outputs, event_states) = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
-        self.assertAlmostEqual(times[-1], 782.53, 0)
+        results = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)
+        self.assertAlmostEqual(results.times[-1], 782.53, 0)
         
     def test_pneumatic_valve(self):
         self.assertEqual(PneumaticValve, PneumaticValveWithWear)
 
     def test_pneumatic_valve_namedtuple_access(self):
-        m = PneumaticValveWithWear(process_noise= 0)
-
+        m = PneumaticValveWithWear(process_noise=0)
         cycle_time = 20
+
         def future_loading(t, x=None):
             t = t % cycle_time
             if t < cycle_time/2:
@@ -413,7 +416,7 @@ class TestPneumaticValve(unittest.TestCase):
         z = m.output(x)
         z_test = {
             "Q": 0,
-            "iB": True, 
+            "iB": True,
             "iT": False,
             "pB": 0.91551734,
             "pT": 3.7319387914459899,
@@ -444,7 +447,7 @@ class TestPneumaticValve(unittest.TestCase):
         }
 
         config = {'dt': 0.01, 'horizon': 800, 'save_freq': 60}
-        named_results = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)# , 'save_freq': 60
+        named_results = m.simulate_to_threshold(future_loading, m.output(m.initialize(future_loading(0))), **config)
         times = named_results.times
         inputs = named_results.inputs
         states = named_results.states
@@ -452,14 +455,11 @@ class TestPneumaticValve(unittest.TestCase):
         event_states = named_results.event_states
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Pneumatic Valve model")
-    result = runner.run(l.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestPneumaticValve)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

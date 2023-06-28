@@ -4,28 +4,27 @@
 from math import inf
 import numpy as np
 
-from .. import PrognosticsModel
+from prog_models import PrognosticsModel
 
 
 class BatteryCircuit(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an equivilant circuit model as described in the following paper:
-    `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253`
-    
+    Vectorized prognostics :term:`model` for a battery, represented by an equivilant circuit model as described in [DaigleSankararaman2013]_
+
     :term:`Events<event>`: (1)
         EOD: End of Discharge
-    
+
     :term:`Inputs/Loading<input>`: (1)
         i: Current draw on the battery
 
     :term:`States<state>`: (4)
-        | tb : Battery Temperature (°C)
+        | tb : Battery Temperature (K)
         | qb : Charge stored in Capacitor Cb of the equivalent circuit model
         | qcp : Charge stored in Capacitor Ccp of the equivalent circuit model
         | qcs : Charge stored in Capacitor Ccs of the equivalent circuit model
 
     :term:`Outputs<output>`: (2)
-        | t: Temperature of battery (°C)
+        | t: Temperature of battery (K)
         | v: Voltage supplied by battery
 
     Keyword Args
@@ -45,7 +44,7 @@ class BatteryCircuit(PrognosticsModel):
         V0 : float
           Nominal Battery Voltage
         Rp : float
-          Battery Parasitic Resistance 
+          Battery Parasitic Resistance
         qMax : float
           Maximum Charge
         CMax : float
@@ -54,13 +53,13 @@ class BatteryCircuit(PrognosticsModel):
           End of Discharge Voltage Threshold
         Cb0 : float 
           Battery Capacity Parameter
-        Cbp0 : float 
+        Cbp0 : float
           Battery Capacity Parameter
-        Cbp1 : float 
+        Cbp1 : float
           Battery Capacity Parameter
-        Cbp2 : float 
+        Cbp2 : float
           Battery Capacity Parameter
-        Cbp3 : float 
+        Cbp3 : float
           Battery Capacity Parameter
         Rs : float
           R-C Pair Parameter
@@ -75,7 +74,7 @@ class BatteryCircuit(PrognosticsModel):
         Ccp : float
           R-C Pair Parameter
         Ta : float
-          Ambient Temperature
+          Ambient Temperature (K)
         Jt : float
           Temperature parameter
         ha : float
@@ -84,17 +83,21 @@ class BatteryCircuit(PrognosticsModel):
           Heat transfer coefficient parameter
         hcs : float
           Heat transfer coefficient - surface
-        x0 : dict[str, float]
+        x0 : StateContianer
           Initial :term:`state`
     
     Note
     ----
         This is quicker but also less accurate than the electrochemistry :term:`model` (:py:class:`prog_models.models.BatteryElectroChemEOD`). We recommend using the electrochemistry model, when possible.
+
+    References
+    -----------
+    .. [DaigleSankararaman2013] M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253
     """
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'qb', 'qcp', 'qcs']
-    outputs = ['t',  'v']
+    outputs = ['t', 'v']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
@@ -112,20 +115,20 @@ class BatteryCircuit(PrognosticsModel):
         'Cbp2': 2079.9,
         'Cbp3': 27.055726,
         # R-C Pairs
-        'Rs': 0.0538926, 
+        'Rs': 0.0538926,
         'Cs': 234.387,
         'Rcp0': 0.0697776,
         'Rcp1': 1.50528e-17,
         'Rcp2': 37.223,
         'Ccp': 14.8223,
         # Temperature Parameters
-        'Ta': 18.95,
+        'Ta': 292.1,
         'Jt': 800,
         'ha': 0.5,
         'hcp': 19,
         'hcs': 1,
         'x0': {
-            'tb': 18.95,
+            'tb': 292.1,
             'qb': 7856.3254,
             'qcp': 0,
             'qcs': 0
@@ -133,12 +136,13 @@ class BatteryCircuit(PrognosticsModel):
     }
 
     state_limits = {
-        'tb': (-273.15, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
+        'tb': (0, inf),  # Limited by absolute zero. Note thermal runaway temperature is ~130°C, so the model is not valid after that temperature.
         'qb': (0, inf)
     }
 
-    def dx(self, x : dict, u : dict):
-        # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+    def dx(self, x, u):
+        # Keep this here- accessing member can be expensive in python
+        # this optimization reduces runtime by almost half!
         parameters = self.parameters
         Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
@@ -160,12 +164,12 @@ class BatteryCircuit(PrognosticsModel):
 
         return self.StateContainer(np.array([
             np.atleast_1d(Tbdot),  # tb
-            np.atleast_1d(-ib),    # qb
-            np.atleast_1d(icp),    # qcp
-            np.atleast_1d(ics)     # qcs
+            np.atleast_1d(-ib),  # qb
+            np.atleast_1d(icp),  # qcp
+            np.atleast_1d(ics)  # qcs
         ]))
     
-    def event_state(self, x : dict) -> dict:
+    def event_state(self, x) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -181,7 +185,7 @@ class BatteryCircuit(PrognosticsModel):
             'EOD': np.minimum(charge_EOD, voltage_EOD)
         }
 
-    def output(self, x : dict):
+    def output(self, x):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -193,7 +197,7 @@ class BatteryCircuit(PrognosticsModel):
             np.atleast_1d(x['tb']),            # t
             np.atleast_1d(Vb - Vcp - Vcs)]))   # v
 
-    def threshold_met(self, x : dict) -> dict:
+    def threshold_met(self, x) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

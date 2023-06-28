@@ -5,25 +5,18 @@ import sys
 import unittest
 
 from prog_models.models import BatteryCircuit, BatteryElectroChem, BatteryElectroChemEOL, BatteryElectroChemEOD, BatteryElectroChemEODEOL
+from prog_models.loading import Piecewise
 
-def future_loading(t, x=None):
-    # Variable (piece-wise) future loading scheme 
-    if (t < 600):
-        i = 2
-    elif (t < 900):
-        i = 1
-    elif (t < 1800):
-        i = 4
-    elif (t < 3000):
-        i = 2
-    else:
-        i = 3
-    return {'i': i}
+# Variable (piece-wise) future loading scheme 
+future_loading = Piecewise(
+    dict,
+    [600, 900, 1800, 3000, float('inf')],
+    {'i': [2, 1, 4, 2, 3]})
 
 
 class TestBattery(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
@@ -31,11 +24,11 @@ class TestBattery(unittest.TestCase):
     
     def test_battery_circuit(self):
         batt = BatteryCircuit()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
 
     def test_battery_electrochem(self):
         batt = BatteryElectroChem()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
         self.assertEqual(BatteryElectroChem, BatteryElectroChemEODEOL)
 
         # check warning raised when changing overwritten parameter
@@ -50,7 +43,7 @@ class TestBattery(unittest.TestCase):
 
     def test_battery_electrochem_EOD(self):
         batt = BatteryElectroChemEOD()
-        (times, inputs, states, outputs, event_states) = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
+        result = batt.simulate_to(200, future_loading, {'t': 18.95, 'v': 4.183})
 
     def test_battery_electrochem_EOL(self):
         batt = BatteryElectroChemEOL()
@@ -67,14 +60,11 @@ class TestBattery(unittest.TestCase):
         event_states = named_results.event_states
 
 # This allows the module to be executed directly
-def run_tests():
-    unittest.main()
-    
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Battery models")
-    result = runner.run(l.loadTestsFromTestCase(TestBattery)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestBattery)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

@@ -7,7 +7,8 @@ on:
     types: [opened]
 
 jobs:
-  benchmark_branch: 
+  pr_msg: 
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - name: Auto Comment
@@ -17,11 +18,9 @@ jobs:
           pullRequestOpened: >
             Thank you for opening this PR. Each PR into dev requires a code review. For the code review, look at the following:
 
-            - [ ] Reviewer should look for bugs, efficiency, readability, testing, and coverage in examples (if relevant).
+            - [ ] Reviewer (someone other than author) should look for bugs, efficiency, readability, testing, and coverage in examples (if relevant).
 
             - [ ] Ensure that each PR adding a new feature should include a test verifying that feature.
-
-            - [ ] All tests must be passing.
 
             - [ ] All errors from static analysis must be resolved.
             

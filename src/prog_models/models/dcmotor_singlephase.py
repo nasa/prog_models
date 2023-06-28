@@ -6,7 +6,7 @@ import numpy as np
 
 from prog_models import PrognosticsModel
 
-# Derived Paramaters
+# Derived Parameters
 def update_L1(params):
     return {
         'L1': params['L'] - params['M']
@@ -15,7 +15,7 @@ def update_L1(params):
 def update_Kv(params):
     # (rad/s)/V, inverse of Kt
     return {
-        'Kv':    1.0 / params['Kt']
+        'Kv': 1.0 / params['Kt']
     }
 
 def update_Km(params):
@@ -88,8 +88,8 @@ class DCMotorSP(PrognosticsModel):
     Keyword Args
     ------------
         process_noise : Optional, float or dict[str, float]
-            :term:`Process noise<process noise>` (applied at dx/next_state). 
-            Can be number (e.g., .2) applied to every state, a dictionary of values for each 
+            :term:`Process noise<process noise>` (applied at dx/next_state).
+            Can be number (e.g., .2) applied to every state, a dictionary of values for each
             state (e.g., {'x1': 0.2, 'x2': 0.3}), or a function (x) -> x
         process_noise_dist : Optional, str
             distribution for :term:`process noise` (e.g., normal, uniform, triangular)
@@ -118,8 +118,8 @@ class DCMotorSP(PrognosticsModel):
         x0 : dict[str, float]
             Initial :term:`state`
     """
-    states  = ['i', 'v_rot']
-    inputs  = ['v', 't_l']
+    states = ['i', 'v_rot']
+    inputs = ['v', 't_l']
     outputs = ['v_rot']
 
     param_callbacks = {
@@ -141,8 +141,7 @@ class DCMotorSP(PrognosticsModel):
                               x0={'i': 0.0, 'v_rot': 0.0}
                               )
 
-    def dx(self, x: dict, u: dict):
-        
+    def dx(self, x, u):
         # Get parameters
         parameters     = self.parameters
         friction_coeff = parameters['B']
@@ -166,7 +165,7 @@ class DCMotorSP(PrognosticsModel):
             np.atleast_1d(dvrotdt)          # rotor speed
         ]))
 
-    def output(self, x : dict):
+    def output(self, x):
         rotor_speed = x['v_rot']
         return self.OutputContainer(np.array([
             np.atleast_1d(rotor_speed),
