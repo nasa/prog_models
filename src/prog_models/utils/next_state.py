@@ -113,7 +113,7 @@ class SciPyIntegrateNextState():
             self.f,
             t_span=(0, dt),
             y0=x.matrix.T[0],
-            args=(u,),
+            args=(u,),    # must be a tuple, "," forces a tuple in (u,) when u is a dict
             method=self.method,
             **m.parameters.get('integrator_config', {}))
         return m.StateContainer(next_state.y.T[-1])
