@@ -87,30 +87,35 @@ class SciPyIntegrateNextState():
 
     Examples:
         >>> from prog_models.utils.next_state import SciPyIntegrateNextState
-        >>> from prog_models.models.battery_circuit import BatteryCircuit
+        >>> from prog_models.models import BatteryCircuit
         >>> import scipy
         >>> m = BatteryCircuit()
+        >>> dt = 0.1
+        >>> u = m.InputContainer({'i': 2.0})
+        >>> z = m.OutputContainer({'v': 3.2, 't': 295})
+        >>> x = m.initialize(u, z) # Initialize first state
         >>> next_state = SciPyIntegrateNextState(m, scipy.integrate.RK45)
-        >>> next_state(x, u, dt)
+        >>> next_state(m, x, u, dt)
+        {'tb': 292.10000192371604, 'qb': 7856.125358239746, 'qcp': 0.19067532151000474, 'qcs': 0.19925202272004439}
 
     """
     def __init__(self, m, method):
 
-        def f(_, x, u=m.InputContainer({})):
+        def f(_, x, u):
             return m.dx(m.StateContainer(x), m.InputContainer(u)).matrix.T[0]
 
         self.f = f
         self.method = method
 
     def __call__(self, m, x, u, dt: float):
+
         next_state = solve_ivp(
             self.f,
             t_span=(0, dt),
             y0=x.matrix.T[0],
-            args=(u),
+            args=(u,),
             method=self.method,
             **m.parameters.get('integrator_config', {}))
-
         return m.StateContainer(next_state.y.T[-1])
 
 next_state_functions = {
