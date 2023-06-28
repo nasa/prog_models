@@ -4,7 +4,6 @@
 # Import packages
 # ============
 from typing import List
-import doctest
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
