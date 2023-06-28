@@ -216,7 +216,7 @@ class PrognosticsModel(ABC):
 
         Example
         -------
-            :
+            
             >>> from prog_models.models import BatteryCircuit
             >>> m = BatteryCircuit()    # Replace above with specific model being simulated ^
             >>> u = m.InputContainer({'i': 2.0})
