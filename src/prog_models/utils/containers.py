@@ -207,7 +207,7 @@ class DictLikeMatrixWrapper():
         """
         boolean showing whether the key exists
 
-        Example:
+        example
         -------
         >>> from prog_models.utils.containers import DictLikeMatrixWrapper
         >>> dlmw = DictLikeMatrixWrapper(['a', 'b', 'c'], {'a': 1, 'b': 2, 'c': 3})
