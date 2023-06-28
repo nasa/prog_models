@@ -55,18 +55,11 @@ class PrognosticsModel(ABC):
 
     Example
     -------
-        >>> m = PrognosticsModel(process_noise=3.2)
-        Traceback (most recent call last):
-            ...
-        TypeError: Must have `states` attribute
-        >>> m2 = PrognosticsModel(integration_method='rk4')
-        Traceback (most recent call last):
-            ...
-        TypeError: Must have `states` attribute
-        >>> m3 = PrognosticsModel(integration_method=sp.integrate.RK45)
-        Traceback (most recent call last):
-            ...
-        NameError: name 'sp' is not defined
+        >>> from prog_models.models import BatteryCircuit
+        >>> import scipy as sp
+        >>> m = BatteryCircuit(process_noise=3.2)
+        >>> m2 = BatteryCircuit(integration_method='rk4')
+        >>> m3 = BatteryCircuit(integration_method=sp.integrate.RK45)
 
     Attributes
     ----------
@@ -226,9 +219,9 @@ class PrognosticsModel(ABC):
             :
             >>> from prog_models.models import BatteryCircuit
             >>> m = BatteryCircuit()    # Replace above with specific model being simulated ^
-            >>> u = m.InputContainer({'u1': 3.2})
-            >>> z = m.OutputContainer({'z1': 2.2})
-            >>> x = m.initialize(u, z)  # Initialize first state
+            >>> u = m.InputContainer({'i': 2.0})
+            >>> z = m.OutputContainer({'v': 3.2, 't': 295})
+            >>> x = m.initialize(u, z) # Initialize first state
         """
         return self.StateContainer(self.parameters['x0'])
 
@@ -252,7 +245,7 @@ class PrognosticsModel(ABC):
         -------
         >>> from prog_models.models import BatteryCircuit
         >>> m = BatteryCircuit()
-        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> z = m.OutputContainer({'v': 3.2, 't': 295})
         >>> z = m.apply_measurement_noise(z)
 
         Note
@@ -284,10 +277,10 @@ class PrognosticsModel(ABC):
         -------
         >>> from prog_models.models import BatteryCircuit
         >>> m = BatteryCircuit() # Replace with specific model being simulated
-        >>> u = m.InputContainer({'u1': 3.2})
-        >>> z = m.OutputContainer({'z1': 2.2})
+        >>> u = m.InputContainer({'i': 2.0})
+        >>> z = m.OutputContainer({'v': 3.2, 't': 295})
         >>> x = m.initialize(u, z) # Initialize first state
-        >>> x = m.apply_process_noise(x)    # {'tb': 292.04728504765023, 'qb': 7856.398056966799, 'qcp': 0.1736435913459429, 'qcs': 0.053705829558158086}
+        >>> x = m.apply_process_noise(x)
 
         Note
         ----
@@ -366,7 +359,6 @@ class PrognosticsModel(ABC):
         >>> x = m.initialize(u, z) # Initialize first state
         >>> x = m.next_state(x, u, 0.1) # Returns state at 3.1 seconds given input u
 
-        ???{'tb': 292.1, 'qb': nan, 'qcp': nan, 'qcs': nan}
 
         See Also
         --------

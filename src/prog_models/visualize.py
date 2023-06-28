@@ -53,14 +53,13 @@ def get_subplot_dim(num_subplots: int, rowfirst: bool = True) -> tuple:
     >>> states = np.random.randn(1000,5) # let us consider a state vector with 5 dimensions, and 1000 values of the states (one for each time step)
     >>> n_states = states.shape[-1]     # get the number of states (5)
     >>> nrows, ncols = get_subplot_dim(n_states)
-    >>> print(get_subplot_dim(n_states)) # 3, 2
+    >>> print(get_subplot_dim(n_states))
     (3, 2)
-    >>> print(get_subplot_dim(n_states, rowfirst=False)) # 2, 3
+    >>> print(get_subplot_dim(n_states, rowfirst=False))
     (2, 3)
     >>> fig = plt.figure()
     >>> ax = fig.add_subplot(nrows, ncols, 1)
 
-    # ...
     """
     nrows, ncols = 1, 1  # initialize number of rows and cols to 1.
     if rowfirst:
@@ -101,7 +100,7 @@ def set_plot_options(opt: dict) -> dict:
     opt : dict
         dict of plot options with default values added.
 
-    Example:
+    Example
     -------
     >>> opt = {}
     >>> opt = set_plot_options(opt)
