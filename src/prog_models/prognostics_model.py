@@ -94,7 +94,7 @@ class PrognosticsModel(ABC):
 
     # Configuration Parameters for model
     default_parameters = {
-        'process_noise': 0.1,
+        'process_noise': 0.0,
         'measurement_noise': 0.0
     }
 
