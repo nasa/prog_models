@@ -2,7 +2,7 @@
 # This ensures that the directory containing examples is in the python search directories 
 
 """
-This example demonstrates the Polynomial Choas Expansion (PCE) Surrogate Direct Model functionality. PCE is a method by which the behavior of a model can be approximated by a polynomial. In this case the relationship between future loading and time of event. The result is a direct surrogate model that can be used to estimate time of event given a loading profile, without requiring the original model to be simulated. The resulting estimation is MUCH faster than simulating the model.
+This example demonstrates the Polynomial Chaos Expansion (PCE) Surrogate Direct Model functionality. PCE is a method by which the behavior of a model can be approximated by a polynomial. In this case the relationship between future loading and time of event. The result is a direct surrogate model that can be used to estimate time of event given a loading profile, without requiring the original model to be simulated. The resulting estimation is MUCH faster than simulating the model.
 
 This functionality is especially useful in cases where you need to evaluate a large number of loading profiles in a short amount of time or with limited computational resources. For example, when you would like to optimize a loading profile. In that case, it would not make sense to have a state-transition model in the inner loop of the optimization, since the state transition model would be called many times. Instead, you can use a direct surrogate model to estimate time of event directly from the loading profile.
 

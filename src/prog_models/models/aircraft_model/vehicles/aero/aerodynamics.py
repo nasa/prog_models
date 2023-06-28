@@ -7,10 +7,11 @@ Functions for aerodynamics effects
 
 import numpy as np
 
-# Aerodynamic forces
-# ====================
+
 class DragModel():
     """
+    .. versionadded:: 1.5.0
+    
     Bluff body drag model of the form:
 
             F_D = 1/2 * rho * A * Cd * V^2

@@ -7,6 +7,8 @@ import numpy as np
 
 class GaussianNoiseLoadWrapper():
     """
+    .. versionadded:: 1.5.0
+    
     This is a simple wrapper for future loading functions that adds gaussian noise to the inputs. It takes a future loading function and a standard deviation and returns a new future loading function that adds gaussian noise to the inputs.
 
     Parameters

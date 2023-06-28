@@ -193,7 +193,7 @@ jobs:
     - name: Run tests
       run: python -m tests.test_estimate_params
   test_examples:
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

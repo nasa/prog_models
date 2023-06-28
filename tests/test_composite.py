@@ -2,8 +2,7 @@
 
 import unittest
 
-from prog_models import *
-from prog_models.models import *
+from prog_models import CompositeModel
 from prog_models.models.test_models.linear_models import (
     OneInputOneOutputNoEventLM,
     OneInputNoOutputOneEventLM,
@@ -133,14 +132,14 @@ class TestCompositeModel(unittest.TestCase):
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propagates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertSetEqual(set(z.keys()), {'OneInputOneOutputNoEventLM_2.z1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
 
-        # Propogate again
+        # Propagate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1', 'OneInputOneOutputNoEventLM.z1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3)  # 1 + 2
@@ -162,13 +161,13 @@ class TestCompositeModel(unittest.TestCase):
         # Only provide non-zero input for model 1
         u = m_composite.InputContainer({'OneInputOneOutputNoEventLM.u1': 1})
         x = m_composite.next_state(x0, u, 1)
-        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propogates through, because of the order. If the connection were the other way it wouldn't
+        self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 1) # Propagates through, because of the order. If the connection were the other way it wouldn't
         self.assertEqual(x['OneInputOneOutputNoEventLM.x1'], 1)
         z = m_composite.output(x)
         self.assertEqual(z['OneInputOneOutputNoEventLM_2.z1'], 1)
         self.assertEqual(z['OneInputOneOutputNoEventLM.z1'], 1)
 
-        # Propogate again
+        # Propagate again
         x = m_composite.next_state(x, u, 1)
         self.assertSetEqual(set(x.keys()), {'OneInputOneOutputNoEventLM_2.x1', 'OneInputOneOutputNoEventLM.x1'})
         self.assertEqual(x['OneInputOneOutputNoEventLM_2.x1'], 3) # 1 + 2
@@ -233,10 +232,10 @@ class TestCompositeModel(unittest.TestCase):
         self.assertAlmostEqual(x['OneInputOneOutputOneEventLM_2.x1'], 2)
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Composite Models")
-    result = runner.run(l.loadTestsFromTestCase(TestCompositeModel)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestCompositeModel)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

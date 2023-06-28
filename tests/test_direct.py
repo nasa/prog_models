@@ -21,7 +21,7 @@ class TestDirect(unittest.TestCase):
 
     def test_inherited_direct(self):
         m = ThrownObject()
-        self.assertFalse(m.is_direct_model)
+        self.assertFalse(m.is_direct)
 
         x = m.initialize()
         tic = time.perf_counter()
@@ -41,7 +41,7 @@ class TestDirect(unittest.TestCase):
 
         m_direct = DirectThrownObject()
         x = m_direct.initialize()
-        self.assertTrue(m_direct.is_direct_model)
+        self.assertTrue(m_direct.is_direct)
         tic = time.perf_counter()
         m_direct.time_of_event(x, dt=0.05)
         toc = time.perf_counter()
@@ -96,7 +96,7 @@ class TestDirect(unittest.TestCase):
 
         m_inherited = DirectInheritedThrownObject()
         m_non_inherited = DirectNonInheritedThrownObject()
-        self.assertTrue(m_non_inherited.is_direct_model)
+        self.assertTrue(m_non_inherited.is_direct)
 
         x = m_inherited.initialize()
         # Time of event should work the same
@@ -109,10 +109,10 @@ class TestDirect(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Direct models")
-    result = runner.run(l.loadTestsFromTestCase(TestDirect)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestDirect)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

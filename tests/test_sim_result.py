@@ -13,12 +13,12 @@ from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class TestSimResult(unittest.TestCase):
-    """def setUp(self):
-        set stdout (so it won't print)
+    def setUp(self):
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def test_sim_result(self):
         # Variables
@@ -792,10 +792,10 @@ class TestSimResult(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Sim Result")
-    result = runner.run(l.loadTestsFromTestCase(TestSimResult)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSimResult)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

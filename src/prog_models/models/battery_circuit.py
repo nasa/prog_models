@@ -9,12 +9,11 @@ from prog_models import PrognosticsModel
 
 class BatteryCircuit(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an equivilant circuit model as described in the following paper:
-    `M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253`
-    
+    Vectorized prognostics :term:`model` for a battery, represented by an equivilant circuit model as described in [DaigleSankararaman2013]_
+
     :term:`Events<event>`: (1)
         EOD: End of Discharge
-    
+
     :term:`Inputs/Loading<input>`: (1)
         i: Current draw on the battery
 
@@ -84,17 +83,21 @@ class BatteryCircuit(PrognosticsModel):
           Heat transfer coefficient parameter
         hcs : float
           Heat transfer coefficient - surface
-        x0 : dict[str, float]
+        x0 : StateContianer
           Initial :term:`state`
     
     Note
     ----
         This is quicker but also less accurate than the electrochemistry :term:`model` (:py:class:`prog_models.models.BatteryElectroChemEOD`). We recommend using the electrochemistry model, when possible.
+
+    References
+    -----------
+    .. [DaigleSankararaman2013] M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253
     """
     events = ['EOD']
     inputs = ['i']
     states = ['tb', 'qb', 'qcp', 'qcs']
-    outputs = ['t',  'v']
+    outputs = ['t', 'v']
     is_vectorized = True
 
     default_parameters = {  # Set to defaults
@@ -112,7 +115,7 @@ class BatteryCircuit(PrognosticsModel):
         'Cbp2': 2079.9,
         'Cbp3': 27.055726,
         # R-C Pairs
-        'Rs': 0.0538926, 
+        'Rs': 0.0538926,
         'Cs': 234.387,
         'Rcp0': 0.0697776,
         'Rcp1': 1.50528e-17,
@@ -137,8 +140,9 @@ class BatteryCircuit(PrognosticsModel):
         'qb': (0, inf)
     }
 
-    def dx(self, x: dict, u: dict):
-        # Keep this here- accessing member can be expensive in python- this optimization reduces runtime by almost half!
+    def dx(self, x, u):
+        # Keep this here- accessing member can be expensive in python
+        # this optimization reduces runtime by almost half!
         parameters = self.parameters
         Rs = parameters['Rs']
         Vcs = x['qcs']/parameters['Cs']
@@ -160,12 +164,12 @@ class BatteryCircuit(PrognosticsModel):
 
         return self.StateContainer(np.array([
             np.atleast_1d(Tbdot),  # tb
-            np.atleast_1d(-ib),    # qb
-            np.atleast_1d(icp),    # qcp
-            np.atleast_1d(ics)     # qcs
+            np.atleast_1d(-ib),  # qb
+            np.atleast_1d(icp),  # qcp
+            np.atleast_1d(ics)  # qcs
         ]))
     
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -181,7 +185,7 @@ class BatteryCircuit(PrognosticsModel):
             'EOD': np.minimum(charge_EOD, voltage_EOD)
         }
 
-    def output(self, x: dict):
+    def output(self, x):
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']
@@ -193,7 +197,7 @@ class BatteryCircuit(PrognosticsModel):
             np.atleast_1d(x['tb']),            # t
             np.atleast_1d(Vb - Vcp - Vcs)]))   # v
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         parameters = self.parameters
         Vcs = x['qcs']/parameters['Cs']
         Vcp = x['qcp']/parameters['Ccp']

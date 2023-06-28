@@ -5,7 +5,7 @@ import unittest
 import copy
 import pickle
 from prog_models.models.test_models.linear_thrown_object import (LinearThrownObject, LinearThrownObjectNoE, LinearThrownObjectWrongB,
-                                                                 LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitalizedMethod,
+                                                                 LinearThrownDiffThrowingSpeed, LinearThrownObjectUpdatedInitializedMethod,
                                                                  LinearThrownObjectFourStates)
 from prog_models.models.test_models.linear_models import FNoneNoEventStateLM
 
@@ -14,7 +14,7 @@ class TestLinearModel(unittest.TestCase):
     def test_linear_model(self):
         m = LinearThrownObject()
 
-        #Checking to see if initalization would error when passing in incorrect parameter forms
+        #Checking to see if initialization would error when passing in incorrect parameter forms
         with self.assertRaises(AttributeError):
             b = LinearThrownObjectWrongB()
 
@@ -160,7 +160,7 @@ class TestLinearModel(unittest.TestCase):
         m.matrixCheck()
 
 
-# Included some tests that are checking if exceptions are being thrown without matrxiCheck being invoked
+# Included some tests that are checking if exceptions are being thrown without matrixCheck being invoked
         with self.assertRaises(TypeError):
             m.D = "[[0, 1], [0, 0]]" # string
             m.matrixCheck() 
@@ -391,7 +391,7 @@ class TestLinearModel(unittest.TestCase):
         self.assertFalse(deepcopym4 == deepcopym3)
 
 
-        m5 = LinearThrownObjectUpdatedInitalizedMethod()
+        m5 = LinearThrownObjectUpdatedInitializedMethod()
         copym5 = copy.copy(m5)
         deepcopym5 = copy.deepcopy(m5)
 
@@ -429,10 +429,10 @@ class TestLinearModel(unittest.TestCase):
         self.assertTrue(loaded_m3 == loaded_m1)
         self.assertTrue(LinearThrownObject, type(loaded_m3))
 
-        l = LinearThrownObjectUpdatedInitalizedMethod()
-        bytes_l = pickle.dumps(l)
+        updated_model = LinearThrownObjectUpdatedInitializedMethod()
+        bytes_l = pickle.dumps(updated_model)
         loaded_l = pickle.loads(bytes_l)
-        self.assertTrue(l == loaded_l)
+        self.assertTrue(updated_model == loaded_l)
         self.assertFalse(bytes_l == bytes_m1)
 
     def test_F_property_not_none(self):
@@ -482,10 +482,10 @@ class TestLinearModel(unittest.TestCase):
         # Needs more development; test coverage needs testing of event_state not overridden
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Linear Models")
-    result = runner.run(l.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestLinearModel)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

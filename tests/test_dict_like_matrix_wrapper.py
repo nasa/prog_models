@@ -10,12 +10,12 @@ from prog_models.utils.containers import DictLikeMatrixWrapper
 
 
 class TestDictLikeMatrixWrapper(unittest.TestCase):
-    """def setUp(self):
+    def setUp(self):
         # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__"""
+        sys.stdout = sys.__stdout__
 
     def _checks(self, c1):
         self.assertListEqual(c1.keys(), ['a', 'b'])
@@ -102,10 +102,10 @@ class TestDictLikeMatrixWrapper(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Containers")
-    result = runner.run(l.loadTestsFromTestCase(TestDictLikeMatrixWrapper)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestDictLikeMatrixWrapper)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

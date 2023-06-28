@@ -9,7 +9,7 @@ from warnings import warn
 
 class DictLikeMatrixWrapper():
     """
-    A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessable. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
+    A container that behaves like a dictionary, but is backed by a numpy array, which is itself directly accessible. This is used for model states, inputs, and outputs- and enables efficient matrix operations.
 
     Arguments:
         keys -- list: The keys of the dictionary. e.g., model.states or model.inputs
