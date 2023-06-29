@@ -7,7 +7,7 @@ from prog_models import PrognosticsModel
 
 
 class LinearModel(PrognosticsModel, ABC):
-    """
+    r"""
     A linear prognostics :term:`model`. Used when behavior can be described using a simple linear time-series model defined by the following equations:
     .. math::
         \dfrac{dx}{dt} = Ax + Bu + E

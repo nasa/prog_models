@@ -51,8 +51,8 @@ class DataModel(PrognosticsModel, ABC):
             DataModel: Trained PrognosticsModel
 
         Example:
-            >>> # Replace DataModel with specific classname below
-            >>> m = DataModel.from_data(data)
+            Replace DataModel with specific classname :
+            m = DataModel.from_data(data)
         """
         pass
 

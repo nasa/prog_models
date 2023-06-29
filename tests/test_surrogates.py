@@ -50,7 +50,7 @@ class TestSurrogate(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], outputs=['invalid'])
         with self.assertRaises(ValueError):
-            m.generate_surrogate([load_eqn], outputs=['invalid', 'x'])    
+            m.generate_surrogate([load_eqn], outputs=['invalid', 'x'])
         with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], events=['invalid'])
         with self.assertRaises(ValueError):
@@ -133,11 +133,11 @@ class TestSurrogate(unittest.TestCase):
         load_functions = [future_loading_1, future_loading_2]
 
         options_surrogate = {
-            'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
-            'dt': 0.1, # For DMD, this value is the time step of the training data
-            'state_keys': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
-            'trim_data_to': 0.7, # Trim data to this fraction of the time series
-            'output_keys': ['v'], # Define outputs to be included in surrogate model 
+            'save_freq': 1,  # For DMD, this value is the time step for which the surrogate model is generated
+            'dt': 0.1,  # For DMD, this value is the time step of the training data
+            'state_keys': ['Vsn', 'Vsp', 'tb'],  # Define internal states to be included in surrogate model
+            'trim_data_to': 0.7,  # Trim data to this fraction of the time series
+            'output_keys': ['v'],  # Define outputs to be included in surrogate model 
             'training_noise': 0
         }
 
@@ -148,11 +148,11 @@ class TestSurrogate(unittest.TestCase):
         self.assertListEqual(surrogate.events, m.events)
 
         options_sim = {
-            'save_freq': 1, # Frequency at which results are saved, or equivalently time step in results
+            'save_freq': 1,  # Frequency at which results are saved, or equivalently time step in results
             'dt': 0.1,
         }
 
-        # Define loading profile 
+        # Define loading profile
         def future_loading(t, x=None):
             if (t < 600):
                 i = 3
@@ -261,7 +261,7 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
         # Outputs - Empty
-        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25,      threshold_keys='impact', outputs=[], training_noise=0)
+        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', outputs=[], training_noise=0)
         self.assertListEqual(surrogate.states, m.states + m.events + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, [])
@@ -289,8 +289,8 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
-        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact',training_noise=0)
-        surrogate_noise = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact',training_noise=0.01)
+        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0)
+        surrogate_noise = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0.01)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, surrogate_noise.states)
@@ -593,10 +593,10 @@ class TestSurrogate(unittest.TestCase):
             
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Surrogate")
-    result = runner.run(l.loadTestsFromTestCase(TestSurrogate)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSurrogate)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

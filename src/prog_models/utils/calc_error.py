@@ -9,8 +9,11 @@ from typing import List
 from warnings import warn
 import numpy as np
 
+
 def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Maximum Error between model behavior and some collected data.
 
     Args:
@@ -87,6 +90,8 @@ def MAX_E(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwar
 
 def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Root Mean Squared Error between model behavior and some collected data.
 
     Args:
@@ -114,7 +119,10 @@ def RMSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
 
 def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
-    """Calculate Mean Squared Error (MSE) between simulated and observed
+    """
+    .. versionadded:: 1.5.0
+
+    Calculate Mean Squared Error (MSE) between simulated and observed
 
     Args:
         m (PrognosticsModel): Model to use for comparison
@@ -181,8 +189,11 @@ def MSE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             counter += 1
     return err_total/counter
 
+
 def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Mean Absolute Error between model behavior and some collected data.
 
     Args:
@@ -242,9 +253,9 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
             if any(np.isnan(z_obs.matrix)):
                 if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
-                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")       
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
                 else:
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    warn(f"Model unstable- NaN reached in simulation (t={t})")
                     break
             err_total += np.sum(
                 np.abs(z.matrix - z_obs.matrix))
@@ -253,6 +264,8 @@ def MAE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs
 
 def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwargs) -> float:
     """
+    .. versionadded:: 1.5.0
+
     Calculate the Mean Absolute Percentage Error between model behavior and some collected data.
 
     Args:
@@ -312,9 +325,9 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
             if any(np.isnan(z_obs.matrix)):
                 if t <= cutoffThreshold:
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
-                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
+                                     f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")
                 else:
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    warn(f"Model unstable- NaN reached in simulation (t={5})")
                     break
             err_total += np.sum(np.abs(z.matrix - z_obs.matrix) / z.matrix)
             counter += 1
@@ -323,6 +336,8 @@ def MAPE(m, times: List[float], inputs: List[dict], outputs: List[dict], **kwarg
 
 def DTW(m, times, inputs, outputs, **kwargs):
     """
+    .. versionadded:: 1.5.0
+    
     Dynamic Time Warping Algorithm using FastDTW's package.
     How DTW Works: https://cs.fit.edu/~pkc/papers/tdm04.pdf
     FastDTW Documentation: https://pypi.org/project/fastdtw/
@@ -380,7 +395,7 @@ def DTW(m, times, inputs, outputs, **kwargs):
                     raise ValueError(f"Model unstable- NAN reached in simulation (t={t}) before cutoff threshold. "
                                      f"Cutoff threshold is {cutoffThreshold}, or roughly {stability_tol * 100}% of the data")     
                 else:
-                    warn("Model unstable- NaN reached in simulation (t={})".format(t))
+                    warn(f"Model unstable- NaN reached in simulation (t={t})")
                     # When model goes unstable after cutoffThreshold, we want to match the last stable observed value with the 
                         # equivalent user-provided output by truncating our user-provided series to match the length of our observed series.
                     percent = counter / len(outputs)
@@ -415,6 +430,6 @@ def DTW(m, times, inputs, outputs, **kwargs):
             transform[i].append(t)
         return transform
     simulated, observed = dtw_helper(simulated), dtw_helper(outputs)
-    distance, path = fastdtw(simulated, observed, dist=euclidean)
+    distance, _ = fastdtw(simulated, observed, dist=euclidean)
 
     return distance

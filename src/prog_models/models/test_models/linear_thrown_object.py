@@ -77,8 +77,8 @@ class LinearThrownObjectWrongB(LinearThrownObject):
     F = None # Will override method
 
 
-# Wrong x statecontainer parameter. Has Throwing_speed when it should be thrower_height
-class LinearThrownObjectUpdatedInitalizedMethod(LinearThrownObject):
+# Wrong x stateContainer parameter. Has Throwing_speed when it should be thrower_height
+class LinearThrownObjectUpdatedInitializedMethod(LinearThrownObject):
     inputs = [] 
     states = ['x', 'v']
     outputs = ['x']

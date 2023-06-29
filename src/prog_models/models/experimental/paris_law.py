@@ -2,11 +2,10 @@
 # National Aeronautics and Space Administration.  All Rights Reserved.
 
 from numpy import inf
-
 from prog_models import PrognosticsModel
 
 
-class ParisLawCrackGrowth(PrognosticsModel): 
+class ParisLawCrackGrowth(PrognosticsModel):
     """
     .. versionadded:: 1.4.0
     A simple Paris Law Crack Growth :term:`model`
@@ -52,7 +51,7 @@ class ParisLawCrackGrowth(PrognosticsModel):
     # Event: Crack Growth Fracture
     events = ['CGF']
     # Inputs are ['k_min', 'k_max']
-    inputs = ['k_max','k_min']
+    inputs = ['k_max', 'k_min']
     # State: Crack Length
     states = ['c_l']
     # Output: Crack Length
@@ -74,25 +73,21 @@ class ParisLawCrackGrowth(PrognosticsModel):
     }
 
     # The model equations
-    def dx(self, x : dict, u : dict):
+    def dx(self, x, u):
         parameters = self.parameters
-        r = (parameters['c']*(u['k_max'] - u['k_min'])**parameters['m'])*parameters['dndt'] # Paris Law Equation with respect to time
-        dxdt = {
-             'c_l': r,
-         }
+        r = (parameters['c']*(u['k_max'] - u['k_min'])**parameters['m'])*parameters['dndt']  # Paris Law Equation with respect to time
+        dxdt = {'c_l': r}
         return self.StateContainer(dxdt)
 
     def output(self, x):
-        return self.OutputContainer(x) 
+        return self.OutputContainer(x)
 
-    def event_state(self, x : dict) -> dict: 
-       return {
-            'CGF' : 1- x['c_l'] / self.parameters['crack_limit']
+    def event_state(self, x) -> dict:
+        return {
+            'CGF': 1 - x['c_l'] / self.parameters['crack_limit']
         }
 
     def threshold_met(self, x):
-        t_met = {
+        return {
            'CGF': x['c_l'] > self.parameters['crack_limit']
         }
-        return t_met
-         

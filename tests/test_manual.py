@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.append(join(dirname(__file__), ".."))  # Needed to access examples
-from examples import dataset, sim_battery_eol, ensemble
+from examples import dataset, sim_battery_eol, ensemble, custom_model
 
 from prog_models.datasets import nasa_cmapss, nasa_battery
 
@@ -84,12 +84,16 @@ class TestManual(unittest.TestCase):
         with patch('matplotlib.pyplot.show'):
             ensemble.run_example()
 
+    def test_custom_model_example(self):
+        with patch('matplotlib.pyplot.show'):
+            custom_model.run_example()
+
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Manual")
-    result = runner.run(l.loadTestsFromTestCase(TestManual)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestManual)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")
