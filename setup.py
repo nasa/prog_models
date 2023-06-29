@@ -22,7 +22,7 @@ INSTALL_REQS = [
 
 setup(
     name='prog_models',
-    version='1.5.0-pre',
+    version='1.5.0',
     description='The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',

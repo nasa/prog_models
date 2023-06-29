@@ -7,4 +7,4 @@ from prog_models.ensemble_model import EnsembleModel
 from prog_models.composite_model import CompositeModel
 from prog_models.linear_model import LinearModel
 
-__version__ = '1.5.0.pre'
+__version__ = '1.5.0'
