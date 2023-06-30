@@ -1034,7 +1034,7 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, tol = 1e-10)
         override2 = m.calc_error(results.times, results.inputs, results.outputs)
-
+        
         self.assertLess(override1, override2)
 
         m.parameters['thrower_height'] = 3.1
