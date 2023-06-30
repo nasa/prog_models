@@ -1026,18 +1026,16 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                           bounds=bound, keys=keys, tol = 1e-2)
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, tol = 1)
         override1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                            bounds=bound, keys=keys, tol = 1e-5)
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, tol = 1e-10)
         override2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        self.assertNotEqual(override1, override2)
+        self.assertLess(override1, override2)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
@@ -1053,7 +1051,7 @@ class TestEstimateParams(unittest.TestCase):
 def main():
     l = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting EstimateParams Feature")
+    print("\n\nTesting Estimate Params Feature")
     result = runner.run(l.loadTestsFromTestCase(TestEstimateParams)).wasSuccessful()
 
     if not result:
