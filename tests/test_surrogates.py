@@ -15,9 +15,11 @@ class TestSurrogate(unittest.TestCase):
     def setUp(self):
         # set stdout (so it wont print)
         sys.stdout = StringIO()
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     def tearDown(self):
         sys.stdout = sys.__stdout__
+        warnings.filterwarnings("default", category=DeprecationWarning)
 
     def test_surrogate_improper_input(self):
         m = ThrownObject()
@@ -48,7 +50,7 @@ class TestSurrogate(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], outputs=['invalid'])
         with self.assertRaises(ValueError):
-            m.generate_surrogate([load_eqn], outputs=['invalid', 'x'])    
+            m.generate_surrogate([load_eqn], outputs=['invalid', 'x'])
         with self.assertRaises(ValueError):
             m.generate_surrogate([load_eqn], events=['invalid'])
         with self.assertRaises(ValueError):
@@ -131,11 +133,11 @@ class TestSurrogate(unittest.TestCase):
         load_functions = [future_loading_1, future_loading_2]
 
         options_surrogate = {
-            'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
-            'dt': 0.1, # For DMD, this value is the time step of the training data
-            'state_keys': ['Vsn','Vsp','tb'], # Define internal states to be included in surrogate model
-            'trim_data_to': 0.7, # Trim data to this fraction of the time series
-            'output_keys': ['v'], # Define outputs to be included in surrogate model 
+            'save_freq': 1,  # For DMD, this value is the time step for which the surrogate model is generated
+            'dt': 0.1,  # For DMD, this value is the time step of the training data
+            'state_keys': ['Vsn', 'Vsp', 'tb'],  # Define internal states to be included in surrogate model
+            'trim_data_to': 0.7,  # Trim data to this fraction of the time series
+            'output_keys': ['v'],  # Define outputs to be included in surrogate model 
             'training_noise': 0
         }
 
@@ -146,11 +148,11 @@ class TestSurrogate(unittest.TestCase):
         self.assertListEqual(surrogate.events, m.events)
 
         options_sim = {
-            'save_freq': 1, # Frequency at which results are saved, or equivalently time step in results
+            'save_freq': 1,  # Frequency at which results are saved, or equivalently time step in results
             'dt': 0.1,
         }
 
-        # Define loading profile 
+        # Define loading profile
         def future_loading(t, x=None):
             if (t < 600):
                 i = 3
@@ -259,7 +261,7 @@ class TestSurrogate(unittest.TestCase):
             self.assertEqual(surrogate_results.states[i]['impact'], surrogate_results.event_states[i]['impact'])
 
         # Outputs - Empty
-        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25,      threshold_keys='impact', outputs=[], training_noise=0)
+        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', outputs=[], training_noise=0)
         self.assertListEqual(surrogate.states, m.states + m.events + m.inputs)
         self.assertListEqual(surrogate.inputs, m.inputs)
         self.assertListEqual(surrogate.outputs, [])
@@ -287,8 +289,8 @@ class TestSurrogate(unittest.TestCase):
         def load_eqn(t=None, x=None):
             return m.InputContainer({})
         
-        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact',training_noise=0)
-        surrogate_noise = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact',training_noise=0.01)
+        surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0)
+        surrogate_noise = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0.01)
         self.assertEqual(surrogate.dt, 0.25)
 
         self.assertListEqual(surrogate.states, surrogate_noise.states)
@@ -507,22 +509,22 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({})
         
         # treat warnings as exceptions
-        warnings.filterwarnings("error")
-
-        try:
+        with self.assertWarns(UserWarning):
             surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys = ['v'], training_noise = 0)
-            self.fail('warning not raised')
-        except Warning:
-            pass
 
+        warnings.filterwarnings("error")
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        # This is needed to check that warning doesn't occur
         try:
             # Set sufficiently large failure tolerance
             surrogate = m.generate_surrogate([load_eqn], dt = 0.1, save_freq = 0.25, threshold_keys = 'impact', state_keys = ['v'], stability_tol=1e99)
-        except Warning:
-            self.fail('Warning raised')
+        except Warning as w:
+            if w is not DeprecationWarning:  # Ignore deprecation warnings
+                self.fail('Warning raised')
         
         # Reset Warnings
         warnings.filterwarnings("default")
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     def test_surrogate_use_error_cases(self):
         m = ThrownObject()
@@ -530,6 +532,10 @@ class TestSurrogate(unittest.TestCase):
             return m.InputContainer({})
         
         surrogate = m.generate_surrogate([load_eqn], dt=0.1, save_freq=0.25, threshold_keys='impact', training_noise=0)
+
+        # Reset warnings seen so warning will occur
+        from prog_models import exceptions
+        exceptions.warnings_seen = set() 
 
         with self.assertWarns(Warning):
             surrogate.simulate_to_threshold(load_eqn, dt=0.05)
@@ -587,10 +593,10 @@ class TestSurrogate(unittest.TestCase):
             
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Surrogate")
-    result = runner.run(l.loadTestsFromTestCase(TestSurrogate)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSurrogate)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

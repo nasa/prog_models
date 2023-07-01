@@ -79,7 +79,6 @@ def update_qnSBmin(params: dict) -> dict:
     return {
         'qnSMin': params['qMax']*params['xnMin']*params['VolSFraction'],
         'qnBMin': params['qMax']*params['xnMin']*(1.0-params['VolSFraction'])
-
     }
 
 def update_qnSBmax(params: dict) -> dict:
@@ -161,9 +160,9 @@ def update_qSBmax(params: dict) -> dict:
 
 class BatteryElectroChemEOD(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in [0]_. This model predicts the end of discharge event. 
+    Vectorized prognostics :term:`model` for a battery, represented by an electrochemical equations as described in [Daigle2013]_. This model predicts the end of discharge event. 
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [1]_.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [DataRepo]_.
 
     :term:`Events<event>`: (1)
         EOD: End of Discharge
@@ -254,8 +253,8 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
     References 
     -------------
-     .. [0] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
-     .. [1] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
+     .. [Daigle2013] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
+     .. [DataRepo] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     events = ['EOD']
     inputs = ['i']
@@ -328,7 +327,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         'xnMax': [update_qmax, update_qnmax, update_qnSBmax]
     }
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         params = self.parameters
         # Negative Surface
         CnBulk = x['qnB']/params['VolB']
@@ -443,7 +442,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
         
         return {'max_i': fsolve(f, [3])}
         
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         # The most "correct" indication of SOC is based on charge (charge_EOD), 
         # since voltage decreases non-linearally. 
         # However, as voltage approaches VEOD, the charge-based approach no 
@@ -503,7 +502,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             'EOD': np.clip(min(charge_EOD, voltage_EOD), 0, 1)
         }
 
-    def output(self, x: dict):
+    def output(self, x):
         params = self.parameters
         An = params['An']
         # Negative Surface
@@ -557,7 +556,7 @@ class BatteryElectroChemEOD(PrognosticsModel):
             np.atleast_1d(Vep - Ven - x['Vo'] - x['Vsn'] - x['Vsp'])
         ]))
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         z = self.output(x)
 
         # Return true if voltage is less than the voltage threshold
@@ -568,9 +567,9 @@ class BatteryElectroChemEOD(PrognosticsModel):
 
 class BatteryElectroChemEOL(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in [2]_
+    Vectorized prognostics :term:`model` for a battery degredation, represented by an electrochemical model as described in [Daigle2016]_
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository[3]_.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [DataRepo]_.
 
     :term:`Events<event>`: (1)
         InsufficientCapacity: Insufficient battery capacity
@@ -616,8 +615,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
 
     References
     -----------
-    .. [2] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
-    .. [3] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
+    .. [Daigle2016] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
     """
     states = ['qMax', 'Ro', 'D']
     events = ['InsufficientCapacity']
@@ -640,7 +638,7 @@ class BatteryElectroChemEOL(PrognosticsModel):
         'qMax': (0, np.inf)
     }
 
-    def dx(self, _, u: dict):
+    def dx(self, _, u):
         params = self.parameters
 
         return self.StateContainer(np.array([
@@ -649,11 +647,11 @@ class BatteryElectroChemEOL(PrognosticsModel):
             np.atleast_1d(params['wd'] * abs(u['i']))
         ]))
 
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         e_state = (x['qMax']-self.parameters['qMaxThreshold'])/(self.parameters['x0']['qMax']-self.parameters['qMaxThreshold'])
         return {'InsufficientCapacity': max(min(e_state, 1.0), 0.0)}
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         return {'InsufficientCapacity': x['qMax'] < self.parameters['qMaxThreshold']}
 
     def output(self, _):
@@ -677,9 +675,9 @@ def OverwrittenWarning(params):
 
 class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     """
-    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in [4]_ and [5]_
+    Prognostics :term:`model` for a battery degredation and discharge, represented by an electrochemical model as described in [Dailge2013]_ and [Daigle2016]_
 
-    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [6]_.
+    The default model parameters included are for Li-ion batteries, specifically 18650-type cells. Experimental discharge curves for these cells can be downloaded from the Prognostics Center of Excellence Data Repository [DataRepo]_.
 
     :term:`Events<event>`: (2)
         | EOD: End of Discharge
@@ -702,12 +700,6 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
     Note
     ----
     For keyword arguments, see BatteryElectroChemEOD, BatteryElectroChemEOL
-
-    References
-    -----------
-    .. [4] M. Daigle and C. Kulkarni, "Electrochemistry-based Battery Modeling for Prognostics," Annual Conference of the Prognostics and Health Management Society 2013, pp. 249-261, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2252
-    .. [5] M. Daigle and C. Kulkarni, "End-of-discharge and End-of-life Prediction in Lithium-ion Batteries with Electrochemistry-based Aging Models," AIAA SciTech Forum 2016, San Diego, CA. https://arc.aiaa.org/doi/pdf/10.2514/6.2016-2132
-    .. [6] Prognostics Center of Excellence Data Repository https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/.
     """
     inputs = BatteryElectroChemEOD.inputs
     outputs = BatteryElectroChemEOD.outputs
@@ -729,7 +721,7 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         self.param_callbacks['Ro'] = [OverwrittenWarning]
         super().__init__(**kwargs)
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         # Set EOD Parameters (corresponding to health)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -743,18 +735,18 @@ class BatteryElectroChemEODEOL(BatteryElectroChemEOL, BatteryElectroChemEOD):
         x_dot.matrix = np.vstack((x_dot.matrix, x_dot2.matrix))
         return x_dot
 
-    def output(self, x: dict) -> dict:
+    def output(self, x):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['qMobile'] = x['qMax']
         return BatteryElectroChemEOD.output(self, x)
 
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         e_state = BatteryElectroChemEOD.event_state(self, x)
         e_state.update(BatteryElectroChemEOL.event_state(self, x))
         return e_state
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         t_met = BatteryElectroChemEOD.threshold_met(self, x)
         t_met.update(BatteryElectroChemEOL.threshold_met(self, x))
         return t_met

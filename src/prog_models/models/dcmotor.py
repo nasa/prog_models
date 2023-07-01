@@ -179,7 +179,7 @@ class DCMotor(PrognosticsModel):
         }
     }
 
-    def next_state(self, x, u, dt):
+    def next_state(self, x, u, dt: float):
         (F_a, F_b, F_c) = backemf(x['theta'])
 
         Ac = self.parameters['Ac'].copy()
@@ -194,7 +194,6 @@ class DCMotor(PrognosticsModel):
         dxdt = np.dot(Ac, x.matrix) + np.dot(self.parameters['Bc'], u.matrix)
         x.matrix += dxdt * dt  # Update inplace
         x.matrix[4] %= PI2  # Wrap angle
-
         return x
 
     def output(self, x):

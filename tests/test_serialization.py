@@ -10,7 +10,7 @@ from prog_models.data_models import DMDModel
 
 class TestSerialization(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
@@ -20,7 +20,7 @@ class TestSerialization(unittest.TestCase):
         batt = Battery()
 
         def future_loading_1(t, x=None):
-            # Variable (piece-wise) future loading scheme 
+            # Variable (piece-wise) future loading scheme
             if (t < 500):
                 i = 3
             elif (t < 1000):
@@ -30,9 +30,9 @@ class TestSerialization(unittest.TestCase):
             else:
                 i = 4.5
             return batt.InputContainer({'i': i})
-        
+
         def future_loading_2(t, x=None):
-            # Variable (piece-wise) future loading scheme 
+            # Variable (piece-wise) future loading scheme
             if (t < 300):
                 i = 2
             elif (t < 800):
@@ -48,20 +48,19 @@ class TestSerialization(unittest.TestCase):
         load_functions = [future_loading_1, future_loading_2]
 
         options_surrogate = {
-            'save_freq': 1, # For DMD, this value is the time step for which the surrogate model is generated
-            'dt': 0.1, # For DMD, this value is the time step of the training data
-            'trim_data_to': 0.7 # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
+            'save_freq': 1,  # For DMD, this value is the time step for which the surrogate model is generated
+            'dt': 0.1,  # For DMD, this value is the time step of the training data
+            'trim_data_to': 0.7  # Value between 0 and 1 that determines the fraction of data resulting from simulate_to_threshold that is used to train DMD surrogate model
         }
 
         batt.parameters['process_noise'] = 0
 
         # Generate surrogate model  
-        surrogate_orig = batt.generate_surrogate(load_functions,**options_surrogate)
-
+        surrogate_orig = batt.generate_surrogate(load_functions, **options_surrogate)
         # Serialize parameters
         save_json_dict = surrogate_orig.to_json()
 
-        # Generate new surrogated with serialized version
+        # Generate new surrogate with serialized version
         new_model = DMDModel.from_json(save_json_dict)
 
         # Check serialization
@@ -69,10 +68,10 @@ class TestSerialization(unittest.TestCase):
         
         # Check deserialization
         options_sim = {
-            'save_freq': 1 # Frequency at which results are saved, or equivalently time step in results
+            'save_freq': 1  # Frequency at which results are saved, or equivalently time step in results
         }
 
-        # Define loading profile 
+        # Define loading profile
         def future_loading(t, x=None):
             if (t < 600):
                 i = 3
@@ -91,20 +90,20 @@ class TestSerialization(unittest.TestCase):
         for i in range(min(len(surrogate_results.times), len(new_results.times))):
             self.assertEqual(surrogate_results.times[i], new_results.times[i])
             for key in surrogate_results.states[0].keys():
-                self.assertAlmostEqual(surrogate_results.states[i][key], new_results.states[i][key], delta = 3e-01)
+                self.assertAlmostEqual(surrogate_results.states[i][key], new_results.states[i][key], delta=3e-01)
             for key in surrogate_results.inputs[0].keys():
-                self.assertAlmostEqual(surrogate_results.inputs[i][key], new_results.inputs[i][key], delta = 3e-01)
+                self.assertAlmostEqual(surrogate_results.inputs[i][key], new_results.inputs[i][key], delta=3e-01)
             for key in surrogate_results.outputs[0].keys():
-                self.assertAlmostEqual(surrogate_results.outputs[i][key], new_results.outputs[i][key], delta = 3e-01)
+                self.assertAlmostEqual(surrogate_results.outputs[i][key], new_results.outputs[i][key], delta=3e-01)
             for key in surrogate_results.event_states[0].keys():
-                self.assertAlmostEqual(surrogate_results.event_states[i][key], new_results.event_states[i][key], delta = 3e-01)
+                self.assertAlmostEqual(surrogate_results.event_states[i][key], new_results.event_states[i][key], delta=3e-01)
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Serialization of Surrogate Model")
-    result = runner.run(l.loadTestsFromTestCase(TestSerialization)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestSerialization)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

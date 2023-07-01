@@ -15,42 +15,43 @@ INSTALL_REQS = [
         'matplotlib',
         'requests',  # For data downloading features
         'chaospy',  # For PCE
-        'fastdtw', # For DTW error calculation
-        "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'", 
+        'fastdtw',  # For DTW error calculation
+        "tensorflow; platform_system!='Darwin' or platform_machine!='arm64'",
         "tensorflow-macos; platform_system=='Darwin' and platform_machine=='arm64'",
     ]
 
 setup(
-    name = 'prog_models',
-    version = '1.5.0-pre',
-    description = 'The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
+    name='prog_models',
+    version='1.5.0',
+    description='The NASA Prognostic Model Package is a python modeling framework focused on defining and building models for prognostics (computation of remaining useful life) of engineering systems, and provides a set of prognostics models for select components developed within this framework, suitable for use in prognostics applications for these components.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url = 'https://nasa.github.io/progpy/prog_models_guide.html',
-    author = 'Christopher Teubert',
-    author_email = 'christopher.a.teubert@nasa.gov',
-    classifiers = [
+    url='https://nasa.github.io/progpy/prog_models_guide.html',
+    author='Christopher Teubert',
+    author_email='christopher.a.teubert@nasa.gov',
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
-        'Intended Audience :: Manufacturing', 
+        'Intended Audience :: Manufacturing',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Physics',
-        'License :: Other/Proprietary License ',   
-        'Programming Language :: Python :: 3',     
+        'License :: Other/Proprietary License ',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3 :: Only'
     ],
-    keywords = ['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management', 'surrogate modeling', 'model tuning', 'simulation', 'ivhm'],
-    package_dir = {"":"src"},
-    packages = find_packages(where = 'src'),
+    keywords=['prognostics', 'diagnostics', 'fault detection', 'fdir', 'physics modeling', 'prognostics and health management', 'PHM', 'health management', 'surrogate modeling', 'model tuning', 'simulation', 'ivhm'],
+    package_dir={"": "src"},
+    packages=find_packages(where='src'),
     python_requires='>=3.7, <3.12',
-    install_requires = INSTALL_REQS,
-    license = 'NOSA',
+    install_requires=INSTALL_REQS,
+    license='NOSA',
     project_urls={  # Optional
         'Bug Reports': 'https://github.com/nasa/prog_models/issues',
         'Docs': 'https://nasa.github.io/progpy/prog_models_guide.html',

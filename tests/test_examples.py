@@ -25,7 +25,7 @@ def make_test_function(example):
 
 class TestExamples(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
@@ -40,10 +40,10 @@ def main():
             test_func = make_test_function(name)
             setattr(TestExamples, 'test_{0}'.format(name), test_func)   
 
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Examples")
-    result = runner.run(l.loadTestsFromTestCase(TestExamples)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestExamples)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")
