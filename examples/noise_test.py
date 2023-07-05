@@ -41,7 +41,7 @@ def print_results(simulated_results):
     simulated_results.states.plot()
 
 
-process_noise_dist = 'uniform'
+process_noise_dist = 'triangular'
 process_noise = {'tb': 30, 'Vo': 15}
 model_config = {'process_noise_dist': process_noise_dist, 'process_noise': process_noise}
 m = BatteryElectroChemEOD(**model_config)
