@@ -1124,8 +1124,8 @@ class PrognosticsModel(ABC):
             method (str, optional): Error method to use when calculating error. Supported methods include:
 
               * MSE (Mean Squared Error) - DEFAULT
-              * RMSE (Root Mean Squared Error)
-              * MAX_E (Maximum Error)
+              * RMSE (Root Mean Squared Error) - Squareroot of MSE
+              * MAX_E (Maximum Absolute Error)
               * MAE (Mean Absolute Error)
               * MAPE (Mean Absolute Percentage Error)
               * DTW (Dynamic Time Warping)
