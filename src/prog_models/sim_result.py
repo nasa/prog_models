@@ -38,10 +38,11 @@ class SimResult(UserList):
         """
             created for deprecation warning. [] continues to be handled by parent
         """
-        warn_once('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
+        warn_once(
+            '[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
             'data by element.', DeprecationWarning, stacklevel=2)
         return super().__getitem__(item)
-    
+
     def __iter__(self):
         """
             created for deprecation warning. iteration continues to be handled by parent
@@ -51,11 +52,11 @@ class SimResult(UserList):
             'and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
         return super().__iter__()
-    
+
     def iterrows(self):
         """
         .. versionadded:: 1.5.0
-        
+
             Iterates -- through keys
         """
         return super().__iter__()
@@ -64,7 +65,7 @@ class SimResult(UserList):
     def frame(self) -> pd.DataFrame:
         """
         .. versionadded:: 1.5.0
-        
+
             pd.DataFrame: A pandas DataFrame representing the SimResult data
         """
         warn_once('frame will be deprecated after version 1.5 of ProgPy.', DeprecationWarning, stacklevel=2)
@@ -81,11 +82,11 @@ class SimResult(UserList):
             return self._frame
         else:
             return self._frame
-        
+
     def frame_is_empty(self) -> bool:
         """
         .. versionadded:: 1.5.0
-        
+
         Returns:
             bool: If the value has been calculated
         """
@@ -110,6 +111,8 @@ class SimResult(UserList):
 
     def insert(self, i: int, item) -> None:
         """
+        .. versionadded:: 1.5.0
+
             in addition to the normal functionality, updates the _frame if it exists
         """
         self.insert(i, item)
@@ -121,7 +124,7 @@ class SimResult(UserList):
     def iloc(self):
         """
         .. versionadded:: 1.5.0
-        
+
             returns the iloc indexer
         """
         return self.frame.iloc
@@ -129,7 +132,7 @@ class SimResult(UserList):
     def equals(self, other: "SimResult") -> bool:
         """
         .. versionadded:: 1.5.0
-        
+
         Compare 2 SimResults
 
         Args:
@@ -159,6 +162,8 @@ class SimResult(UserList):
 
     def index_of_data(self, other: dict, *args, **kwargs) -> int:
         """
+        .. versionadded:: 1.5.0
+
         Get the index of the first sample where other occurs
 
         Args:
@@ -168,7 +173,7 @@ class SimResult(UserList):
             int: Index of first sample where other occurs
         """
         return self.data.index(other, *args, **kwargs)
-    
+
     def index(self, other: dict, *args, **kwargs) -> int:
         """
         Get the index of the first sample where other occurs
@@ -179,7 +184,8 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
-        warn_once('index will be deprecated after version 1.5 of ProgPy. The function will be renamed, index_of_data, and users may begin using it under this name now.',
+        warn_once(
+            'index will be deprecated after version 1.5 of ProgPy. The function will be renamed, index_of_data, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
 
         return self.index_of_data(other, *args, **kwargs)
@@ -201,7 +207,10 @@ class SimResult(UserList):
             self._frame = None
 
     def pop_by_index(self, index: int = -1) -> dict:
-        """Remove and return an element
+        """
+        .. versionadded:: 1.5.0
+
+        Remove and return an element
 
         Args:
             index (int, optional): Index of element to be removed. Defaults to -1.
@@ -215,7 +224,8 @@ class SimResult(UserList):
         return self.data.pop(index)
 
     def pop(self, index: int = -1) -> dict:
-        """Remove and return an element
+        """
+        Remove and return an element
 
         Args:
             index (int, optional): Index of element to be removed. Defaults to -1.
@@ -229,7 +239,8 @@ class SimResult(UserList):
         return self.pop_by_index(index)
 
     def remove(self, d: dict = None, t: float = None) -> None:
-        """Remove an element
+        """
+        Remove an element
 
         Args:
             d: Data value to be removed.
@@ -245,13 +256,16 @@ class SimResult(UserList):
         self.pop_by_index(target_index)
 
     def clear(self) -> None:
-        """Clear the SimResult"""
+        """
+        Clear the SimResult
+        """
         self.times = []
         self.data = []
         self._frame = None
 
     def time(self, index: int) -> float:
-        """Get time for data point at index `index`
+        """
+        Get time for data point at index `index`
 
         Args:
             index (int)
@@ -280,7 +294,7 @@ class SimResult(UserList):
         if keys is None:
             keys = self.data[0].keys()
         return np.array([[u_i[key] for key in keys] for u_i in self.data], dtype=np.float64)
-    
+
     def plot(self, **kwargs) -> figure:
         """
         Plot the simresult as a line plot
@@ -301,7 +315,8 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        warn_once('Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
+        warn_once(
+            'Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
         return plot_timeseries(self.times, self.data, legend={'display': True}, options=kwargs)
 
     def monotonicity(self) -> Dict[str, float]:
@@ -420,7 +435,8 @@ class LazySimResult(SimResult):  # lgtm [py/missing-equals]
             raise ValueError(f"ValueError: Argument must be of type {self.__class__}.")
 
     def pop(self, index: int = -1) -> dict:
-        """Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
+        """
+        Remove an element. If data hasn't been cached, remove the state - so it wont be calculated
 
         Args:
             index (int, optional): Index of element to be removed. Defaults to -1.
