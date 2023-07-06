@@ -6,9 +6,16 @@ class ProgPyDataFrame(pd.DataFrame):
     def _constructor(self):
         return ProgPyDataFrame
 
-    def timestamps(self, times: list[float]=None):
+    def timestamps(self, times: list[float] = None):
         self.insert(0, 'time', times)
         self.set_index('time', inplace=True, drop=True)
 
-    def add_timestamp(self, time: float=None, data=None):
+    def add_timestamp(self, time: float = None, data=None):
         self.loc[time] = data
+
+
+InputContainer = ProgPyDataFrame
+
+StateContainer = ProgPyDataFrame
+
+OutputContainer = ProgPyDataFrame

@@ -9,7 +9,7 @@ from prog_models import PrognosticsModel
 
 class BatteryCircuit(PrognosticsModel):
     """
-    Vectorized prognostics :term:`model` for a battery, represented by an equivilant circuit model as described in [DaigleSankararaman2013]_
+    Vectorized prognostics :term:`model` for a battery, represented by an equivalent circuit model as described in [DaigleSankararaman2013]_
 
     :term:`Events<event>`: (1)
         EOD: End of Discharge
@@ -92,7 +92,7 @@ class BatteryCircuit(PrognosticsModel):
 
     References
     -----------
-    .. [DaigleSankararaman2013] M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253
+    .. [Daigle, Sankararaman2013] M. Daigle and S. Sankararaman, "Advanced Methods for Determining Prediction Uncertainty in Model-Based Prognostics with Application to Planetary Rovers," Annual Conference of the Prognostics and Health Management Society 2013, pp. 262-274, New Orleans, LA, October 2013. https://papers.phmsociety.org/index.php/phmconf/article/view/2253
     """
     events = ['EOD']
     inputs = ['i']
@@ -162,12 +162,12 @@ class BatteryCircuit(PrognosticsModel):
         icp = ib - Vcp/Rcp
         ics = ib - Vcs/Rs
 
-        return self.StateContainer(np.array([
+        return self.StateContainer(columns=['tb', 'qb', 'qcp', 'qcs'], data=np.array([
             np.atleast_1d(Tbdot),  # tb
             np.atleast_1d(-ib),  # qb
             np.atleast_1d(icp),  # qcp
             np.atleast_1d(ics)  # qcs
-        ]))
+        ]).T)
     
     def event_state(self, x) -> dict:
         parameters = self.parameters
@@ -193,9 +193,9 @@ class BatteryCircuit(PrognosticsModel):
         Cb = parameters['Cbp0']*SOC**3 + parameters['Cbp1']*SOC**2 + parameters['Cbp2']*SOC + parameters['Cbp3']
         Vb = x['qb']/Cb
 
-        return self.OutputContainer(np.array([
+        return self.OutputContainer(columns=['t', 'v'], data=np.array([
             np.atleast_1d(x['tb']),            # t
-            np.atleast_1d(Vb - Vcp - Vcs)]))   # v
+            np.atleast_1d(Vb - Vcp - Vcs)]).T)   # v
 
     def threshold_met(self, x) -> dict:
         parameters = self.parameters

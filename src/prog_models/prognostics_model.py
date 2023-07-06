@@ -15,8 +15,9 @@ from prog_models.exceptions import ProgModelStateLimitWarning, warn_once
 from prog_models.loading import Piecewise
 from prog_models.sim_result import SimResult, LazySimResult
 from prog_models.utils import ProgressBar, calc_error, input_validation
-from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
+# from prog_models.utils.containers import DictLikeMatrixWrapper, InputContainer, OutputContainer
 from prog_models.utils.next_state import next_state_functions
+from prog_models.utils.pandas_subclass import ProgPyDataFrame, InputContainer, OutputContainer
 from prog_models.utils.parameters import PrognosticsModelParameters
 from prog_models.utils.serialization import CustomEncoder, custom_decoder
 from prog_models.utils.size import getsizeof
@@ -138,6 +139,7 @@ class PrognosticsModel(ABC):
     def __getstate__(self) -> dict:
         return self.parameters.data
 
+# BOOKMARK MIRYAM
     def __setstate__(self, params: dict) -> None:
         # This method is called when de-pickling and in construction.
         # It builds the model from the parameters
@@ -174,21 +176,21 @@ class PrognosticsModel(ABC):
 
         states = self.states
 
-        class StateContainer(DictLikeMatrixWrapper):
+        class StateContainer(ProgPyDataFrame):
             def __init__(self, data):
                 super().__init__(states, data)
         self.StateContainer = StateContainer
 
         inputs = self.inputs
 
-        class InputContainer(DictLikeMatrixWrapper):
+        class InputContainer(ProgPyDataFrame):
             def __init__(self, data):
                 super().__init__(inputs, data)
         self.InputContainer = InputContainer
 
         outputs = self.outputs
 
-        class OutputContainer(DictLikeMatrixWrapper):
+        class OutputContainer(ProgPyDataFrame):
             def __init__(self, data):
                 super().__init__(outputs, data)
         self.OutputContainer = OutputContainer
@@ -219,8 +221,8 @@ class PrognosticsModel(ABC):
             
             >>> from prog_models.models import BatteryCircuit
             >>> m = BatteryCircuit()    # Replace above with specific model being simulated ^
-            >>> u = m.InputContainer({'i': 2.0})
-            >>> z = m.OutputContainer({'v': 3.2, 't': 295})
+            >>> u = m.InputContainer([{'i': 2.0}])
+            >>> z = m.OutputContainer([{'v': 3.2, 't': 295}])
             >>> x = m.initialize(u, z) # Initialize first state
         """
         return self.StateContainer(self.parameters['x0'])
