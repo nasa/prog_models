@@ -38,8 +38,7 @@ class SimResult(UserList):
         """
             created for deprecation warning. [] continues to be handled by parent
         """
-        warn_once(
-            '[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
+        warn_once('[] for access by row number will be deprecated after version 1.5 of ProgPy. After v1.5, [] will access by column (e.g., data[\'state1\']), Users may use \'iloc\' to access by row number (e.g., data.iloc[10])'
             'data by element.', DeprecationWarning, stacklevel=2)
         return super().__getitem__(item)
 
@@ -184,8 +183,7 @@ class SimResult(UserList):
         Returns:
             int: Index of first sample where other occurs
         """
-        warn_once(
-            'index will be deprecated after version 1.5 of ProgPy. The function will be renamed, index_of_data, and users may begin using it under this name now.',
+        warn_once('index will be deprecated after version 1.5 of ProgPy. The function will be renamed, index_of_data, and users may begin using it under this name now.',
             DeprecationWarning, stacklevel=2)
 
         return self.index_of_data(other, *args, **kwargs)
@@ -315,8 +313,7 @@ class SimResult(UserList):
         Returns:
             Figure
         """
-        warn_once(
-            'Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
+        warn_once('Behavior of SimResult.plot() will change with version 1.6. New behavior will match that of a pandas data frame.')
         return plot_timeseries(self.times, self.data, legend={'display': True}, options=kwargs)
 
     def monotonicity(self) -> Dict[str, float]:
