@@ -178,7 +178,7 @@ class PrognosticsModel(ABC):
 
         class StateContainer(ProgPyDataFrame):
             def __init__(self, data):
-                super().__init__(states, data)
+                super().__init__(columns=states, data=data)
         self.StateContainer = StateContainer
 
         inputs = self.inputs

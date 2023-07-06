@@ -13,6 +13,9 @@ class ProgPyDataFrame(pd.DataFrame):
     def add_timestamp(self, time: float = None, data=None):
         self.loc[time] = data
 
+    def get_progpy_dict(self):
+        return self.to_dict('records')[0]
+
 
 InputContainer = ProgPyDataFrame
 

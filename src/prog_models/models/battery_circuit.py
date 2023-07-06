@@ -167,7 +167,7 @@ class BatteryCircuit(PrognosticsModel):
             np.atleast_1d(-ib),  # qb
             np.atleast_1d(icp),  # qcp
             np.atleast_1d(ics)  # qcs
-        ]).T)
+        ]))
     
     def event_state(self, x) -> dict:
         parameters = self.parameters
@@ -195,7 +195,7 @@ class BatteryCircuit(PrognosticsModel):
 
         return self.OutputContainer(columns=['t', 'v'], data=np.array([
             np.atleast_1d(x['tb']),            # t
-            np.atleast_1d(Vb - Vcp - Vcs)]).T)   # v
+            np.atleast_1d(Vb - Vcp - Vcs)]))   # v
 
     def threshold_met(self, x) -> dict:
         parameters = self.parameters
