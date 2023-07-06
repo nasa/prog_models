@@ -23,6 +23,12 @@ authors:
     orcid: 0000-0002-7169-1051
     equal-contrib: false
     affiliation: 2
+  - name: Chetan Kulkarni
+    equal-contrib: false
+    affiliation: 2
+  - name: Matthew Daigle
+    equal-contrib: false
+    affiliation: 2
 affiliations:
  - name: NASA Ames Research Center, United States
    index: 1
