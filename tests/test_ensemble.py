@@ -12,7 +12,7 @@ from prog_models.models.test_models.linear_models import OneInputOneOutputOneEve
 
 class TestEnsemble(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
@@ -52,7 +52,7 @@ class TestEnsemble(unittest.TestCase):
         m = OneInputOneOutputOneEventLM()
         m2 = OneInputOneOutputOneEventLM(x0={'x1': 2})
 
-        # Make sure they're not the same - matricies are 3x their original values
+        # Make sure they're not the same - matrices are 3x their original values
         # The result is a model where state changes 3x as fast.
         # Event state degrades 9x as fast, since B and F compound
         m2.B = np.array([[3]])
@@ -198,10 +198,10 @@ class TestEnsemble(unittest.TestCase):
 
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Ensemble models")
-    result = runner.run(l.loadTestsFromTestCase(TestEnsemble)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestEnsemble)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

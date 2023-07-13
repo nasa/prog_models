@@ -9,34 +9,36 @@ from prog_models.models.centrifugal_pump import CentrifugalPump, CentrifugalPump
 
 class TestCentrifugalPump(unittest.TestCase):
     def setUp(self):
-        # set stdout (so it wont print)
+        # set stdout (so it won't print)
         sys.stdout = StringIO()
 
     def tearDown(self):
         sys.stdout = sys.__stdout__
-    
+
     def test_centrifugal_pump_base(self):
-        pump = CentrifugalPumpBase(process_noise= 0)
+        pump = CentrifugalPumpBase(process_noise=0)
 
         cycle_time = 3600
+
         def future_loading(t, x=None):
             t = t % cycle_time
-            if t < cycle_time/2.0:
+            if t < cycle_time / 2.0:
                 V = 471.2389
-            elif t < cycle_time/2 + 100:
-                V = 471.2389 + (t-cycle_time/2)
+            elif t < cycle_time / 2 + 100:
+                V = 471.2389 + (t - cycle_time / 2)
             elif t < cycle_time - 100:
                 V = 571.2389
             else:
-                V = 471.2398 - (t-cycle_time)
+                V = 471.2398 - (t - cycle_time)
 
             return {
                 'Tamb': 290,
                 'V': V,
-                'pdisch': 928654, 
-                'psuc': 239179, 
+                'pdisch': 928654,
+                'psuc': 239179,
                 'wsync': V * 0.8
             }
+
         x0 = pump.initialize(future_loading(0))
         # Same as with wear except without wA, wRadial, wThrust
         x0_test = {
@@ -48,11 +50,11 @@ class TestCentrifugalPump(unittest.TestCase):
             'To': 290,
             'Q': 0.0,
             'A': 12.7084,
-            'QLeak':  -8.303463132934355e-08
+            'QLeak': -8.303463132934355e-08
         }
         for key in pump.states:
             self.assertAlmostEqual(x0[key], x0_test[key], 7)
-        
+
         x = pump.next_state(x0, future_loading(0), 1)
         x_test = {
             'w': 372.68973081274,
@@ -83,31 +85,34 @@ class TestCentrifugalPump(unittest.TestCase):
         # Wear rates are parameters instead of states
         pump.parameters['wA'] = 1e-2
         pump.parameters['wThrust'] = 1e-10
-        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
+        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(
+            pump.initialize(future_loading(0), {})))
         self.assertAlmostEqual(times[-1], 23892)
 
     def test_centrifugal_pump_with_wear(self):
-        pump = CentrifugalPumpWithWear(process_noise= 0)
+        pump = CentrifugalPumpWithWear(process_noise=0)
 
         cycle_time = 3600
+
         def future_loading(t, x=None):
             t = t % cycle_time
-            if t < cycle_time/2.0:
+            if t < cycle_time / 2.0:
                 V = 471.2389
-            elif t < cycle_time/2 + 100:
-                V = 471.2389 + (t-cycle_time/2)
+            elif t < cycle_time / 2 + 100:
+                V = 471.2389 + (t - cycle_time / 2)
             elif t < cycle_time - 100:
                 V = 571.2389
             else:
-                V = 471.2398 - (t-cycle_time)
+                V = 471.2398 - (t - cycle_time)
 
             return {
                 'Tamb': 290,
                 'V': V,
-                'pdisch': 928654, 
-                'psuc': 239179, 
+                'pdisch': 928654,
+                'psuc': 239179,
                 'wsync': V * 0.8
             }
+
         x0 = pump.initialize(future_loading(0))
         x0_test = {
             'w': 376.991118431,
@@ -121,11 +126,10 @@ class TestCentrifugalPump(unittest.TestCase):
             'To': 290,
             'Q': 0.0,
             'A': 12.7084,
-            'QLeak':  -8.303463132934355e-08
+            'QLeak': -8.303463132934355e-08
         }
         for key in pump.states:
             self.assertAlmostEqual(x0[key], x0_test[key], 7)
-        
         x = pump.next_state(x0, future_loading(0), 1)
         x_test = {
             'w': 372.68973081274,
@@ -158,45 +162,48 @@ class TestCentrifugalPump(unittest.TestCase):
 
         pump.parameters['x0']['wA'] = 1e-2
         pump.parameters['x0']['wThrust'] = 1e-10
-        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
+        (times, inputs, states, outputs, event_states) = pump.simulate_to_threshold(future_loading, pump.output(
+            pump.initialize(future_loading(0), {})))
         self.assertAlmostEqual(times[-1], 23892)
 
         # Check warning when changing overwritten Parameters
         with self.assertWarns(UserWarning):
-            pump.parameters['wA']  = 1e-2
+            pump.parameters['wA'] = 1e-2
 
         with self.assertWarns(UserWarning):
-            pump.parameters['wRadial']  = 1e-2
+            pump.parameters['wRadial'] = 1e-2
 
         with self.assertWarns(UserWarning):
-            pump.parameters['wThrust']  = 1e-10
+            pump.parameters['wThrust'] = 1e-10
 
     def test_centrifugal_pump(self):
-        self.assertEqual(CentrifugalPump,CentrifugalPumpWithWear)
+        self.assertEqual(CentrifugalPump, CentrifugalPumpWithWear)
         # CentrifugalPump is alias for "with wear"
 
     def test_centrifugal_pump_namedtuple_access(self):
-        pump = CentrifugalPumpWithWear(process_noise= 0)
+        pump = CentrifugalPumpWithWear(process_noise=0)
 
         cycle_time = 3600
+
         def future_loading(t, x=None):
             t = t % cycle_time
-            if t < cycle_time/2.0:
+            if t < cycle_time / 2.0:
                 V = 471.2389
-            elif t < cycle_time/2 + 100:
-                V = 471.2389 + (t-cycle_time/2)
+            elif t < cycle_time / 2 + 100:
+                V = 471.2389 + (t - cycle_time / 2)
             elif t < cycle_time - 100:
                 V = 571.2389
             else:
-                V = 471.2398 - (t-cycle_time)
+                V = 471.2398 - (t - cycle_time)
 
             return {
                 'Tamb': 290,
                 'V': V,
-                'pdisch': 928654, 
-                'psuc': 239179, 
+                'pdisch': 928654,
+                'psuc': 239179,
                 'wsync': V * 0.8
             }
+
         x0 = pump.initialize(future_loading(0))
         x0_test = {
             'w': 376.991118431,
@@ -210,9 +217,9 @@ class TestCentrifugalPump(unittest.TestCase):
             'To': 290,
             'Q': 0.0,
             'A': 12.7084,
-            'QLeak':  -8.303463132934355e-08
+            'QLeak': -8.303463132934355e-08
         }
-        
+
         x = pump.next_state(x0, future_loading(0), 1)
         x_test = {
             'w': 372.68973081274,
@@ -240,22 +247,24 @@ class TestCentrifugalPump(unittest.TestCase):
 
         pump.parameters['x0']['wA'] = 1e-2
         pump.parameters['x0']['wThrust'] = 1e-10
-        named_results = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0),{})))
+        named_results = pump.simulate_to_threshold(future_loading, pump.output(pump.initialize(future_loading(0), {})))
         times = named_results.times
         inputs = named_results.inputs
         states = named_results.states
         outputs = named_results.outputs
         event_states = named_results.event_states
 
+
 # This allows the module to be executed directly
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
     print("\n\nTesting Centrifugal Pump Model")
-    result = runner.run(l.loadTestsFromTestCase(TestCentrifugalPump)).wasSuccessful()
+    result = runner.run(load_test.loadTestsFromTestCase(TestCentrifugalPump)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")
+
 
 if __name__ == '__main__':
     main()

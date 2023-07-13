@@ -8,6 +8,7 @@ import numpy as np
 import sys
 from warnings import warn
 
+from prog_models.exceptions import warn_once
 from prog_models.data_models import DataModel
 from prog_models.sim_result import SimResult
 
@@ -94,7 +95,7 @@ class LSTMStateTransitionModel(DataModel):
         self.parameters.__setitem__('history', self.history, _copy = False)        
 
     def __getstate__(self):
-        warn("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
+        warn_once("LSTMStateTransitionModel uses a Keras model, which does not always support pickling. We recommend that you use the keras save and load model functions instead with m.model", RuntimeWarning)
         return ((), self.parameters.data)
 
     def __eq__(self, other):
@@ -252,7 +253,7 @@ class LSTMStateTransitionModel(DataModel):
                     # No inputs
                     u = []
                 else:
-                    u = np.array([u_i.matrix[:,0] for u_i in u])
+                    u = np.array([u_i.matrix[:, 0] for u_i in u])
 
             if len(u) > 0 and len(u) <= window:
                 raise TypeError(f"Not enough data for window size {window}. Only {len(u)} elements present.")

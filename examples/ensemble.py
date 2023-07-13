@@ -55,7 +55,7 @@ def run_example():
     plt.plot(results_ensemble.times, [z['v'] for z in results_ensemble.outputs], color='red', label='ensemble')
     plt.legend()
 
-    # Note: This is a very poor perfoming model
+    # Note: This is a very poor performing model
     # there was an outlier model (m_circuit_3), which effected the quality of the model prediction
     # This can be resolved by using a different aggregation_method. For example, median
     # In a real scenario, you would likely remove this model, this is just to illustrate outlier elimination
@@ -94,7 +94,7 @@ def run_example():
     plt.legend()
     
     # Note that the result may not be exactly between the other two models. 
-    # This is because of aggrigation is done in 2 steps: at state transition and then at output calculation
+    # This is because of aggregation is done in 2 steps: at state transition and then at output calculation
 
 # This allows the module to be executed directly 
 if __name__=='__main__':

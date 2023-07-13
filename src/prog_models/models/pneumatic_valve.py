@@ -28,8 +28,7 @@ def calc_v(x: float, v: float, dv: float, forces: float, Ls: float, new_x: float
 
 class PneumaticValveBase(PrognosticsModel):
     """
-    Prognostics :term:`model` for a Pneumatic Valve model as described in the following paper:
-    `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
+    Prognostics :term:`model` for a Pneumatic Valve model as described in [DaigleValve2011]_.
     
     :term:`Events<event>`: (5)
         | Bottom Leak: Failure due to a leak at the bottom pneumatic port
@@ -144,6 +143,10 @@ class PneumaticValveBase(PrognosticsModel):
     Note
     ----
     Supply gas parameters (gas_mass, gas_temp, gas_gamme, gas_z, gas_R) are for Nitrogen by default
+
+    References
+    ----------
+    .. [DaigleValve2014] `M. Daigle and K. Goebel, "A Model-based Prognostics Approach Applied to Pneumatic Valves," International Journal of Prognostics and Health Management, vol. 2, no. 2, August 2011. https://papers.phmsociety.org/index.php/ijphm/article/view/1359`
     """
     events = ["Bottom Leak", "Top Leak", "Internal Leak", "Spring Failure", "Friction Failure"]
     inputs = ["pL", "pR", "uBot", "uTop"]
@@ -233,7 +236,7 @@ class PneumaticValveBase(PrognosticsModel):
         'r': (0, np.inf)
     }
 
-    def initialize(self, u: dict, z=None):
+    def initialize(self, u, z=None):
         x0 = self.parameters['x0']
         x0['pDiff'] = u['pL'] - u['pR']
         return self.StateContainer(x0)
@@ -271,7 +274,7 @@ class PneumaticValveBase(PrognosticsModel):
         # pOut>pIn but pOut/pIn < threshold - only remaining possibility 
         return -C*A*pOut*np.sqrt(2/Z/R/T*k/(k-1)*abs((pIn/pOut)**(2/k)-(pIn/pOut)**((k+1)/k)))
     
-    def next_state(self, x: dict, u: dict, dt: float):
+    def next_state(self, x, u, dt: float):
         params = self.parameters  # optimization
         pInTop = params['pSupply'] if u['uTop'] else params['pAtm']
         springForce = x['k']*(params['offsetX']+x['x'])
@@ -323,7 +326,7 @@ class PneumaticValveBase(PrognosticsModel):
             np.atleast_1d(dp)                                # pL - pR
         ]))
     
-    def output(self, x: dict):
+    def output(self, x):
         params = self.parameters  # Optimization
         indicatorTopm = (x['x'] >= params['Ls']-params['indicatorTol'])
         indicatorBotm = (x['x'] <= params['indicatorTol'])
@@ -343,7 +346,7 @@ class PneumaticValveBase(PrognosticsModel):
             np.atleast_1d(x['x'])                # x
         ]))
 
-    def event_state(self, x: dict) -> dict:
+    def event_state(self, x) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": (params['AbMax'] - x['Aeb'])/(params['AbMax'] - params['x0']['Aeb']), 
@@ -353,7 +356,7 @@ class PneumaticValveBase(PrognosticsModel):
             "Friction Failure": (params['rMax'] - x['r'])/(params['rMax'] - params['x0']['r'])
         }
 
-    def threshold_met(self, x: dict) -> dict:
+    def threshold_met(self, x) -> dict:
         params = self.parameters
         return {
             "Bottom Leak": x['Aeb'] > params['AbMax'], 
@@ -417,7 +420,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         'wt': [OverwrittenWarning]
     }
 
-    def next_state(self, x: dict, u: dict, dt: float) -> dict:
+    def next_state(self, x, u, dt: float):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.parameters['wb'] = x['wb']
@@ -430,6 +433,7 @@ class PneumaticValveWithWear(PneumaticValveBase):
         # Append this way because the keys in the structure but the values are
         # missing - this is due to the behavior of subclassed models calling
         # their parent functions.
+
         next_x.matrix = np.vstack((next_x.matrix, np.array([
             np.atleast_1d(x['wb']),
             np.atleast_1d(x['wi']),

@@ -4,8 +4,7 @@
 import numpy as np
 import unittest
 
-from prog_models import *
-from prog_models.models import *
+from prog_models.models import ThrownObject
 
 
 class TestEstimateParams(unittest.TestCase):
@@ -68,14 +67,12 @@ class TestEstimateParams(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(m.parameters[key], gt[key], 2)
 
-
     def test_estimate_params(self):
         """
         General estimate_params testing
         """
         m = ThrownObject()
         results = m.simulate_to_threshold(save_freq=0.5)
-        data = [(results.times, results.inputs, results.outputs)]
         gt = m.parameters.copy()
 
         # Reset some parameters
@@ -225,7 +222,7 @@ class TestEstimateParams(unittest.TestCase):
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'g': 7})
 
         # Passing in bounds as a dictionary with tuples
-        m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds= {'g': (7, 14)})
+        m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds={'g': (7, 14)})
 
         with self.assertRaises(ValueError):
             m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=None)
@@ -496,6 +493,19 @@ class TestEstimateParams(unittest.TestCase):
 
         # Testing bounds equality with strings in np.array
         m.estimate_params(times=results.times, inputs=results.inputs, outputs=results.outputs, keys=keys, bounds=[np.array(['9', '9']), np.array(['2', '3']), np.array(['4', '5'])])
+
+        # Resetting parameters
+        m2 = ThrownObject()
+        m.parameters['thrower_height'] = m2.parameters['thrower_height'] = 1.5
+        m.parameters['throwing_speed'] = m2.parameters['throwing_speed'] = 25
+        m.parameters['g'] = m2.parameters['g'] = 8
+        m_result = m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, error_method = 'MSE')
+        m2_result = m2.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, error_method = 'DTW')
+        # Checking if two different error_methods would result in a different final_simplex. A different final_simplex returned value would indicate
+        # that the optimized result is different. Since all other parameters are the same, and because we are using different error_methods, the only
+        # explanation for having different final_simplex values between the two results is because of the different error_methods, thus showing we have
+        # successfully passed in the error_methods to estimate_params()!
+        self.assertFalse(np.array_equal(m_result['final_simplex'], m2_result['final_simplex']))
 
         # Resetting parameters
         m.parameters['thrower_height'] = 1.5
@@ -1049,10 +1059,10 @@ class TestEstimateParams(unittest.TestCase):
         self.assertEqual(override2, override3)
 
 def main():
-    l = unittest.TestLoader()
+    load_test = unittest.TestLoader()
     runner = unittest.TextTestRunner()
-    print("\n\nTesting Estimate Params Feature")
-    result = runner.run(l.loadTestsFromTestCase(TestEstimateParams)).wasSuccessful()
+    print("\n\nTesting EstimateParams Feature")
+    result = runner.run(load_test.loadTestsFromTestCase(TestEstimateParams)).wasSuccessful()
 
     if not result:
         raise Exception("Failed test")

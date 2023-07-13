@@ -6,7 +6,7 @@ import numpy as np
 
 from prog_models import PrognosticsModel
 
-# Derived Paramaters
+# Derived Parameters
 def update_L1(params):
     return {
         'L1': params['L'] - params['M']
@@ -15,7 +15,7 @@ def update_L1(params):
 def update_Kv(params):
     # (rad/s)/V, inverse of Kt
     return {
-        'Kv':    1.0 / params['Kt']
+        'Kv': 1.0 / params['Kt']
     }
 
 def update_Km(params):
@@ -141,7 +141,7 @@ class DCMotorSP(PrognosticsModel):
                               x0={'i': 0.0, 'v_rot': 0.0}
                               )
 
-    def dx(self, x: dict, u: dict):
+    def dx(self, x, u):
         # Get parameters
         parameters     = self.parameters
         friction_coeff = parameters['B']
@@ -165,7 +165,7 @@ class DCMotorSP(PrognosticsModel):
             np.atleast_1d(dvrotdt)          # rotor speed
         ]))
 
-    def output(self, x: dict):
+    def output(self, x):
         rotor_speed = x['v_rot']
         return self.OutputContainer(np.array([
             np.atleast_1d(rotor_speed),

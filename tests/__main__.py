@@ -4,6 +4,7 @@ from tests.test_base_models import main as base_models_main
 from tests.test_sim_result import main as sim_result_main
 from tests.test_dict_like_matrix_wrapper import main as dict_like_matrix_wrapper_main
 from tests.test_examples import main as examples_main
+from tests.test_battery import main as battery_main
 from tests.test_centrifugal_pump import main as centrifugal_pump_main
 from tests.test_pneumatic_valve import main as pneumatic_valve_main
 from tests.test_tutorials import main as tutorials_main
@@ -18,6 +19,7 @@ from tests.test_composite import main as composite_main
 from tests.test_serialization import main as serialization_main
 from tests.test_estimate_params import main as estimate_params_main
 from tests.test_ensemble import main as ensemble_main
+from tests.test_uav_model import main as uav_main
 
 if __name__ == '__main__':
     was_successful = True
@@ -48,8 +50,6 @@ if __name__ == '__main__':
         battery_main()
     except Exception:
         was_successful = False
-
-
     try:
         centrifugal_pump_main()
     except Exception:
@@ -112,6 +112,11 @@ if __name__ == '__main__':
 
     try:
         estimate_params_main()
+    except Exception:
+        was_successful = False
+
+    try:
+        uav_main()
     except Exception:
         was_successful = False
 
