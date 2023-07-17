@@ -944,8 +944,8 @@ class TestEstimateParams(unittest.TestCase):
 
         # When tolerance is empty list
         m.parameters['thrower_height'] = 3.1
-        m.parameters['throwing_speed'] = 29
-        m.parameters['g'] = 10
+        # m.parameters['throwing_speed'] = 29
+        # m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [])
         hold1 = m.calc_error(results.times, results.inputs, results.outputs)
 
@@ -1036,24 +1036,22 @@ class TestEstimateParams(unittest.TestCase):
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                           bounds=bound, keys=keys, tol = 1e-2)
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, tol = 1)
         override1 = m.calc_error(results.times, results.inputs, results.outputs)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                            bounds=bound, keys=keys, tol = 1e-5)
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys=keys, tol = 1e-5)
         override2 = m.calc_error(results.times, results.inputs, results.outputs)
 
-        self.assertNotEqual(override1, override2)
+        self.assertGreater(override1, override2)
 
         m.parameters['thrower_height'] = 3.1
         m.parameters['throwing_speed'] = 29
         m.parameters['g'] = 10
-        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs,
-                           bounds = bound, keys=keys, tol = 1e-2, options={'xatol': 1e-5})
+        m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, 
+                          keys=keys, tol = 1e-2, options={'xatol': 1e-5})
         override3 = m.calc_error(results.times, results.inputs, results.outputs)
 
         # Passed in options properly overrides the tolerance that is placed. 

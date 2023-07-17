@@ -1256,6 +1256,9 @@ class PrognosticsModel(ABC):
         """
         from scipy.optimize import minimize
 
+        if runs is not None:
+            warn(f"Passing in data as runs is a depreciated feature. Instead consider splitting runs to times, inputs, and outputs. Runs will be removed in ProgPy Version 1.7")
+
         if keys is None:
             # if no keys provided, use all keys that are Numbers
             keys = [key for key in self.parameters.keys() if isinstance(self.parameters[key], Number)]
