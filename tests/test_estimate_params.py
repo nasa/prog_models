@@ -944,8 +944,8 @@ class TestEstimateParams(unittest.TestCase):
 
         # When tolerance is empty list
         m.parameters['thrower_height'] = 3.1
-        # m.parameters['throwing_speed'] = 29
-        # m.parameters['g'] = 10
+        m.parameters['throwing_speed'] = 29
+        m.parameters['g'] = 10
         m.estimate_params(times = results.times, inputs = results.inputs, outputs = results.outputs, keys = keys, tol = [])
         hold1 = m.calc_error(results.times, results.inputs, results.outputs)
 
